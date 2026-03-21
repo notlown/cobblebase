@@ -20,7 +20,7 @@ object CobblebaseConfig {
      * Returns the effective cooldown in ticks, respecting dev mode.
      */
     fun getEffectiveCooldownTicks(baseCooldownSeconds: Long, proficiency: Int): Long {
-        if (devMode) return 20L // 1 second in dev mode
+        if (devMode) return 100L // 5 seconds in dev mode
         if (baseCooldownSeconds <= 0) return 10L
         return baseCooldownSeconds * 20L * (6 - proficiency) / 3
     }

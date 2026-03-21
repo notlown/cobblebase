@@ -1,51 +1,39 @@
 {
   "schemaVersion": 1,
-  "id": "cobbleworkers",
+  "id": "cobblebase",
   "version": "${version}",
-  "name": "Cobbleworkers Plus",
-  "description": "Enhanced Pokémon jobs mod — improved fishing, attack animations, per-job effects, and more!",
+  "name": "Cobblebase",
+  "description": "Palworld-style Pokemon base management for Cobblemon. Every Pokemon has unique job skills.",
   "authors": [
-    "notlown",
-    "Accieo"
+    "notlown"
   ],
   "contact": {
-    "issues": "https://github.com/notlown/cobbleworkers-plus/issues",
-    "sources": "https://github.com/notlown/cobbleworkers-plus"
+    "issues": "https://github.com/notlown/cobblebase/issues",
+    "sources": "https://github.com/notlown/cobblebase"
   },
   "license": "MPL-2.0",
-  "icon": "assets/cobbleworkers/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
       {
-        "value": "accieo.cobbleworkers.fabric.CobbleworkersFabric",
+        "value": "notlown.cobblebase.fabric.CobblebaseFabric",
         "adapter": "kotlin"
       }
     ],
     "client": [
       {
-        "value": "accieo.cobbleworkers.fabric.client.CobbleworkersFabricClient",
-        "adapter": "kotlin"
-      }
-    ],
-    "modmenu": [
-      {
-        "value": "accieo.cobbleworkers.fabric.client.config.CobbleworkersModMenu",
+        "value": "notlown.cobblebase.fabric.client.CobblebaseFabricClient",
         "adapter": "kotlin"
       }
     ]
   },
   "mixins": [
-    "cobbleworkers.mixins.json",
-    "cobbleworkers-fabric.mixins.json"
+    "cobblebase.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.14",
     "fabric-language-kotlin": "*",
     "minecraft": "~1.21.1",
     "java": ">=21"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }

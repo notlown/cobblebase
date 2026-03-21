@@ -1,16 +1,14 @@
-package notlown.cobblebase.executor
+package notlown.cobblebase.core
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import notlown.cobblebase.skill.Skill
-import notlown.cobblebase.skill.SkillEntry
 
 /**
  * Executes a skill for a Pokemon. Each executor type handles a different mechanic.
  * The executor name in the Skill JSON maps to a registered executor implementation.
  *
- * This is the core of the ECS-like system: Skills are data, executors are behavior.
+ * This is the core of the ECS-like system: SkillDefs are data, executors are behavior.
  */
 interface SkillExecutor {
     /**
@@ -25,7 +23,7 @@ interface SkillExecutor {
         world: World,
         origin: BlockPos,
         pokemonEntity: PokemonEntity,
-        skill: Skill,
+        skill: SkillDef,
         skillEntry: SkillEntry
     )
 }

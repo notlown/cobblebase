@@ -1,4 +1,4 @@
-package notlown.cobblebase.executor
+package notlown.cobblebase.core
 
 import notlown.cobblebase.core.Cobblebase
 

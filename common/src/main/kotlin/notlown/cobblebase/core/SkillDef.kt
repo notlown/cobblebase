@@ -1,4 +1,4 @@
-package notlown.cobblebase.skill
+package notlown.cobblebase.core
 
 /**
  * Represents a skill/job definition loaded from JSON.
@@ -21,7 +21,7 @@ package notlown.cobblebase.skill
  *   "icon": "cobblebase:textures/skill/fishing.png"
  * }
  */
-data class Skill(
+data class SkillDef(
     val id: String,
     val name: String,
     val description: String = "",

@@ -1,4 +1,4 @@
-package notlown.cobblebase.skill
+package notlown.cobblebase.core
 
 /**
  * Defines which skills a Pokemon species can perform and at what proficiency.
@@ -28,6 +28,6 @@ data class SpeciesSkills(
 )
 
 data class SkillEntry(
-    val skill: String,
+    val skillId: String,
     val proficiency: Int = 3
 )

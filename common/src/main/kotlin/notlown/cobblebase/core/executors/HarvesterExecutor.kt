@@ -35,7 +35,9 @@ object HarvesterExecutor : SkillExecutor {
 
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
     private val targetBlock = mutableMapOf<UUID, BlockPos>()
+    private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastHarvestTime = mutableMapOf<UUID, Long>()
+    private val NAV_TIMEOUT_TICKS = 100L // 5 seconds - auto-harvest if can't reach
 
     override fun tick(
         world: World,
@@ -65,9 +67,14 @@ object HarvesterExecutor : SkillExecutor {
         val target = targetBlock[pokemonId]
         if (target != null) {
             navigateTo(pokemonEntity, target)
-            if (isNearPosition(pokemonEntity, target)) {
+            val navStarted = targetSetTime[pokemonId] ?: now
+            val timedOut = now - navStarted >= NAV_TIMEOUT_TICKS
+
+            if (isNearPosition(pokemonEntity, target) || timedOut) {
+                // Harvest - either we reached it or timed out (auto-pick)
                 harvest(world, target, pokemonEntity, pokemonId)
                 targetBlock.remove(pokemonId)
+                targetSetTime.remove(pokemonId)
                 lastHarvestTime[pokemonId] = now
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
             }
@@ -75,9 +82,7 @@ object HarvesterExecutor : SkillExecutor {
             val found = findHarvestable(world, origin, skill.searchRadius)
             if (found != null) {
                 targetBlock[pokemonId] = found
-                Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} found harvestable at $found")
-            } else if (now % 100 == 0L) {
-                Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} no harvestable blocks in radius ${skill.searchRadius} from $origin")
+                targetSetTime[pokemonId] = now
             }
         }
     }
@@ -200,10 +205,6 @@ object HarvesterExecutor : SkillExecutor {
     }
 
     private fun isNearPosition(pokemonEntity: PokemonEntity, pos: BlockPos): Boolean {
-        // Wider check: 3 blocks horizontal, 4 blocks vertical (for flying mons and tree apricorns)
-        val dx = pokemonEntity.x - (pos.x + 0.5)
-        val dy = pokemonEntity.y - (pos.y + 0.5)
-        val dz = pokemonEntity.z - (pos.z + 0.5)
-        return dx * dx + dz * dz <= 9.0 && dy * dy <= 16.0
+        return pokemonEntity.blockPos.getSquaredDistance(pos) <= 6.0
     }
 }

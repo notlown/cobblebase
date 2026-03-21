@@ -195,10 +195,15 @@ object HarvesterExecutor : SkillExecutor {
 
     private fun navigateTo(pokemonEntity: PokemonEntity, target: BlockPos) {
         val nav = pokemonEntity.navigation
-        nav.startMovingTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5, 1.0)
+        // Navigate to ground level near the target
+        nav.startMovingTo(target.x + 0.5, (target.y - 1).toDouble(), target.z + 0.5, 1.0)
     }
 
     private fun isNearPosition(pokemonEntity: PokemonEntity, pos: BlockPos): Boolean {
-        return pokemonEntity.blockPos.getSquaredDistance(pos) <= 4.0
+        // Wider check: 3 blocks horizontal, 4 blocks vertical (for flying mons and tree apricorns)
+        val dx = pokemonEntity.x - (pos.x + 0.5)
+        val dy = pokemonEntity.y - (pos.y + 0.5)
+        val dz = pokemonEntity.z - (pos.z + 0.5)
+        return dx * dx + dz * dz <= 9.0 && dy * dy <= 16.0
     }
 }

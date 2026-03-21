@@ -8,6 +8,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.World
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -36,7 +37,7 @@ object HealerExecutor : SkillExecutor {
 
         // Use a short cooldown between heal attempts (every 3 seconds base, adjusted by proficiency)
         val cooldownTicks = if (skill.cooldownSeconds > 0) {
-            computeCooldown(skill, skillEntry)
+            CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         } else {
             60L * (6 - skillEntry.proficiency) / 3 // ~3 seconds at prof 3
         }
@@ -76,9 +77,6 @@ object HealerExecutor : SkillExecutor {
         }
     }
 
-    private fun computeCooldown(skill: SkillDef, entry: SkillEntry): Long {
-        return skill.cooldownSeconds * 20L * (6 - entry.proficiency) / 3
-    }
 
     private fun navigateToPlayer(pokemonEntity: PokemonEntity, player: PlayerEntity) {
         pokemonEntity.navigation.startMovingTo(player.x, player.y, player.z, 1.0)

@@ -13,7 +13,12 @@ object BaseManager {
         val pokemonId: UUID = pokemonEntity.pokemon.uuid
         val speciesName: String = pokemonEntity.pokemon.species.name.lowercase()
 
-        val speciesData: SpeciesSkills = SpeciesSkillRegistry.getSkills(speciesName) ?: return
+        val speciesData: SpeciesSkills = SpeciesSkillRegistry.getSkills(speciesName) ?: run {
+            if (world.time % 100 == 0L) {
+                Cobblebase.LOGGER.info("[Cobblebase] No skills for species='$speciesName' (raw=${pokemonEntity.pokemon.species.name})")
+            }
+            return
+        }
         val assignedSkillId: String? = assignments[pokemonId]
 
         if (assignedSkillId != null) {

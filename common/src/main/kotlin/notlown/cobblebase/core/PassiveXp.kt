@@ -6,36 +6,25 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.world.World
 import java.util.UUID
 
-/**
- * Passive XP for all pastured Pokemon.
- * Default: 125 XP every 60 seconds (about 1 level per in-game day at mid-levels).
- */
 object PassiveXp {
     private val lastXpTick = mutableMapOf<UUID, Long>()
 
-    // Configurable later via config
-    var enabled = true
-    var xpAmount = 250
-    var intervalSeconds = 60L
-
-    private val intervalTicks get() = intervalSeconds * 20L
+    private val intervalTicks get() = CobblebaseConfig.passiveXpIntervalSeconds * 20L
 
     fun tick(world: World, pokemonEntity: PokemonEntity) {
-        if (!enabled) return
+        if (!CobblebaseConfig.passiveXpEnabled) return
 
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
         val lastTime = lastXpTick[pokemonId] ?: now.also { lastXpTick[pokemonId] = it }
 
         if (now - lastTime < intervalTicks) return
-
         lastXpTick[pokemonId] = now
 
         val pokemon = pokemonEntity.pokemon
-        // Skip entirely if at max level to avoid level cap alerts
         if (pokemon.level >= Cobblemon.config.maxPokemonLevel) return
         if (pokemon.canLevelUpFurther()) {
-            pokemon.addExperience(CobblebaseExperienceSource, xpAmount)
+            pokemon.addExperience(CobblebaseExperienceSource, CobblebaseConfig.passiveXpAmount)
         }
     }
 }

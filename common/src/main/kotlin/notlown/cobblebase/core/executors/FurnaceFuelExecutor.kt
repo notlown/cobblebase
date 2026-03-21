@@ -6,6 +6,7 @@ import net.minecraft.block.entity.AbstractFurnaceBlockEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -30,7 +31,7 @@ object FurnaceFuelExecutor : SkillExecutor {
     ) {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
-        val cooldownTicks = computeCooldown(skill, skillEntry)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
 
         // Cooldown check
         val lastTime = lastFuelTime[pokemonId] ?: 0L
@@ -108,9 +109,6 @@ object FurnaceFuelExecutor : SkillExecutor {
         }
     }
 
-    private fun computeCooldown(skill: SkillDef, entry: SkillEntry): Long {
-        return skill.cooldownSeconds * 20L * (6 - entry.proficiency) / 3
-    }
 
     private fun navigateTo(pokemonEntity: PokemonEntity, target: BlockPos) {
         pokemonEntity.navigation.startMovingTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5, 1.0)

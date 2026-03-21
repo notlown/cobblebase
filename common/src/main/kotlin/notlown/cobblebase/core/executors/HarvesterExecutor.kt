@@ -19,6 +19,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -46,7 +47,7 @@ object HarvesterExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
-        val cooldownTicks = computeCooldown(skill, skillEntry)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val items = heldItems[pokemonId]
 
         if (!items.isNullOrEmpty()) {
@@ -63,7 +64,6 @@ object HarvesterExecutor : SkillExecutor {
         // Find a harvestable block
         val target = targetBlock[pokemonId]
         if (target != null) {
-            // Navigate toward target
             navigateTo(pokemonEntity, target)
             if (isNearPosition(pokemonEntity, target)) {
                 harvest(world, target, pokemonEntity, pokemonId)
@@ -75,6 +75,9 @@ object HarvesterExecutor : SkillExecutor {
             val found = findHarvestable(world, origin, skill.searchRadius)
             if (found != null) {
                 targetBlock[pokemonId] = found
+                Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} found harvestable at $found")
+            } else if (now % 100 == 0L) {
+                Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} no harvestable blocks in radius ${skill.searchRadius} from $origin")
             }
         }
     }
@@ -189,10 +192,6 @@ object HarvesterExecutor : SkillExecutor {
         }
     }
 
-    private fun computeCooldown(skill: SkillDef, entry: SkillEntry): Long {
-        if (skill.cooldownSeconds <= 0) return 10L // Minimal tick delay for 0-cooldown harvesters
-        return skill.cooldownSeconds * 20L * (6 - entry.proficiency) / 3
-    }
 
     private fun navigateTo(pokemonEntity: PokemonEntity, target: BlockPos) {
         val nav = pokemonEntity.navigation

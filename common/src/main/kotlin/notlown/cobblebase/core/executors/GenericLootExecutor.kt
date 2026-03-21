@@ -13,6 +13,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
@@ -47,7 +48,10 @@ object GenericLootExecutor : SkillExecutor {
 
         // Cooldown check
         val lastTime = lastLootTime[pokemonId] ?: 0L
-        if (now - lastTime < cooldownTicks) return
+        if (now - lastTime < cooldownTicks) {
+            if (world.time % 20 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            return
+        }
 
         // Generate loot from the skill's loot table
         val lootTableId = skill.lootTable ?: return
@@ -65,6 +69,7 @@ object GenericLootExecutor : SkillExecutor {
         if (drops.isNotEmpty()) {
             lastLootTime[pokemonId] = now
             heldItems[pokemonId] = drops
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
         }
     }
 

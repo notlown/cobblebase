@@ -12,6 +12,7 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
@@ -53,10 +54,16 @@ object FishingExecutor : SkillExecutor {
             waterTarget.remove(pokemonId)
             // At water - check cooldown
             val lastTime = lastGenerationTime[pokemonId] ?: 0L
-            if (now - lastTime < cooldownTicks) return
+            if (now - lastTime < cooldownTicks) {
+                if (world.time % 20 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+                return
+            }
 
             // Generate fishing loot
             generateLoot(world, pokemonEntity, pokemonId, now)
+            if (!heldItems[pokemonId].isNullOrEmpty()) {
+                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            }
         } else {
             // Navigate to water
             val target = waterTarget[pokemonId] ?: findWater(world, origin, skill.searchRadius)

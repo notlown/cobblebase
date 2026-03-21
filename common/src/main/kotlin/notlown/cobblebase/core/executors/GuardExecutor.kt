@@ -14,6 +14,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
@@ -50,7 +51,10 @@ object GuardExecutor : SkillExecutor {
 
         // Cooldown check
         val lastTime = lastGuardTime[pokemonId] ?: 0L
-        if (now - lastTime < cooldownTicks) return
+        if (now - lastTime < cooldownTicks) {
+            if (world.time % 20 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            return
+        }
 
         // Find nearest wild Pokemon within search radius
         val guardRadius = skill.searchRadius.toDouble()
@@ -93,6 +97,7 @@ object GuardExecutor : SkillExecutor {
 
             // Repel the wild Pokemon
             targetMon.discard()
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
         } else {
             navigateTo(pokemonEntity, targetMon.blockPos)
         }

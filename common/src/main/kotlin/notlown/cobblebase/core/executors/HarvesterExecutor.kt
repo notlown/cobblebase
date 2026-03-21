@@ -19,6 +19,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
@@ -68,6 +69,7 @@ object HarvesterExecutor : SkillExecutor {
                 harvest(world, target, pokemonEntity, pokemonId)
                 targetBlock.remove(pokemonId)
                 lastHarvestTime[pokemonId] = now
+                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
             }
         } else {
             val found = findHarvestable(world, origin, skill.searchRadius)

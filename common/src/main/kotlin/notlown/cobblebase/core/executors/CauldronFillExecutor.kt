@@ -6,6 +6,7 @@ import net.minecraft.block.LeveledCauldronBlock
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
@@ -51,6 +52,7 @@ object CauldronFillExecutor : SkillExecutor {
             fillCauldron(world, target, skill)
             lastFillTime[pokemonId] = now
             cauldronTarget.remove(pokemonId)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
         }
     }
 

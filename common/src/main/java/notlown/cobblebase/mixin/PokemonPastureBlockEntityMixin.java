@@ -2,6 +2,7 @@ package notlown.cobblebase.mixin;
 
 import notlown.cobblebase.core.BaseManager;
 import notlown.cobblebase.core.Cobblebase;
+import notlown.cobblebase.core.PassiveXp;
 import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity;
 import com.cobblemon.mod.common.entity.PoseType;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
@@ -37,6 +38,11 @@ public class PokemonPastureBlockEntityMixin {
 
             PokemonEntity pokemonEntity = pokemon.getEntity();
             if (pokemonEntity == null) continue;
+
+            // Passive XP for all pastured Pokemon (even sleeping)
+            try {
+                PassiveXp.INSTANCE.tick(world, pokemonEntity);
+            } catch (Exception ignored) { }
 
             PoseType poseType = pokemonEntity.getDataTracker().get(PokemonEntity.getPOSE_TYPE());
             if (poseType == PoseType.SLEEP) continue;

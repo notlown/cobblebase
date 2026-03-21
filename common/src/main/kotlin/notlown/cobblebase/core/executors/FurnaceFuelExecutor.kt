@@ -6,6 +6,7 @@ import net.minecraft.block.entity.AbstractFurnaceBlockEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
@@ -52,6 +53,7 @@ object FurnaceFuelExecutor : SkillExecutor {
             addFuel(world, target)
             lastFuelTime[pokemonId] = now
             furnaceTarget.remove(pokemonId)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
         }
     }
 

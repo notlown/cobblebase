@@ -157,7 +157,8 @@ class SkillAssignmentScreen(
     }
 
     override fun close() {
-        client?.setScreen(parentScreen)
+        // Close completely instead of returning to parent (avoids PCGUI state issues)
+        client?.setScreen(null)
     }
 
     override fun shouldPause(): Boolean = false

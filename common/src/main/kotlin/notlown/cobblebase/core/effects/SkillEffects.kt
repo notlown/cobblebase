@@ -2,6 +2,7 @@ package notlown.cobblebase.core.effects
 
 import com.cobblemon.mod.common.CobblemonNetwork
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
+import notlown.cobblebase.core.Cobblebase
 import com.cobblemon.mod.common.net.messages.client.animation.PlayPosableAnimationPacket
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.server.network.ServerPlayerEntity
@@ -35,45 +36,43 @@ object SkillEffects {
         val h = pokemonEntity.height.toDouble()
         val z = pokemonEntity.z
 
-        // Cry on every success
-        sendAnimation(world, pokemonEntity, "cry")
-
+        // Cry + attack animation in ONE packet so they don't override each other
         when (effectType) {
             "harvest" -> {
-                sendAnimation(world, pokemonEntity, "tackle", "scratch", "pound", "physical")
+                sendAnimation(world, pokemonEntity, "cry", "tackle", "scratch", "pound", "physical")
                 world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y + h, z, 15, 0.5, 0.3, 0.5, 0.03)
                 world.spawnParticles(ParticleTypes.COMPOSTER, x, y + h * 0.5, z, 10, 0.3, 0.2, 0.3, 0.05)
             }
             "water" -> {
-                sendAnimation(world, pokemonEntity, "watergun", "bubble", "spray", "special")
+                sendAnimation(world, pokemonEntity, "cry", "watergun", "bubble", "spray", "special")
                 world.spawnParticles(ParticleTypes.SPLASH, x, y, z, 40, 0.5, 0.3, 0.5, 0.3)
                 world.spawnParticles(ParticleTypes.FISHING, x, y, z, 15, 0.5, 0.0, 0.5, 0.05)
                 world.spawnParticles(ParticleTypes.BUBBLE_POP, x, y + 0.5, z, 10, 0.3, 0.3, 0.3, 0.05)
             }
             "fire" -> {
-                sendAnimation(world, pokemonEntity, "ember", "flamethrower", "flame", "special")
+                sendAnimation(world, pokemonEntity, "cry", "ember", "flamethrower", "flame", "special")
                 world.spawnParticles(ParticleTypes.FLAME, x, y + h * 0.5, z, 25, 0.4, 0.3, 0.4, 0.05)
                 world.spawnParticles(ParticleTypes.LAVA, x, y + h * 0.3, z, 8, 0.3, 0.2, 0.3, 0.0)
                 world.spawnParticles(ParticleTypes.SMOKE, x, y + h, z, 10, 0.3, 0.2, 0.3, 0.02)
             }
             "combat" -> {
-                sendAnimation(world, pokemonEntity, "tackle", "bite", "crunch", "physical")
+                sendAnimation(world, pokemonEntity, "cry", "tackle", "bite", "crunch", "physical")
                 world.spawnParticles(ParticleTypes.ANGRY_VILLAGER, x, y + h, z, 8, 0.4, 0.3, 0.4, 0.02)
                 world.spawnParticles(ParticleTypes.CRIT, x, y + h * 0.5, z, 15, 0.5, 0.3, 0.5, 0.1)
                 world.spawnParticles(ParticleTypes.SMOKE, x, y, z, 10, 0.4, 0.2, 0.4, 0.03)
             }
             "heal" -> {
-                sendAnimation(world, pokemonEntity, "wish", "special")
+                sendAnimation(world, pokemonEntity, "cry", "wish", "special")
                 world.spawnParticles(ParticleTypes.HEART, x, y + h, z, 10, 0.5, 0.3, 0.5, 0.02)
                 world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y + h * 0.5, z, 15, 0.4, 0.3, 0.4, 0.02)
             }
             "special" -> {
-                sendAnimation(world, pokemonEntity, "special")
+                sendAnimation(world, pokemonEntity, "cry", "special")
                 world.spawnParticles(ParticleTypes.ENCHANT, x, y + h + 0.5, z, 30, 0.5, 0.5, 0.5, 0.8)
                 world.spawnParticles(ParticleTypes.END_ROD, x, y + h, z, 8, 0.3, 0.3, 0.3, 0.02)
             }
             else -> {
-                sendAnimation(world, pokemonEntity, "special", "physical")
+                sendAnimation(world, pokemonEntity, "cry", "special", "physical")
                 world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y + h, z, 12, 0.5, 0.3, 0.5, 0.03)
                 world.spawnParticles(ParticleTypes.ENCHANT, x, y + h + 0.5, z, 20, 0.4, 0.3, 0.4, 0.5)
             }

@@ -48,8 +48,8 @@ object CauldronFillExecutor : SkillExecutor {
             return
         }
 
-        navigateTo(pokemonEntity, target)
-        if (isNearPosition(pokemonEntity, target)) {
+        NavigationHelper.navigateTo(pokemonEntity, target)
+        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target)) {
             fillCauldron(world, target, skill)
             lastFillTime[pokemonId] = now
             cauldronTarget.remove(pokemonId)
@@ -107,11 +107,5 @@ object CauldronFillExecutor : SkillExecutor {
     }
 
 
-    private fun navigateTo(pokemonEntity: PokemonEntity, target: BlockPos) {
-        pokemonEntity.navigation.startMovingTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5, 1.0)
-    }
 
-    private fun isNearPosition(pokemonEntity: PokemonEntity, pos: BlockPos): Boolean {
-        return pokemonEntity.blockPos.getSquaredDistance(pos) <= 4.0
-    }
 }

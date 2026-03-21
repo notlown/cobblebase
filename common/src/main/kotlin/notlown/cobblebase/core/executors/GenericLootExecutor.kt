@@ -78,19 +78,13 @@ object GenericLootExecutor : SkillExecutor {
         val items = heldItems[pokemonId] ?: return
         val chestPos = InventoryHelper.findBestContainer(world, pokemonEntity.blockPos, 10, items) ?: return
 
-        navigateTo(pokemonEntity, chestPos)
-        if (isNearPosition(pokemonEntity, chestPos)) {
+        NavigationHelper.navigateTo(pokemonEntity, chestPos)
+        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)) {
             InventoryHelper.insertItems(world, chestPos, items)
             heldItems.remove(pokemonId)
         }
     }
 
 
-    private fun navigateTo(pokemonEntity: PokemonEntity, target: BlockPos) {
-        pokemonEntity.navigation.startMovingTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5, 1.0)
-    }
 
-    private fun isNearPosition(pokemonEntity: PokemonEntity, pos: BlockPos): Boolean {
-        return pokemonEntity.blockPos.getSquaredDistance(pos) <= 4.0
-    }
 }

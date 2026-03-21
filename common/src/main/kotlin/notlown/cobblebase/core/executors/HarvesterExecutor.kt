@@ -66,11 +66,11 @@ object HarvesterExecutor : SkillExecutor {
         // Find a harvestable block
         val target = targetBlock[pokemonId]
         if (target != null) {
-            navigateTo(pokemonEntity, target)
+            NavigationHelper.navigateTo(pokemonEntity, target)
             val navStarted = targetSetTime[pokemonId] ?: now
             val timedOut = now - navStarted >= NAV_TIMEOUT_TICKS
 
-            if (isNearPosition(pokemonEntity, target) || timedOut) {
+            if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target) || timedOut) {
                 // Harvest - either we reached it or timed out (auto-pick)
                 harvest(world, target, pokemonEntity, pokemonId)
                 targetBlock.remove(pokemonId)
@@ -190,21 +190,13 @@ object HarvesterExecutor : SkillExecutor {
         val items = heldItems[pokemonId] ?: return
         val chestPos = InventoryHelper.findBestContainer(world, pokemonEntity.blockPos, 10, items) ?: return
 
-        navigateTo(pokemonEntity, chestPos)
-        if (isNearPosition(pokemonEntity, chestPos)) {
+        NavigationHelper.navigateTo(pokemonEntity, chestPos)
+        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)) {
             InventoryHelper.insertItems(world, chestPos, items)
             heldItems.remove(pokemonId)
         }
     }
 
 
-    private fun navigateTo(pokemonEntity: PokemonEntity, target: BlockPos) {
-        val nav = pokemonEntity.navigation
-        // Navigate to ground level near the target
-        nav.startMovingTo(target.x + 0.5, (target.y - 1).toDouble(), target.z + 0.5, 1.0)
-    }
 
-    private fun isNearPosition(pokemonEntity: PokemonEntity, pos: BlockPos): Boolean {
-        return pokemonEntity.blockPos.getSquaredDistance(pos) <= 6.0
-    }
 }

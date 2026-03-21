@@ -6,7 +6,7 @@ package notlown.cobblebase.core
  */
 object CobblebaseConfig {
     // Dev mode: reduces all cooldowns to 1 second for testing
-    var devMode = false
+    var devMode = true // TODO: set to false for release
 
     // Passive XP
     var passiveXpEnabled = true

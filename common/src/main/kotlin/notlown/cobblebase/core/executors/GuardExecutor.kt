@@ -68,7 +68,7 @@ object GuardExecutor : SkillExecutor {
 
         val targetMon = wildMons.minByOrNull { it.squaredDistanceTo(pokemonEntity) } ?: return
 
-        if (isNearPosition(pokemonEntity, targetMon.blockPos, 3.0)) {
+        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, targetMon.blockPos, 3.0)) {
             lastGuardTime[pokemonId] = now
 
             val pokemon = pokemonEntity.pokemon
@@ -100,7 +100,7 @@ object GuardExecutor : SkillExecutor {
             targetMon.discard()
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
         } else {
-            navigateTo(pokemonEntity, targetMon.blockPos)
+            NavigationHelper.navigateTo(pokemonEntity, targetMon.blockPos)
         }
     }
 
@@ -108,21 +108,15 @@ object GuardExecutor : SkillExecutor {
         val items = heldItems[pokemonId] ?: return
         val chestPos = InventoryHelper.findBestContainer(world, pokemonEntity.blockPos, 10, items) ?: return
 
-        navigateTo(pokemonEntity, chestPos)
-        if (isNearPosition(pokemonEntity, chestPos, 2.0)) {
+        NavigationHelper.navigateTo(pokemonEntity, chestPos)
+        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos, 2.0)) {
             InventoryHelper.insertItems(world, chestPos, items)
             heldItems.remove(pokemonId)
         }
     }
 
 
-    private fun navigateTo(pokemonEntity: PokemonEntity, target: BlockPos) {
-        pokemonEntity.navigation.startMovingTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5, 1.0)
-    }
 
-    private fun isNearPosition(pokemonEntity: PokemonEntity, pos: BlockPos, range: Double = 2.0): Boolean {
-        return pokemonEntity.blockPos.getSquaredDistance(pos) <= range * range
-    }
 }
 
 /**

@@ -79,10 +79,10 @@ object HealerExecutor : SkillExecutor {
 
 
     private fun navigateToPlayer(pokemonEntity: PokemonEntity, player: PlayerEntity) {
-        pokemonEntity.navigation.startMovingTo(player.x, player.y, player.z, 1.0)
+        NavigationHelper.navigateTo(pokemonEntity, player.blockPos)
     }
 
     private fun isNearPlayer(pokemonEntity: PokemonEntity, player: PlayerEntity): Boolean {
-        return pokemonEntity.squaredDistanceTo(player) <= 9.0 // 3 blocks
+        return NavigationHelper.isPokemonNearPlayer(pokemonEntity, player)
     }
 }

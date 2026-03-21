@@ -28,7 +28,8 @@
     ]
   },
   "mixins": [
-    "cobblebase.mixins.json"
+    "cobblebase.mixins.json",
+    "cobblebase-fabric.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.14",

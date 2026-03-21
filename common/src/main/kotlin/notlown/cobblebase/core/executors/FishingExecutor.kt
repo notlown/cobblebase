@@ -129,7 +129,7 @@ object FishingExecutor : SkillExecutor {
 
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
-        val chestPos = InventoryHelper.findNearestContainer(world, origin, 10) ?: return
+        val chestPos = InventoryHelper.findBestContainer(world, pokemonEntity.blockPos, 10, items) ?: return
 
         navigateTo(pokemonEntity, chestPos)
         if (isNearPosition(pokemonEntity, chestPos)) {

@@ -1,5 +1,6 @@
 package notlown.cobblebase.core
 
+import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.pokemon.experience.ExperienceSource
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.world.World
@@ -14,7 +15,7 @@ object PassiveXp {
 
     // Configurable later via config
     var enabled = true
-    var xpAmount = 125
+    var xpAmount = 250
     var intervalSeconds = 60L
 
     private val intervalTicks get() = intervalSeconds * 20L
@@ -31,6 +32,8 @@ object PassiveXp {
         lastXpTick[pokemonId] = now
 
         val pokemon = pokemonEntity.pokemon
+        // Skip entirely if at max level to avoid level cap alerts
+        if (pokemon.level >= Cobblemon.config.maxPokemonLevel) return
         if (pokemon.canLevelUpFurther()) {
             pokemon.addExperience(CobblebaseExperienceSource, xpAmount)
         }

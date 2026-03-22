@@ -43,16 +43,7 @@ class SkillAssignmentScreen(
         "legendary" to 0xFFFFD700.toInt()
     )
 
-    private data class SkillButton(
-        val pokemonId: UUID,
-        val skillId: String?,
-        val displayName: String,
-        val proficiency: Int,
-        val category: String,
-        var baseX: Int,
-        var baseY: Int,
-        var selected: Boolean
-    )
+    // SkillButton is defined at file level below to avoid ClassLoader issues
 
     private val allButtons = mutableListOf<SkillButton>()
     private var panelX = 0
@@ -233,3 +224,14 @@ class SkillAssignmentScreen(
 
     override fun shouldPause(): Boolean = false
 }
+
+data class SkillButton(
+    val pokemonId: UUID,
+    val skillId: String?,
+    val displayName: String,
+    val proficiency: Int,
+    val category: String,
+    var baseX: Int,
+    var baseY: Int,
+    var selected: Boolean
+)

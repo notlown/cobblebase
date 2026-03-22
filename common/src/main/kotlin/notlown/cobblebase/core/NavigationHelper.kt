@@ -1,4 +1,4 @@
-package notlown.cobblebase.core.executors
+package notlown.cobblebase.core
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.entity.player.PlayerEntity

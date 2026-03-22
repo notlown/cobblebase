@@ -13,6 +13,7 @@ import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
+import notlown.cobblebase.core.NavigationHelper
 import java.util.UUID
 
 /**

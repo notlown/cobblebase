@@ -8,6 +8,7 @@ import notlown.cobblebase.core.executors.GenericLootExecutor
 import notlown.cobblebase.core.executors.GuardExecutor
 import notlown.cobblebase.core.executors.HarvesterExecutor
 import notlown.cobblebase.core.executors.HealerExecutor
+import notlown.cobblebase.core.executors.RecruiterExecutor
 
 /**
  * Maps executor names (from Skill JSON) to executor implementations.
@@ -44,8 +45,8 @@ object ExecutorRegistry {
         register("gather_items", GenericLootExecutor)      // Placeholder: item gatherer
         register("scout", GenericLootExecutor)             // Placeholder: scout creates maps
 
-        // -- Legendary (stubs) --
-        register("recruiter", GenericLootExecutor)         // Placeholder: spawns rare Pokemon
+        // -- Legendary / Fairy --
+        register("recruiter", RecruiterExecutor)           // Spawns rare wild Pokemon nearby
         register("aura", GenericLootExecutor)              // Placeholder: passive aura buff
         register("passive_buff", GenericLootExecutor)      // Placeholder: lucky charm
         register("growth", GenericLootExecutor)            // Placeholder: growth aura

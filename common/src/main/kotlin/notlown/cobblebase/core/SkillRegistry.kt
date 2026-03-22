@@ -47,6 +47,9 @@ object SkillRegistry {
         register(SkillDef("cobblebase:archeologist", "Archeologist", "Digs for fossils and ancient treasures", "gathering", 80, 10, "archeology", "default", "cobblebase:archeology_treasure"))
         register(SkillDef("cobblebase:pickup", "Pick-up", "Finds random loot items", "gathering", 120, 10, "pickup", "default"))
 
+        // -- Fairy --
+        register(SkillDef("cobblebase:friend_recruiter", "Friend Recruiter", "Attracts rare wild Pokemon to appear nearby with charm", "fairy", 300, 15, "recruiter", "special"))
+
         // -- Legendary / Unique --
         register(SkillDef("cobblebase:recruiter", "Recruiter", "Attracts rare wild Pokemon to spawn near your base", "legendary", 600, 20, "recruiter", "special"))
         register(SkillDef("cobblebase:aura_boost", "Aura Boost", "All nearby workers perform jobs faster", "legendary", 0, 15, "aura", "special"))

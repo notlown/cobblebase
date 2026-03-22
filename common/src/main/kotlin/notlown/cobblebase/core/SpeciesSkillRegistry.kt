@@ -116,10 +116,18 @@ object SpeciesSkillRegistry {
 
         // -- Fairy --
         mon("clefairy",     sk("cobblebase:harvester", 2), sk("cobblebase:healer", 2))
-        mon("clefable",     sk("cobblebase:harvester", 3), sk("cobblebase:healer", 3))
-        mon("jigglypuff",   sk("cobblebase:healer", 2))
-        mon("wigglytuff",   sk("cobblebase:healer", 4))
-        mon("sylveon",      sk("cobblebase:healer", 4))
+        mon("clefairy",     sk("cobblebase:friend_recruiter", 3), sk("cobblebase:harvester", 2), sk("cobblebase:healer", 2))
+        mon("clefable",     sk("cobblebase:friend_recruiter", 4), sk("cobblebase:harvester", 3), sk("cobblebase:healer", 3))
+        mon("jigglypuff",   sk("cobblebase:friend_recruiter", 3), sk("cobblebase:healer", 2))
+        mon("wigglytuff",   sk("cobblebase:friend_recruiter", 4), sk("cobblebase:healer", 4))
+        mon("sylveon",      sk("cobblebase:friend_recruiter", 4), sk("cobblebase:healer", 4))
+        mon("togetic",      sk("cobblebase:friend_recruiter", 3), sk("cobblebase:healer", 3))
+        mon("togekiss",     sk("cobblebase:friend_recruiter", 5), sk("cobblebase:healer", 4))
+        mon("gardevoir",    sk("cobblebase:friend_recruiter", 4), sk("cobblebase:healer", 3), sk("cobblebase:gatherer", 3))
+        mon("florges",      sk("cobblebase:friend_recruiter", 4), sk("cobblebase:harvester", 4))
+        mon("primarina",    sk("cobblebase:friend_recruiter", 3), sk("cobblebase:fishing", 3))
+        mon("alcremie",     sk("cobblebase:friend_recruiter", 3), sk("cobblebase:healer", 3))
+        mon("hatterene",    sk("cobblebase:friend_recruiter", 4), sk("cobblebase:healer", 3))
 
         // -- Ghost/Dark --
         mon("gastly",       sk("cobblebase:harvester", 1)) // netherwart

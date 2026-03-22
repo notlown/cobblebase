@@ -22,7 +22,14 @@ object SpawnData {
      * Get the rarity bucket for a species. Defaults to COMMON if unknown.
      */
     fun getBucket(speciesName: String): Bucket {
-        return speciesBucket.getOrPut(speciesName.lowercase()) { Bucket.COMMON }
+        return speciesBucket[speciesName.lowercase()] ?: Bucket.COMMON
+    }
+
+    /**
+     * Check if a species exists in our spawn data (confirmed to exist in Cobblemon).
+     */
+    fun exists(speciesName: String): Boolean {
+        return speciesBucket.containsKey(speciesName.lowercase())
     }
 
     /**

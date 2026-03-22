@@ -3,6 +3,7 @@ package notlown.cobblebase.core.executors
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
+import net.minecraft.entity.SpawnReason
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -87,17 +88,24 @@ object RecruiterExecutor : SkillExecutor {
 
         try {
             val species = PokemonSpecies.getByName(speciesName) ?: return
+
+            // Create a proper wild Pokemon
             val pokemon = Pokemon()
             pokemon.species = species
-
             val baseLevel = pokemonEntity.pokemon.level
             val level = (baseLevel * 0.6 + world.random.nextInt(10) - 5).toInt().coerceIn(5, baseLevel)
             pokemon.level = level
             pokemon.initialize()
 
-            pokemon.sendOut(world, spawnPos.toCenterPos(), null) {
-                Cobblebase.LOGGER.info("[Recruiter] ${pokemonEntity.pokemon.species.name} found a ${bucket.name} $speciesName (Lv.$level) [${chosenType.name}]")
-            }
+            // Spawn as a real wild entity (not sendOut which is for owned Pokemon)
+            val entity = PokemonEntity(world, pokemon)
+            entity.refreshPositionAndAngles(
+                spawnPos.x + 0.5, spawnPos.y.toDouble(), spawnPos.z + 0.5,
+                world.random.nextFloat() * 360f, 0f
+            )
+            world.spawnEntity(entity)
+
+            Cobblebase.LOGGER.info("[Recruiter] ${pokemonEntity.pokemon.species.name} found a ${bucket.name} $speciesName (Lv.$level) [${chosenType.name}]")
 
             // Spawn effects
             val sx = spawnPos.x + 0.5; val sy = spawnPos.y + 1.0; val sz = spawnPos.z + 0.5
@@ -105,10 +113,7 @@ object RecruiterExecutor : SkillExecutor {
             world.spawnParticles(ParticleTypes.END_ROD, sx, sy, sz, 15, 0.4, 0.4, 0.4, 0.03)
             world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, sx, sy + 0.5, sz, 10, 0.3, 0.3, 0.3, 0.02)
 
-            // Cry on recruited mon
-            SkillEffects.sendAnimationPublic(world, pokemonEntity, "cry")
-
-            pokemon.entity?.let { recruitedEntities.add(it.id) }
+            recruitedEntities.add(entity.id)
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
 
             // Notify nearby players
@@ -203,6 +208,8 @@ object RecruiterExecutor : SkillExecutor {
         try {
             for (species in PokemonSpecies.species) {
                 val name = species.name.lowercase()
+                // Only include Pokemon that exist in our spawn CSV (confirmed in Cobblemon)
+                if (!SpawnData.exists(name)) continue
                 for (type in species.types) {
                     map.getOrPut(type.name.lowercase()) { mutableListOf() }.add(name)
                 }

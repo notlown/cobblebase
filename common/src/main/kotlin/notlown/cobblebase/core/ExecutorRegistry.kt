@@ -8,6 +8,7 @@ import notlown.cobblebase.core.executors.GenericLootExecutor
 import notlown.cobblebase.core.executors.GuardExecutor
 import notlown.cobblebase.core.executors.HarvesterExecutor
 import notlown.cobblebase.core.executors.FinderExecutor
+import notlown.cobblebase.core.executors.IrrigatorExecutor
 import notlown.cobblebase.core.executors.HealerExecutor
 import notlown.cobblebase.core.executors.RecruiterExecutor
 
@@ -41,8 +42,8 @@ object ExecutorRegistry {
         // -- Support --
         register("healer", HealerExecutor)
 
-        // -- Utility (stubs - reuse closest matching executor) --
-        register("irrigate", HarvesterExecutor)           // Placeholder: irrigator waters farmland
+        // -- Utility --
+        register("irrigate", IrrigatorExecutor)
         register("extinguish", GenericLootExecutor)        // Placeholder: extinguisher removes fire
         register("gather_items", GenericLootExecutor)      // Placeholder: item gatherer
         register("scout", GenericLootExecutor)             // Placeholder: scout creates maps

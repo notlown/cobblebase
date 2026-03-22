@@ -1,0 +1,7 @@
+{
+  "species": "wishiwashi",
+  "skills": [
+    { "skillId": "cobblebase:irrigator", "proficiency": 3 },
+    { "skillId": "cobblebase:fishing", "proficiency": 2 }
+  ]
+}

@@ -208,3 +208,4 @@ wigglytuff.json
 zigzagoon.json
 zubat.json
 metapod.json
+wishiwashi.json

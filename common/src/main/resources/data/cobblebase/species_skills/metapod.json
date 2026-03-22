@@ -1,0 +1,6 @@
+{
+  "species": "metapod",
+  "skills": [
+    { "skillId": "cobblebase:harvester", "proficiency": 2 }
+  ]
+}

@@ -207,3 +207,4 @@ weezing.json
 wigglytuff.json
 zigzagoon.json
 zubat.json
+metapod.json

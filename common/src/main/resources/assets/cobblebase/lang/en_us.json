@@ -7,7 +7,7 @@
 
   "text.autoconfig.cobblebase.option.passiveXp": "Passive XP",
   "text.autoconfig.cobblebase.option.passiveXp.enabled": "Enabled",
-  "text.autoconfig.cobblebase.option.passiveXp.xpAmount": "XP per interval",
+  "text.autoconfig.cobblebase.option.passiveXp.xpPercent": "XP per interval (% of next level)",
   "text.autoconfig.cobblebase.option.passiveXp.intervalSeconds": "Interval (seconds)",
 
   "text.autoconfig.cobblebase.option.skills": "Skill Toggles",

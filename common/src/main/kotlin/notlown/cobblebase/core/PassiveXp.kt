@@ -35,9 +35,11 @@ object PassiveXp {
         if (now - lastTime < intervalTicks) return
         lastXpTick[pokemonId] = now
 
-        pokemon.addExperience(CobblebaseExperienceSource, CobblebaseConfig.passiveXpAmount)
+        // Percentage-based: give X% of XP needed for next level each tick
+        val xpToNextLevel = pokemon.getExperienceToNextLevel()
+        val xpGain = (xpToNextLevel * CobblebaseConfig.passiveXpPercent / 100.0).toInt().coerceAtLeast(1)
+        pokemon.addExperience(CobblebaseExperienceSource, xpGain)
 
-        // Check if just hit cap after adding XP
         if (pokemon.level >= maxLevel) {
             maxedOut.add(pokemonId)
         }

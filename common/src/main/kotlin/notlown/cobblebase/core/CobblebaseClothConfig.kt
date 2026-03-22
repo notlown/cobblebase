@@ -24,8 +24,8 @@ class CobblebaseClothConfig : ConfigData {
 
     class PassiveXpGroup {
         var enabled = true
-        @ConfigEntry.BoundedDiscrete(min = 10, max = 1000)
-        var xpAmount = 250
+        @ConfigEntry.BoundedDiscrete(min = 1, max = 50)
+        var xpPercent = 5
         var intervalSeconds: Long = 60
     }
 

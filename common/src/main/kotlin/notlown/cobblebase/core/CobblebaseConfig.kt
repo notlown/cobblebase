@@ -10,7 +10,7 @@ object CobblebaseConfig {
 
     // Passive XP
     var passiveXpEnabled = true
-    var passiveXpAmount = 250
+    var passiveXpPercent = 5 // 5% of XP needed for next level per tick
     var passiveXpIntervalSeconds = 60L
 
     // General

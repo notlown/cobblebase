@@ -20,7 +20,7 @@ object CobblebaseConfigBridge {
         CobblebaseConfig.devMode = cfg.general.devMode
         CobblebaseConfig.defaultSearchRadius = cfg.general.defaultSearchRadius
         CobblebaseConfig.passiveXpEnabled = cfg.passiveXp.enabled
-        CobblebaseConfig.passiveXpAmount = cfg.passiveXp.xpAmount
+        CobblebaseConfig.passiveXpPercent = cfg.passiveXp.xpPercent
         CobblebaseConfig.passiveXpIntervalSeconds = cfg.passiveXp.intervalSeconds
     }
 }

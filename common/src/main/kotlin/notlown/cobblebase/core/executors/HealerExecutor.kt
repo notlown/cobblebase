@@ -65,9 +65,9 @@ object HealerExecutor : SkillExecutor {
             return
         }
 
-        // Cooldown
+        // Cooldown - first heal triggers immediately (lastTime defaults to 0, not now)
         val cooldownTicks = if (CobblebaseConfig.devMode) 100L else 180L * 20L
-        val lastTime = lastHealTime[pokemonId] ?: now.also { lastHealTime[pokemonId] = now }
+        val lastTime = lastHealTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) {
             if (now % 40 == 0L) {
                 SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
@@ -147,8 +147,12 @@ object HealerExecutor : SkillExecutor {
         if (player.health < player.maxHealth) return true
         try {
             val party = Cobblemon.storage.getParty(player)
-            return party.any { it.isFainted() || it.currentHealth < it.maxHealth }
-        } catch (_: Exception) { return false }
+            val needsHeal = party.any { it.isFainted() || it.currentHealth < it.maxHealth }
+            return needsHeal
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.error("[Healer] Error checking party: ${e.message}")
+            return false
+        }
     }
 
     private fun selectMonsToHeal(player: ServerPlayerEntity, count: Int): List<Pokemon> {

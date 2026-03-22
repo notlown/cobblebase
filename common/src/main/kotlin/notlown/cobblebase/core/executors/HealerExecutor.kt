@@ -15,15 +15,13 @@ import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
 
 /**
- * Healer executor: gives regeneration effect to nearby players that need healing.
- * Navigates to injured players and applies regeneration on arrival.
+ * Healer: navigates to injured players and gives regeneration.
+ * Duration and amplifier scale with proficiency.
+ * Only heals players that are missing HP and don't already have regen.
  */
 object HealerExecutor : SkillExecutor {
 
     private val lastHealTime = mutableMapOf<UUID, Long>()
-    private val playerTarget = mutableMapOf<UUID, UUID>()
-    private const val REGEN_DURATION_SECONDS = 10
-    private const val REGEN_AMPLIFIER = 0
 
     override fun tick(
         world: World,
@@ -35,13 +33,8 @@ object HealerExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
-        // Use a short cooldown between heal attempts (every 3 seconds base, adjusted by proficiency)
-        val cooldownTicks = if (skill.cooldownSeconds > 0) {
-            CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
-        } else {
-            60L * (6 - skillEntry.proficiency) / 3 // ~3 seconds at prof 3
-        }
-
+        // Cooldown between heals: ~5 seconds at prof 3
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(5, skillEntry.proficiency)
         val lastTime = lastHealTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) return
 
@@ -49,40 +42,30 @@ object HealerExecutor : SkillExecutor {
         val radius = skill.searchRadius.toDouble()
         val searchBox = Box.of(origin.toCenterPos(), radius * 2, radius * 2, radius * 2)
         val nearbyPlayers = world.getEntitiesByClass(PlayerEntity::class.java, searchBox) { true }
-        if (nearbyPlayers.isEmpty()) {
-            playerTarget.remove(pokemonId)
-            return
-        }
 
-        // Find closest player who needs healing
-        val closestPlayer = nearbyPlayers
-            .filter { !it.hasStatusEffect(StatusEffects.REGENERATION) && it.health < it.maxHealth }
+        // Find closest player that needs healing (missing HP + no regen)
+        val target = nearbyPlayers
+            .filter { it.health < it.maxHealth && !it.hasStatusEffect(StatusEffects.REGENERATION) }
             .minByOrNull { it.squaredDistanceTo(pokemonEntity.pos) }
             ?: return
 
-        // Navigate to the player
-        navigateToPlayer(pokemonEntity, closestPlayer)
+        // Navigate to player
+        NavigationHelper.navigateTo(pokemonEntity, target.blockPos)
 
-        if (isNearPlayer(pokemonEntity, closestPlayer)) {
-            closestPlayer.addStatusEffect(
+        if (NavigationHelper.isPokemonNearPlayer(pokemonEntity, target)) {
+            // Proficiency affects duration and amplifier
+            val regenSeconds = 10 + (skillEntry.proficiency * 4) // 14s at prof1, 30s at prof5
+            val amplifier = if (skillEntry.proficiency >= 4) 1 else 0 // Regen II at prof 4+
+
+            target.addStatusEffect(
                 StatusEffectInstance(
                     StatusEffects.REGENERATION,
-                    REGEN_DURATION_SECONDS * 20,
-                    REGEN_AMPLIFIER
+                    regenSeconds * 20,
+                    amplifier
                 )
             )
             lastHealTime[pokemonId] = now
-            playerTarget.remove(pokemonId)
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
         }
-    }
-
-
-    private fun navigateToPlayer(pokemonEntity: PokemonEntity, player: PlayerEntity) {
-        NavigationHelper.navigateTo(pokemonEntity, player.blockPos)
-    }
-
-    private fun isNearPlayer(pokemonEntity: PokemonEntity, player: PlayerEntity): Boolean {
-        return NavigationHelper.isPokemonNearPlayer(pokemonEntity, player)
     }
 }

@@ -18,6 +18,12 @@ object CobblebaseConfig {
     var friendRecruiterCooldownSeconds = 300L
     var legendaryRecruiterCooldownSeconds = 600L
 
+    // Recruiter spawn rates (base rates at proficiency 1, scale up to 2x at proficiency 5)
+    var recruiterCommonRate = 93.8
+    var recruiterUncommonRate = 5.0
+    var recruiterRareRate = 1.0
+    var recruiterUltraRareRate = 0.2
+
     /**
      * Returns the effective cooldown in ticks, respecting dev mode.
      */

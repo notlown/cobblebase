@@ -24,5 +24,9 @@ object CobblebaseConfigBridge {
         CobblebaseConfig.passiveXpIntervalSeconds = cfg.passiveXp.intervalSeconds
         CobblebaseConfig.friendRecruiterCooldownSeconds = cfg.skills.friendRecruiterCooldownSeconds.toLong()
         CobblebaseConfig.legendaryRecruiterCooldownSeconds = cfg.skills.legendaryRecruiterCooldownSeconds.toLong()
+        CobblebaseConfig.recruiterCommonRate = cfg.recruiterRates.commonRate
+        CobblebaseConfig.recruiterUncommonRate = cfg.recruiterRates.uncommonRate
+        CobblebaseConfig.recruiterRareRate = cfg.recruiterRates.rareRate
+        CobblebaseConfig.recruiterUltraRareRate = cfg.recruiterRates.ultraRareRate
     }
 }

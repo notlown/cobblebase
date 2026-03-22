@@ -19,5 +19,11 @@
   "text.autoconfig.cobblebase.option.skills.generationEnabled": "Generation skills (lava, water, fuel)",
   "text.autoconfig.cobblebase.option.skills.utilityEnabled": "Utility skills (scout, irrigator, etc.)",
   "text.autoconfig.cobblebase.option.skills.friendRecruiterCooldownSeconds": "Friend Recruiter cooldown (seconds)",
-  "text.autoconfig.cobblebase.option.skills.legendaryRecruiterCooldownSeconds": "Legendary Recruiter cooldown (seconds)"
+  "text.autoconfig.cobblebase.option.skills.legendaryRecruiterCooldownSeconds": "Legendary Recruiter cooldown (seconds)",
+
+  "text.autoconfig.cobblebase.option.recruiterRates": "Recruiter Spawn Rates (base at Proficiency 1)",
+  "text.autoconfig.cobblebase.option.recruiterRates.commonRate": "Common rate (%)",
+  "text.autoconfig.cobblebase.option.recruiterRates.uncommonRate": "Uncommon rate (%)",
+  "text.autoconfig.cobblebase.option.recruiterRates.rareRate": "Rare rate (%)",
+  "text.autoconfig.cobblebase.option.recruiterRates.ultraRareRate": "Ultra-Rare rate (%)"
 }

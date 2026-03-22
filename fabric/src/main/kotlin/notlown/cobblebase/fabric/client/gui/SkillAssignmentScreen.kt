@@ -73,6 +73,7 @@ class SkillAssignmentScreen(
             val currentAssignment = BaseManager.getAssignment(pokemonId)
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
+            println("[CobblebaseGUI] species='$speciesName' found=${speciesSkills != null} skills=${availableSkills.size}")
 
             val rowY = contentY + index * ROW_HEIGHT
             var btnX = panelX + PANEL_PADDING + NAME_WIDTH

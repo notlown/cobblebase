@@ -42,4 +42,14 @@ class CobblebaseClothConfig : ConfigData {
         @ConfigEntry.BoundedDiscrete(min = 60, max = 3600)
         var legendaryRecruiterCooldownSeconds = 600
     }
+
+    @ConfigEntry.Gui.CollapsibleObject
+    var recruiterRates = RecruiterRatesGroup()
+
+    class RecruiterRatesGroup {
+        var commonRate = 93.8
+        var uncommonRate = 5.0
+        var rareRate = 1.0
+        var ultraRareRate = 0.2
+    }
 }

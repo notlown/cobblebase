@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import com.cobblemon.mod.common.block.ApricornBlock
+import com.cobblemon.mod.common.block.BerryBlock
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -120,6 +121,13 @@ object HarvesterExecutor : SkillExecutor {
             } catch (_: Exception) { false }
         }
 
+        // Cobblemon berries
+        if (block is BerryBlock) {
+            return try {
+                state.get(BerryBlock.AGE) >= BerryBlock.FRUIT_AGE
+            } catch (_: Exception) { false }
+        }
+
         // Vanilla crops (wheat, carrots, potatoes, beetroot)
         if (block is CropBlock) {
             return block.isMature(state)
@@ -147,6 +155,18 @@ object HarvesterExecutor : SkillExecutor {
             val drops = getBlockDrops(world, pos, state, pokemonEntity)
             if (drops.isNotEmpty()) heldItems[pokemonId] = drops
             world.setBlockState(pos, state.with(ApricornBlock.AGE, 0), Block.NOTIFY_ALL)
+            return
+        }
+
+        if (block is BerryBlock) {
+            // Cobblemon berry: get drops, reset age to 0
+            val drops = getBlockDrops(world, pos, state, pokemonEntity)
+            if (drops.isNotEmpty()) heldItems[pokemonId] = drops
+            try {
+                world.setBlockState(pos, state.with(BerryBlock.AGE, 0), Block.NOTIFY_ALL)
+            } catch (_: Exception) {
+                world.setBlockState(pos, block.defaultState, Block.NOTIFY_ALL)
+            }
             return
         }
 

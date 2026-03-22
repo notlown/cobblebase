@@ -95,31 +95,27 @@ object FinderExecutor : SkillExecutor {
     }
 
     /**
-     * Higher proficiency = much better loot tables selected more often.
-     * Prof 1: mostly common (pokeballs, seeds)
-     * Prof 5: mostly rare (evo stones, held items, exp candy)
+     * 4 tiers: Common, Uncommon, Rare, Ultra Rare.
+     * Higher proficiency shifts the distribution toward rarer tiers.
+     *
+     * Prof 1: Common 80%, Uncommon 15%, Rare 4%, Ultra Rare 1%
+     * Prof 2: Common 65%, Uncommon 25%, Rare 8%, Ultra Rare 2%
+     * Prof 3: Common 50%, Uncommon 30%, Rare 15%, Ultra Rare 5%
+     * Prof 4: Common 30%, Uncommon 35%, Rare 25%, Ultra Rare 10%
+     * Prof 5: Common 15%, Uncommon 30%, Rare 35%, Ultra Rare 20%
      */
     private fun pickLootTable(world: World, proficiency: Int): String {
         val roll = world.random.nextInt(100)
 
-        // Rare item chance scales steeply: Prof1=5%, Prof2=15%, Prof3=30%, Prof4=50%, Prof5=70%
-        val rareChance = proficiency * proficiency * 3 - proficiency + 3 // 5, 15, 30, 47, 70 roughly
+        val ultraRare = when (proficiency) { 1->1; 2->2; 3->5; 4->10; else->20 }
+        val rare = when (proficiency) { 1->4; 2->8; 3->15; 4->25; else->35 }
+        val uncommon = when (proficiency) { 1->15; 2->25; 3->30; 4->35; else->30 }
 
-        return if (roll < rareChance) {
-            // Rare pool
-            when (world.random.nextInt(3)) {
-                0 -> "cobblemon:sets/any_evo_stone"
-                1 -> "cobblemon:sets/any_ancient_held_item"
-                else -> "cobblemon:sets/any_exp_candy"
-            }
-        } else {
-            // Common pool
-            when (world.random.nextInt(4)) {
-                0 -> "cobblemon:sets/any_common_pokeball"
-                1 -> "cobblemon:sets/any_natural_heal_item"
-                2 -> "cobblemon:sets/any_type_gem"
-                else -> "cobblemon:sets/any_apricorn_seed"
-            }
+        return when {
+            roll < ultraRare -> "cobblebase:finder_ultra_rare"
+            roll < ultraRare + rare -> "cobblebase:finder_rare"
+            roll < ultraRare + rare + uncommon -> "cobblebase:finder_uncommon"
+            else -> "cobblebase:finder_common"
         }
     }
 }

@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:great_ball", "weight": 8, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 2 } }] },
+        { "type": "minecraft:item", "name": "cobblemon:ultra_ball", "weight": 4 },
+        { "type": "minecraft:item", "name": "cobblemon:timer_ball", "weight": 3 },
+        { "type": "minecraft:item", "name": "cobblemon:quick_ball", "weight": 3 },
+        { "type": "minecraft:item", "name": "cobblemon:fine_remedy", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:revival_herb", "weight": 3 },
+        { "type": "minecraft:item", "name": "cobblemon:leppa_berry", "weight": 4 },
+        { "type": "minecraft:item", "name": "cobblemon:lum_berry", "weight": 3 },
+        { "type": "minecraft:item", "name": "cobblemon:sitrus_berry", "weight": 4, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 3 } }] },
+        { "type": "minecraft:item", "name": "cobblemon:exp_candy_xs", "weight": 6, "functions": [{ "function": "set_count", "count": { "min": 2, "max": 4 } }] },
+        { "type": "minecraft:item", "name": "cobblemon:exp_candy_s", "weight": 3 },
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_type_gem", "weight": 8 },
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_apricorn_seed", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:green_mint_seeds", "weight": 2 },
+        { "type": "minecraft:item", "name": "cobblemon:pink_mint_seeds", "weight": 2 },
+        { "type": "minecraft:item", "name": "cobblemon:white_mint_seeds", "weight": 2 }
+      ]
+    }
+  ]
+}

@@ -68,12 +68,7 @@ object HealerExecutor : SkillExecutor {
         // Cooldown - first heal triggers immediately (lastTime defaults to 0, not now)
         val cooldownTicks = if (CobblebaseConfig.devMode) 100L else 180L * 20L
         val lastTime = lastHealTime[pokemonId] ?: 0L
-        if (now - lastTime < cooldownTicks) {
-            if (now % 40 == 0L) {
-                SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
-            }
-            return
-        }
+        if (now - lastTime < cooldownTicks) return
 
         // Find player that needs healing
         val radius = skill.searchRadius.toDouble()
@@ -124,17 +119,16 @@ object HealerExecutor : SkillExecutor {
             session.targetPlayer.heal(missing / session.ticksRemaining.coerceAtLeast(1))
         }
 
-        // Heal/revive team mons (33% per pulse)
+        // Heal/revive team mons (33% -> 66% -> 100% over 3 pulses)
         for (mon in session.monsToHeal) {
-            if (mon.isFainted()) {
-                // Revive: bring to 33% -> 66% -> 100% over 3 pulses
-                val targetHp = mon.maxHealth * (4 - session.ticksRemaining) / 3
-                mon.currentHealth = targetHp.coerceAtLeast(1)
-            } else {
-                // Heal: fill missing HP in 3 steps
-                val targetHp = mon.maxHealth * (4 - session.ticksRemaining) / 3
-                if (mon.currentHealth < targetHp) {
-                    mon.currentHealth = targetHp.coerceAtMost(mon.maxHealth)
+            val targetHp = mon.maxHealth * (4 - session.ticksRemaining) / 3
+            mon.currentHealth = targetHp.coerceIn(1, mon.maxHealth)
+
+            // On final pulse: full PokéCenter heal (status + PP)
+            if (session.ticksRemaining == 1) {
+                mon.status = null
+                for (move in mon.moveSet.getMoves()) {
+                    move.currentPp = move.maxPp
                 }
             }
         }
@@ -147,8 +141,12 @@ object HealerExecutor : SkillExecutor {
         if (player.health < player.maxHealth) return true
         try {
             val party = Cobblemon.storage.getParty(player)
-            val needsHeal = party.any { it.isFainted() || it.currentHealth < it.maxHealth }
-            return needsHeal
+            return party.any { mon ->
+                mon.isFainted() ||
+                mon.currentHealth < mon.maxHealth ||
+                mon.status != null ||
+                mon.moveSet.getMoves().any { it.currentPp < it.maxPp }
+            }
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Healer] Error checking party: ${e.message}")
             return false
@@ -158,13 +156,18 @@ object HealerExecutor : SkillExecutor {
     private fun selectMonsToHeal(player: ServerPlayerEntity, count: Int): List<Pokemon> {
         try {
             val party = Cobblemon.storage.getParty(player)
-            // Fainted first, then most injured
+            // Fainted first, then most injured, then status/PP issues
             val fainted = party.filter { it.isFainted() }
-            val injured = party.filter { !it.isFainted() && it.currentHealth < it.maxHealth }
-                .sortedBy { it.currentHealth.toFloat() / it.maxHealth.toFloat() }
+            val needsHeal = party.filter { mon ->
+                !mon.isFainted() && (
+                    mon.currentHealth < mon.maxHealth ||
+                    mon.status != null ||
+                    mon.moveSet.getMoves().any { it.currentPp < it.maxPp }
+                )
+            }.sortedBy { it.currentHealth.toFloat() / it.maxHealth.toFloat() }
 
             val result = mutableListOf<Pokemon>()
-            for (mon in fainted + injured) {
+            for (mon in fainted + needsHeal) {
                 if (result.size >= count) break
                 result.add(mon)
             }

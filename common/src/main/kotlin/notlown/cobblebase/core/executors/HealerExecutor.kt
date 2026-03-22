@@ -40,8 +40,8 @@ object HealerExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
-        // Cooldown: 30 seconds base, slightly reduced by proficiency
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(30, skillEntry.proficiency)
+        // Fixed 3 minute cooldown for all proficiency levels
+        val cooldownTicks = if (CobblebaseConfig.devMode) 100L else 180L * 20L
         val lastTime = lastHealTime[pokemonId] ?: now.also { lastHealTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
             if (now % 40 == 0L) {

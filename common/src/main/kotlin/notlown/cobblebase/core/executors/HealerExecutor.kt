@@ -2,8 +2,6 @@ package notlown.cobblebase.core.executors
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -48,12 +46,12 @@ object HealerExecutor : SkillExecutor {
 
         // Find injured players
         val injuredPlayers = world.getEntitiesByClass(PlayerEntity::class.java, searchBox) {
-            it.health < it.maxHealth && !it.hasStatusEffect(StatusEffects.REGENERATION)
+            it.health < it.maxHealth
         }
 
         // Find injured or fainted Pokemon (not the healer itself)
         val needsHealPokemon = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) {
-            it != pokemonEntity && it.isAlive && !it.hasStatusEffect(StatusEffects.REGENERATION) &&
+            it != pokemonEntity && it.isAlive &&
             (it.pokemon.isFainted() || it.health < it.maxHealth)
         }
 
@@ -73,23 +71,35 @@ object HealerExecutor : SkillExecutor {
         NavigationHelper.navigateTo(pokemonEntity, target.blockPos)
 
         if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target.blockPos, 2.0)) {
-            val regenSeconds = 10 + (skillEntry.proficiency * 4)
-            val amplifier = if (skillEntry.proficiency >= 4) 1 else 0
-
-            if (target is PokemonEntity && target.pokemon.isFainted()) {
-                // Revive: set HP to 50% then apply regen
-                val maxHp = target.pokemon.maxHealth
-                target.pokemon.currentHealth = maxHp / 2
-                target.heal(target.maxHealth * 0.5f)
+            // Heal percentage scales with proficiency:
+            // Prof 1: 5%, Prof 2: 8%, Prof 3: 12%, Prof 4: 18%, Prof 5: 25%
+            val healPercent = when (skillEntry.proficiency) {
+                1 -> 0.05f
+                2 -> 0.08f
+                3 -> 0.12f
+                4 -> 0.18f
+                5 -> 0.25f
+                else -> 0.05f
             }
 
-            target.addStatusEffect(
-                StatusEffectInstance(
-                    StatusEffects.REGENERATION,
-                    regenSeconds * 20,
-                    amplifier
-                )
-            )
+            if (target is PokemonEntity && target.pokemon.isFainted()) {
+                // Revive: set HP to healPercent then apply heal
+                val maxHp = target.pokemon.maxHealth
+                target.pokemon.currentHealth = (maxHp * healPercent).toInt().coerceAtLeast(1)
+                target.health = target.maxHealth * healPercent
+            } else {
+                // Direct heal: X% of max HP instantly
+                val healAmount = target.maxHealth * healPercent
+                target.heal(healAmount)
+
+                // Also heal Cobblemon HP if it's a Pokemon
+                if (target is PokemonEntity) {
+                    val newHp = (target.pokemon.currentHealth + (target.pokemon.maxHealth * healPercent).toInt())
+                        .coerceAtMost(target.pokemon.maxHealth)
+                    target.pokemon.currentHealth = newHp
+                }
+            }
+
             lastHealTime[pokemonId] = now
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
         }

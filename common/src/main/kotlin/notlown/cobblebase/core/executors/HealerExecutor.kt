@@ -3,7 +3,6 @@ package notlown.cobblebase.core.executors
 import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -17,18 +16,27 @@ import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
 
 /**
- * Healer: navigates to nearby player and fully heals + revives their team Pokemon.
- * Also heals the player's HP.
+ * Healer: navigates to player, heals team in 3 visual ticks (1 sec apart).
+ * Each tick heals 33% -> 66% -> 100% and plays cry + heart particles.
  *
- * Prof 1: heals/revives 1 Pokemon + player
- * Prof 2: heals/revives 2 Pokemon + player
- * Prof 3: heals/revives 3 Pokemon + player
- * Prof 4: heals/revives 4 Pokemon + player
- * Prof 5: heals/revives entire team (6) + player
+ * Prof determines how many mons get healed per cycle:
+ * Prof 1: 1 mon, Prof 2: 2, Prof 3: 3, Prof 4: 4, Prof 5: all 6
+ * Fixed 3 minute cooldown for all proficiency levels.
  */
 object HealerExecutor : SkillExecutor {
 
     private val lastHealTime = mutableMapOf<UUID, Long>()
+
+    // Active healing state: healer UUID -> HealingSession
+    private val activeSessions = mutableMapOf<UUID, HealingSession>()
+
+    private class HealingSession(
+        val targetPlayer: ServerPlayerEntity,
+        val monsToHeal: List<Pokemon>,
+        val healPlayerHp: Boolean,
+        var ticksRemaining: Int = 3, // 3 pulses
+        var nextPulseTick: Long = 0
+    )
 
     override fun tick(
         world: World,
@@ -40,7 +48,23 @@ object HealerExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
-        // Fixed 3 minute cooldown for all proficiency levels
+        // Active healing session - do the 3-pulse animation
+        val session = activeSessions[pokemonId]
+        if (session != null) {
+            if (now >= session.nextPulseTick) {
+                doPulse(world, pokemonEntity, session)
+                session.ticksRemaining--
+                session.nextPulseTick = now + 20L // next pulse in 1 second
+
+                if (session.ticksRemaining <= 0) {
+                    activeSessions.remove(pokemonId)
+                    lastHealTime[pokemonId] = now
+                }
+            }
+            return
+        }
+
+        // Cooldown
         val cooldownTicks = if (CobblebaseConfig.devMode) 100L else 180L * 20L
         val lastTime = lastHealTime[pokemonId] ?: now.also { lastHealTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
@@ -50,10 +74,10 @@ object HealerExecutor : SkillExecutor {
             return
         }
 
+        // Find player that needs healing
         val radius = skill.searchRadius.toDouble()
         val searchBox = Box.of(origin.toCenterPos(), radius * 2, radius * 2, radius * 2)
 
-        // Find nearest player that needs healing (team has fainted/injured mons OR player is injured)
         val target = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
             .filter { playerNeedsHealing(it) }
             .minByOrNull { it.squaredDistanceTo(pokemonEntity.pos) }
@@ -63,13 +87,51 @@ object HealerExecutor : SkillExecutor {
         NavigationHelper.navigateTo(pokemonEntity, target.blockPos)
 
         if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target.blockPos, 3.0)) {
-            val monsToHeal = if (skillEntry.proficiency >= 5) 6 else skillEntry.proficiency
+            // Start healing session
+            val monsCount = if (skillEntry.proficiency >= 5) 6 else skillEntry.proficiency
+            val monsToHeal = selectMonsToHeal(target, monsCount)
+            val healPlayer = target.health < target.maxHealth
 
-            healPlayer(target, monsToHeal)
-            lastHealTime[pokemonId] = now
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
-            Cobblebase.LOGGER.info("[Healer] ${pokemonEntity.pokemon.species.name} healed ${target.name.string}'s team ($monsToHeal mons)")
+            if (monsToHeal.isNotEmpty() || healPlayer) {
+                activeSessions[pokemonId] = HealingSession(
+                    targetPlayer = target,
+                    monsToHeal = monsToHeal,
+                    healPlayerHp = healPlayer,
+                    ticksRemaining = 3,
+                    nextPulseTick = now
+                )
+                Cobblebase.LOGGER.info("[Healer] ${pokemonEntity.pokemon.species.name} starting heal on ${target.name.string} (${monsToHeal.size} mons)")
+            }
         }
+    }
+
+    /**
+     * One heal pulse: heals 33% of each mon's missing HP and plays effects.
+     */
+    private fun doPulse(world: World, healer: PokemonEntity, session: HealingSession) {
+        // Heal player HP (33% per pulse = 100% after 3)
+        if (session.healPlayerHp) {
+            val missing = session.targetPlayer.maxHealth - session.targetPlayer.health
+            session.targetPlayer.heal(missing / session.ticksRemaining.coerceAtLeast(1))
+        }
+
+        // Heal/revive team mons (33% per pulse)
+        for (mon in session.monsToHeal) {
+            if (mon.isFainted()) {
+                // Revive: bring to 33% -> 66% -> 100% over 3 pulses
+                val targetHp = mon.maxHealth * (4 - session.ticksRemaining) / 3
+                mon.currentHealth = targetHp.coerceAtLeast(1)
+            } else {
+                // Heal: fill missing HP in 3 steps
+                val targetHp = mon.maxHealth * (4 - session.ticksRemaining) / 3
+                if (mon.currentHealth < targetHp) {
+                    mon.currentHealth = targetHp.coerceAtMost(mon.maxHealth)
+                }
+            }
+        }
+
+        // Visual: cry + heart particles every pulse
+        SkillEffects.playSuccess(world, healer, "heal")
     }
 
     private fun playerNeedsHealing(player: ServerPlayerEntity): Boolean {
@@ -80,29 +142,20 @@ object HealerExecutor : SkillExecutor {
         } catch (_: Exception) { return false }
     }
 
-    private fun healPlayer(player: ServerPlayerEntity, monsToHeal: Int) {
-        // Heal the player fully
-        player.health = player.maxHealth
-
-        // Heal/revive team Pokemon
+    private fun selectMonsToHeal(player: ServerPlayerEntity, count: Int): List<Pokemon> {
         try {
             val party = Cobblemon.storage.getParty(player)
-
-            // Fainted first, then injured, up to monsToHeal count
+            // Fainted first, then most injured
             val fainted = party.filter { it.isFainted() }
             val injured = party.filter { !it.isFainted() && it.currentHealth < it.maxHealth }
+                .sortedBy { it.currentHealth.toFloat() / it.maxHealth.toFloat() }
 
-            var healed = 0
-            for (mon in fainted) {
-                if (healed >= monsToHeal) break
-                mon.currentHealth = mon.maxHealth
-                healed++
+            val result = mutableListOf<Pokemon>()
+            for (mon in fainted + injured) {
+                if (result.size >= count) break
+                result.add(mon)
             }
-            for (mon in injured) {
-                if (healed >= monsToHeal) break
-                mon.currentHealth = mon.maxHealth
-                healed++
-            }
-        } catch (_: Exception) { }
+            return result
+        } catch (_: Exception) { return emptyList() }
     }
 }

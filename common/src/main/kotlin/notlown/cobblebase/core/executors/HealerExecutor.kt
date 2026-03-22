@@ -3,7 +3,6 @@ package notlown.cobblebase.core.executors
 import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
-import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.math.BlockPos
@@ -18,8 +17,14 @@ import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
 
 /**
- * Healer: heals players, Pokemon entities, AND revives fainted team Pokemon.
- * Priority: 1. Fainted team Pokemon, 2. Injured entities (lowest HP%)
+ * Healer: navigates to nearby player and fully heals + revives their team Pokemon.
+ * Also heals the player's HP.
+ *
+ * Prof 1: heals/revives 1 Pokemon + player
+ * Prof 2: heals/revives 2 Pokemon + player
+ * Prof 3: heals/revives 3 Pokemon + player
+ * Prof 4: heals/revives 4 Pokemon + player
+ * Prof 5: heals/revives entire team (6) + player
  */
 object HealerExecutor : SkillExecutor {
 
@@ -35,7 +40,8 @@ object HealerExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(5, skillEntry.proficiency)
+        // Cooldown: 30 seconds base, slightly reduced by proficiency
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(30, skillEntry.proficiency)
         val lastTime = lastHealTime[pokemonId] ?: now.also { lastHealTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
             if (now % 40 == 0L) {
@@ -47,125 +53,56 @@ object HealerExecutor : SkillExecutor {
         val radius = skill.searchRadius.toDouble()
         val searchBox = Box.of(origin.toCenterPos(), radius * 2, radius * 2, radius * 2)
 
-        // Find nearby players
-        val nearbyPlayers = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
+        // Find nearest player that needs healing (team has fainted/injured mons OR player is injured)
+        val target = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
+            .filter { playerNeedsHealing(it) }
+            .minByOrNull { it.squaredDistanceTo(pokemonEntity.pos) }
+            ?: return
 
-        // PRIORITY 1: Check team Pokemon of nearby players for fainted mons
-        for (player in nearbyPlayers) {
-            val faintedMon = findFaintedTeamPokemon(player)
-            if (faintedMon != null) {
-                // Navigate to the player (the fainted mon is in their team, not in the world)
-                NavigationHelper.navigateTo(pokemonEntity, player.blockPos)
-
-                if (NavigationHelper.isPokemonAtPosition(pokemonEntity, player.blockPos, 3.0)) {
-                    reviveTeamPokemon(faintedMon, skillEntry.proficiency)
-                    lastHealTime[pokemonId] = now
-                    SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
-                    Cobblebase.LOGGER.info("[Healer] ${pokemonEntity.pokemon.species.name} revived ${faintedMon.species.name} for ${player.name.string}")
-                }
-                return
-            }
-        }
-
-        // PRIORITY 2: Heal injured players
-        val injuredPlayer = nearbyPlayers
-            .filter { it.health < it.maxHealth }
-            .minByOrNull { it.health / it.maxHealth }
-
-        // PRIORITY 3: Heal injured Pokemon entities in the world
-        val injuredMon = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) {
-            it != pokemonEntity && it.isAlive && it.health < it.maxHealth
-        }.minByOrNull { it.health / it.maxHealth }
-
-        // Also check team Pokemon that are injured but not fainted
-        var injuredTeamMon: Pokemon? = null
-        var injuredTeamPlayer: ServerPlayerEntity? = null
-        for (player in nearbyPlayers) {
-            val mon = findInjuredTeamPokemon(player)
-            if (mon != null) {
-                injuredTeamMon = mon
-                injuredTeamPlayer = player
-                break
-            }
-        }
-
-        // Pick the best target
-        val target: LivingEntity? = listOfNotNull(injuredPlayer, injuredMon)
-            .minByOrNull { it.health / it.maxHealth }
-
-        // Compare world entity target vs team Pokemon
-        if (injuredTeamMon != null && injuredTeamPlayer != null) {
-            val teamHpPercent = injuredTeamMon.currentHealth.toFloat() / injuredTeamMon.maxHealth.toFloat()
-            val entityHpPercent = target?.let { it.health / it.maxHealth } ?: 1f
-
-            if (teamHpPercent < entityHpPercent) {
-                // Heal team Pokemon instead
-                NavigationHelper.navigateTo(pokemonEntity, injuredTeamPlayer.blockPos)
-                if (NavigationHelper.isPokemonAtPosition(pokemonEntity, injuredTeamPlayer.blockPos, 3.0)) {
-                    healTeamPokemon(injuredTeamMon, skillEntry.proficiency)
-                    lastHealTime[pokemonId] = now
-                    SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
-                }
-                return
-            }
-        }
-
-        if (target == null) return
-
-        // Heal world entity
+        // Navigate to player
         NavigationHelper.navigateTo(pokemonEntity, target.blockPos)
 
-        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target.blockPos, 2.0)) {
-            val healPercent = getHealPercent(skillEntry.proficiency)
-            val healAmount = target.maxHealth * healPercent
-            target.heal(healAmount)
+        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target.blockPos, 3.0)) {
+            val monsToHeal = if (skillEntry.proficiency >= 5) 6 else skillEntry.proficiency
 
-            if (target is PokemonEntity) {
-                val newHp = (target.pokemon.currentHealth + (target.pokemon.maxHealth * healPercent).toInt())
-                    .coerceAtMost(target.pokemon.maxHealth)
-                target.pokemon.currentHealth = newHp
-            }
-
+            healPlayer(target, monsToHeal)
             lastHealTime[pokemonId] = now
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            Cobblebase.LOGGER.info("[Healer] ${pokemonEntity.pokemon.species.name} healed ${target.name.string}'s team ($monsToHeal mons)")
         }
     }
 
-    private fun findFaintedTeamPokemon(player: ServerPlayerEntity): Pokemon? {
+    private fun playerNeedsHealing(player: ServerPlayerEntity): Boolean {
+        if (player.health < player.maxHealth) return true
         try {
             val party = Cobblemon.storage.getParty(player)
-            return party.firstOrNull { it.isFainted() }
-        } catch (_: Exception) { return null }
+            return party.any { it.isFainted() || it.currentHealth < it.maxHealth }
+        } catch (_: Exception) { return false }
     }
 
-    private fun findInjuredTeamPokemon(player: ServerPlayerEntity): Pokemon? {
+    private fun healPlayer(player: ServerPlayerEntity, monsToHeal: Int) {
+        // Heal the player fully
+        player.health = player.maxHealth
+
+        // Heal/revive team Pokemon
         try {
             val party = Cobblemon.storage.getParty(player)
-            return party.filter { !it.isFainted() && it.currentHealth < it.maxHealth }
-                .minByOrNull { it.currentHealth.toFloat() / it.maxHealth.toFloat() }
-        } catch (_: Exception) { return null }
-    }
 
-    private fun reviveTeamPokemon(pokemon: Pokemon, proficiency: Int) {
-        val healPercent = getHealPercent(proficiency)
-        val newHp = (pokemon.maxHealth * healPercent).toInt().coerceAtLeast(1)
-        pokemon.currentHealth = newHp
-    }
+            // Fainted first, then injured, up to monsToHeal count
+            val fainted = party.filter { it.isFainted() }
+            val injured = party.filter { !it.isFainted() && it.currentHealth < it.maxHealth }
 
-    private fun healTeamPokemon(pokemon: Pokemon, proficiency: Int) {
-        val healPercent = getHealPercent(proficiency)
-        val healAmount = (pokemon.maxHealth * healPercent).toInt()
-        pokemon.currentHealth = (pokemon.currentHealth + healAmount).coerceAtMost(pokemon.maxHealth)
-    }
-
-    private fun getHealPercent(proficiency: Int): Float {
-        return when (proficiency) {
-            1 -> 0.05f
-            2 -> 0.08f
-            3 -> 0.12f
-            4 -> 0.18f
-            5 -> 0.25f
-            else -> 0.05f
-        }
+            var healed = 0
+            for (mon in fainted) {
+                if (healed >= monsToHeal) break
+                mon.currentHealth = mon.maxHealth
+                healed++
+            }
+            for (mon in injured) {
+                if (healed >= monsToHeal) break
+                mon.currentHealth = mon.maxHealth
+                healed++
+            }
+        } catch (_: Exception) { }
     }
 }

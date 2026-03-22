@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:healer",
+  "name": "Healer",
+  "description": "Heals nearby players with regeneration",
+  "category": "support",
+  "cooldownSeconds": 0,
+  "searchRadius": 10,
+  "executor": "healer",
+  "effectType": "heal"
+}

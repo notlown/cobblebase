@@ -1,0 +1,9 @@
+{
+  "species": "glaceon",
+  "skills": [
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 4
+    }
+  ]
+}

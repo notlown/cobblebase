@@ -1,0 +1,9 @@
+{
+  "species": "boldore",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

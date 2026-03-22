@@ -1,0 +1,21 @@
+{
+  "species": "arceus",
+  "skills": [
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 5
+    }
+  ]
+}

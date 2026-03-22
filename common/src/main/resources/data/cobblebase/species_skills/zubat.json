@@ -1,0 +1,9 @@
+{
+  "species": "zubat",
+  "skills": [
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 1
+    }
+  ]
+}

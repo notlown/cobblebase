@@ -1,0 +1,13 @@
+{
+  "species": "scyther",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    }
+  ]
+}

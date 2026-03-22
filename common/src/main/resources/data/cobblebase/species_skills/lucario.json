@@ -1,0 +1,13 @@
+{
+  "species": "lucario",
+  "skills": [
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    }
+  ]
+}

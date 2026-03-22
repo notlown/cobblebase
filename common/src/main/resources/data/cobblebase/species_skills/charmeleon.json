@@ -1,0 +1,21 @@
+{
+  "species": "charmeleon",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:lava_fill",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "species": "ninetales",
+  "skills": [
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:lava_fill",
+      "proficiency": 3
+    }
+  ]
+}

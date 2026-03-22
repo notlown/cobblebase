@@ -1,0 +1,9 @@
+{
+  "species": "igglybuff",
+  "skills": [
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 1
+    }
+  ]
+}

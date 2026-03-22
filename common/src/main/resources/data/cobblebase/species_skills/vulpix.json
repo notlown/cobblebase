@@ -1,0 +1,9 @@
+{
+  "species": "vulpix",
+  "skills": [
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 2
+    }
+  ]
+}

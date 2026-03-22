@@ -1,0 +1,17 @@
+{
+  "species": "gyarados",
+  "skills": [
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
+    }
+  ]
+}

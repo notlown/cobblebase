@@ -1,0 +1,12 @@
+{
+  "id": "cobblebase:guard",
+  "name": "Guard",
+  "description": "Repels wild Pokemon, earns XP or loot",
+  "category": "combat",
+  "cooldownSeconds": 120,
+  "searchRadius": 10,
+  "executor": "guard",
+  "effectType": "combat",
+  "lootTable": "cobblebase:guard_loot",
+  "xpReward": 50
+}

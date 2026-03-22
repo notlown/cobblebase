@@ -1,0 +1,13 @@
+{
+  "species": "spearow",
+  "skills": [
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 1
+    }
+  ]
+}

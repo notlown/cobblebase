@@ -1,0 +1,9 @@
+{
+  "species": "bellsprout",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    }
+  ]
+}

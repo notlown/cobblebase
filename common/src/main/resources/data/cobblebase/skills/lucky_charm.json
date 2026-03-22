@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:lucky_charm",
+  "name": "Lucky Charm",
+  "description": "Increases loot quality for all workers",
+  "category": "legendary",
+  "cooldownSeconds": 0,
+  "searchRadius": 15,
+  "executor": "passive_buff",
+  "effectType": "special"
+}

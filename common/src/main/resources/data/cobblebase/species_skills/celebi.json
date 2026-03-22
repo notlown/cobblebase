@@ -1,0 +1,13 @@
+{
+  "species": "celebi",
+  "skills": [
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 5
+    }
+  ]
+}

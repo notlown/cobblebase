@@ -1,0 +1,21 @@
+{
+  "species": "clefairy",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

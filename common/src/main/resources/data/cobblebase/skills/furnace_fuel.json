@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:furnace_fuel",
+  "name": "Furnace Fuel",
+  "description": "Adds fuel to furnaces",
+  "category": "generation",
+  "cooldownSeconds": 80,
+  "searchRadius": 10,
+  "executor": "furnace_fuel",
+  "effectType": "fire"
+}

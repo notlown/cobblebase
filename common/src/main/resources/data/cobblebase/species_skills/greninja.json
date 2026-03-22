@@ -1,0 +1,21 @@
+{
+  "species": "greninja",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

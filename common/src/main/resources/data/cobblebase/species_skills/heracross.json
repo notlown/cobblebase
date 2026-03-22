@@ -1,0 +1,17 @@
+{
+  "species": "heracross",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

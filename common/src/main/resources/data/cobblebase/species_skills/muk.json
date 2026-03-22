@@ -1,0 +1,13 @@
+{
+  "species": "muk",
+  "skills": [
+    {
+      "skillId": "cobblebase:extinguisher",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    }
+  ]
+}

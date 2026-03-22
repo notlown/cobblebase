@@ -1,0 +1,13 @@
+{
+  "species": "growlithe",
+  "skills": [
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 2
+    }
+  ]
+}

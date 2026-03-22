@@ -1,0 +1,9 @@
+{
+  "species": "grimer",
+  "skills": [
+    {
+      "skillId": "cobblebase:extinguisher",
+      "proficiency": 2
+    }
+  ]
+}

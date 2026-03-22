@@ -1,0 +1,13 @@
+{
+  "species": "magmortar",
+  "skills": [
+    {
+      "skillId": "cobblebase:lava_fill",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 4
+    }
+  ]
+}

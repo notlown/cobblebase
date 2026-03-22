@@ -1,0 +1,13 @@
+{
+  "species": "espeon",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    }
+  ]
+}

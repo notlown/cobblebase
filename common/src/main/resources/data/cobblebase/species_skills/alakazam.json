@@ -1,0 +1,13 @@
+{
+  "species": "alakazam",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    }
+  ]
+}

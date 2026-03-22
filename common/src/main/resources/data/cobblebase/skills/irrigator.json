@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:irrigator",
+  "name": "Irrigator",
+  "description": "Hydrates nearby farmland",
+  "category": "utility",
+  "cooldownSeconds": 0,
+  "searchRadius": 10,
+  "executor": "irrigate",
+  "effectType": "water"
+}

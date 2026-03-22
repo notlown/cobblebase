@@ -1,0 +1,9 @@
+{
+  "species": "caterpie",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 1
+    }
+  ]
+}

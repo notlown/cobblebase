@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:honey_collect",
+  "name": "Honey Collect",
+  "description": "Collects honey from beehives",
+  "category": "gathering",
+  "cooldownSeconds": 120,
+  "searchRadius": 10,
+  "executor": "honey",
+  "effectType": "harvest"
+}

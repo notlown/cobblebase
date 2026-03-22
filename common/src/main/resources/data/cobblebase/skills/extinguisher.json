@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:extinguisher",
+  "name": "Extinguisher",
+  "description": "Puts out nearby fires",
+  "category": "utility",
+  "cooldownSeconds": 0,
+  "searchRadius": 10,
+  "executor": "extinguish",
+  "effectType": "water"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "cobblebase:fishing",
+  "name": "Fishing",
+  "description": "Catches fish from nearby water",
+  "category": "gathering",
+  "cooldownSeconds": 60,
+  "searchRadius": 10,
+  "executor": "fishing",
+  "effectType": "water",
+  "lootTable": "minecraft:gameplay/fishing",
+  "targetBlock": "minecraft:water",
+  "requiresNearby": true
+}

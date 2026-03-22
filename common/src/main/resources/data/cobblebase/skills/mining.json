@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:mining",
+  "name": "Mining",
+  "description": "Harvests amethyst and tumblestone",
+  "category": "gathering",
+  "cooldownSeconds": 0,
+  "searchRadius": 10,
+  "executor": "mining",
+  "effectType": "harvest"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "cobblebase:archeologist",
+  "name": "Archeologist",
+  "description": "Digs for fossils and ancient treasures",
+  "category": "gathering",
+  "cooldownSeconds": 80,
+  "searchRadius": 10,
+  "executor": "archeology",
+  "effectType": "default",
+  "lootTable": "cobblebase:archeology_treasure"
+}

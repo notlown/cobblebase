@@ -1,0 +1,13 @@
+{
+  "species": "combee",
+  "skills": [
+    {
+      "skillId": "cobblebase:honey_collect",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 1
+    }
+  ]
+}

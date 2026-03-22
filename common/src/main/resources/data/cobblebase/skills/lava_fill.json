@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:lava_fill",
+  "name": "Lava Fill",
+  "description": "Fills cauldrons with lava",
+  "category": "generation",
+  "cooldownSeconds": 90,
+  "searchRadius": 10,
+  "executor": "cauldron_fill",
+  "effectType": "fire"
+}

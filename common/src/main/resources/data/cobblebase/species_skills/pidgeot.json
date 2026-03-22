@@ -1,0 +1,9 @@
+{
+  "species": "pidgeot",
+  "skills": [
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 5
+    }
+  ]
+}

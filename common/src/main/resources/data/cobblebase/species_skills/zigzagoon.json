@@ -1,0 +1,9 @@
+{
+  "species": "zigzagoon",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

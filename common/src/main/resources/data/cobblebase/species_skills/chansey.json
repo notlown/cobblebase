@@ -1,0 +1,9 @@
+{
+  "species": "chansey",
+  "skills": [
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 4
+    }
+  ]
+}

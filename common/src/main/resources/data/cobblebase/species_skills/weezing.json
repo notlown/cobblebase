@@ -1,0 +1,9 @@
+{
+  "species": "weezing",
+  "skills": [
+    {
+      "skillId": "cobblebase:brew_fuel",
+      "proficiency": 4
+    }
+  ]
+}

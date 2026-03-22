@@ -1,0 +1,17 @@
+{
+  "species": "serperior",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

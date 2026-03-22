@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:snow_fill",
+  "name": "Snow Fill",
+  "description": "Fills cauldrons with powder snow",
+  "category": "generation",
+  "cooldownSeconds": 90,
+  "searchRadius": 10,
+  "executor": "cauldron_fill",
+  "effectType": "water"
+}

@@ -1,0 +1,13 @@
+{
+  "species": "articuno",
+  "skills": [
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 5
+    }
+  ]
+}

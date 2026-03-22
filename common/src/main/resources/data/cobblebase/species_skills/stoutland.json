@@ -1,0 +1,9 @@
+{
+  "species": "stoutland",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 5
+    }
+  ]
+}

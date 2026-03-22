@@ -1,0 +1,21 @@
+{
+  "species": "gardevoir",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

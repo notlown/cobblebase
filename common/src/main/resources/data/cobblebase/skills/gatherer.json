@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:gatherer",
+  "name": "Item Gatherer",
+  "description": "Picks up items on the ground",
+  "category": "utility",
+  "cooldownSeconds": 0,
+  "searchRadius": 10,
+  "executor": "gather_items",
+  "effectType": "default"
+}

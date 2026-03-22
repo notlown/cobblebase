@@ -1,0 +1,13 @@
+{
+  "species": "leafeon",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 3
+    }
+  ]
+}

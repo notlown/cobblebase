@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:aura_boost",
+  "name": "Aura Boost",
+  "description": "All nearby workers perform jobs faster",
+  "category": "legendary",
+  "cooldownSeconds": 0,
+  "searchRadius": 15,
+  "executor": "aura",
+  "effectType": "special"
+}

@@ -1,0 +1,9 @@
+{
+  "species": "herdier",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

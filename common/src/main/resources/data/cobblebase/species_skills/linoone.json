@@ -1,0 +1,9 @@
+{
+  "species": "linoone",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 4
+    }
+  ]
+}

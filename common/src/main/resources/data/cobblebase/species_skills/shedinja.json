@@ -1,0 +1,9 @@
+{
+  "species": "shedinja",
+  "skills": [
+    {
+      "skillId": "cobblebase:archeologist",
+      "proficiency": 3
+    }
+  ]
+}

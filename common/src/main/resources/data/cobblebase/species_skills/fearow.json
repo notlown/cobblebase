@@ -1,0 +1,13 @@
+{
+  "species": "fearow",
+  "skills": [
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "species": "onix",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:archeologist",
+      "proficiency": 2
+    }
+  ]
+}

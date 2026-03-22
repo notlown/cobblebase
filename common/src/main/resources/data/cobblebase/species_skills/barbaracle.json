@@ -1,0 +1,13 @@
+{
+  "species": "barbaracle",
+  "skills": [
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    }
+  ]
+}

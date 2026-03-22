@@ -1,0 +1,13 @@
+{
+  "species": "jirachi",
+  "skills": [
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 4
+    }
+  ]
+}

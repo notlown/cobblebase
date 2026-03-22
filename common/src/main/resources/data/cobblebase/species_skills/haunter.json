@@ -1,0 +1,13 @@
+{
+  "species": "haunter",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    }
+  ]
+}

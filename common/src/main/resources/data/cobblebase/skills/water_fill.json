@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:water_fill",
+  "name": "Water Fill",
+  "description": "Fills cauldrons with water",
+  "category": "generation",
+  "cooldownSeconds": 90,
+  "searchRadius": 10,
+  "executor": "cauldron_fill",
+  "effectType": "water"
+}

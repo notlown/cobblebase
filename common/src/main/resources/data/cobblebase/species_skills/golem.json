@@ -1,0 +1,13 @@
+{
+  "species": "golem",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    }
+  ]
+}

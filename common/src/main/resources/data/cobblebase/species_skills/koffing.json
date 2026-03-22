@@ -1,0 +1,9 @@
+{
+  "species": "koffing",
+  "skills": [
+    {
+      "skillId": "cobblebase:brew_fuel",
+      "proficiency": 2
+    }
+  ]
+}

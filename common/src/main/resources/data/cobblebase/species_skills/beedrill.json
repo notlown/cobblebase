@@ -1,0 +1,17 @@
+{
+  "species": "beedrill",
+  "skills": [
+    {
+      "skillId": "cobblebase:honey_collect",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    }
+  ]
+}

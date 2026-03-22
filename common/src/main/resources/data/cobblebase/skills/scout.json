@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:scout",
+  "name": "Scout",
+  "description": "Creates explorer maps to structures",
+  "category": "utility",
+  "cooldownSeconds": 80,
+  "searchRadius": 10,
+  "executor": "scout",
+  "effectType": "default"
+}

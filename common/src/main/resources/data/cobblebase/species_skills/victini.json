@@ -1,0 +1,13 @@
+{
+  "species": "victini",
+  "skills": [
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 3
+    }
+  ]
+}

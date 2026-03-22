@@ -1,0 +1,13 @@
+{
+  "species": "vileplume",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    }
+  ]
+}

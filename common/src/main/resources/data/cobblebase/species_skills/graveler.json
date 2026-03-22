@@ -1,0 +1,9 @@
+{
+  "species": "graveler",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

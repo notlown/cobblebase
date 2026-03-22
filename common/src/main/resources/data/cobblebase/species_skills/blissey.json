@@ -1,0 +1,13 @@
+{
+  "species": "blissey",
+  "skills": [
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

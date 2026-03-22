@@ -1,0 +1,17 @@
+{
+  "species": "manaphy",
+  "skills": [
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 3
+    }
+  ]
+}

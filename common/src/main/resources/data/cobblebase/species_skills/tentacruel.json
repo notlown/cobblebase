@@ -1,0 +1,13 @@
+{
+  "species": "tentacruel",
+  "skills": [
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 4
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "hitmonchan",
+  "skills": [
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    }
+  ]
+}

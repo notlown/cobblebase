@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:finder",
+  "name": "Finder",
+  "description": "Searches the area for rare items and treasures",
+  "category": "gathering",
+  "cooldownSeconds": 240,
+  "searchRadius": 10,
+  "executor": "finder",
+  "effectType": "default"
+}

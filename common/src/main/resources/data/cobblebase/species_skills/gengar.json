@@ -1,0 +1,13 @@
+{
+  "species": "gengar",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    }
+  ]
+}

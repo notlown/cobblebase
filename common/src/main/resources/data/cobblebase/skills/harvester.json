@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:harvester",
+  "name": "Harvester",
+  "description": "Harvests crops, berries, apricorns, mints, netherwart, and more",
+  "category": "gathering",
+  "cooldownSeconds": 0,
+  "searchRadius": 10,
+  "executor": "harvester",
+  "effectType": "harvest"
+}

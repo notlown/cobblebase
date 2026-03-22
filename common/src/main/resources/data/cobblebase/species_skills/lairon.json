@@ -1,0 +1,9 @@
+{
+  "species": "lairon",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

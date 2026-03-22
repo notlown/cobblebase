@@ -1,0 +1,13 @@
+{
+  "species": "persian",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    }
+  ]
+}

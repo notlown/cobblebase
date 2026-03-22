@@ -1,0 +1,13 @@
+{
+  "species": "tropius",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "oddish",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 1
+    }
+  ]
+}

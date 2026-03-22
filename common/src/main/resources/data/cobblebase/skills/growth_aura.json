@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:growth_aura",
+  "name": "Growth Aura",
+  "description": "Crops and berries grow faster nearby",
+  "category": "legendary",
+  "cooldownSeconds": 0,
+  "searchRadius": 10,
+  "executor": "growth",
+  "effectType": "special"
+}

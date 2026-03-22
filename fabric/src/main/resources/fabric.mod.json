@@ -25,6 +25,9 @@
         "value": "notlown.cobblebase.fabric.client.CobblebaseFabricClient",
         "adapter": "kotlin"
       }
+    ],
+    "modmenu": [
+      "notlown.cobblebase.fabric.client.CobblebaseModMenu"
     ]
   },
   "mixins": [

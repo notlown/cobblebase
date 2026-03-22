@@ -9,6 +9,7 @@ object Cobblebase {
 
     fun init() {
         LOGGER.info("Launching Cobblebase...")
+        CobblebaseConfigBridge.init()
         SkillRegistry.init()
         ExecutorRegistry.init()
         SpeciesSkillRegistry.init()

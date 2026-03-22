@@ -1,0 +1,21 @@
+{
+  "text.autoconfig.cobblebase.title": "Cobblebase Settings",
+
+  "text.autoconfig.cobblebase.option.general": "General",
+  "text.autoconfig.cobblebase.option.general.devMode": "Dev Mode (5s cooldowns for testing)",
+  "text.autoconfig.cobblebase.option.general.defaultSearchRadius": "Default search radius",
+
+  "text.autoconfig.cobblebase.option.passiveXp": "Passive XP",
+  "text.autoconfig.cobblebase.option.passiveXp.enabled": "Enabled",
+  "text.autoconfig.cobblebase.option.passiveXp.xpAmount": "XP per interval",
+  "text.autoconfig.cobblebase.option.passiveXp.intervalSeconds": "Interval (seconds)",
+
+  "text.autoconfig.cobblebase.option.skills": "Skill Toggles",
+  "text.autoconfig.cobblebase.option.skills.harvestingEnabled": "Harvesting skills",
+  "text.autoconfig.cobblebase.option.skills.fishingEnabled": "Fishing skills",
+  "text.autoconfig.cobblebase.option.skills.guardEnabled": "Guard skills",
+  "text.autoconfig.cobblebase.option.skills.healingEnabled": "Healing skills",
+  "text.autoconfig.cobblebase.option.skills.recruitingEnabled": "Recruiting skills",
+  "text.autoconfig.cobblebase.option.skills.generationEnabled": "Generation skills (lava, water, fuel)",
+  "text.autoconfig.cobblebase.option.skills.utilityEnabled": "Utility skills (scout, irrigator, etc.)"
+}

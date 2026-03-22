@@ -63,7 +63,7 @@ object RecruiterExecutor : SkillExecutor {
             CobblebaseConfig.friendRecruiterCooldownSeconds
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency)
 
-        val lastTime = lastRecruitTime[pokemonId] ?: 0L
+        val lastTime = lastRecruitTime[pokemonId] ?: now.also { lastRecruitTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
             if (now % 40 == 0L) {
                 SkillEffects.playWorking(world, pokemonEntity, skill.effectType)

@@ -1,32 +1,34 @@
 package notlown.cobblebase.core
 
+import me.shedaniel.autoconfig.AutoConfig
+
 /**
- * Simple config holder. Will be replaced with Cloth Config later.
- * For now values are set here and can be toggled via dev mode.
+ * Direct access to config values. Reads from ClothConfig holder every time.
+ * Changes in the settings menu apply immediately - no sync needed.
  */
 object CobblebaseConfig {
-    // Dev mode: reduces all cooldowns to 1 second for testing
-    var devMode = false
 
-    // Passive XP
-    var passiveXpEnabled = true
-    var passiveXpPercent = 5 // 5% of XP needed for next level per tick
-    var passiveXpIntervalSeconds = 60L
+    private val holder get() = AutoConfig.getConfigHolder(CobblebaseClothConfig::class.java).config
 
     // General
-    var defaultSearchRadius = 10
-    var friendRecruiterCooldownSeconds = 300L
-    var legendaryRecruiterCooldownSeconds = 600L
+    val devMode get() = holder.general.devMode
+    val defaultSearchRadius get() = holder.general.defaultSearchRadius
 
-    // Recruiter spawn rates (base rates at proficiency 1, scale up to 2x at proficiency 5)
-    var recruiterCommonRate = 93.8
-    var recruiterUncommonRate = 5.0
-    var recruiterRareRate = 1.0
-    var recruiterUltraRareRate = 0.2
+    // Passive XP
+    val passiveXpEnabled get() = holder.passiveXp.enabled
+    val passiveXpPercent get() = holder.passiveXp.xpPercent
+    val passiveXpIntervalSeconds get() = holder.passiveXp.intervalSeconds
 
-    /**
-     * Returns the effective cooldown in ticks, respecting dev mode.
-     */
+    // Skills
+    val friendRecruiterCooldownSeconds get() = holder.recruiterRates.spawnCooldownSeconds.toLong()
+    val legendaryRecruiterCooldownSeconds get() = holder.skills.legendaryRecruiterCooldownSeconds.toLong()
+
+    // Recruiter rates
+    val recruiterCommonRate get() = holder.recruiterRates.commonRate
+    val recruiterUncommonRate get() = holder.recruiterRates.uncommonRate
+    val recruiterRareRate get() = holder.recruiterRates.rareRate
+    val recruiterUltraRareRate get() = holder.recruiterRates.ultraRareRate
+
     fun getEffectiveCooldownTicks(baseCooldownSeconds: Long, proficiency: Int): Long {
         if (devMode) return 100L // 5 seconds in dev mode
         if (baseCooldownSeconds <= 0) return 10L

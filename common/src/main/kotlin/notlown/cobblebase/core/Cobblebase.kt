@@ -1,5 +1,7 @@
 package notlown.cobblebase.core
 
+import me.shedaniel.autoconfig.AutoConfig
+import me.shedaniel.autoconfig.serializer.GsonConfigSerializer
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -9,7 +11,7 @@ object Cobblebase {
 
     fun init() {
         LOGGER.info("Launching Cobblebase...")
-        CobblebaseConfigBridge.init()
+        AutoConfig.register(CobblebaseClothConfig::class.java, ::GsonConfigSerializer)
         SkillRegistry.init()
         ExecutorRegistry.init()
         SpeciesSkillRegistry.init()
@@ -20,8 +22,7 @@ object Cobblebase {
         try {
             val stream = Cobblebase::class.java.getResourceAsStream("/data/cobblebase/spawn_buckets.csv")
             if (stream != null) {
-                val csv = stream.bufferedReader().readText()
-                SpawnData.loadFromCsv(csv)
+                SpawnData.loadFromCsv(stream.bufferedReader().readText())
             } else {
                 LOGGER.warn("[Cobblebase] spawn_buckets.csv not found in resources")
             }

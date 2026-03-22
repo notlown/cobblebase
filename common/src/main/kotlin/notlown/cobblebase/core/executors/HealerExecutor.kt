@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
@@ -15,9 +16,9 @@ import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
 
 /**
- * Healer: navigates to injured players and gives regeneration.
+ * Healer: navigates to injured players AND Pokemon and gives regeneration.
+ * Prioritizes whoever has the lowest HP percentage.
  * Duration and amplifier scale with proficiency.
- * Only heals players that are missing HP and don't already have regen.
  */
 object HealerExecutor : SkillExecutor {
 
@@ -33,7 +34,6 @@ object HealerExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
-        // Cooldown between heals: ~5 seconds at prof 3
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(5, skillEntry.proficiency)
         val lastTime = lastHealTime[pokemonId] ?: now.also { lastHealTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
@@ -43,24 +43,35 @@ object HealerExecutor : SkillExecutor {
             return
         }
 
-        // Find nearby players who need healing
         val radius = skill.searchRadius.toDouble()
         val searchBox = Box.of(origin.toCenterPos(), radius * 2, radius * 2, radius * 2)
-        val nearbyPlayers = world.getEntitiesByClass(PlayerEntity::class.java, searchBox) { true }
 
-        // Find closest player that needs healing (missing HP + no regen)
-        val target = nearbyPlayers
-            .filter { it.health < it.maxHealth && !it.hasStatusEffect(StatusEffects.REGENERATION) }
-            .minByOrNull { it.squaredDistanceTo(pokemonEntity.pos) }
+        // Find injured players
+        val injuredPlayers = world.getEntitiesByClass(PlayerEntity::class.java, searchBox) {
+            it.health < it.maxHealth && !it.hasStatusEffect(StatusEffects.REGENERATION)
+        }
+
+        // Find injured Pokemon (not the healer itself, not fainted)
+        val injuredPokemon = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) {
+            it != pokemonEntity && it.health < it.maxHealth && it.isAlive &&
+            !it.hasStatusEffect(StatusEffects.REGENERATION)
+        }
+
+        // Pick the target with the lowest HP percentage (players and Pokemon together)
+        val allTargets = mutableListOf<LivingEntity>()
+        allTargets.addAll(injuredPlayers)
+        allTargets.addAll(injuredPokemon)
+
+        val target = allTargets
+            .minByOrNull { it.health / it.maxHealth }
             ?: return
 
-        // Navigate to player
+        // Navigate to target
         NavigationHelper.navigateTo(pokemonEntity, target.blockPos)
 
-        if (NavigationHelper.isPokemonNearPlayer(pokemonEntity, target)) {
-            // Proficiency affects duration and amplifier
-            val regenSeconds = 10 + (skillEntry.proficiency * 4) // 14s at prof1, 30s at prof5
-            val amplifier = if (skillEntry.proficiency >= 4) 1 else 0 // Regen II at prof 4+
+        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target.blockPos, 2.0)) {
+            val regenSeconds = 10 + (skillEntry.proficiency * 4)
+            val amplifier = if (skillEntry.proficiency >= 4) 1 else 0
 
             target.addStatusEffect(
                 StatusEffectInstance(

@@ -45,7 +45,7 @@ class SkillAssignmentScreen(
 
     // SkillButton is defined at file level below to avoid ClassLoader issues
 
-    private val allButtons = mutableListOf<SkillButton>()
+    private val allButtons = mutableListOf<SkillButtonData>()
     private var panelX = 0
     private var panelY = 0
     private var panelW = 0
@@ -79,12 +79,12 @@ class SkillAssignmentScreen(
             var btnX = panelX + PANEL_PADDING + NAME_WIDTH
 
             // Auto button
-            allButtons.add(SkillButton(pokemonId, null, "Auto", 0, "", btnX, rowY, currentAssignment == null))
+            allButtons.add(SkillButtonData(pokemonId, null, "Auto", 0, "", btnX, rowY, currentAssignment == null))
             btnX += BTN_WIDTH + BTN_GAP
 
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
-                allButtons.add(SkillButton(
+                allButtons.add(SkillButtonData(
                     pokemonId, entry.skillId, skillDef.name, entry.proficiency,
                     skillDef.category, btnX, rowY, currentAssignment == entry.skillId
                 ))
@@ -225,14 +225,4 @@ class SkillAssignmentScreen(
 
     override fun shouldPause(): Boolean = false
 }
-
-data class SkillButton(
-    val pokemonId: UUID,
-    val skillId: String?,
-    val displayName: String,
-    val proficiency: Int,
-    val category: String,
-    var baseX: Int,
-    var baseY: Int,
-    var selected: Boolean
-)
+// SkillButtonData is defined in SkillButtonData.java to avoid Fabric ClassLoader issues

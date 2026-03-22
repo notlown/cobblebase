@@ -96,7 +96,7 @@ object RecruiterExecutor : SkillExecutor {
             pokemon.initialize()
 
             pokemon.sendOut(world, spawnPos.toCenterPos(), null) {
-                Cobblebase.LOGGER.info("[Recruiter] ${pokemonEntity.pokemon.species.name} recruited a ${bucket.name} $speciesName (Lv.$level) [${chosenType.name}]")
+                Cobblebase.LOGGER.info("[Recruiter] ${pokemonEntity.pokemon.species.name} found a ${bucket.name} $speciesName (Lv.$level) [${chosenType.name}]")
             }
 
             // Spawn effects
@@ -127,7 +127,7 @@ object RecruiterExecutor : SkillExecutor {
             val message = Text.literal("")
                 .append(Text.literal("[Cobblebase] ").formatted(Formatting.AQUA))
                 .append(Text.literal("${pokemonEntity.pokemon.species.name}").formatted(Formatting.YELLOW))
-                .append(Text.literal(" recruited a ").formatted(Formatting.GRAY))
+                .append(Text.literal(" found a ").formatted(Formatting.GRAY))
                 .append(Text.literal(bucketLabel).formatted(bucketColor, Formatting.BOLD))
                 .append(Text.literal(" $speciesName").formatted(Formatting.WHITE, Formatting.BOLD))
                 .append(Text.literal(" (Lv.$level)!").formatted(Formatting.GRAY))

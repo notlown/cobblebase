@@ -78,7 +78,15 @@ object HealerExecutor : SkillExecutor {
         val radius = skill.searchRadius.toDouble()
         val searchBox = Box.of(origin.toCenterPos(), radius * 2, radius * 2, radius * 2)
 
-        val target = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
+        val allPlayers = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
+        if (now % 100 == 0L) {
+            Cobblebase.LOGGER.info("[Healer] ${pokemonEntity.pokemon.species.name} searching... players=${allPlayers.size}")
+            for (p in allPlayers) {
+                Cobblebase.LOGGER.info("[Healer]   ${p.name.string}: hp=${p.health}/${p.maxHealth} needsHeal=${playerNeedsHealing(p)}")
+            }
+        }
+
+        val target = allPlayers
             .filter { playerNeedsHealing(it) }
             .minByOrNull { it.squaredDistanceTo(pokemonEntity.pos) }
             ?: return

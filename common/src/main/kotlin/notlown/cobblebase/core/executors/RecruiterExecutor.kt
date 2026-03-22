@@ -4,7 +4,13 @@ import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
 import net.minecraft.particle.ParticleTypes
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvents
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.Heightmap
 import net.minecraft.world.World
@@ -104,6 +110,36 @@ object RecruiterExecutor : SkillExecutor {
 
             pokemon.entity?.let { recruitedEntities.add(it.id) }
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+
+            // Notify nearby players
+            val bucketColor = when (bucket) {
+                SpawnData.Bucket.ULTRA_RARE -> Formatting.GOLD
+                SpawnData.Bucket.RARE -> Formatting.LIGHT_PURPLE
+                SpawnData.Bucket.UNCOMMON -> Formatting.GREEN
+                else -> Formatting.WHITE
+            }
+            val bucketLabel = when (bucket) {
+                SpawnData.Bucket.ULTRA_RARE -> "Ultra Rare"
+                SpawnData.Bucket.RARE -> "Rare"
+                SpawnData.Bucket.UNCOMMON -> "Uncommon"
+                else -> "Common"
+            }
+            val message = Text.literal("")
+                .append(Text.literal("[Cobblebase] ").formatted(Formatting.AQUA))
+                .append(Text.literal("${pokemonEntity.pokemon.species.name}").formatted(Formatting.YELLOW))
+                .append(Text.literal(" recruited a ").formatted(Formatting.GRAY))
+                .append(Text.literal(bucketLabel).formatted(bucketColor, Formatting.BOLD))
+                .append(Text.literal(" $speciesName").formatted(Formatting.WHITE, Formatting.BOLD))
+                .append(Text.literal(" (Lv.$level)!").formatted(Formatting.GRAY))
+
+            val nearbyPlayers = world.getEntitiesByClass(ServerPlayerEntity::class.java, Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)) { true }
+            for (player in nearbyPlayers) {
+                player.sendMessage(message, false)
+                // Extra ding sound for rare+
+                if (bucket.ordinal >= SpawnData.Bucket.RARE.ordinal) {
+                    player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f)
+                }
+            }
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Recruiter] Failed to spawn $speciesName: ${e.message}")
         }

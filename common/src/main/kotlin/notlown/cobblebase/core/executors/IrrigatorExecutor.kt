@@ -39,7 +39,9 @@ object IrrigatorExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(3, skillEntry.proficiency)
+        if (!CobblebaseConfig.irrigatorEnabled) return
+
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(CobblebaseConfig.irrigatorCooldownSeconds, skillEntry.proficiency)
         val lastTime = lastIrrigateTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) return
 
@@ -97,9 +99,10 @@ object IrrigatorExecutor : SkillExecutor {
         // Set moisture to max
         world.setBlockState(pos, state.with(FarmlandBlock.MOISTURE, FarmlandBlock.MAX_MOISTURE), 3)
 
-        // Also irrigate nearby farmland (3x3 area)
-        for (dx in -1..1) {
-            for (dz in -1..1) {
+        // Also irrigate nearby farmland (configurable area)
+        val r = CobblebaseConfig.irrigatorRadius
+        for (dx in -r..r) {
+            for (dz in -r..r) {
                 val nearby = pos.add(dx, 0, dz)
                 val nearbyState = world.getBlockState(nearby)
                 if (nearbyState.block is FarmlandBlock) {

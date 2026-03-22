@@ -21,6 +21,11 @@
   "text.autoconfig.cobblebase.option.skills.friendRecruiterCooldownSeconds": "Friend Recruiter cooldown (seconds)",
   "text.autoconfig.cobblebase.option.skills.legendaryRecruiterCooldownSeconds": "Legendary Recruiter cooldown (seconds)",
 
+  "text.autoconfig.cobblebase.option.irrigator": "Irrigator",
+  "text.autoconfig.cobblebase.option.irrigator.irrigatorEnabled": "Enabled",
+  "text.autoconfig.cobblebase.option.irrigator.irrigatorCooldownSeconds": "Cooldown (seconds)",
+  "text.autoconfig.cobblebase.option.irrigator.irrigatorRadius": "Irrigation radius (blocks around target)",
+
   "text.autoconfig.cobblebase.option.finder": "Finder",
   "text.autoconfig.cobblebase.option.finder.finderCooldownSeconds": "Find cooldown (seconds)",
 

@@ -47,7 +47,18 @@ class CobblebaseClothConfig : ConfigData {
     var recruiterRates = RecruiterRatesGroup()
 
     @ConfigEntry.Gui.CollapsibleObject
+    var irrigator = IrrigatorGroup()
+
+    @ConfigEntry.Gui.CollapsibleObject
     var finder = FinderGroup()
+
+    class IrrigatorGroup {
+        var irrigatorEnabled = true
+        @ConfigEntry.BoundedDiscrete(min = 1, max = 60)
+        var irrigatorCooldownSeconds = 3
+        @ConfigEntry.BoundedDiscrete(min = 1, max = 5)
+        var irrigatorRadius = 1
+    }
 
     class FinderGroup {
         @ConfigEntry.BoundedDiscrete(min = 60, max = 3600)

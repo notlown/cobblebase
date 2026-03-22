@@ -45,6 +45,10 @@ object IrrigatorExecutor : SkillExecutor {
         val lastTime = lastIrrigateTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) return
 
+        if (now % 100 == 0L) {
+            Cobblebase.LOGGER.info("[Irrigator] ${pokemonEntity.pokemon.species.name} searching for dry farmland in radius ${skill.searchRadius} from $origin")
+        }
+
         // Find or navigate to dry farmland
         val target = targetBlock[pokemonId]
         if (target != null) {
@@ -63,6 +67,7 @@ object IrrigatorExecutor : SkillExecutor {
             if (found != null) {
                 targetBlock[pokemonId] = found
                 targetSetTime[pokemonId] = now
+                Cobblebase.LOGGER.info("[Irrigator] Found dry farmland at $found")
             }
         }
     }
@@ -97,6 +102,7 @@ object IrrigatorExecutor : SkillExecutor {
         if (state.block !is FarmlandBlock) return
 
         // Set moisture to max
+        Cobblebase.LOGGER.info("[Irrigator] Irrigating at $pos")
         world.setBlockState(pos, state.with(FarmlandBlock.MOISTURE, FarmlandBlock.MAX_MOISTURE), 3)
 
         // Also irrigate nearby farmland (configurable area)

@@ -61,8 +61,8 @@ Open the Pasture Block and click the **"Skills"** button to assign jobs:
 | **Gathering** | Harvester, Fishing, Diving, Mining, Honey | Collect resources from the world |
 | **Generation** | Lava Fill, Water Fill, Snow Fill, Furnace Fuel, Brew Fuel | Produce resources in containers |
 | **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
-| **Support** | Healer | Apply regeneration to nearby players |
-| **Utility** | Irrigator, Extinguisher, Item Gatherer, Scout, Archeologist, Pick-up | Various helper jobs |
+| **Support** | Healer | Direct % healing for players and Pokemon, revives fainted mons |
+| **Utility** | Irrigator, Extinguisher, Item Gatherer, Scout, Archeologist, Finder | Various helper jobs |
 | **Fairy/Starters** | Friend Recruiter | Spawns wild Pokemon of same type nearby |
 | **Legendary** | Recruiter, Aura Boost, Lucky Charm, Growth Aura | Exclusive to rare/legendary Pokemon |
 

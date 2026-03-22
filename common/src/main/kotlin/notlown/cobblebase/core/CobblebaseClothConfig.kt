@@ -46,6 +46,14 @@ class CobblebaseClothConfig : ConfigData {
     @ConfigEntry.Gui.CollapsibleObject
     var recruiterRates = RecruiterRatesGroup()
 
+    @ConfigEntry.Gui.CollapsibleObject
+    var finder = FinderGroup()
+
+    class FinderGroup {
+        @ConfigEntry.BoundedDiscrete(min = 60, max = 3600)
+        var finderCooldownSeconds = 600
+    }
+
     class RecruiterRatesGroup {
         var commonRate = 93.8
         var uncommonRate = 5.0

@@ -7,6 +7,7 @@ import notlown.cobblebase.core.executors.FurnaceFuelExecutor
 import notlown.cobblebase.core.executors.GenericLootExecutor
 import notlown.cobblebase.core.executors.GuardExecutor
 import notlown.cobblebase.core.executors.HarvesterExecutor
+import notlown.cobblebase.core.executors.FinderExecutor
 import notlown.cobblebase.core.executors.HealerExecutor
 import notlown.cobblebase.core.executors.RecruiterExecutor
 
@@ -35,6 +36,7 @@ object ExecutorRegistry {
 
         // -- Combat --
         register("guard", GuardExecutor)
+        register("finder", FinderExecutor)
 
         // -- Support --
         register("healer", HealerExecutor)

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_common_pokeball", "weight": 30 },
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_natural_heal_item", "weight": 25 },
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_type_gem", "weight": 15 },
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_apricorn_seed", "weight": 15 },
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_evo_stone", "weight": 8 },
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_exp_candy", "weight": 5 },
+        { "type": "minecraft:loot_table", "value": "cobblemon:sets/any_ancient_held_item", "weight": 2 }
+      ]
+    }
+  ]
+}

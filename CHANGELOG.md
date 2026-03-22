@@ -39,6 +39,20 @@
 - **Legendary Recruiter** kept separate for Mew, Jirachi, etc. (longer cooldown)
 - **All rates configurable** in settings menu
 
+### Healer System
+- **Heals players AND Pokemon** -- prioritizes lowest HP percentage
+- **Revives fainted Pokemon** -- sets HP to heal% then continues healing
+- **Direct % healing** instead of slow Regeneration:
+  - Prof 1: 5%, Prof 2: 8%, Prof 3: 12%, Prof 4: 18%, Prof 5: 25% max HP per tick
+- **Healer Pokemon:** Igglybuff/Jigglypuff/Wigglytuff (1/2/3), Cleffa/Clefairy/Clefable (1/2/3), Happiny/Chansey/Blissey (3/4/5)
+
+### Finder Skill
+- **Renamed from Pick-up to Finder** -- Pokemon searches for rare items and treasures
+- **10-minute default cooldown** (vs 2 min in Cobbleworkers) to keep items valuable
+- **Finder loot table:** Pokeballs (30%), Heal items (25%), Type Gems (15%), Apricorn Seeds (15%), Evo Stones (8%), Exp Candy (5%), Ancient Held Items (2%)
+- **Cooldown configurable** in settings
+- **Finder Pokemon:** Meowth/Persian (4/5), Stoutland (5), Zigzagoon/Linoone (3/4), Aipom/Ambipom (3/4), Ditto (3), Eevee (2), and more
+
 ### Effects
 - **SkillEffects** -- Visual effects system with per-skill-type particles and animations
 - **Cry + attack animation** in single packet to prevent override

@@ -20,6 +20,7 @@ object CobblebaseConfig {
     val passiveXpIntervalSeconds get() = holder.passiveXp.intervalSeconds
 
     // Skills
+    val finderCooldownSeconds get() = holder.finder.finderCooldownSeconds.toLong()
     val friendRecruiterCooldownSeconds get() = holder.recruiterRates.spawnCooldownSeconds.toLong()
     val legendaryRecruiterCooldownSeconds get() = holder.skills.legendaryRecruiterCooldownSeconds.toLong()
 

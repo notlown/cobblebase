@@ -68,7 +68,8 @@ object RecruiterExecutor : SkillExecutor {
         // Find a Pokemon of that type to spawn
         val speciesName = pickSpeciesByType(world, chosenType.name, skillEntry.proficiency) ?: return
 
-        val spawnPos = findSpawnPos(world, origin, skill.searchRadius) ?: return
+        // Spawn directly next to the recruiter Pokemon, not at the pasture
+        val spawnPos = findSpawnPos(world, pokemonEntity.blockPos, 3) ?: return
 
         try {
             val species = PokemonSpecies.getByName(speciesName) ?: return

@@ -16,6 +16,9 @@ import net.minecraft.world.World
  */
 object SkillEffects {
 
+    fun sendAnimationPublic(world: World, pokemonEntity: PokemonEntity, vararg names: String) =
+        sendAnimation(world, pokemonEntity, *names)
+
     private fun sendAnimation(world: World, pokemonEntity: PokemonEntity, vararg names: String) {
         if (world !is ServerWorld) return
         val packet = PlayPosableAnimationPacket(pokemonEntity.id, names.toSet(), emptyList())

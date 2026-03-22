@@ -37,5 +37,9 @@ class CobblebaseClothConfig : ConfigData {
         var recruitingEnabled = true
         var generationEnabled = true
         var utilityEnabled = true
+        @ConfigEntry.BoundedDiscrete(min = 30, max = 1800)
+        var friendRecruiterCooldownSeconds = 300
+        @ConfigEntry.BoundedDiscrete(min = 60, max = 3600)
+        var legendaryRecruiterCooldownSeconds = 600
     }
 }

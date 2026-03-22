@@ -43,7 +43,12 @@ object RecruiterExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        // Use config cooldown instead of skill definition (so it can be changed in settings)
+        val baseCooldown = if (skill.id == "cobblebase:recruiter")
+            CobblebaseConfig.legendaryRecruiterCooldownSeconds
+        else
+            CobblebaseConfig.friendRecruiterCooldownSeconds
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency)
 
         // Sparkle effect on all recruited Pokemon every 2 seconds
         if (now % 40 == 0L) {

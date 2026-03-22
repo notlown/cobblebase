@@ -17,5 +17,7 @@
   "text.autoconfig.cobblebase.option.skills.healingEnabled": "Healing skills",
   "text.autoconfig.cobblebase.option.skills.recruitingEnabled": "Recruiting skills",
   "text.autoconfig.cobblebase.option.skills.generationEnabled": "Generation skills (lava, water, fuel)",
-  "text.autoconfig.cobblebase.option.skills.utilityEnabled": "Utility skills (scout, irrigator, etc.)"
+  "text.autoconfig.cobblebase.option.skills.utilityEnabled": "Utility skills (scout, irrigator, etc.)",
+  "text.autoconfig.cobblebase.option.skills.friendRecruiterCooldownSeconds": "Friend Recruiter cooldown (seconds)",
+  "text.autoconfig.cobblebase.option.skills.legendaryRecruiterCooldownSeconds": "Legendary Recruiter cooldown (seconds)"
 }

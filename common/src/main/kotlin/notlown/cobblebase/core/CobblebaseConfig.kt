@@ -15,6 +15,8 @@ object CobblebaseConfig {
 
     // General
     var defaultSearchRadius = 10
+    var friendRecruiterCooldownSeconds = 300L
+    var legendaryRecruiterCooldownSeconds = 600L
 
     /**
      * Returns the effective cooldown in ticks, respecting dev mode.

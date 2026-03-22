@@ -22,5 +22,7 @@ object CobblebaseConfigBridge {
         CobblebaseConfig.passiveXpEnabled = cfg.passiveXp.enabled
         CobblebaseConfig.passiveXpPercent = cfg.passiveXp.xpPercent
         CobblebaseConfig.passiveXpIntervalSeconds = cfg.passiveXp.intervalSeconds
+        CobblebaseConfig.friendRecruiterCooldownSeconds = cfg.skills.friendRecruiterCooldownSeconds.toLong()
+        CobblebaseConfig.legendaryRecruiterCooldownSeconds = cfg.skills.legendaryRecruiterCooldownSeconds.toLong()
     }
 }

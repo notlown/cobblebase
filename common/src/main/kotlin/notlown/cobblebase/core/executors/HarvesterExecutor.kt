@@ -2,6 +2,13 @@ package notlown.cobblebase.core.executors
 
 import com.cobblemon.mod.common.block.ApricornBlock
 import com.cobblemon.mod.common.block.BerryBlock
+import com.cobblemon.mod.common.block.MintBlock
+import com.cobblemon.mod.common.block.MedicinalLeekBlock
+import com.cobblemon.mod.common.block.RevivalHerbBlock
+import com.cobblemon.mod.common.block.HeartyGrainsBlock
+import com.cobblemon.mod.common.block.NutBushBlock
+import com.cobblemon.mod.common.block.BugwortBlock
+import com.cobblemon.mod.common.block.VivichokeBlock
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -143,6 +150,41 @@ object HarvesterExecutor : SkillExecutor {
             return state.get(SweetBerryBushBlock.AGE) >= 2
         }
 
+        // Cobblemon mints
+        if (block is MintBlock) {
+            return try { state.get(MintBlock.AGE) >= MintBlock.MATURE_AGE } catch (_: Exception) { false }
+        }
+
+        // Cobblemon medicinal leek
+        if (block is MedicinalLeekBlock) {
+            return try { state.get(MedicinalLeekBlock.AGE) >= MedicinalLeekBlock.MATURE_AGE } catch (_: Exception) { false }
+        }
+
+        // Cobblemon revival herb
+        if (block is RevivalHerbBlock) {
+            return try { state.get(RevivalHerbBlock.AGE) >= RevivalHerbBlock.MAX_AGE } catch (_: Exception) { false }
+        }
+
+        // Cobblemon hearty grains
+        if (block is HeartyGrainsBlock) {
+            return try { state.get(HeartyGrainsBlock.AGE) >= HeartyGrainsBlock.MATURE_AGE } catch (_: Exception) { false }
+        }
+
+        // Cobblemon nut bush (Galarica Nuts etc.)
+        if (block is NutBushBlock) {
+            return try { state.get(NutBushBlock.AGE) >= NutBushBlock.MAX_AGE } catch (_: Exception) { false }
+        }
+
+        // Cobblemon bugwort
+        if (block is BugwortBlock) {
+            return try { state.get(BugwortBlock.AGE) >= BugwortBlock.MATURE_AGE } catch (_: Exception) { false }
+        }
+
+        // Cobblemon vivichoke
+        if (block is VivichokeBlock) {
+            return try { state.get(net.minecraft.state.property.Properties.AGE_4) >= 4 } catch (_: Exception) { false }
+        }
+
         return false
     }
 
@@ -192,10 +234,14 @@ object HarvesterExecutor : SkillExecutor {
             return
         }
 
-        // Generic fallback: break and collect drops
+        // Generic Cobblemon growable: get drops, reset to default state (regrow)
         val drops = getBlockDrops(world, pos, state, pokemonEntity)
         if (drops.isNotEmpty()) heldItems[pokemonId] = drops
-        world.breakBlock(pos, false)
+        try {
+            world.setBlockState(pos, block.defaultState, Block.NOTIFY_ALL)
+        } catch (_: Exception) {
+            world.breakBlock(pos, false)
+        }
     }
 
     private fun getBlockDrops(world: ServerWorld, pos: BlockPos, state: BlockState, pokemonEntity: PokemonEntity): List<ItemStack> {

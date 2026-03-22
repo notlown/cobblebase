@@ -20,7 +20,21 @@ Unlike type-based job systems, Cobblebase gives **every Pokemon species its own 
 | Mew | Recruiter, Lucky Charm, Aura Boost | 5, 5, 3 |
 | Arceus | Recruiter, Aura, Lucky Charm, Growth | 5, 5, 5, 5 |
 
-**90+ Pokemon** have hand-crafted skill assignments. Legendary and rare Pokemon get exclusive skills like **Recruiter** (attracts rare spawns) and **Aura Boost** (speeds up all workers).
+**150+ Pokemon** have hand-crafted skill assignments, including all starters from Gen 1-9. Fairy Pokemon and starters get **Friend Recruiter**, legendaries get exclusive skills like **Recruiter** and **Aura Boost**.
+
+### Friend Recruiter System
+Fairy Pokemon and all starters can recruit wild Pokemon of their own type:
+- **Type-based**: A Water starter recruits Water-types, a Fire starter recruits Fire-types
+- **Official rarity data**: Uses Cobblemon 1.7.3 spawn bucket data (Common/Uncommon/Rare/Ultra-Rare)
+- **Proficiency scaling**: Prof 1 = normal rates, Prof 5 = double chance for rare/ultra-rare
+- **Visual feedback**: Recruited Pokemon spawn with enchant sparkles and play their cry
+- **All rates configurable** in the settings menu
+
+| Proficiency | Common | Uncommon | Rare | Ultra-Rare |
+|-------------|--------|----------|------|------------|
+| 1 (base) | 93.8% | 5.0% | 1.0% | 0.2% |
+| 3 (skilled) | 90.3% | 7.5% | 1.5% | 0.3% |
+| 5 (master) | 86.8% | 10.0% | 2.0% | 0.4% |
 
 ### Proficiency System
 Each Pokemon has a proficiency level (1-5) for each of its skills:
@@ -49,6 +63,7 @@ Open the Pasture Block and click the **"Skills"** button to assign jobs:
 | **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
 | **Support** | Healer | Apply regeneration to nearby players |
 | **Utility** | Irrigator, Extinguisher, Item Gatherer, Scout, Archeologist, Pick-up | Various helper jobs |
+| **Fairy/Starters** | Friend Recruiter | Spawns wild Pokemon of same type nearby |
 | **Legendary** | Recruiter, Aura Boost, Lucky Charm, Growth Aura | Exclusive to rare/legendary Pokemon |
 
 ### Visual Effects

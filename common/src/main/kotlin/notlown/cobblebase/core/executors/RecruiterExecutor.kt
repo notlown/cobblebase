@@ -1,9 +1,9 @@
 package notlown.cobblebase.core.executors
 
+import com.cobblemon.mod.common.CobblemonEntities
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
-import net.minecraft.entity.SpawnReason
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -97,12 +97,15 @@ object RecruiterExecutor : SkillExecutor {
             pokemon.level = level
             pokemon.initialize()
 
-            // Spawn as a real wild entity (not sendOut which is for owned Pokemon)
-            val entity = PokemonEntity(world, pokemon)
+            // Create a proper wild Pokemon entity using Cobblemon's entity type
+            val entity = PokemonEntity(world, pokemon, CobblemonEntities.POKEMON)
             entity.refreshPositionAndAngles(
                 spawnPos.x + 0.5, spawnPos.y.toDouble(), spawnPos.z + 0.5,
                 world.random.nextFloat() * 360f, 0f
             )
+            // Mark as wild spawn so Cobblemon treats it normally
+            entity.countsTowardsSpawnCap = false
+            entity.tickSpawned = world.server?.ticks ?: 0
             world.spawnEntity(entity)
 
             Cobblebase.LOGGER.info("[Recruiter] ${pokemonEntity.pokemon.species.name} found a ${bucket.name} $speciesName (Lv.$level) [${chosenType.name}]")

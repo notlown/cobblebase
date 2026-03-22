@@ -25,5 +25,6 @@
   "text.autoconfig.cobblebase.option.recruiterRates.commonRate": "Common rate (%)",
   "text.autoconfig.cobblebase.option.recruiterRates.uncommonRate": "Uncommon rate (%)",
   "text.autoconfig.cobblebase.option.recruiterRates.rareRate": "Rare rate (%)",
-  "text.autoconfig.cobblebase.option.recruiterRates.ultraRareRate": "Ultra-Rare rate (%)"
+  "text.autoconfig.cobblebase.option.recruiterRates.ultraRareRate": "Ultra-Rare rate (%)",
+  "text.autoconfig.cobblebase.option.recruiterRates.spawnCooldownSeconds": "Spawn cooldown (seconds)"
 }

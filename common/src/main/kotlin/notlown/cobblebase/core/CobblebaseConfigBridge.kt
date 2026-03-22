@@ -28,5 +28,6 @@ object CobblebaseConfigBridge {
         CobblebaseConfig.recruiterUncommonRate = cfg.recruiterRates.uncommonRate
         CobblebaseConfig.recruiterRareRate = cfg.recruiterRates.rareRate
         CobblebaseConfig.recruiterUltraRareRate = cfg.recruiterRates.ultraRareRate
+        CobblebaseConfig.friendRecruiterCooldownSeconds = cfg.recruiterRates.spawnCooldownSeconds.toLong()
     }
 }

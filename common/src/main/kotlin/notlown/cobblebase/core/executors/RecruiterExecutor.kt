@@ -166,6 +166,7 @@ object RecruiterExecutor : SkillExecutor {
         val common = (100.0 - total).coerceAtLeast(0.0)
 
         val roll = world.random.nextDouble() * 100.0
+        Cobblebase.LOGGER.info("[Recruiter] Roll: ${"%.2f".format(roll)} (UR<${"%.2f".format(ultraRare)} R<${"%.2f".format(ultraRare+rare)} UC<${"%.2f".format(ultraRare+rare+uncommon)} C=rest) prof=$proficiency")
 
         return when {
             roll < ultraRare -> SpawnData.Bucket.ULTRA_RARE
@@ -190,8 +191,9 @@ object RecruiterExecutor : SkillExecutor {
             return matching[world.random.nextInt(matching.size)]
         }
 
-        // Fallback: try lower buckets
-        for (fallback in SpawnData.Bucket.entries.reversed()) {
+        // Fallback: try MORE COMMON buckets first (never fall UP to rarer)
+        for (fallback in SpawnData.Bucket.entries) {
+            if (fallback.ordinal > targetBucket.ordinal) continue // don't go rarer
             val fallbackMatching = candidates.filter { SpawnData.getBucket(it) == fallback }
             if (fallbackMatching.isNotEmpty()) {
                 return fallbackMatching[world.random.nextInt(fallbackMatching.size)]

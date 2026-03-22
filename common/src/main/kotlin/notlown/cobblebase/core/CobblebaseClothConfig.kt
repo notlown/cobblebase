@@ -51,5 +51,7 @@ class CobblebaseClothConfig : ConfigData {
         var uncommonRate = 5.0
         var rareRate = 1.0
         var ultraRareRate = 0.2
+        @ConfigEntry.BoundedDiscrete(min = 10, max = 1800)
+        var spawnCooldownSeconds = 300
     }
 }

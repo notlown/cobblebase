@@ -51,19 +51,22 @@ object HealerExecutor : SkillExecutor {
             it.health < it.maxHealth && !it.hasStatusEffect(StatusEffects.REGENERATION)
         }
 
-        // Find injured Pokemon (not the healer itself, not fainted)
-        val injuredPokemon = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) {
-            it != pokemonEntity && it.health < it.maxHealth && it.isAlive &&
-            !it.hasStatusEffect(StatusEffects.REGENERATION)
+        // Find injured or fainted Pokemon (not the healer itself)
+        val needsHealPokemon = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) {
+            it != pokemonEntity && it.isAlive && !it.hasStatusEffect(StatusEffects.REGENERATION) &&
+            (it.pokemon.isFainted() || it.health < it.maxHealth)
         }
 
-        // Pick the target with the lowest HP percentage (players and Pokemon together)
-        val allTargets = mutableListOf<LivingEntity>()
-        allTargets.addAll(injuredPlayers)
-        allTargets.addAll(injuredPokemon)
-
-        val target = allTargets
+        // Prioritize: fainted Pokemon first, then lowest HP percentage
+        val faintedMon = needsHealPokemon.firstOrNull { it.pokemon.isFainted() }
+        val injuredPlayer = injuredPlayers.minByOrNull { it.health / it.maxHealth }
+        val injuredMon = needsHealPokemon.filter { !it.pokemon.isFainted() }
             .minByOrNull { it.health / it.maxHealth }
+
+        // Fainted mons get top priority, then whoever has lowest HP%
+        val target: LivingEntity = faintedMon
+            ?: listOfNotNull(injuredPlayer, injuredMon)
+                .minByOrNull { it.health / it.maxHealth }
             ?: return
 
         // Navigate to target
@@ -72,6 +75,13 @@ object HealerExecutor : SkillExecutor {
         if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target.blockPos, 2.0)) {
             val regenSeconds = 10 + (skillEntry.proficiency * 4)
             val amplifier = if (skillEntry.proficiency >= 4) 1 else 0
+
+            if (target is PokemonEntity && target.pokemon.isFainted()) {
+                // Revive: set HP to 50% then apply regen
+                val maxHp = target.pokemon.maxHealth
+                target.pokemon.currentHealth = maxHp / 2
+                target.heal(target.maxHealth * 0.5f)
+            }
 
             target.addStatusEffect(
                 StatusEffectInstance(

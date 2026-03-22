@@ -22,9 +22,10 @@ object BaseManager {
         val pokemonId: UUID = pokemonEntity.pokemon.uuid
         val speciesName: String = pokemonEntity.pokemon.species.name.lowercase()
 
-        // Auto-save periodically
-        if (dirty && world is ServerWorld && world.time - lastSaveTick > SAVE_INTERVAL) {
-            save(world)
+        // Auto-save periodically + sync config
+        if (world is ServerWorld && world.time % SAVE_INTERVAL == 0L) {
+            CobblebaseConfigBridge.sync()
+            if (dirty) save(world)
         }
 
         val speciesData: SpeciesSkills = SpeciesSkillRegistry.getSkills(speciesName) ?: return

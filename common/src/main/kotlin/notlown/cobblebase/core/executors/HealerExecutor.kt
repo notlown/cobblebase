@@ -35,8 +35,13 @@ object HealerExecutor : SkillExecutor {
 
         // Cooldown between heals: ~5 seconds at prof 3
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(5, skillEntry.proficiency)
-        val lastTime = lastHealTime[pokemonId] ?: 0L
-        if (now - lastTime < cooldownTicks) return
+        val lastTime = lastHealTime[pokemonId] ?: now.also { lastHealTime[pokemonId] = now }
+        if (now - lastTime < cooldownTicks) {
+            if (now % 40 == 0L) {
+                SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            }
+            return
+        }
 
         // Find nearby players who need healing
         val radius = skill.searchRadius.toDouble()

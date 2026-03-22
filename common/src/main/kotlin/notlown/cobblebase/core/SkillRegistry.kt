@@ -45,7 +45,7 @@ object SkillRegistry {
         register(SkillDef("cobblebase:gatherer", "Item Gatherer", "Picks up items on the ground", "utility", 0, 10, "gather_items", "default"))
         register(SkillDef("cobblebase:scout", "Scout", "Creates explorer maps to structures", "utility", 80, 10, "scout", "default"))
         register(SkillDef("cobblebase:archeologist", "Archeologist", "Digs for fossils and ancient treasures", "gathering", 80, 10, "archeology", "default", "cobblebase:archeology_treasure"))
-        register(SkillDef("cobblebase:finder", "Finder", "Searches the area for rare items and treasures", "gathering", 600, 10, "finder", "default"))
+        register(SkillDef("cobblebase:finder", "Finder", "Searches the area for rare items and treasures", "gathering", 240, 10, "finder", "default"))
 
         // -- Fairy --
         register(SkillDef("cobblebase:friend_recruiter", "Friend Recruiter", "Attracts rare wild Pokemon to appear nearby with charm", "fairy", 300, 15, "recruiter", "special"))

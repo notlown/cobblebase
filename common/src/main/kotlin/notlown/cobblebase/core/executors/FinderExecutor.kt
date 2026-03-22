@@ -54,8 +54,11 @@ object FinderExecutor : SkillExecutor {
         }
 
         // Cooldown
+        // Finder cooldown only slightly reduced by proficiency (not halved like other skills)
+        // Prof 1: 100%, Prof 2: 90%, Prof 3: 80%, Prof 4: 70%, Prof 5: 60%
         val baseCooldown = CobblebaseConfig.finderCooldownSeconds
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency)
+        val cooldownTicks = if (CobblebaseConfig.devMode) 100L
+            else (baseCooldown * 20L * (11 - skillEntry.proficiency) / 10)
         val lastTime = lastFindTime[pokemonId] ?: now.also { lastFindTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
             if (now % 60 == 0L) {
@@ -64,11 +67,14 @@ object FinderExecutor : SkillExecutor {
             return
         }
 
-        // Generate loot
+        // Generate loot - proficiency affects quality, not just speed
         lastFindTime[pokemonId] = now
 
         try {
-            val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase", "finder_loot"))
+            // Pick a loot tier based on proficiency
+            // Higher prof = much better items, less trash
+            val lootTableName = pickLootTable(world, skillEntry.proficiency)
+            val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of(lootTableName))
             val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
 
             val lootParams = LootContextParameterSet.Builder(world)
@@ -81,10 +87,39 @@ object FinderExecutor : SkillExecutor {
             if (drops.isNotEmpty()) {
                 heldItems[pokemonId] = drops
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
-                Cobblebase.LOGGER.info("[Finder] ${pokemonEntity.pokemon.species.name} found ${drops.size} items!")
+                Cobblebase.LOGGER.info("[Finder] ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) found: ${drops.map { "${it.name.string}x${it.count}" }}")
             }
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Finder] Error generating loot: ${e.message}")
+        }
+    }
+
+    /**
+     * Higher proficiency = much better loot tables selected more often.
+     * Prof 1: mostly common (pokeballs, seeds)
+     * Prof 5: mostly rare (evo stones, held items, exp candy)
+     */
+    private fun pickLootTable(world: World, proficiency: Int): String {
+        val roll = world.random.nextInt(100)
+
+        // Rare item chance scales steeply: Prof1=5%, Prof2=15%, Prof3=30%, Prof4=50%, Prof5=70%
+        val rareChance = proficiency * proficiency * 3 - proficiency + 3 // 5, 15, 30, 47, 70 roughly
+
+        return if (roll < rareChance) {
+            // Rare pool
+            when (world.random.nextInt(3)) {
+                0 -> "cobblemon:sets/any_evo_stone"
+                1 -> "cobblemon:sets/any_ancient_held_item"
+                else -> "cobblemon:sets/any_exp_candy"
+            }
+        } else {
+            // Common pool
+            when (world.random.nextInt(4)) {
+                0 -> "cobblemon:sets/any_common_pokeball"
+                1 -> "cobblemon:sets/any_natural_heal_item"
+                2 -> "cobblemon:sets/any_type_gem"
+                else -> "cobblemon:sets/any_apricorn_seed"
+            }
         }
     }
 }

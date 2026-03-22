@@ -51,7 +51,7 @@ class CobblebaseClothConfig : ConfigData {
 
     class FinderGroup {
         @ConfigEntry.BoundedDiscrete(min = 60, max = 3600)
-        var finderCooldownSeconds = 600
+        var finderCooldownSeconds = 240
     }
 
     class RecruiterRatesGroup {

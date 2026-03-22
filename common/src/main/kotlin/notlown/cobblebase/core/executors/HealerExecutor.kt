@@ -124,14 +124,15 @@ object HealerExecutor : SkillExecutor {
         for (mon in session.monsToHeal) {
             val targetHp = mon.maxHealth * (4 - session.ticksRemaining) / 3
             mon.currentHealth = targetHp.coerceIn(1, mon.maxHealth)
+        }
 
-            // On final pulse: full PokéCenter heal (status + PP)
-            if (isFinalPulse) {
-                mon.status = null
-                for (move in mon.moveSet.getMoves()) {
-                    move.currentPp = move.maxPp
-                }
-            }
+        // On final pulse: use Cobblemon's official party.heal() for full PokéCenter restore
+        // This handles HP, status, PP - exactly like the Healing Machine
+        if (isFinalPulse) {
+            try {
+                val party = Cobblemon.storage.getParty(session.targetPlayer)
+                party.heal()
+            } catch (_: Exception) { }
         }
 
         // Visual: cry + heart particles every pulse

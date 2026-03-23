@@ -1,4 +1,6 @@
 {
+  "key.cobblebase.settings": "Open Cobblebase Settings",
+
   "text.autoconfig.cobblebase.title": "Cobblebase Settings",
 
   "text.autoconfig.cobblebase.option.general": "General",

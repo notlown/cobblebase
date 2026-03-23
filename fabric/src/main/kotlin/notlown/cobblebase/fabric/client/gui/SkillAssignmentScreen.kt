@@ -23,13 +23,13 @@ class SkillAssignmentScreen(
     private val ROW_EVEN = 0x44FFFFFF.toInt()
     private val ROW_ODD = 0x22FFFFFF.toInt()
 
-    private val ROW_HEIGHT = 26
+    private val ROW_HEIGHT = 42 // taller for 2-row button wrapping
     private val HEADER_HEIGHT = 36
     private val PANEL_PADDING = 8
     private val NAME_WIDTH = 90
-    private val BTN_WIDTH = 62
-    private val BTN_HEIGHT = 18
-    private val BTN_GAP = 3
+    private val BTN_WIDTH = 58
+    private val BTN_HEIGHT = 16
+    private val BTN_GAP = 2
 
     private var scrollX = 0
     private var scrollY = 0
@@ -76,17 +76,25 @@ class SkillAssignmentScreen(
             println("[CobblebaseGUI] species='$speciesName' found=${speciesSkills != null} skills=${availableSkills.size}")
 
             val rowY = contentY + index * ROW_HEIGHT
-            var btnX = panelX + PANEL_PADDING + NAME_WIDTH
+            val btnStartX = panelX + PANEL_PADDING + NAME_WIDTH
+            val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
+            var btnX = btnStartX
+            var btnY = rowY
 
             // Auto button
-            allButtons.add(SkillButtonData(pokemonId, null, "Auto", 0, "", btnX, rowY, currentAssignment == null))
+            allButtons.add(SkillButtonData(pokemonId, null, "Auto", 0, "", btnX, btnY, currentAssignment == null))
             btnX += BTN_WIDTH + BTN_GAP
 
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
+                // Wrap to second row if overflowing
+                if (btnX > maxBtnX) {
+                    btnX = btnStartX
+                    btnY = rowY + BTN_HEIGHT + BTN_GAP
+                }
                 allButtons.add(SkillButtonData(
                     pokemonId, entry.skillId, skillDef.name, entry.proficiency,
-                    skillDef.category, btnX, rowY, currentAssignment == entry.skillId
+                    skillDef.category, btnX, btnY, currentAssignment == entry.skillId
                 ))
                 btnX += BTN_WIDTH + BTN_GAP
             }

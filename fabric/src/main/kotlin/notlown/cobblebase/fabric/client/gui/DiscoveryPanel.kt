@@ -107,16 +107,14 @@ class DiscoveryPanel(
             return
         }
 
-        // Column headers
-        val colType = panelX + PADDING
-        val colName = panelX + PADDING + 70
-        val colCoords = panelX + PADDING + 230
-        val colBy = panelX + PADDING + 340
-        val colWhen = panelX + panelW - PADDING - 80
-        context.drawTextWithShadow(textRenderer, "\u00A7eType", colType, contentTop - 10, 0xFFFF55)
+        // Column headers (no Type column — tab already shows the type)
+        val colName = panelX + PADDING + 4
+        val colCoords = panelX + PADDING + 100
+        val colBy = panelX + PADDING + 210
+        val colWhen = panelX + panelW - PADDING - 70
         context.drawTextWithShadow(textRenderer, "\u00A7eName", colName, contentTop - 10, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eCoordinates", colCoords, contentTop - 10, 0xFFFF55)
-        context.drawTextWithShadow(textRenderer, "\u00A7eDiscovered By", colBy, contentTop - 10, 0xFFFF55)
+        context.drawTextWithShadow(textRenderer, "\u00A7eBy", colBy, contentTop - 10, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eWhen", colWhen, contentTop - 10, 0xFFFF55)
 
         // Scrollable content
@@ -130,20 +128,16 @@ class DiscoveryPanel(
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
-            // Type color bar
-            val typeColor = entry.type.color
-            context.fill(panelX + 1, ry, panelX + 3, ry + ROW_HEIGHT - 1, typeColor)
+            // Rarity color bar on left
+            val rarityColor = entry.rarity.color
+            context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, rarityColor)
 
-            // Type
-            context.drawTextWithShadow(textRenderer, entry.type.displayName, colType + 4, ry + 2, typeColor)
-
-            // Name
-            val nameColor = entry.rarity.color
-            context.drawTextWithShadow(textRenderer, entry.name, colName, ry + 2, nameColor)
+            // Name (colored by rarity)
+            context.drawTextWithShadow(textRenderer, entry.name, colName, ry + 2, rarityColor)
 
             // Coordinates
-            val coordStr = "(${entry.x}, ${entry.y}, ${entry.z})"
-            context.drawTextWithShadow(textRenderer, coordStr, colCoords, ry + 2, 0xCCCCCC)
+            val coordStr = "${entry.x}, ${entry.z}"
+            context.drawTextWithShadow(textRenderer, coordStr, colCoords, ry + 2, 0x55FFFF)
 
             // Discovered By
             context.drawTextWithShadow(textRenderer, entry.discoveredBy, colBy, ry + 2, 0xFFFFFF)

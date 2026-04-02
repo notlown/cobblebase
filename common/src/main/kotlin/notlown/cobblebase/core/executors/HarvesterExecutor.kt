@@ -47,6 +47,8 @@ object HarvesterExecutor : SkillExecutor {
     private val targetBlock = mutableMapOf<UUID, BlockPos>()
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastSearchTime = mutableMapOf<UUID, Long>()
+    private val harvestedBlockCooldown = mutableMapOf<BlockPos, Long>() // per-block cooldown to prevent instant re-harvest
+    private const val BLOCK_COOLDOWN_TICKS = 1200L // 60 seconds before same block can be harvested again
     private val NAV_TIMEOUT_TICKS = 100L // 5 seconds - auto-harvest if can't reach
     private val SEARCH_INTERVAL_TICKS = 40L // 2 seconds between scans when nothing is ripe
 
@@ -127,14 +129,23 @@ object HarvesterExecutor : SkillExecutor {
     }
 
     private fun findHarvestable(world: World, origin: BlockPos, radius: Int): BlockPos? {
+        val now = world.time
+        // Cleanup old block cooldowns periodically
+        if (now % 200 == 0L) {
+            harvestedBlockCooldown.entries.removeIf { now - it.value > BLOCK_COOLDOWN_TICKS }
+        }
         val candidates = mutableListOf<BlockPos>()
 
         for (x in -radius..radius) {
             for (y in -radius..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
+                    // Skip blocks still on cooldown (prevents instant re-harvest with Irrigator)
+                    val immPos = pos.toImmutable()
+                    val lastHarvest = harvestedBlockCooldown[immPos]
+                    if (lastHarvest != null && now - lastHarvest < BLOCK_COOLDOWN_TICKS) continue
                     if (isReadyToHarvest(world, pos)) {
-                        candidates.add(pos.toImmutable())
+                        candidates.add(immPos)
                     }
                 }
             }
@@ -246,6 +257,8 @@ object HarvesterExecutor : SkillExecutor {
     private fun harvest(world: ServerWorld, pos: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val state = world.getBlockState(pos)
         val block = state.block
+        // Record harvest time for this block (prevents instant re-harvest)
+        harvestedBlockCooldown[pos.toImmutable()] = world.time
 
         if (state.isIn(APRICORNS_TAG)) {
             // Apricorn: get drops, reset age to 0

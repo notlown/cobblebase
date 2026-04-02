@@ -216,14 +216,16 @@ object IrrigatorExecutor : SkillExecutor {
             }
         }
 
-        // Apply growth ticks - higher proficiency = more ticks
-        val growthTicks = proficiency.coerceIn(1, 5)
-        try {
-            repeat(growthTicks) {
+        // Apply growth boost - single randomTick with a chance based on proficiency
+        // Prof 1 = 10% chance, Prof 2 = 20%, Prof 3 = 30%, Prof 4 = 40%, Prof 5 = 50%
+        // This is much gentler than the old system (which applied 1-5 ticks every visit)
+        val boostChance = proficiency * 10
+        if (world.random.nextInt(100) < boostChance) {
+            try {
                 state.randomTick(world, pos, world.random)
+            } catch (e: Exception) {
+                Cobblebase.LOGGER.warn("[Irrigator] randomTick failed at $pos: ${e.message}")
             }
-        } catch (e: Exception) {
-            Cobblebase.LOGGER.warn("[Irrigator] randomTick failed at $pos: ${e.message}")
         }
 
         // Watergun animation + cry + splash particles

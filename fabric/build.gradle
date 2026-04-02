@@ -62,3 +62,12 @@ shadowJar {
 remapJar {
     inputFile.set shadowJar.archiveFile
 }
+
+// Auto-copy JAR to Minecraft mods folder after build
+tasks.register('copyToMods', Copy) {
+    dependsOn remapJar
+    from(remapJar.archiveFile)
+    into("/Users/umut/Library/Application Support/minecraft/versions/Cobblemon Official Modpack [Fabric] Cobblemon Modpack [Fabric] 1.7.3/mods")
+}
+
+build.finalizedBy copyToMods

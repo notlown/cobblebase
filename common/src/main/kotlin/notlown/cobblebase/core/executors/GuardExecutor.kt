@@ -107,13 +107,8 @@ object GuardExecutor : SkillExecutor {
 
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
-        val chestPos = InventoryHelper.findBestContainer(world, pokemonEntity.blockPos, 10, items) ?: return
-
-        NavigationHelper.navigateTo(pokemonEntity, chestPos)
-        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos, 2.0)) {
-            InventoryHelper.insertItems(world, chestPos, items)
-            heldItems.remove(pokemonId)
-        }
+        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        heldItems.remove(pokemonId)
     }
 
 

@@ -46,6 +46,11 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
+        // If navigation is stuck, reset it
+        if (pokemonEntity.navigation.isIdle) {
+            pokemonEntity.navigation.stop()
+        }
+
         pokemonEntity.navigation.startMovingTo(
             targetPos.x + 0.5,
             targetPos.y.toDouble(),

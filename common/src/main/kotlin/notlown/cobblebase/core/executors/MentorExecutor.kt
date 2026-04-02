@@ -82,15 +82,19 @@ object MentorExecutor : SkillExecutor {
      * 1.0 = no boost, 2.0 = double XP (at prof 5 with default config).
      * Called by PassiveXp to scale XP gains.
      */
+    /**
+     * Returns the XP multiplier for a given pasture position.
+     * 0.0 = no mentor (no passive XP), 1.0 = baseline (Prof 3), ~1.66 = Prof 5.
+     *
+     * Scaling: Prof 3 = 1.0x (default baseline rate)
+     *   Prof 1 = 0.33x, Prof 2 = 0.66x, Prof 3 = 1.0x, Prof 4 = 1.33x, Prof 5 = 1.66x
+     */
     fun getXpMultiplier(pasturePos: BlockPos): Double {
-        val entry = activeMentors[pasturePos] ?: return 1.0
-        // Expire stale entries (mentor may have been unassigned or despawned)
-        // We can't check world.time here, so we rely on tick() refreshing within EXPIRY_TICKS
+        val entry = activeMentors[pasturePos] ?: return 0.0 // No mentor = no XP
         val proficiency = entry.proficiency.coerceIn(1, 5)
         val maxBoost = CobblebaseConfig.mentorMaxBoost
-        // Prof 1 = 20% of maxBoost, Prof 5 = 100% of maxBoost
-        val boost = maxBoost * proficiency / 5.0
-        return 1.0 + boost
+        // Prof 3 is the baseline (1.0x). Scale linearly: prof / 3.0
+        return (proficiency / 3.0) * maxBoost
     }
 
     /**

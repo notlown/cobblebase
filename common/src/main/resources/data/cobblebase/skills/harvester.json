@@ -4,7 +4,7 @@
   "description": "Harvests crops, berries, apricorns, mints, netherwart, and more",
   "category": "gathering",
   "cooldownSeconds": 0,
-  "searchRadius": 10,
+  "searchRadius": 20,
   "executor": "harvester",
   "effectType": "harvest"
 }

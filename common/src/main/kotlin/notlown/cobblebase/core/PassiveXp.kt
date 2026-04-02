@@ -38,12 +38,15 @@ object PassiveXp {
         if (now - lastTime < intervalTicks) return
         lastXpTick[pokemonId] = now
 
+        // Passive XP requires an active Mentor in the pasture
+        // No Mentor = no passive XP at all
+        val mentorMultiplier = if (pastureOrigin != null) MentorExecutor.getXpMultiplier(pastureOrigin) else 0.0
+        if (mentorMultiplier <= 0.0) return
+
         // Percentage-based: give X% of XP needed for next level each tick
+        // Prof 3 Mentor = 1.0x (the default/baseline rate)
         val xpToNextLevel = pokemon.getExperienceToNextLevel()
         val baseXpGain = (xpToNextLevel * CobblebaseConfig.passiveXpPercent / 100.0).toInt().coerceAtLeast(1)
-
-        // Apply mentor XP multiplier if a mentor is active in the same pasture
-        val mentorMultiplier = if (pastureOrigin != null) MentorExecutor.getXpMultiplier(pastureOrigin) else 1.0
         val xpGain = (baseXpGain * mentorMultiplier).toInt().coerceAtLeast(1)
 
         pokemon.addExperience(CobblebaseExperienceSource, xpGain)

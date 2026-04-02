@@ -21,19 +21,30 @@ object BaseManager {
     fun tickPokemon(world: World, pastureOrigin: BlockPos, pokemonEntity: PokemonEntity) {
         val pokemonId: UUID = pokemonEntity.pokemon.uuid
         val speciesName: String = pokemonEntity.pokemon.species.name.lowercase()
+        val now = world.time
 
         // Auto-save periodically
-        if (dirty && world is ServerWorld && world.time - lastSaveTick > SAVE_INTERVAL) {
+        if (dirty && world is ServerWorld && now - lastSaveTick > SAVE_INTERVAL) {
             save(world)
         }
 
-        val speciesData: SpeciesSkills = SpeciesSkillRegistry.getSkills(speciesName) ?: return
+        val speciesData: SpeciesSkills? = SpeciesSkillRegistry.getSkills(speciesName)
+        if (speciesData == null) {
+            if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName has NO species skills registered")
+            return
+        }
+
         val assignedSkillId: String? = assignments[pokemonId]
 
         if (assignedSkillId != null) {
-            val entry: SkillEntry = speciesData.skills.find { e -> e.skillId == assignedSkillId } ?: return
+            val entry: SkillEntry? = speciesData.skills.find { e -> e.skillId == assignedSkillId }
+            if (entry == null) {
+                if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName assigned=$assignedSkillId but skill NOT FOUND in species skills: ${speciesData.skills.map { it.skillId }}")
+                return
+            }
             executeSkill(world, pastureOrigin, pokemonEntity, entry)
         } else {
+            if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName has no assignment, running all ${speciesData.skills.size} skills")
             for (entry: SkillEntry in speciesData.skills) {
                 executeSkill(world, pastureOrigin, pokemonEntity, entry)
             }
@@ -41,8 +52,16 @@ object BaseManager {
     }
 
     private fun executeSkill(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, entry: SkillEntry) {
-        val skillDef: SkillDef = SkillRegistry.get(entry.skillId) ?: return
-        val exec: SkillExecutor = ExecutorRegistry.get(skillDef.executor) ?: return
+        val skillDef: SkillDef? = SkillRegistry.get(entry.skillId)
+        if (skillDef == null) {
+            if (world.time % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] SkillDef NOT FOUND for ${entry.skillId}")
+            return
+        }
+        val exec: SkillExecutor? = ExecutorRegistry.get(skillDef.executor)
+        if (exec == null) {
+            if (world.time % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] Executor NOT FOUND for ${skillDef.executor}")
+            return
+        }
         exec.tick(world, origin, pokemonEntity, skillDef, entry)
     }
 

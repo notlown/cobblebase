@@ -4,7 +4,7 @@
   "description": "Hydrates nearby farmland",
   "category": "utility",
   "cooldownSeconds": 0,
-  "searchRadius": 10,
+  "searchRadius": 20,
   "executor": "irrigate",
   "effectType": "water"
 }

@@ -43,14 +43,10 @@ object FinderExecutor : SkillExecutor {
         val now = world.time
         val items = heldItems[pokemonId]
 
-        // Deposit phase
+        // Drop items on ground — Gatherer will sort into chests
         if (!items.isNullOrEmpty()) {
-            val chestPos = InventoryHelper.findBestContainer(world, pokemonEntity.blockPos, 10, items) ?: return
-            NavigationHelper.navigateTo(pokemonEntity, chestPos)
-            if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)) {
-                InventoryHelper.insertItems(world, chestPos, items)
-                heldItems.remove(pokemonId)
-            }
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+            heldItems.remove(pokemonId)
             return
         }
 

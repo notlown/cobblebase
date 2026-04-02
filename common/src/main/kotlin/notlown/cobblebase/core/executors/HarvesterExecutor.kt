@@ -27,7 +27,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.SkillDef
-import notlown.cobblebase.core.CobblebaseConfig
+
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -45,8 +45,17 @@ object HarvesterExecutor : SkillExecutor {
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
     private val targetBlock = mutableMapOf<UUID, BlockPos>()
     private val targetSetTime = mutableMapOf<UUID, Long>()
-    private val lastHarvestTime = mutableMapOf<UUID, Long>()
+    private val lastSearchTime = mutableMapOf<UUID, Long>()
     private val NAV_TIMEOUT_TICKS = 100L // 5 seconds - auto-harvest if can't reach
+    private val SEARCH_INTERVAL_TICKS = 40L // 2 seconds between scans when nothing is ripe
+
+    /**
+     * Returns movement speed based on proficiency (1-5).
+     * Prof 1 = 0.4 (slow), Prof 5 = 1.2 (fast)
+     */
+    private fun getSpeedForProficiency(proficiency: Int): Double {
+        return 0.2 + (proficiency * 0.2)
+    }
 
     override fun tick(
         world: World,
@@ -58,63 +67,94 @@ object HarvesterExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val speed = getSpeedForProficiency(skillEntry.proficiency)
         val items = heldItems[pokemonId]
 
+        // Phase 1: deposit items if holding any
         if (!items.isNullOrEmpty()) {
-            depositItems(world, origin, pokemonEntity, pokemonId)
+            depositItems(world, origin, pokemonEntity, pokemonId, speed)
             return
         }
 
-        // Cooldown check (only if cooldown > 0)
-        if (cooldownTicks > 0) {
-            val lastTime = lastHarvestTime[pokemonId] ?: 0L
-            if (now - lastTime < cooldownTicks) return
-        }
-
-        // Find a harvestable block
+        // Phase 2: navigate to target or harvest
         val target = targetBlock[pokemonId]
         if (target != null) {
-            NavigationHelper.navigateTo(pokemonEntity, target)
+            NavigationHelper.navigateTo(pokemonEntity, target, speed)
             val navStarted = targetSetTime[pokemonId] ?: now
             val timedOut = now - navStarted >= NAV_TIMEOUT_TICKS
 
             if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target) || timedOut) {
-                // Harvest - either we reached it or timed out (auto-pick)
                 harvest(world, target, pokemonEntity, pokemonId)
                 targetBlock.remove(pokemonId)
                 targetSetTime.remove(pokemonId)
-                lastHarvestTime[pokemonId] = now
+                Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} HARVESTED at $target - calling playSuccess(${skill.effectType})")
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
             }
+            return
+        }
+
+        // Phase 3: search for harvestable block (throttled to avoid lag)
+        val lastSearch = lastSearchTime[pokemonId] ?: 0L
+        if (now - lastSearch < SEARCH_INTERVAL_TICKS) return
+        lastSearchTime[pokemonId] = now
+
+        val found = findHarvestable(world, origin, skill.searchRadius)
+        if (found != null) {
+            targetBlock[pokemonId] = found
+            targetSetTime[pokemonId] = now
         } else {
-            val found = findHarvestable(world, origin, skill.searchRadius)
-            if (found != null) {
-                targetBlock[pokemonId] = found
-                targetSetTime[pokemonId] = now
+            // Nothing ripe - wander towards nearest growing (not yet ripe) harvestable block
+            val growingPos = findGrowing(world, origin, skill.searchRadius)
+            if (growingPos != null) {
+                NavigationHelper.navigateTo(pokemonEntity, growingPos, speed * 0.4)
             }
         }
     }
 
     private fun findHarvestable(world: World, origin: BlockPos, radius: Int): BlockPos? {
-        var best: BlockPos? = null
-        var bestDist = Double.MAX_VALUE
+        val candidates = mutableListOf<BlockPos>()
 
         for (x in -radius..radius) {
             for (y in -radius..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     if (isReadyToHarvest(world, pos)) {
-                        val dist = pos.getSquaredDistance(origin)
-                        if (dist < bestDist) {
-                            bestDist = dist
-                            best = pos.toImmutable()
-                        }
+                        candidates.add(pos.toImmutable())
                     }
                 }
             }
         }
-        return best
+        return candidates.randomOrNull()
+    }
+
+    /**
+     * Finds a random growing (not yet ripe) harvestable block to wander towards.
+     */
+    private fun findGrowing(world: World, origin: BlockPos, radius: Int): BlockPos? {
+        val candidates = mutableListOf<BlockPos>()
+        for (x in -radius..radius) {
+            for (y in -radius..radius) {
+                for (z in -radius..radius) {
+                    val pos = origin.add(x, y, z)
+                    if (isHarvestableBlock(world, pos) && !isReadyToHarvest(world, pos)) {
+                        candidates.add(pos.toImmutable())
+                    }
+                }
+            }
+        }
+        return candidates.randomOrNull()
+    }
+
+    /**
+     * Checks if a block is a harvestable type at all (crop, berry, apricorn, etc.) regardless of age.
+     */
+    private fun isHarvestableBlock(world: World, pos: BlockPos): Boolean {
+        val state = world.getBlockState(pos)
+        val block = state.block
+        return state.isIn(APRICORNS_TAG) || block is BerryBlock || block is CropBlock
+            || block is NetherWartBlock || block is SweetBerryBushBlock || block is MintBlock
+            || block is MedicinalLeekBlock || block is RevivalHerbBlock || block is HeartyGrainsBlock
+            || block is NutBushBlock || block is BugwortBlock || block is VivichokeBlock
     }
 
     private fun isReadyToHarvest(world: World, pos: BlockPos): Boolean {
@@ -253,15 +293,11 @@ object HarvesterExecutor : SkillExecutor {
         return state.getDroppedStacks(lootParams)
     }
 
-    private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
+    private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID, speed: Double = 1.0) {
         val items = heldItems[pokemonId] ?: return
-        val chestPos = InventoryHelper.findBestContainer(world, pokemonEntity.blockPos, 10, items) ?: return
-
-        NavigationHelper.navigateTo(pokemonEntity, chestPos)
-        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)) {
-            InventoryHelper.insertItems(world, chestPos, items)
-            heldItems.remove(pokemonId)
-        }
+        // Drop items on the ground — Gatherer will pick them up and sort into chests
+        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        heldItems.remove(pokemonId)
     }
 
 

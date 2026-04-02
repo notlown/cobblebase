@@ -2,6 +2,7 @@ package notlown.cobblebase.core.executors
 
 import net.minecraft.block.BarrelBlock
 import net.minecraft.block.ChestBlock
+import net.minecraft.entity.ItemEntity
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
@@ -93,6 +94,25 @@ object InventoryHelper {
         }
         // Didn't fit
         return stack
+    }
+
+    /**
+     * Drops items on the ground at the Pokemon's position.
+     * Used by all executors except Gatherer (which sorts into chests).
+     */
+    fun dropItems(world: World, pos: BlockPos, items: List<ItemStack>) {
+        for (stack in items) {
+            if (stack.isEmpty) continue
+            val entity = ItemEntity(
+                world,
+                pos.x + 0.5,
+                pos.y + 1.0,
+                pos.z + 0.5,
+                stack.copy()
+            )
+            entity.setPickupDelay(20) // 1 second before pickup
+            world.spawnEntity(entity)
+        }
     }
 
     private fun findAllContainers(world: World, origin: BlockPos, radius: Int): List<BlockPos> {

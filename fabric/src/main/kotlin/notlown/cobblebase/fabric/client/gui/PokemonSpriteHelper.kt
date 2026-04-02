@@ -133,13 +133,14 @@ object PokemonSpriteHelper {
             val matrixStack = context.matrices
 
             matrixStack.push()
-            // Position: center of icon area — Pokemon portrait anchors at bottom-center
+            // Position: drawProfilePokemon renders the Pokemon ABOVE the translate point
+            // So we translate to the bottom-center of where we want the icon
             matrixStack.translate(
                 (x + ICON_SIZE / 2.0),
-                (y + ICON_SIZE.toDouble() - 2.0),
+                (y.toDouble() + 4.0),
                 0.0
             )
-            matrixStack.scale(1.8F, 1.8F, 1F)
+            matrixStack.scale(1.2F, 1.2F, 1F)
 
             drawProfilePokemon(
                 species = species,

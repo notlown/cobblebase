@@ -30,6 +30,7 @@ object HealerExecutor : SkillExecutor {
 
     // Active healing state: healer UUID -> HealingSession
     private val activeSessions = mutableMapOf<UUID, HealingSession>()
+    private val navStartTime = mutableMapOf<UUID, Long>()  // track when healer started navigating to player
 
     private class HealingSession(
         val targetPlayer: ServerPlayerEntity,
@@ -96,10 +97,18 @@ object HealerExecutor : SkillExecutor {
             .minByOrNull { it.squaredDistanceTo(pokemonEntity.pos) }
             ?: return
 
-        // Navigate to player
+        // Navigate to player — use generous range check (5 blocks) and auto-heal after 5s timeout
         NavigationHelper.navigateTo(pokemonEntity, target.blockPos)
+        val distToPlayer = pokemonEntity.squaredDistanceTo(target)
+        val closeEnough = distToPlayer < 36.0 // 6 blocks squared
 
-        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target.blockPos, 3.0)) {
+        // Track navigation time for timeout
+        val navKey = pokemonEntity.pokemon.uuid
+        val navStarted = navStartTime.getOrPut(navKey) { now }
+        val navTimedOut = now - navStarted > 100L // 5 seconds timeout
+
+        if (closeEnough || navTimedOut) {
+            navStartTime.remove(navKey)
             // Start healing session
             val monsCount = if (skillEntry.proficiency >= 5) 6 else skillEntry.proficiency
             val monsToHeal = selectMonsToHeal(target, monsCount)

@@ -140,6 +140,23 @@ class LogsPanel(
 
         context.disableScissor()
 
+        // Scrollbar
+        val totalContentHeight = entries.size * ROW_HEIGHT
+        val visibleHeight = contentBottom - contentTop
+        if (totalContentHeight > visibleHeight) {
+            val trackX = panelX + panelW - 6
+            val trackTop = contentTop
+            val trackHeight = visibleHeight
+            // Track background
+            context.fill(trackX, trackTop, trackX + 4, trackTop + trackHeight, 0x44FFFFFF.toInt())
+            // Thumb
+            val thumbHeight = (visibleHeight.toFloat() / totalContentHeight * trackHeight).toInt().coerceAtLeast(16)
+            val scrollRange = totalContentHeight - visibleHeight
+            val scrollProgress = (-scrollY).toFloat() / scrollRange.coerceAtLeast(1)
+            val thumbY = trackTop + ((trackHeight - thumbHeight) * scrollProgress).toInt()
+            context.fill(trackX, thumbY, trackX + 4, thumbY + thumbHeight, 0xFFAAAAAA.toInt())
+        }
+
         // Footer line
         context.fill(panelX, panelY + panelH - 28, panelX + panelW, panelY + panelH - 27, CobblebaseScreen.PANEL_BORDER)
 

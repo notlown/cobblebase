@@ -16,20 +16,11 @@ import java.io.File
  */
 object LogManager {
 
-    enum class Rarity {
-        COMMON, UNCOMMON, RARE, ULTRA_RARE;
-
-        val displayName: String
-            get() = name.replace("_", " ").lowercase()
-                .replaceFirstChar { it.uppercase() }
-
-        val color: Int
-            get() = when (this) {
-                COMMON -> 0xAAAAAA
-                UNCOMMON -> 0x55FF55
-                RARE -> 0x5555FF
-                ULTRA_RARE -> 0xFFAA00
-            }
+    enum class Rarity(val color: Int, val displayName: String) {
+        COMMON(0xAAAAAA, "Common"),
+        UNCOMMON(0x55FF55, "Uncommon"),
+        RARE(0x5555FF, "Rare"),
+        ULTRA_RARE(0xFFAA00, "Ultra Rare");
     }
 
     data class LogEntry(

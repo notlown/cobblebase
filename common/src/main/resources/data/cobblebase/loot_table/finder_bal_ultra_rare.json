@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:master_ball", "weight": 1 },
+        { "type": "minecraft:item", "name": "cobblemon:beast_ball", "weight": 2 },
+        { "type": "minecraft:item", "name": "cobblemon:dream_ball", "weight": 2 },
+        { "type": "minecraft:item", "name": "cobblemon:park_ball", "weight": 2 },
+        { "type": "minecraft:item", "name": "cobblemon:cherish_ball", "weight": 1 }
+      ]
+    }
+  ]
+}

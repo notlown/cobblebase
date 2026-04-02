@@ -66,7 +66,7 @@ Open the Pasture Block and click the **"Skills"** button to assign jobs:
 | **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
 | **Support** | Healer, Mentor | Healer: direct % healing + revive. Mentor: passive XP boost for all Pokemon in the same pasture |
 | **Utility** | Irrigator, Extinguisher, Item Gatherer, Scout, Archeologist, Finder | Various helper jobs (Gatherer picks up dropped items and sorts into chests) |
-| **Specialized Finders** | Finder Evo, Finder Hea, Finder Bui, Finder Ore, Finder See | Themed item finders with dedicated loot tables |
+| **Specialized Finders** | Finder Evo, Finder Hea, Finder Bui, Finder Ore, Finder See, Finder Bal, Finder Exp | Themed item finders with dedicated loot tables |
 | **Fairy/Starters** | Friend Recruiter | Spawns wild Pokemon of same type nearby |
 | **Legendary** | Recruiter, Aura Boost, Lucky Charm, Growth Aura | Exclusive to rare/legendary Pokemon |
 
@@ -77,7 +77,7 @@ Every skill has themed visual feedback:
 - **Working particles** during cooldowns so you can see who's busy
 
 ### Specialized Finder Skills
-Five themed Finder variants that use dedicated loot tables for targeted item discovery:
+Seven themed Finder variants that use dedicated loot tables for targeted item discovery:
 
 | Finder Type | Focus | Example Loot |
 |-------------|-------|--------------|
@@ -86,8 +86,10 @@ Five themed Finder variants that use dedicated loot tables for targeted item dis
 | **Finder Bui** | Building materials | Planks, Bricks, Stone, Prismarine, Crying Obsidian |
 | **Finder Ore** | Ores and minerals | Raw Iron/Gold/Copper, Diamond, Ancient Debris |
 | **Finder See** | Seeds and plants | Wheat/Apricorn/Mint Seeds, Berries, Torchflower Seeds |
+| **Finder Bal** | Pokeballs | Poke/Great/Ultra Ball, Apricorn Balls, Master Ball |
+| **Finder Exp** | XP Candies | Exp Candy XS-XL, Rare Candy |
 
-Each type shares the same proficiency-based rarity tiers (Common/Uncommon/Rare/Ultra Rare) as the generic Finder. Healer Pokemon automatically get **Finder Hea**, and Harvester Pokemon automatically get **Finder See**.
+Each type shares the same proficiency-based rarity tiers (Common/Uncommon/Rare/Ultra Rare) as the generic Finder. Healer Pokemon automatically get **Finder Hea**, Harvester Pokemon automatically get **Finder See**, Mentor Pokemon automatically get **Finder Exp**, and collector Pokemon (Aipom, Zigzagoon, etc.) get **Finder Bal**.
 
 ### Smart Inventory System
 - Pokemon find and deposit items in the **nearest chest or barrel**

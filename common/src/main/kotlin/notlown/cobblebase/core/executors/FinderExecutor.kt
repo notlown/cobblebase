@@ -142,5 +142,11 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
 
         /** Finder See -- Seeds and plantable items only. */
         val See = FinderExecutor("finder_see")
+
+        /** Finder Bal -- Pokeballs only. */
+        val Bal = FinderExecutor("finder_bal")
+
+        /** Finder Exp -- XP Candies only. */
+        val Exp = FinderExecutor("finder_exp")
     }
 }

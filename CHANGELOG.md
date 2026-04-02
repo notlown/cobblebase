@@ -1,5 +1,18 @@
 # Changelog - Cobblebase
 
+## [0.3.1] - 2026-04-01
+
+### 2 New Specialized Finder Subtypes
+- **Finder Bal** (`finder_bal`) -- Pokeballs only: Poke/Great Ball + color balls (Common), Ultra/Net/Dive/Nest/Repeat/Timer/Quick Ball (Uncommon), Dusk/Luxury/Premier/Heal + Apricorn balls (Rare), Master/Beast/Dream/Park/Cherish Ball (Ultra Rare)
+- **Finder Exp** (`finder_exp`) -- XP Candies only: Exp Candy XS/S (Common), Exp Candy S/M (Uncommon), Exp Candy M/L (Rare), Exp Candy L/XL + Rare Candy (Ultra Rare)
+- **8 new loot table JSONs** -- 4 tiers x 2 types
+- **2 new skill definition JSONs** in `data/cobblebase/skills/`
+- **Species assignments:**
+  - Finder Bal: Aipom (3), Ambipom (4), Pachirisu (3), Sentret (2), Furret (3), Zigzagoon (2), Linoone (3) -- collector Pokemon
+  - Finder Exp: Added to all 11 Mentor Pokemon (proficiency = mentor prof - 1, min 1): Alakazam (4), Metagross (3), Gardevoir (3), Slowking (3), Oranguru (3), Espeon (2), Lucario (2), Mr. Mime (2), Orbeetle (2), Blissey (1), Chansey (1)
+- ExecutorRegistry updated with 2 new executor registrations
+- FinderExecutor companion object: added `Bal` and `Exp` instances
+
 ## [0.3.0] - 2026-04-01
 
 ### 5 Specialized Finder Subtypes

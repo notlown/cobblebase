@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:finder_exp",
+  "name": "Finder Exp",
+  "description": "Searches the area for XP Candies and Rare Candies",
+  "category": "gathering",
+  "cooldownSeconds": 240,
+  "searchRadius": 10,
+  "executor": "finder_exp",
+  "effectType": "default"
+}

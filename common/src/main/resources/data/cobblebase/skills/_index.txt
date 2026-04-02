@@ -4,8 +4,10 @@ brew_fuel.json
 diving.json
 extinguisher.json
 finder.json
+finder_bal.json
 finder_bui.json
 finder_evo.json
+finder_exp.json
 finder_hea.json
 finder_ore.json
 finder_see.json

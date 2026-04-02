@@ -43,6 +43,16 @@ class SkillsPanel(
     private var scrollX = 0
     private var scrollY = 0
     private var contentY = 0
+    private var isDraggingScrollbar = false
+
+    // Scrollbar track dimensions (updated each render)
+    private var trackX = 0
+    private var trackTop = 0
+    private var trackHeight = 0
+    private var totalContentHeight = 0
+    private var visibleHeight = 0
+    private var thumbHeight = 0
+    private var thumbY = 0
 
     fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
         allButtons.clear()
@@ -164,20 +174,23 @@ class SkillsPanel(
         context.disableScissor()
 
         // Scrollbar
-        val totalContentHeight = pokemonList.size * ROW_HEIGHT
-        val visibleHeight = contentBottom - contentY
+        totalContentHeight = pokemonList.size * ROW_HEIGHT
+        visibleHeight = contentBottom - contentY
         if (totalContentHeight > visibleHeight) {
-            val trackX = panelX + panelW - 6
-            val trackTop = contentY
-            val trackHeight = visibleHeight
+            trackX = panelX + panelW - 8
+            trackTop = contentY
+            trackHeight = visibleHeight
             // Track background
-            context.fill(trackX, trackTop, trackX + 4, trackTop + trackHeight, 0x44FFFFFF.toInt())
+            context.fill(trackX, trackTop, trackX + 6, trackTop + trackHeight, 0x44FFFFFF.toInt())
             // Thumb
-            val thumbHeight = (visibleHeight.toFloat() / totalContentHeight * trackHeight).toInt().coerceAtLeast(16)
+            thumbHeight = (visibleHeight.toFloat() / totalContentHeight * trackHeight).toInt().coerceAtLeast(16)
             val scrollRange = totalContentHeight - visibleHeight
             val scrollProgress = (-scrollY).toFloat() / scrollRange.coerceAtLeast(1)
-            val thumbY = trackTop + ((trackHeight - thumbHeight) * scrollProgress).toInt()
-            context.fill(trackX, thumbY, trackX + 4, thumbY + thumbHeight, 0xFFAAAAAA.toInt())
+            thumbY = trackTop + ((trackHeight - thumbHeight) * scrollProgress).toInt()
+            // Highlight when hovering or dragging
+            val isHovered = mouseX in trackX..(trackX + 6) && mouseY in thumbY..(thumbY + thumbHeight)
+            val thumbColor = if (isDraggingScrollbar || isHovered) 0xFFDDDDDD.toInt() else 0xFFAAAAAA.toInt()
+            context.fill(trackX, thumbY, trackX + 6, thumbY + thumbHeight, thumbColor)
         }
 
         // Footer line
@@ -185,6 +198,16 @@ class SkillsPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Check scrollbar click first
+        if (totalContentHeight > visibleHeight &&
+            mouseX >= trackX && mouseX <= trackX + 6 &&
+            mouseY >= trackTop && mouseY <= trackTop + trackHeight
+        ) {
+            isDraggingScrollbar = true
+            updateScrollFromMouse(mouseY)
+            return true
+        }
+
         val contentBottom = panelY + panelH - 28
         for (btn in allButtons) {
             val rx = btn.baseX + scrollX
@@ -200,13 +223,43 @@ class SkillsPanel(
         return false
     }
 
+    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        if (isDraggingScrollbar) {
+            updateScrollFromMouse(mouseY)
+            return true
+        }
+        return false
+    }
+
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (isDraggingScrollbar) {
+            isDraggingScrollbar = false
+            return true
+        }
+        return false
+    }
+
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (net.minecraft.client.gui.screen.Screen.hasShiftDown()) {
             scrollX = (scrollX + verticalAmount.toInt() * 16).coerceAtMost(0)
         } else {
             scrollY = (scrollY + verticalAmount.toInt() * 16).coerceAtMost(0)
+            clampScroll()
         }
         return true
+    }
+
+    private fun updateScrollFromMouse(mouseY: Double) {
+        val scrollRange = totalContentHeight - visibleHeight
+        if (scrollRange <= 0) return
+        val relativeY = ((mouseY - trackTop - thumbHeight / 2.0) / (trackHeight - thumbHeight)).coerceIn(0.0, 1.0)
+        scrollY = -(relativeY * scrollRange).toInt()
+        clampScroll()
+    }
+
+    private fun clampScroll() {
+        val maxScroll = (totalContentHeight - visibleHeight).coerceAtLeast(0)
+        scrollY = scrollY.coerceIn(-maxScroll, 0)
     }
 
     private fun selectSkill(pokemonId: UUID, skillId: String?) {

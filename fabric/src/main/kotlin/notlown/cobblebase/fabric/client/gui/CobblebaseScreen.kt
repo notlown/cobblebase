@@ -166,9 +166,29 @@ class CobblebaseScreen(
         // Delegate to active tab
         return when (activeTab) {
             Tab.SKILLS -> skillsPanel.mouseClicked(mouseX, mouseY, button)
-            Tab.BUFFS -> false
-            Tab.LOGS -> false
+            Tab.BUFFS -> buffsPanel.mouseClicked(mouseX, mouseY, button)
+            Tab.LOGS -> logsPanel.mouseClicked(mouseX, mouseY, button)
         }
+    }
+
+    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        val handled = when (activeTab) {
+            Tab.SKILLS -> skillsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+            Tab.BUFFS -> buffsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+            Tab.LOGS -> logsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+        }
+        if (handled) return true
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+    }
+
+    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        val handled = when (activeTab) {
+            Tab.SKILLS -> skillsPanel.mouseReleased(mouseX, mouseY, button)
+            Tab.BUFFS -> buffsPanel.mouseReleased(mouseX, mouseY, button)
+            Tab.LOGS -> logsPanel.mouseReleased(mouseX, mouseY, button)
+        }
+        if (handled) return true
+        return super.mouseReleased(mouseX, mouseY, button)
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {

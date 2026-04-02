@@ -2,6 +2,7 @@ package notlown.cobblebase.core.effects
 
 import com.cobblemon.mod.common.CobblemonNetwork
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
+import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.Cobblebase
 import com.cobblemon.mod.common.net.messages.client.animation.PlayPosableAnimationPacket
 import net.minecraft.particle.ParticleTypes
@@ -53,11 +54,14 @@ object SkillEffects {
         val z = pokemonEntity.z
 
         // Play cry sound from Cobblebase's own sound pack (registered during init)
-        val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
-        val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
-        val soundEvent = Registries.SOUND_EVENT.get(cryId)
-        if (soundEvent != null) {
-            world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, 0.8f, 1.0f)
+        if (CobblebaseConfig.cryEnabled && CobblebaseConfig.cryVolume > 0) {
+            val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
+            val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
+            val soundEvent = Registries.SOUND_EVENT.get(cryId)
+            if (soundEvent != null) {
+                val volume = CobblebaseConfig.cryVolume / 100f
+                world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, volume, 1.0f)
+            }
         }
 
         when (effectType) {

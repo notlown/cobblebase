@@ -11,7 +11,7 @@ class CobblebaseClothConfig : ConfigData {
     var general = GeneralGroup()
 
     @ConfigEntry.Gui.CollapsibleObject
-    var passiveXp = PassiveXpGroup()
+    var cry = CryGroup()
 
     @ConfigEntry.Gui.CollapsibleObject
     var skills = SkillsGroup()
@@ -22,9 +22,19 @@ class CobblebaseClothConfig : ConfigData {
         var defaultSearchRadius = 10
     }
 
+    class CryGroup {
+        var cryEnabled = true
+        @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
+        var cryVolume = 80
+    }
+
+    // Passive XP is now controlled by the Mentor skill internally.
+    // These backing fields remain for PassiveXp.kt but are hidden from the GUI.
+    @ConfigEntry.Gui.Excluded
+    var passiveXp = PassiveXpGroup()
+
     class PassiveXpGroup {
         var enabled = true
-        @ConfigEntry.BoundedDiscrete(min = 1, max = 50)
         var xpPercent = 5
         var intervalSeconds: Long = 60
     }
@@ -37,6 +47,9 @@ class CobblebaseClothConfig : ConfigData {
         var recruitingEnabled = true
         var generationEnabled = true
         var utilityEnabled = true
+        var gathererEnabled = true
+        @ConfigEntry.BoundedDiscrete(min = 5, max = 300)
+        var gathererCooldownSeconds = 10
         @ConfigEntry.BoundedDiscrete(min = 30, max = 1800)
         var friendRecruiterCooldownSeconds = 300
         @ConfigEntry.BoundedDiscrete(min = 60, max = 3600)

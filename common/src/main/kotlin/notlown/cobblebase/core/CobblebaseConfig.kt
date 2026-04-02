@@ -14,7 +14,11 @@ object CobblebaseConfig {
     val devMode get() = holder.general.devMode
     val defaultSearchRadius get() = holder.general.defaultSearchRadius
 
-    // Passive XP
+    // Cry
+    val cryEnabled get() = holder.cry.cryEnabled
+    val cryVolume get() = holder.cry.cryVolume
+
+    // Passive XP (internal, hidden from GUI - controlled by Mentor skill)
     val passiveXpEnabled get() = holder.passiveXp.enabled
     val passiveXpPercent get() = holder.passiveXp.xpPercent
     val passiveXpIntervalSeconds get() = holder.passiveXp.intervalSeconds
@@ -24,6 +28,10 @@ object CobblebaseConfig {
     val mentorMaxBoost get() = holder.mentor.mentorMaxBoost
 
     // Skills
+    // Gatherer
+    val gathererEnabled get() = holder.skills.gathererEnabled
+    val gathererCooldownSeconds get() = holder.skills.gathererCooldownSeconds.toLong()
+
     // Irrigator
     val irrigatorEnabled get() = holder.irrigator.irrigatorEnabled
     val irrigatorCooldownSeconds get() = holder.irrigator.irrigatorCooldownSeconds.toLong()

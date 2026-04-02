@@ -7,10 +7,9 @@
   "text.autoconfig.cobblebase.option.general.devMode": "Dev Mode (5s cooldowns for testing)",
   "text.autoconfig.cobblebase.option.general.defaultSearchRadius": "Default search radius",
 
-  "text.autoconfig.cobblebase.option.passiveXp": "Passive XP",
-  "text.autoconfig.cobblebase.option.passiveXp.enabled": "Enabled",
-  "text.autoconfig.cobblebase.option.passiveXp.xpPercent": "XP per interval (% of next level)",
-  "text.autoconfig.cobblebase.option.passiveXp.intervalSeconds": "Interval (seconds)",
+  "text.autoconfig.cobblebase.option.cry": "Pokemon Cries",
+  "text.autoconfig.cobblebase.option.cry.cryEnabled": "Enable Pokemon cries",
+  "text.autoconfig.cobblebase.option.cry.cryVolume": "Cry volume (%)",
 
   "text.autoconfig.cobblebase.option.skills": "Skill Toggles",
   "text.autoconfig.cobblebase.option.skills.harvestingEnabled": "Harvesting skills",
@@ -20,6 +19,8 @@
   "text.autoconfig.cobblebase.option.skills.recruitingEnabled": "Recruiting skills",
   "text.autoconfig.cobblebase.option.skills.generationEnabled": "Generation skills (lava, water, fuel)",
   "text.autoconfig.cobblebase.option.skills.utilityEnabled": "Utility skills (scout, irrigator, etc.)",
+  "text.autoconfig.cobblebase.option.skills.gathererEnabled": "Gatherer skill",
+  "text.autoconfig.cobblebase.option.skills.gathererCooldownSeconds": "Gatherer cooldown (seconds)",
   "text.autoconfig.cobblebase.option.skills.friendRecruiterCooldownSeconds": "Friend Recruiter cooldown (seconds)",
   "text.autoconfig.cobblebase.option.skills.legendaryRecruiterCooldownSeconds": "Legendary Recruiter cooldown (seconds)",
 
@@ -36,5 +37,9 @@
   "text.autoconfig.cobblebase.option.recruiterRates.uncommonRate": "Uncommon rate (%)",
   "text.autoconfig.cobblebase.option.recruiterRates.rareRate": "Rare rate (%)",
   "text.autoconfig.cobblebase.option.recruiterRates.ultraRareRate": "Ultra-Rare rate (%)",
-  "text.autoconfig.cobblebase.option.recruiterRates.spawnCooldownSeconds": "Spawn cooldown (seconds)"
+  "text.autoconfig.cobblebase.option.recruiterRates.spawnCooldownSeconds": "Spawn cooldown (seconds)",
+
+  "text.autoconfig.cobblebase.option.mentor": "Mentor",
+  "text.autoconfig.cobblebase.option.mentor.mentorEnabled": "Mentor skill enabled",
+  "text.autoconfig.cobblebase.option.mentor.mentorMaxBoost": "Max XP boost multiplier"
 }

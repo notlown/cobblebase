@@ -29,6 +29,7 @@ import java.util.UUID
 object GathererExecutor : SkillExecutor {
 
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
+    private val originalHeldItem = mutableMapOf<UUID, ItemStack>()  // backup of Pokemon's real held item
     private val targetItem = mutableMapOf<UUID, Int>()          // entity ID of target ItemEntity
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastPickupTime = mutableMapOf<UUID, Long>()
@@ -43,14 +44,8 @@ object GathererExecutor : SkillExecutor {
      * Prof 1 = 5, Prof 2 = 7, Prof 3 = 8, Prof 4 = 10, Prof 5 = 12
      */
     private fun getRadiusForProficiency(proficiency: Int): Double {
-        return when (proficiency) {
-            1 -> 5.0
-            2 -> 7.0
-            3 -> 8.0
-            4 -> 10.0
-            5 -> 12.0
-            else -> 8.0
-        }
+        // All proficiency levels get max radius — Prof only affects speed + cooldown
+        return 12.0
     }
 
     /**
@@ -151,6 +146,13 @@ object GathererExecutor : SkillExecutor {
 
         heldItems[pokemonId] = listOf(stack)
 
+        // Show gathered item visually on the Pokemon (Cobblemon renders held items)
+        val pokemon = pokemonEntity.pokemon
+        if (!originalHeldItem.containsKey(pokemonId)) {
+            originalHeldItem[pokemonId] = pokemon.heldItem()
+        }
+        pokemon.swapHeldItem(stack.copy(), decrement = false)
+
         // Pickup particles (item sparkle effect)
         val x = pokemonEntity.x
         val y = pokemonEntity.y
@@ -173,6 +175,7 @@ object GathererExecutor : SkillExecutor {
         if (chestPos == null) {
             // No chest found - drop items so Pokemon doesn't get stuck
             heldItems.remove(pokemonId)
+            restoreOriginalHeldItem(pokemonEntity, pokemonId)
             return
         }
 
@@ -180,6 +183,7 @@ object GathererExecutor : SkillExecutor {
         if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)) {
             InventoryHelper.insertItems(world, chestPos, items)
             heldItems.remove(pokemonId)
+            restoreOriginalHeldItem(pokemonEntity, pokemonId)
 
             // Happy villager particles on deposit
             val x = pokemonEntity.x
@@ -200,6 +204,18 @@ object GathererExecutor : SkillExecutor {
             }
 
             Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} deposited items at $chestPos")
+        }
+    }
+
+    /**
+     * Restores the Pokemon's original held item (or clears it) after depositing gathered items.
+     */
+    private fun restoreOriginalHeldItem(pokemonEntity: PokemonEntity, pokemonId: UUID) {
+        val original = originalHeldItem.remove(pokemonId) ?: ItemStack.EMPTY
+        if (original.isEmpty) {
+            pokemonEntity.pokemon.removeHeldItem()
+        } else {
+            pokemonEntity.pokemon.swapHeldItem(original, decrement = false)
         }
     }
 }

@@ -128,16 +128,11 @@ class BuffExecutor(
     }
 
     /**
-     * Cooldown in ticks based on proficiency.
-     * Prof 1: 1200 (60s), Prof 2: 900 (45s), Prof 3: 600 (30s),
-     * Prof 4: 300 (15s), Prof 5: 0 (reapply every tick)
+     * No cooldown for any proficiency — buffs reapply constantly.
+     * Proficiency only affects range.
      */
     private fun getCooldownTicks(prof: Int): Long {
-        if (prof == 1) return 1200L
-        if (prof == 2) return 900L
-        if (prof == 3) return 600L
-        if (prof == 4) return 300L
-        return 0L // prof 5 — no cooldown, effectively permanent
+        return 0L
     }
 
     /**

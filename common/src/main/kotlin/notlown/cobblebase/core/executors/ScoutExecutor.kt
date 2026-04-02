@@ -78,8 +78,8 @@ object ScoutExecutor : SkillExecutor {
         "lush_caves" to "Lush Caves"
     )
 
-    private const val MAX_DISTANCE_FROM_PASTURE = 5.0
-    private const val TELEPORT_DISTANCE = 10.0
+    private const val MAX_DISTANCE_FROM_PASTURE = 20.0
+    private const val TELEPORT_DISTANCE = 25.0
 
     override fun tick(
         world: World,

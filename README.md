@@ -1,275 +1,212 @@
-# Cobblebase
+# Cobblebase ⚡
 
+**Palworld-style base management for Cobblemon — assign jobs, watch Pokemon work, build the ultimate base.**
+
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=minecraft)](https://minecraft.net)
+[![Cobblemon](https://img.shields.io/badge/Cobblemon-1.7.0+-E8532E?style=flat-square)](https://cobblemon.com)
+[![Fabric](https://img.shields.io/badge/Fabric-0.16.14+-DBD0B4?style=flat-square)](https://fabricmc.net)
 [![License: MPL-2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg?style=flat-square)](https://opensource.org/licenses/MPL-2.0)
 
-> Palworld-style Pokemon base management for [Cobblemon](https://cobblemon.com/)
+---
 
-**Cobblebase** turns the Pasture Block into a living, breathing Pokemon base. Every Pokemon has unique job skills -- not based on type, but on species. Assign your Pokemon to jobs, watch them work, and build the ultimate base.
+## Overview
 
-## Features
+**Cobblebase** transforms the Pasture Block into a living, breathing Pokemon base. Every Pokemon species has hand-crafted job skills and proficiency levels — not based on type, but on identity. A Charizard fills lava cauldrons and guards your base. An Alakazam mentors your entire team. A Mew recruits legendaries.
 
-### Per-Species Skill System
-Unlike type-based job systems, Cobblebase gives **every Pokemon species its own unique skill set**, just like Palworld's work suitabilities:
+- 💎 **150+ Pokemon** with unique, hand-crafted skill assignments
+- ⚡ **30 skills** across 8 categories — gathering, finding, combat, support, logistics, exploration, environmental, and recruiting
+- ⭐ **Proficiency 1–5** per skill per species — novice to master
+- 🎯 **Tabbed GUI** with Skills, Buffs, Logs, and Discovery panels
+- 🛡️ **Fully configurable** via Cloth Config and JSON datapacks
 
-| Pokemon | Skills | Proficiency |
-|---------|--------|-------------|
-| Charizard | Lava Fill, Fuel, Guard, Scout | 4, 4, 3, 4 |
-| Nidoking | Archeology, Guard, Mining | 4, 3, 2 |
-| Ninjask | Harvester, Scout, Item Gather | 4, 5, 2 |
-| Munchlax | Finder, Item Gatherer | 3, 4 |
-| Furret | Finder, Item Gatherer | 3, 4 |
-| Chansey | Healer, Mentor | 4, 1 |
-| Alakazam | Gatherer, Scout, Mentor | 5, 4, 5 (Master) |
-| Mew | Recruiter, Lucky Charm, Aura Boost | 5, 5, 3 |
-| Arceus | Recruiter, Aura, Lucky Charm, Growth | 5, 5, 5, 5 |
+---
 
-**150+ Pokemon** have hand-crafted skill assignments, including all starters from Gen 1-9. Fairy Pokemon and starters get **Friend Recruiter**, legendaries get exclusive skills like **Recruiter** and **Aura Boost**.
+## 🌾 Gathering
 
-### Friend Recruiter System
-Fairy Pokemon and all starters can recruit wild Pokemon of their own type:
-- **Type-based**: A Water starter recruits Water-types, a Fire starter recruits Fire-types
-- **Official rarity data**: Uses Cobblemon 1.7.3 spawn bucket data (Common/Uncommon/Rare/Ultra-Rare)
-- **Proficiency scaling**: Prof 1 = normal rates, Prof 5 = double chance for rare/ultra-rare
-- **Visual feedback**: Recruited Pokemon spawn with enchant sparkles and play their cry
-- **All rates configurable** in the settings menu
+Pokemon harvest, fish, mine, and collect resources from the world around your base.
+
+| Job | Description | Example Pokemon |
+|-----|-------------|-----------------|
+| **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Bulbasaur (3), Tropius (5), Breloom (4) |
+| **Fishing** | Navigates to water and catches fish/loot | Magikarp (1), Gyarados (5), Goldeen (3) |
+| **Mining** | Digs for ores, fossils, gems, and tumblestones | Excadrill (5), Dugtrio (4), Onix (3) |
+| **Honey Collect** | Gathers honey from bee nests | Combee (3), Vespiquen (5), Teddiursa (2) |
+
+---
+
+## 🔍 Finding
+
+Seven specialized Finder subtypes with dedicated loot tables for targeted item discovery.
+
+| Job | Focus | Example Loot |
+|-----|-------|--------------|
+| **Finder Evo** | Evolution items | Fire/Thunder Stone, Linking Cord, Ability Patch |
+| **Finder Hea** | Healing items | Potions, Revives, Sacred Ash |
+| **Finder Bui** | Building materials | Prismarine, Sea Lantern, Crying Obsidian |
+| **Finder Ore** | Ores and minerals | Raw Iron/Gold, Diamond, Ancient Debris |
+| **Finder See** | Seeds and plants | Apricorn Seeds, Mint Seeds, Torchflower Seeds |
+| **Finder Bal** | Pokeballs | Great Ball, Apricorn Balls, Master Ball |
+| **Finder Exp** | XP Candies | Exp Candy XS–XL, Rare Candy |
+
+Finder Hea is auto-assigned to Healer Pokemon, Finder See to Harvesters, Finder Exp to Mentors, and Finder Bal to collectors like Aipom and Zigzagoon.
+
+---
+
+## ⚔️ Combat
+
+| Job | Description | Example Pokemon |
+|-----|-------------|-----------------|
+| **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Nidoking (3), Charizard (3), Lucario (3) |
+
+---
+
+## 💚 Support
+
+Healing, mentoring, and 8 buff skills that apply status effects to all players within 16 blocks.
+
+| Job | Effect | Example Pokemon |
+|-----|--------|-----------------|
+| **Healer** | Direct % HP healing + revive fainted Pokemon | Blissey (5), Chansey (4), Clefable (3) |
+| **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam (5), Metagross (4), Gardevoir (4) |
+| **Speed Boost** | Speed II | Jolteon (5), Ninjask (4), Rapidash (4) |
+| **Strength Boost** | Strength I | Machamp (5), Hariyama (4), Conkeldurr (4) |
+| **Resistance Boost** | Resistance I | Steelix (5), Aggron (4), Bastiodon (4) |
+| **Night Vision** | Night Vision | Umbreon (5), Noctowl (4), Espeon (3) |
+| **Water Breathing** | Water Breathing | Lapras (5), Vaporeon (4), Milotic (4) |
+| **Jump Boost** | Jump Boost I | Lopunny (4), Hitmonlee (4), Blaziken (3) |
+| **Haste Boost** | Haste I | Alakazam (4), Metagross (3), Kadabra (3) |
+| **Saturation Boost** | Saturation | Snorlax (5), Munchlax (4), Slurpuff (3) |
+
+Buff duration and cooldown scale with proficiency — at Prof 5, buffs are effectively permanent (70s duration, 0s cooldown).
+
+---
+
+## 📦 Logistics
+
+| Job | Description | Example Pokemon |
+|-----|-------------|-----------------|
+| **Gatherer** | Picks up dropped items and sorts them into nearby chests | Snorlax (5), Furret (4), Munchlax (4) |
+
+Smart sorting prioritizes chests already containing the same item type. Search radius scales from 5 blocks (Prof 1) to 12 blocks (Prof 5).
+
+---
+
+## 🔭 Exploration
+
+| Job | Description | Example Pokemon |
+|-----|-------------|-----------------|
+| **Scout** | Discovers wild Pokemon, structures, and biomes | Ninjask (5), Pidgeot (4), Talonflame (4) |
+
+| Proficiency | Range | Discovers |
+|-------------|-------|-----------|
+| 1–2 | 50–100 blocks | Wild Pokemon only |
+| 3 | 120 blocks | + Structures (Villages, Mineshafts, Shipwrecks) |
+| 4–5 | 160–200 blocks | + Rare Biomes (Mushroom Fields, Deep Dark, Cherry Grove) |
+
+All discoveries persist permanently and appear in the Discovery GUI tab.
+
+---
+
+## 🌿 Environmental
+
+Pokemon that interact with blocks and containers around your base.
+
+| Job | Description | Example Pokemon |
+|-----|-------------|-----------------|
+| **Irrigator** | Hydrates nearby farmland | Squirtle (3), Lotad (2) |
+| **Lava Fill** | Fills cauldrons with lava | Charizard (4), Magmar (3) |
+| **Water Fill** | Fills cauldrons with water | Vaporeon (4), Poliwag (2) |
+| **Snow Fill** | Fills cauldrons with powder snow | Snover (3), Abomasnow (4) |
+| **Furnace Fuel** | Adds burn time to furnaces | Charizard (4), Magmar (3) |
+| **Brew Fuel** | Fuels brewing stands | Blaze (5), Magcargo (3) |
+
+---
+
+## 🎯 Recruiting
+
+Pokemon that attract and spawn new wild Pokemon near your base.
+
+| Job | Description | Example Pokemon |
+|-----|-------------|-----------------|
+| **Friend Recruiter** | Spawns wild Pokemon of same type | All starters, Fairy Pokemon |
+| **Legendary Recruiter** | Spawns rare/legendary Pokemon (longer cooldown) | Mew (5), Jirachi (4), Arceus (5) |
+
+Friend Recruiter uses official Cobblemon 1.7.3 spawn bucket data for accurate rarity distribution:
 
 | Proficiency | Common | Uncommon | Rare | Ultra-Rare |
 |-------------|--------|----------|------|------------|
-| 1 (base) | 93.8% | 5.0% | 1.0% | 0.2% |
-| 3 (skilled) | 90.3% | 7.5% | 1.5% | 0.3% |
-| 5 (master) | 86.8% | 10.0% | 2.0% | 0.4% |
+| 1 | 93.8% | 5.0% | 1.0% | 0.2% |
+| 3 | 90.3% | 7.5% | 1.5% | 0.3% |
+| 5 | 86.8% | 10.0% | 2.0% | 0.4% |
 
-### Proficiency System
-Each Pokemon has a proficiency level (1-5) for each of its skills:
-- **1** -- Novice (1.67x cooldown)
-- **2** -- Apprentice (1.33x cooldown)
-- **3** -- Skilled (normal speed)
-- **4** -- Expert (0.67x cooldown)
-- **5** -- Master (0.33x cooldown)
+---
 
-A Magikarp with Fishing proficiency 1 is slow. A Gyarados with Fishing proficiency 5 is a machine.
+## ⭐ Proficiency System
 
-### Cobblebase GUI (Tabbed Interface)
-Open the Pasture Block and click the **"Cobblebase"** button to manage your base:
+Every Pokemon has a proficiency level (1–5) for each of its skills. Higher proficiency means faster cooldowns, larger range, and better loot quality.
 
-#### Skills Tab
-- Each Pokemon shows **only the skills it can perform**
-- Click a skill to assign it (green = active)
-- **Auto mode** (default) -- Pokemon performs all its skills
-- **Manual mode** -- Pokemon focuses on one specific skill
-- Scrollable list for many Pokemon and skills
+| Level | Title | Cooldown Multiplier | Effect |
+|-------|-------|---------------------|--------|
+| 1 | Novice | 1.67x (slower) | Base rates, small range |
+| 2 | Apprentice | 1.33x | Slightly improved |
+| 3 | Skilled | 1.00x (normal) | Standard performance |
+| 4 | Expert | 0.67x (faster) | Better loot tiers, wider range |
+| 5 | Master | 0.33x (fastest) | Best rates, maximum range |
 
-#### Buffs Tab
-- Shows all currently active jobs/effects for this Pasture
-- Each active Pokemon displays: Pokemon Name, Job Name, Effect Description
-- Color-coded by category (green=gathering, orange=generation, red=combat, pink=support, blue=utility, gold=legendary)
-- Proficiency stars and detailed effect descriptions
+A Magikarp with Fishing Prof 1 is slow. A Gyarados with Fishing Prof 5 is a machine.
 
-#### Logs Tab
-- Activity log showing recent events for this Pasture
-- Scrollable table: Time, Pokemon, Action, Item, Rarity
-- Filter buttons: All, Uncommon+, Rare+, Ultra Rare
-- Color-coded by rarity: Common=gray, Uncommon=green, Rare=blue, Ultra Rare=gold
-- Last 100 events stored per pasture, auto-cleanup after 24 hours
+---
 
-#### Discovery Tab
-- Shows all permanent discoveries (structures and biomes) found by Scout Pokemon
-- Scrollable table: Type, Name, Coordinates, Discovered By, When
-- Filter buttons: All, Structures, Biomes
-- Color-coded by type: Structures=blue, Biomes=green
-- Persistent across sessions -- discoveries are saved to world data
+## 🎵 GUI — Tabbed Interface
 
-### 30 Skills Across 7 Categories
+Open any Pasture Block and click the **"Cobblebase"** button to access the management interface.
 
-| Category | Skills | Description |
-|----------|--------|-------------|
-| **Gathering** | Harvester, Fishing, Diving, Mining, Honey | Collect resources from the world (Mining digs for ores, tumblestones, fossils, and gems) |
-| **Generation** | Lava Fill, Water Fill, Snow Fill, Furnace Fuel, Brew Fuel | Produce resources in containers |
-| **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
-| **Support** | Healer, Mentor | Healer: direct % healing + revive. Mentor: passive XP boost for all Pokemon in the same pasture |
-| **Support Buffs** | Speed, Strength, Resistance, Night Vision, Water Breathing, Jump, Haste, Saturation | Apply Minecraft status effects to all players near the base |
-| **Utility** | Irrigator, Extinguisher, Item Gatherer, **Scout**, Archeologist, Finder | Various helper jobs (Scout discovers wild Pokemon, structures, and biomes; Gatherer picks up dropped items and sorts into chests) |
-| **Specialized Finders** | Finder Evo, Finder Hea, Finder Bui, Finder Ore, Finder See, Finder Bal, Finder Exp | Themed item finders with dedicated loot tables |
-| **Fairy/Starters** | Friend Recruiter | Spawns wild Pokemon of same type nearby |
-| **Legendary** | Recruiter, Aura Boost, Lucky Charm, Growth Aura | Exclusive to rare/legendary Pokemon |
+| Tab | What It Shows |
+|-----|---------------|
+| **Skills** | Per-Pokemon skill list. Click to assign (green = active). Auto or manual mode. |
+| **Buffs** | All active jobs/effects for this pasture. Color-coded by category with proficiency stars. |
+| **Logs** | Recent activity log. Filterable by rarity (Uncommon+, Rare+, Ultra Rare). Last 100 events. |
+| **Discovery** | Permanent scout discoveries — structures and biomes with coordinates. Filterable and persistent. |
 
-### Support Buff Skills
-Pokemon stationed at the pasture apply status effects to all players within 16 blocks of the base. Duration and cooldown scale with proficiency -- at Prof 5, buffs are effectively permanent with no cooldown.
+---
 
-| Buff | Effect | Key Pokemon (Prof) |
-|------|--------|-------------------|
-| **Speed Boost** | Speed II | Jolteon (5), Ninjask (4), Rapidash (4), Arcanine (3) |
-| **Strength Boost** | Strength I | Machamp (5), Hariyama (4), Conkeldurr (4), Lucario (3) |
-| **Resistance Boost** | Resistance I | Steelix (5), Aggron (4), Bastiodon (4), Shuckle (4) |
-| **Night Vision** | Night Vision | Umbreon (5), Noctowl (4), Espeon (3), Hoothoot (3) |
-| **Water Breathing** | Water Breathing | Lapras (5), Vaporeon (4), Milotic (4), Golduck (3) |
-| **Jump Boost** | Jump Boost I | Lopunny (4), Hitmonlee (4), Blaziken (3), Spoink (2) |
-| **Haste Boost** | Haste I | Alakazam (4), Metagross (3), Kadabra (3), Abra (2) |
-| **Saturation Boost** | Saturation | Snorlax (5), Munchlax (4), Slurpuff (3), Chansey (3) |
+## Configuration
 
-| Proficiency | Duration | Cooldown |
-|-------------|----------|----------|
-| 1 (Novice) | 15s | 60s |
-| 2 (Apprentice) | 25s | 45s |
-| 3 (Skilled) | 35s | 30s |
-| 4 (Expert) | 50s | 15s |
-| 5 (Master) | 70s | 0s (permanent) |
+Press **K** to open the Cloth Config settings screen. Key options:
 
-### Visual Effects
-Every skill has themed visual feedback:
-- **Cry + attack animation** on success (uses Cobblemon's animation fallback system)
-- **Themed particles**: splash for water, flames for fire, hearts for healing, enchant sparkle for legendaries
-- **Working particles** during cooldowns so you can see who's busy
+- **Dev Mode** — 5-second cooldowns for testing
+- **Passive XP** — Toggle, percentage (default 5%), interval (default 60s)
+- **Skill Toggles** — Enable/disable entire skill categories
+- **Recruiter Settings** — Cooldowns and spawn rates for Friend/Legendary Recruiters
+- **Search Radius** — Default block search radius for all skills
+- **Mentor Max Boost** — Cap the mentor XP multiplier (default 100% at Prof 5)
 
-### Specialized Finder Skills
-Seven themed Finder variants that use dedicated loot tables for targeted item discovery:
+Everything is also JSON-configurable and customizable via **datapacks** — server admins can add skills, modify loot tables, or reassign Pokemon species without touching code.
 
-| Finder Type | Focus | Example Loot |
-|-------------|-------|--------------|
-| **Finder Evo** | Evolution items | Fire/Water/Thunder Stone, Linking Cord, Metal Coat, Ability Patch |
-| **Finder Hea** | Healing items | Potions, Berries, Revives, Sacred Ash |
-| **Finder Bui** | Building materials | Planks, Bricks, Stone, Prismarine, Crying Obsidian |
-| **Finder Ore** | Ores and minerals | Raw Iron/Gold/Copper, Diamond, Ancient Debris |
-| **Finder See** | Seeds and plants | Wheat/Apricorn/Mint Seeds, Berries, Torchflower Seeds |
-| **Finder Bal** | Pokeballs | Poke/Great/Ultra Ball, Apricorn Balls, Master Ball |
-| **Finder Exp** | XP Candies | Exp Candy XS-XL, Rare Candy |
-
-Each type shares the same proficiency-based rarity tiers (Common/Uncommon/Rare/Ultra Rare) as the generic Finder. Healer Pokemon automatically get **Finder Hea**, Harvester Pokemon automatically get **Finder See**, Mentor Pokemon automatically get **Finder Exp**, and collector Pokemon (Aipom, Zigzagoon, etc.) get **Finder Bal**.
-
-### Mining Skill
-Pokemon walks to a random nearby position, plays a digging animation with stone/gravel particles, and unearths underground treasures on a 30-second cooldown:
-
-| Tier | Example Loot |
-|------|-------------|
-| **Common** | Tumblestone, Raw Copper/Iron, Coal, Cobblestone, Gravel, Flint |
-| **Uncommon** | Black/Sky Tumblestone, Raw Gold, Lapis, Redstone, Fire/Water/Grass/Electric Gem |
-| **Rare** | Diamond, Emerald, Amethyst, Helix/Dome/Root/Claw/Skull/Armor/Cover/Plume/Jaw/Sail Fossil, Old Amber, Dragon/Dark/Psychic Gem |
-| **Ultra Rare** | Diamond x2-3, Ancient Debris, Netherite Scrap, Fairy/Ghost/Ice/Fighting/Steel/Poison/Flying/Bug/Ground/Rock/Normal Gem |
-
-Uses the same proficiency-based rarity distribution as Finder (Prof 1 = mostly common, Prof 5 = more rare/ultra-rare).
-
-### Smart Inventory System
-- Pokemon find and deposit items in the **nearest chest or barrel**
-- Distance calculated from **Pokemon position** (not Pasture Block), so items spread across multiple containers
-- Retries all containers before dropping items as last resort
-
-### Passive XP
-All pastured Pokemon slowly gain experience over time:
-- Default: **5% of XP to next level every 60 seconds** (scales equally at all levels)
-- Works even while the Pokemon is idle or sleeping
-- Respects the global level cap
-
-### Mentor Skill
-Certain intelligent Pokemon can boost passive XP gain for **all** Pokemon in the same Pasture Block:
-- **Passive effect** -- always active while the mentor is assigned, no cooldown
-- **Proficiency scaling**: Prof 1 = +20% XP, Prof 2 = +40%, Prof 3 = +60%, Prof 4 = +80%, Prof 5 = +100% (double XP)
-- **No stacking** -- multiple mentors in the same pasture use the highest proficiency only
-- **Configurable** max boost via settings (default 100% at Prof 5)
-- **Visual**: enchant sparkle particles around the mentor Pokemon
-
-| Pokemon | Mentor Proficiency |
-|---------|--------------------|
-| Alakazam | 5 (Master) |
-| Metagross | 4 |
-| Gardevoir | 4 |
-| Slowking | 4 |
-| Oranguru | 4 |
-| Espeon | 3 |
-| Lucario | 3 |
-| Mr. Mime | 3 |
-| Orbeetle | 3 |
-| Blissey | 2 |
-| Chansey | 1 |
-
-## Data-Driven Design
-
-Everything is JSON-configurable and can be customized via **datapacks**:
-
-### Skill Definitions
-```json
-{
-  "id": "cobblebase:fishing",
-  "name": "Fishing",
-  "category": "gathering",
-  "cooldownSeconds": 60,
-  "searchRadius": 10,
-  "executor": "fishing",
-  "effectType": "water",
-  "lootTable": "minecraft:gameplay/fishing"
-}
-```
-
-### Species Skill Assignments
-```json
-{
-  "species": "nidoking",
-  "skills": [
-    { "skillId": "cobblebase:archeologist", "proficiency": 4 },
-    { "skillId": "cobblebase:guard", "proficiency": 3 },
-    { "skillId": "cobblebase:mining", "proficiency": 2 }
-  ]
-}
-```
-
-Server admins can add new skills, modify existing ones, or change which Pokemon can do what -- all without touching code.
-
-## Requirements
-
-- **Minecraft** 1.21.1
-- **Fabric Loader** 0.16.14+
-- **Fabric Language Kotlin**
-- **Cobblemon** 1.7.0+
+---
 
 ## Installation
 
+### Requirements
+- Minecraft **1.21.1**
+- Fabric Loader **0.16.14+**
+- Fabric Language Kotlin
+- Cobblemon **1.7.0+**
+
+### Steps
 1. Download the latest JAR from [Releases](https://github.com/notlown/cobblebase/releases)
-2. Place it in your `mods/` folder
-3. Make sure Cobblemon and Fabric Language Kotlin are installed
-4. Launch the game
+2. Place it in your `mods/` folder alongside Cobblemon and Fabric Language Kotlin
+3. Launch the game — press **K** to configure settings
 
-## Building from Source
-
+### Building from Source
 ```bash
 git clone https://github.com/notlown/cobblebase.git
 cd cobblebase
 ./gradlew fabric:build
 ```
+Output JAR in `fabric/build/libs/`. Requires **Java 21**.
 
-Output JAR will be in `fabric/build/libs/`. Requires **Java 21**.
-
-## Architecture
-
-```
-cobblebase/
-├── core/
-│   ├── Cobblebase.kt          # Entry point
-│   ├── SkillDef.kt            # Skill data model
-│   ├── SpeciesSkills.kt       # Per-species skill assignments
-│   ├── SkillRegistry.kt       # Loads and manages skill definitions
-│   ├── SpeciesSkillRegistry.kt # Maps species to skills
-│   ├── BaseManager.kt         # Skill dispatch + job assignment
-│   ├── ExecutorRegistry.kt    # Maps executor names to implementations
-│   ├── SkillExecutor.kt       # Executor interface
-│   ├── PassiveXp.kt           # Passive XP system
-│   ├── LogManager.kt          # Activity log storage + persistence
-│   ├── executors/              # All skill executor implementations
-│   ├── effects/                # Visual effects (particles, animations)
-│   └── net/                    # Network packets (skill assign, log sync)
-├── mixin/                      # Pasture Block integration
-└── fabric/
-    ├── CobblebaseFabric.kt     # Fabric entrypoint + packet registration
-    ├── client/gui/             # Tabbed Cobblebase Screen (Skills, Buffs, Logs, Discovery)
-    └── mixin/                  # Client-side PastureWidget mixin
-```
-
-## Roadmap
-
-- [ ] Datapack loading for custom skills and species assignments
-- [ ] Config screen (Cloth Config integration)
-- [ ] Stamina/rest system with sleep animations
-- [ ] More legendary-exclusive skills
-- [ ] Pokemon visual item holding
-- [ ] Skill leveling through use
+---
 
 ## Credits
 

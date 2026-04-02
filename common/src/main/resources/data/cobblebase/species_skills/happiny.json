@@ -4,6 +4,10 @@
     {
       "skillId": "cobblebase:healer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 3
     }
   ]
 }

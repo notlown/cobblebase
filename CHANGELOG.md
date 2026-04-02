@@ -1,5 +1,26 @@
 # Changelog - Cobblebase
 
+## [0.3.0] - 2026-04-01
+
+### 5 Specialized Finder Subtypes
+- **FinderExecutor** refactored from `object` to `class` with `finderType` parameter -- each variant uses its own loot table prefix
+- **Finder Evo** (`finder_evo`) -- Evolution items only: stones (Common), Dusk/Dawn/Shiny/Ice Stone + Linking Cord (Uncommon), trade evo items like Metal Coat, King's Rock, Dragon Scale (Rare), Ability Patch/Capsule + Rare Candy x3 (Ultra Rare)
+- **Finder Hea** (`finder_hea`) -- Healing items only: Potion, Oran/Sitrus Berry, Remedy (Common), Super Potion, Revive, Full Heal (Uncommon), Hyper Potion, Max Revive, Full Restore (Rare), Max Elixir, Sacred Ash (Ultra Rare)
+- **Finder Bui** (`finder_bui`) -- Building materials (no ores): Planks, Cobblestone, Sand (Common), Stone Bricks, Terracotta, Quartz (Uncommon), Prismarine, Sea Lantern, Deepslate Bricks (Rare), Crying Obsidian, Gilded Blackstone, Sculk (Ultra Rare)
+- **Finder Ore** (`finder_ore`) -- Ores only: Raw Copper/Iron, Coal (Common), Raw Gold, Lapis, Redstone (Uncommon), Diamond, Emerald, Amethyst Shard (Rare), Diamond x2-4, Ancient Debris, Netherite Scrap (Ultra Rare)
+- **Finder See** (`finder_see`) -- Seeds and plantable items: Wheat/Beetroot Seeds, Apricorn Seeds (Common), Pumpkin/Melon Seeds, Mint Seeds (Uncommon), Berries, Sweet/Glow Berries, Nether Wart (Rare), Torchflower Seeds, Pitcher Pod (Ultra Rare)
+- **20 new loot table JSONs** -- 4 tiers (common/uncommon/rare/ultra_rare) x 5 types
+- **5 new skill definition JSONs** in `data/cobblebase/skills/`
+- **Species assignments:**
+  - Finder Hea: Added to all 20 Healer Pokemon (proficiency matches their healer level)
+  - Finder See: Added to all 50 Harvester Pokemon (proficiency matches their harvester level)
+  - Finder Evo: Eevee (3), Kadabra (2), Haunter (2), Machoke (2), Graveler (2), Boldore (2), Clamperl (3), Snorunt (2), Kirlia (2), Scyther (2)
+  - Finder Ore: Excadrill (5), Dugtrio (4), Onix (3), Steelix (4), Aggron (4), Rhyperior (4), Drilbur (3), Diglett (2), Nosepass (2), Probopass (3)
+  - Finder Bui: Machamp (4), Conkeldurr (4), Gurdurr (3), Timburr (2), Hariyama (3), Pangoro (3)
+- **21 new species files** for Pokemon not previously in the registry
+- ExecutorRegistry updated with 5 new executor registrations
+- All specialized finders share the same proficiency-based rarity distribution as the generic Finder
+
 ## [0.2.0] - 2026-04-01
 
 ### Mentor Skill

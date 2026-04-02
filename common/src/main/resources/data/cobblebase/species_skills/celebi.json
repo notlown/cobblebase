@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:harvester",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 5
     }
   ]
 }

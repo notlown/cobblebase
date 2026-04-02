@@ -1,0 +1,9 @@
+{
+  "species": "gurdurr",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 3
+    }
+  ]
+}

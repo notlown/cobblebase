@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:archeologist",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 3
     }
   ]
 }

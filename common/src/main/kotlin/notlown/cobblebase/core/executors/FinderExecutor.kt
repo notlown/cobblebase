@@ -25,11 +25,17 @@ import java.util.UUID
  * Finder: Pokemon searches the area and finds random items/treasures.
  * Long cooldown (10 minutes default) to keep items valuable.
  * Deposits found items in nearest chest.
+ *
+ * Supports specialized finder types via the [finderType] parameter.
+ * Each type uses its own loot tables (e.g., finder_evo_common, finder_ore_rare).
+ * The generic "finder" type uses the original loot tables (finder_common, etc.).
  */
-object FinderExecutor : SkillExecutor {
+class FinderExecutor(private val finderType: String = "finder") : SkillExecutor {
 
     private val lastFindTime = mutableMapOf<UUID, Long>()
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
+
+    private val logTag = "[${finderType.replaceFirstChar { it.uppercase() }}]"
 
     override fun tick(
         world: World,
@@ -84,10 +90,10 @@ object FinderExecutor : SkillExecutor {
             if (drops.isNotEmpty()) {
                 heldItems[pokemonId] = drops
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
-                Cobblebase.LOGGER.info("[Finder] ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) found: ${drops.map { "${it.name.string}x${it.count}" }}")
+                Cobblebase.LOGGER.info("$logTag ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) found: ${drops.map { "${it.name.string}x${it.count}" }}")
             }
         } catch (e: Exception) {
-            Cobblebase.LOGGER.error("[Finder] Error generating loot: ${e.message}")
+            Cobblebase.LOGGER.error("$logTag Error generating loot: ${e.message}")
         }
     }
 
@@ -108,11 +114,33 @@ object FinderExecutor : SkillExecutor {
         val rare = when (proficiency) { 1->4; 2->8; 3->15; 4->25; else->35 }
         val uncommon = when (proficiency) { 1->15; 2->25; 3->30; 4->35; else->30 }
 
+        val prefix = "cobblebase:${finderType}"
+
         return when {
-            roll < ultraRare -> "cobblebase:finder_ultra_rare"
-            roll < ultraRare + rare -> "cobblebase:finder_rare"
-            roll < ultraRare + rare + uncommon -> "cobblebase:finder_uncommon"
-            else -> "cobblebase:finder_common"
+            roll < ultraRare -> "${prefix}_ultra_rare"
+            roll < ultraRare + rare -> "${prefix}_rare"
+            roll < ultraRare + rare + uncommon -> "${prefix}_uncommon"
+            else -> "${prefix}_common"
         }
+    }
+
+    companion object {
+        /** The original generic Finder instance (backward compatible). */
+        val Generic = FinderExecutor("finder")
+
+        /** Finder Evo -- Evolution items only. */
+        val Evo = FinderExecutor("finder_evo")
+
+        /** Finder Hea -- Healing items only. */
+        val Hea = FinderExecutor("finder_hea")
+
+        /** Finder Bui -- Building materials only (no ores). */
+        val Bui = FinderExecutor("finder_bui")
+
+        /** Finder Ore -- Ores and raw materials only. */
+        val Ore = FinderExecutor("finder_ore")
+
+        /** Finder See -- Seeds and plantable items only. */
+        val See = FinderExecutor("finder_see")
     }
 }

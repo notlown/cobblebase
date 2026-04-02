@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:finder",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_evo",
+      "proficiency": 3
     }
   ]
 }

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:metal_coat", "weight": 6 },
+        { "type": "minecraft:item", "name": "cobblemon:kings_rock", "weight": 6 },
+        { "type": "minecraft:item", "name": "cobblemon:dragon_scale", "weight": 6 },
+        { "type": "minecraft:item", "name": "cobblemon:upgrade", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:dubious_disc", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:prism_scale", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:protector", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:reaper_cloth", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:deep_sea_tooth", "weight": 4 },
+        { "type": "minecraft:item", "name": "cobblemon:deep_sea_scale", "weight": 4 }
+      ]
+    }
+  ]
+}

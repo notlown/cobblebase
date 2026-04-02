@@ -1,0 +1,9 @@
+{
+  "species": "timburr",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
+    }
+  ]
+}

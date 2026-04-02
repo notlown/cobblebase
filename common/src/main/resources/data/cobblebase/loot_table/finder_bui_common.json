@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "minecraft:oak_planks", "weight": 10, "functions": [{ "function": "set_count", "count": 16 }] },
+        { "type": "minecraft:item", "name": "minecraft:cobblestone", "weight": 10, "functions": [{ "function": "set_count", "count": 32 }] },
+        { "type": "minecraft:item", "name": "minecraft:sand", "weight": 8, "functions": [{ "function": "set_count", "count": 16 }] },
+        { "type": "minecraft:item", "name": "minecraft:gravel", "weight": 8, "functions": [{ "function": "set_count", "count": 16 }] },
+        { "type": "minecraft:item", "name": "minecraft:dirt", "weight": 8, "functions": [{ "function": "set_count", "count": 16 }] },
+        { "type": "minecraft:item", "name": "minecraft:glass", "weight": 6, "functions": [{ "function": "set_count", "count": 8 }] }
+      ]
+    }
+  ]
+}

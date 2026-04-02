@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:finder_ore",
+  "name": "Finder Ore",
+  "description": "Searches the area for ores and raw minerals",
+  "category": "gathering",
+  "cooldownSeconds": 240,
+  "searchRadius": 10,
+  "executor": "finder_ore",
+  "effectType": "default"
+}

@@ -1,0 +1,9 @@
+{
+  "species": "kirlia",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_evo",
+      "proficiency": 2
+    }
+  ]
+}

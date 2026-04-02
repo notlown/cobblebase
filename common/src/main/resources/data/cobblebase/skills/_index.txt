@@ -4,6 +4,11 @@ brew_fuel.json
 diving.json
 extinguisher.json
 finder.json
+finder_bui.json
+finder_evo.json
+finder_hea.json
+finder_ore.json
+finder_see.json
 fishing.json
 friend_recruiter.json
 furnace_fuel.json

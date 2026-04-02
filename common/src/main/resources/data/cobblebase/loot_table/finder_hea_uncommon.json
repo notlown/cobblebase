@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:super_potion", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:revive", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:full_heal", "weight": 7 },
+        { "type": "minecraft:item", "name": "cobblemon:lum_berry", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:chesto_berry", "weight": 6 },
+        { "type": "minecraft:item", "name": "cobblemon:rawst_berry", "weight": 6 },
+        { "type": "minecraft:item", "name": "cobblemon:cheri_berry", "weight": 6 }
+      ]
+    }
+  ]
+}

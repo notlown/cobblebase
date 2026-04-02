@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "minecraft:crying_obsidian", "weight": 6, "functions": [{ "function": "set_count", "count": 4 }] },
+        { "type": "minecraft:item", "name": "minecraft:gilded_blackstone", "weight": 6, "functions": [{ "function": "set_count", "count": 4 }] },
+        { "type": "minecraft:item", "name": "minecraft:sculk", "weight": 5, "functions": [{ "function": "set_count", "count": 8 }] },
+        { "type": "minecraft:item", "name": "minecraft:amethyst_block", "weight": 5, "functions": [{ "function": "set_count", "count": 4 }] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:fire_stone", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:water_stone", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:thunder_stone", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:leaf_stone", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:moon_stone", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:sun_stone", "weight": 10 }
+      ]
+    }
+  ]
+}

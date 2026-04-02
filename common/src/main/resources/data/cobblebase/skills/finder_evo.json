@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:finder_evo",
+  "name": "Finder Evo",
+  "description": "Searches the area for evolution items and stones",
+  "category": "gathering",
+  "cooldownSeconds": 240,
+  "searchRadius": 10,
+  "executor": "finder_evo",
+  "effectType": "default"
+}

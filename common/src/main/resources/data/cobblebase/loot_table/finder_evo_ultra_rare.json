@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:rare_candy", "weight": 5, "functions": [{ "function": "set_count", "count": 3 }] },
+        { "type": "minecraft:item", "name": "cobblemon:exp_candy_xl", "weight": 5, "functions": [{ "function": "set_count", "count": 5 }] },
+        { "type": "minecraft:item", "name": "cobblemon:ability_patch", "weight": 3 },
+        { "type": "minecraft:item", "name": "cobblemon:ability_capsule", "weight": 3 }
+      ]
+    }
+  ]
+}

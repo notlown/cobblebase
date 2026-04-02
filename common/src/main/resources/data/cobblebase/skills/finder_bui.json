@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:finder_bui",
+  "name": "Finder Bui",
+  "description": "Searches the area for building materials",
+  "category": "gathering",
+  "cooldownSeconds": 240,
+  "searchRadius": 10,
+  "executor": "finder_bui",
+  "effectType": "default"
+}

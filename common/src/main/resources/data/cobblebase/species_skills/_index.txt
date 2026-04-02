@@ -36,11 +36,13 @@ chespin.json
 chikorita.json
 chimchar.json
 cinderace.json
+clamperl.json
 clefable.json
 clefairy.json
 cleffa.json
 combee.json
 combusken.json
+conkeldurr.json
 crobat.json
 crocalor.json
 croconaw.json
@@ -49,13 +51,17 @@ dartrix.json
 decidueye.json
 delphox.json
 dewott.json
+diglett.json
 ditto.json
 dragonite.json
+drilbur.json
 drizzile.json
+dugtrio.json
 eevee.json
 emboar.json
 empoleon.json
 espeon.json
+excadrill.json
 fearow.json
 fennekin.json
 feraligatr.json
@@ -65,6 +71,7 @@ florges.json
 froakie.json
 frogadier.json
 fuecoco.json
+furret.json
 garchomp.json
 gardevoir.json
 gastly.json
@@ -82,8 +89,10 @@ grookey.json
 grotle.json
 grovyle.json
 growlithe.json
+gurdurr.json
 gyarados.json
 happiny.json
+hariyama.json
 hatterene.json
 haunter.json
 heracross.json
@@ -99,6 +108,7 @@ jigglypuff.json
 jirachi.json
 jolteon.json
 kadabra.json
+kirlia.json
 koffing.json
 lairon.json
 lapras.json
@@ -116,9 +126,10 @@ magmortar.json
 manaphy.json
 marshtomp.json
 meganium.json
-metagross.json
 meowscarada.json
 meowth.json
+metagross.json
+metapod.json
 mew.json
 mewtwo.json
 monferno.json
@@ -130,12 +141,14 @@ nidoking.json
 nidoqueen.json
 ninetales.json
 ninjask.json
+nosepass.json
 oddish.json
 onix.json
 oranguru.json
 orbeetle.json
 oshawott.json
 pachirisu.json
+pangoro.json
 persian.json
 pidgeot.json
 pidgeotto.json
@@ -147,6 +160,7 @@ popplio.json
 primarina.json
 primeape.json
 prinplup.json
+probopass.json
 psyduck.json
 quaquaval.json
 quaxly.json
@@ -158,6 +172,7 @@ raichu.json
 rayquaza.json
 rhydon.json
 rhyhorn.json
+rhyperior.json
 rillaboom.json
 rowlet.json
 salamence.json
@@ -166,6 +181,7 @@ sceptile.json
 scizor.json
 scorbunny.json
 scyther.json
+sentret.json
 serperior.json
 servine.json
 shaymin.json
@@ -176,6 +192,7 @@ slowking.json
 slowpoke.json
 snivy.json
 snorlax.json
+snorunt.json
 sobble.json
 spearow.json
 sprigatito.json
@@ -190,6 +207,7 @@ tentacool.json
 tentacruel.json
 tepig.json
 thwackey.json
+timburr.json
 togekiss.json
 togetic.json
 torchic.json
@@ -210,9 +228,6 @@ vulpix.json
 wartortle.json
 weezing.json
 wigglytuff.json
+wishiwashi.json
 zigzagoon.json
 zubat.json
-metapod.json
-wishiwashi.json
-sentret.json
-furret.json

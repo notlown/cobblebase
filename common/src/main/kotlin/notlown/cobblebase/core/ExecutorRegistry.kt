@@ -39,7 +39,14 @@ object ExecutorRegistry {
 
         // -- Combat --
         register("guard", GuardExecutor)
-        register("finder", FinderExecutor)
+        register("finder", FinderExecutor.Generic)
+
+        // -- Specialized Finders --
+        register("finder_evo", FinderExecutor.Evo)
+        register("finder_hea", FinderExecutor.Hea)
+        register("finder_bui", FinderExecutor.Bui)
+        register("finder_ore", FinderExecutor.Ore)
+        register("finder_see", FinderExecutor.See)
 
         // -- Support --
         register("healer", HealerExecutor)

@@ -1,0 +1,9 @@
+{
+  "species": "pangoro",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "excadrill",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 5
+    }
+  ]
+}

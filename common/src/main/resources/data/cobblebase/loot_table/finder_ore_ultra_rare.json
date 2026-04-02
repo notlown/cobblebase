@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "minecraft:diamond", "weight": 8, "functions": [{ "function": "set_count", "count": { "min": 2, "max": 4 } }] },
+        { "type": "minecraft:item", "name": "minecraft:ancient_debris", "weight": 3 },
+        { "type": "minecraft:item", "name": "minecraft:netherite_scrap", "weight": 2 },
+        { "type": "minecraft:item", "name": "minecraft:emerald", "weight": 6, "functions": [{ "function": "set_count", "count": { "min": 3, "max": 6 } }] }
+      ]
+    }
+  ]
+}

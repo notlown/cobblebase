@@ -1,0 +1,9 @@
+{
+  "species": "snorunt",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_evo",
+      "proficiency": 2
+    }
+  ]
+}

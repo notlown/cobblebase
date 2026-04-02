@@ -12,10 +12,6 @@
     {
       "skillId": "cobblebase:irrigator",
       "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:finder",
-      "proficiency": 3
     }
   ]
 }

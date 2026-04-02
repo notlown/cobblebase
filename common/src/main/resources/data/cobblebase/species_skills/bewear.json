@@ -2,10 +2,6 @@
   "species": "bewear",
   "skills": [
     {
-      "skillId": "cobblebase:finder",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:guard",
       "proficiency": 3
     },

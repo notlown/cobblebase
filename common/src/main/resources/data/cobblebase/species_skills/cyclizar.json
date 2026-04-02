@@ -8,10 +8,6 @@
     {
       "skillId": "cobblebase:guard",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:finder",
-      "proficiency": 2
     }
   ]
 }

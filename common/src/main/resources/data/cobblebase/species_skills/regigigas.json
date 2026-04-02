@@ -4,10 +4,6 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:finder",
-      "proficiency": 3
     }
   ]
 }

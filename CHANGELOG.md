@@ -1,5 +1,21 @@
 # Changelog - Cobblebase
 
+## [0.4.1] - 2026-04-01
+
+### MiningExecutor (replaces broken HarvesterExecutor for mining)
+- **MiningExecutor** -- New cooldown-based loot executor for the Mining skill (replaces HarvesterExecutor which incorrectly searched for apricorns)
+- Pokemon walks to a random nearby position, plays digging animation with stone/gravel particles, then generates loot
+- **30-second base cooldown** (proficiency reduces: Prof 1 = 100%, Prof 5 = 60%)
+- **4 loot tiers** with same proficiency-based distribution as FinderExecutor:
+  - **Common**: Tumblestone x1-3, Raw Copper x2-4, Raw Iron x1-2, Coal x2-4, Cobblestone x4-8, Gravel x2-4, Flint x1-2
+  - **Uncommon**: Black/Sky Tumblestone x1-2, Raw Gold x1-2, Lapis x2-4, Redstone x3-6, Fire/Water/Grass/Electric Gem
+  - **Rare**: Diamond, Emerald x1-2, Amethyst Shard x2-4, 10 Fossils (Helix, Dome, Old Amber, Root, Claw, Skull, Armor, Cover, Plume, Jaw, Sail), Dragon/Dark/Psychic Gem
+  - **Ultra Rare**: Diamond x2-3, Ancient Debris, Netherite Scrap, 11 Type Gems (Fairy, Ghost, Ice, Fighting, Steel, Poison, Flying, Bug, Ground, Rock, Normal)
+- **4 new loot table JSONs**: mining_common, mining_uncommon, mining_rare, mining_ultra_rare
+- **mining.json** skill definition updated: cooldownSeconds 0 -> 30, description updated
+- **ExecutorRegistry** updated: `mining` now maps to MiningExecutor instead of HarvesterExecutor
+- **LogManager integration**: All mined items logged with appropriate rarity
+
 ## [0.4.0] - 2026-04-01
 
 ### Tabbed Cobblebase GUI

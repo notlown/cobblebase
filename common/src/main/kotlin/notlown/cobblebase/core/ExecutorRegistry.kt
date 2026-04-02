@@ -10,6 +10,7 @@ import notlown.cobblebase.core.executors.GuardExecutor
 import notlown.cobblebase.core.executors.HarvesterExecutor
 import notlown.cobblebase.core.executors.FinderExecutor
 import notlown.cobblebase.core.executors.IrrigatorExecutor
+import notlown.cobblebase.core.executors.MiningExecutor
 import notlown.cobblebase.core.executors.HealerExecutor
 import notlown.cobblebase.core.executors.MentorExecutor
 import notlown.cobblebase.core.executors.RecruiterExecutor
@@ -24,7 +25,7 @@ object ExecutorRegistry {
         // -- Gathering --
         register("harvester", HarvesterExecutor)
         register("fishing", FishingExecutor)
-        register("mining", HarvesterExecutor)            // Mining uses harvester logic (amethyst, tumblestone)
+        register("mining", MiningExecutor)                 // Mining: cooldown-based loot (ores, fossils, gems)
 
         // -- Loot-table based (pickup, archeology, diving, honey) --
         register("pickup", GenericLootExecutor)

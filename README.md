@@ -76,7 +76,7 @@ Open the Pasture Block and click the **"Cobblebase"** button to manage your base
 
 | Category | Skills | Description |
 |----------|--------|-------------|
-| **Gathering** | Harvester, Fishing, Diving, Mining, Honey | Collect resources from the world |
+| **Gathering** | Harvester, Fishing, Diving, Mining, Honey | Collect resources from the world (Mining digs for ores, tumblestones, fossils, and gems) |
 | **Generation** | Lava Fill, Water Fill, Snow Fill, Furnace Fuel, Brew Fuel | Produce resources in containers |
 | **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
 | **Support** | Healer, Mentor | Healer: direct % healing + revive. Mentor: passive XP boost for all Pokemon in the same pasture |
@@ -105,6 +105,18 @@ Seven themed Finder variants that use dedicated loot tables for targeted item di
 | **Finder Exp** | XP Candies | Exp Candy XS-XL, Rare Candy |
 
 Each type shares the same proficiency-based rarity tiers (Common/Uncommon/Rare/Ultra Rare) as the generic Finder. Healer Pokemon automatically get **Finder Hea**, Harvester Pokemon automatically get **Finder See**, Mentor Pokemon automatically get **Finder Exp**, and collector Pokemon (Aipom, Zigzagoon, etc.) get **Finder Bal**.
+
+### Mining Skill
+Pokemon walks to a random nearby position, plays a digging animation with stone/gravel particles, and unearths underground treasures on a 30-second cooldown:
+
+| Tier | Example Loot |
+|------|-------------|
+| **Common** | Tumblestone, Raw Copper/Iron, Coal, Cobblestone, Gravel, Flint |
+| **Uncommon** | Black/Sky Tumblestone, Raw Gold, Lapis, Redstone, Fire/Water/Grass/Electric Gem |
+| **Rare** | Diamond, Emerald, Amethyst, Helix/Dome/Root/Claw/Skull/Armor/Cover/Plume/Jaw/Sail Fossil, Old Amber, Dragon/Dark/Psychic Gem |
+| **Ultra Rare** | Diamond x2-3, Ancient Debris, Netherite Scrap, Fairy/Ghost/Ice/Fighting/Steel/Poison/Flying/Bug/Ground/Rock/Normal Gem |
+
+Uses the same proficiency-based rarity distribution as Finder (Prof 1 = mostly common, Prof 5 = more rare/ultra-rare).
 
 ### Smart Inventory System
 - Pokemon find and deposit items in the **nearest chest or barrel**

@@ -1,9 +1,9 @@
 {
   "id": "cobblebase:mining",
   "name": "Mining",
-  "description": "Harvests amethyst and tumblestone",
+  "description": "Digs for ores, tumblestones, fossils, and gems",
   "category": "gathering",
-  "cooldownSeconds": 0,
+  "cooldownSeconds": 30,
   "searchRadius": 10,
   "executor": "mining",
   "effectType": "harvest"

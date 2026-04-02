@@ -1,0 +1,217 @@
+package notlown.cobblebase.core.executors
+
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.loot.context.LootContextParameterSet
+import net.minecraft.loot.context.LootContextParameters
+import net.minecraft.loot.context.LootContextTypes
+import net.minecraft.particle.ParticleTypes
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
+import notlown.cobblebase.core.CobblebaseConfig
+import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.SkillEntry
+import notlown.cobblebase.core.SkillExecutor
+import notlown.cobblebase.core.NavigationHelper
+import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.effects.SkillEffects
+import java.util.UUID
+
+/**
+ * Mining: Pokemon walks to a nearby position, digs, and finds underground items.
+ * Cooldown-based loot generation (like FinderExecutor), not block harvesting.
+ * Produces ores, tumblestones, fossils, and gems based on proficiency tier.
+ *
+ * Base cooldown: 30 seconds (from skill JSON), reduced by proficiency.
+ * Pokemon navigates to a random spot, plays digging animation with
+ * stone/gravel particles, then generates loot from mining loot tables.
+ */
+object MiningExecutor : SkillExecutor {
+
+    private val lastMineTime = mutableMapOf<UUID, Long>()
+    private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
+    private val digTarget = mutableMapOf<UUID, BlockPos>()
+    private val digStartTime = mutableMapOf<UUID, Long>()
+
+    private const val DIG_DURATION_TICKS = 60L // 3 seconds of digging animation
+    private const val NAV_TIMEOUT_TICKS = 100L // 5 seconds max navigation
+
+    override fun tick(
+        world: World,
+        origin: BlockPos,
+        pokemonEntity: PokemonEntity,
+        skill: SkillDef,
+        skillEntry: SkillEntry
+    ) {
+        if (world !is ServerWorld) return
+        val pokemonId = pokemonEntity.pokemon.uuid
+        val now = world.time
+        val items = heldItems[pokemonId]
+
+        // Phase 1: Drop held items on ground (Gatherer will sort into chests)
+        if (!items.isNullOrEmpty()) {
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+            heldItems.remove(pokemonId)
+            return
+        }
+
+        // Phase 2: Currently digging at a target position
+        val target = digTarget[pokemonId]
+        if (target != null) {
+            val digStart = digStartTime[pokemonId] ?: now
+
+            // Navigate towards dig spot
+            NavigationHelper.navigateTo(pokemonEntity, target, getSpeedForProficiency(skillEntry.proficiency))
+
+            val atPosition = NavigationHelper.isPokemonAtPosition(pokemonEntity, target, 3.0)
+            val navTimedOut = now - digStart >= NAV_TIMEOUT_TICKS
+
+            if (atPosition || navTimedOut) {
+                // Play digging particles while digging
+                val ticksDigging = now - digStart - (if (navTimedOut) NAV_TIMEOUT_TICKS else 0L)
+                if (ticksDigging < DIG_DURATION_TICKS) {
+                    // Digging in progress — spawn stone/gravel particles
+                    if (now % 10 == 0L) {
+                        playDiggingEffects(world, pokemonEntity)
+                    }
+                    return
+                }
+
+                // Digging complete — generate loot
+                generateMiningLoot(world, origin, pokemonEntity, pokemonId, skillEntry, skill)
+                digTarget.remove(pokemonId)
+                digStartTime.remove(pokemonId)
+                lastMineTime[pokemonId] = now
+            }
+            return
+        }
+
+        // Phase 3: Cooldown check
+        val baseCooldown = if (skill.cooldownSeconds > 0) skill.cooldownSeconds.toLong() else 30L
+        val cooldownTicks = if (CobblebaseConfig.devMode) 100L
+            else (baseCooldown * 20L * (11 - skillEntry.proficiency) / 10)
+        val lastTime = lastMineTime[pokemonId] ?: now.also { lastMineTime[pokemonId] = now }
+        if (now - lastTime < cooldownTicks) {
+            // Show working particles periodically while waiting
+            if (now % 60 == 0L) {
+                SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            }
+            return
+        }
+
+        // Phase 4: Pick a random nearby position to "mine" at
+        val radius = skill.searchRadius.coerceAtLeast(5)
+        val offsetX = world.random.nextInt(radius * 2 + 1) - radius
+        val offsetZ = world.random.nextInt(radius * 2 + 1) - radius
+        val minePos = origin.add(offsetX, 0, offsetZ)
+
+        digTarget[pokemonId] = minePos
+        digStartTime[pokemonId] = now
+    }
+
+    /**
+     * Returns movement speed based on proficiency (1-5).
+     * Prof 1 = 0.4 (slow), Prof 5 = 1.2 (fast)
+     */
+    private fun getSpeedForProficiency(proficiency: Int): Double {
+        return 0.2 + (proficiency * 0.2)
+    }
+
+    /**
+     * Plays digging animation and spawns stone/gravel particles.
+     */
+    private fun playDiggingEffects(world: ServerWorld, pokemonEntity: PokemonEntity) {
+        val x = pokemonEntity.x
+        val y = pokemonEntity.y
+        val z = pokemonEntity.z
+
+        // Digging animation (physical attack motions)
+        SkillEffects.sendAnimationPublic(world, pokemonEntity, "dig", "scratch", "pound", "physical")
+
+        // Stone/gravel/dust particles at ground level
+        world.spawnParticles(ParticleTypes.ASH, x, y + 0.3, z, 12, 0.4, 0.1, 0.4, 0.02)
+        world.spawnParticles(ParticleTypes.SMOKE, x, y + 0.2, z, 6, 0.3, 0.1, 0.3, 0.01)
+        world.spawnParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, x, y + 0.5, z, 3, 0.2, 0.2, 0.2, 0.005)
+    }
+
+    /**
+     * Generates mining loot based on proficiency tier.
+     * Uses the same rarity distribution as FinderExecutor.
+     */
+    private fun generateMiningLoot(
+        world: ServerWorld,
+        origin: BlockPos,
+        pokemonEntity: PokemonEntity,
+        pokemonId: UUID,
+        skillEntry: SkillEntry,
+        skill: SkillDef
+    ) {
+        try {
+            val lootTableName = pickLootTable(world, skillEntry.proficiency)
+            val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of(lootTableName))
+            val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
+
+            val lootParams = LootContextParameterSet.Builder(world)
+                .add(LootContextParameters.ORIGIN, pokemonEntity.pos)
+                .addOptional(LootContextParameters.THIS_ENTITY, pokemonEntity)
+                .build(LootContextTypes.CHEST)
+
+            val drops = lootTable.generateLoot(lootParams)
+
+            if (drops.isNotEmpty()) {
+                heldItems[pokemonId] = drops
+                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+                Cobblebase.LOGGER.info("[Mining] ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) mined: ${drops.map { "${it.name.string}x${it.count}" }}")
+
+                // Log to activity log
+                val rarity = when {
+                    lootTableName.endsWith("_ultra_rare") -> LogManager.Rarity.ULTRA_RARE
+                    lootTableName.endsWith("_rare") -> LogManager.Rarity.RARE
+                    lootTableName.endsWith("_uncommon") -> LogManager.Rarity.UNCOMMON
+                    else -> LogManager.Rarity.COMMON
+                }
+                for (drop in drops) {
+                    LogManager.log(
+                        origin, world.time,
+                        pokemonEntity.pokemon.species.name,
+                        "Mined",
+                        "${drop.name.string} x${drop.count}",
+                        rarity
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.error("[Mining] Error generating loot: ${e.message}")
+        }
+    }
+
+    /**
+     * 4 tiers: Common, Uncommon, Rare, Ultra Rare.
+     * Same proficiency-based distribution as FinderExecutor.
+     *
+     * Prof 1: Common 80%, Uncommon 15%, Rare 4%, Ultra Rare 1%
+     * Prof 2: Common 65%, Uncommon 25%, Rare 8%, Ultra Rare 2%
+     * Prof 3: Common 50%, Uncommon 30%, Rare 15%, Ultra Rare 5%
+     * Prof 4: Common 30%, Uncommon 35%, Rare 25%, Ultra Rare 10%
+     * Prof 5: Common 15%, Uncommon 30%, Rare 35%, Ultra Rare 20%
+     */
+    private fun pickLootTable(world: World, proficiency: Int): String {
+        val roll = world.random.nextInt(100)
+
+        val ultraRare = when (proficiency) { 1->1; 2->2; 3->5; 4->10; else->20 }
+        val rare = when (proficiency) { 1->4; 2->8; 3->15; 4->25; else->35 }
+        val uncommon = when (proficiency) { 1->15; 2->25; 3->30; 4->35; else->30 }
+
+        return when {
+            roll < ultraRare -> "cobblebase:mining_ultra_rare"
+            roll < ultraRare + rare -> "cobblebase:mining_rare"
+            roll < ultraRare + rare + uncommon -> "cobblebase:mining_uncommon"
+            else -> "cobblebase:mining_common"
+        }
+    }
+}

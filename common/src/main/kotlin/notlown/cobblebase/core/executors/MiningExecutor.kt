@@ -192,20 +192,21 @@ object MiningExecutor : SkillExecutor {
 
     /**
      * 4 tiers: Common, Uncommon, Rare, Ultra Rare.
-     * Same proficiency-based distribution as FinderExecutor.
+     * Mining uses more common-heavy distribution with very low ultra-rare chance.
+     * 5-minute cooldown means each roll matters more.
      *
-     * Prof 1: Common 80%, Uncommon 15%, Rare 4%, Ultra Rare 1%
-     * Prof 2: Common 65%, Uncommon 25%, Rare 8%, Ultra Rare 2%
-     * Prof 3: Common 50%, Uncommon 30%, Rare 15%, Ultra Rare 5%
-     * Prof 4: Common 30%, Uncommon 35%, Rare 25%, Ultra Rare 10%
-     * Prof 5: Common 15%, Uncommon 30%, Rare 35%, Ultra Rare 20%
+     * Prof 1: Common 90%, Uncommon 8%, Rare 1.5%, Ultra Rare 0.5%
+     * Prof 2: Common 82%, Uncommon 13%, Rare 4%, Ultra Rare 1%
+     * Prof 3: Common 70%, Uncommon 20%, Rare 8%, Ultra Rare 2%
+     * Prof 4: Common 55%, Uncommon 28%, Rare 13%, Ultra Rare 4%
+     * Prof 5: Common 40%, Uncommon 33%, Rare 20%, Ultra Rare 7%
      */
     private fun pickLootTable(world: World, proficiency: Int): String {
-        val roll = world.random.nextInt(100)
+        val roll = world.random.nextInt(1000) // use 1000 for more precision
 
-        val ultraRare = when (proficiency) { 1->1; 2->2; 3->5; 4->10; else->20 }
-        val rare = when (proficiency) { 1->4; 2->8; 3->15; 4->25; else->35 }
-        val uncommon = when (proficiency) { 1->15; 2->25; 3->30; 4->35; else->30 }
+        val ultraRare = when (proficiency) { 1->5; 2->10; 3->20; 4->40; else->70 }
+        val rare = when (proficiency) { 1->15; 2->40; 3->80; 4->130; else->200 }
+        val uncommon = when (proficiency) { 1->80; 2->130; 3->200; 4->280; else->330 }
 
         return when {
             roll < ultraRare -> "cobblebase:mining_ultra_rare"

@@ -3,7 +3,7 @@
   "name": "Mining",
   "description": "Digs for ores, tumblestones, fossils, and gems",
   "category": "gathering",
-  "cooldownSeconds": 30,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "mining",
   "effectType": "harvest"

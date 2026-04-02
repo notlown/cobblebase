@@ -94,14 +94,15 @@ class LogsPanel(
             return
         }
 
-        // Column headers
+        // Column headers (with small icon offset for Pokemon column)
+        val ICON_OFFSET = 14 // 12px small icon + 2px gap
         val colTime = panelX + PADDING
         val colPokemon = panelX + PADDING + 60
-        val colAction = panelX + PADDING + 155
-        val colItem = panelX + PADDING + 225
+        val colAction = panelX + PADDING + 155 + ICON_OFFSET
+        val colItem = panelX + PADDING + 225 + ICON_OFFSET
         val colRarity = panelX + panelW - PADDING - 60
         context.drawTextWithShadow(textRenderer, "\u00A7eTime", colTime, contentTop - 10, 0xFFFF55)
-        context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", colPokemon, contentTop - 10, 0xFFFF55)
+        context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", colPokemon + ICON_OFFSET, contentTop - 10, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eAction", colAction, contentTop - 10, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eItem", colItem, contentTop - 10, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eRarity", colRarity, contentTop - 10, 0xFFFF55)
@@ -125,8 +126,12 @@ class LogsPanel(
             val timeStr = timeFormat.format(Date(entry.timestamp))
             context.drawTextWithShadow(textRenderer, timeStr, colTime, ry + 2, 0x999999)
 
-            // Pokemon name
-            context.drawTextWithShadow(textRenderer, entry.pokemonName, colPokemon, ry + 2, 0xFFFFFF)
+            // Pokemon small icon + name
+            PokemonSpriteHelper.renderSmallIconByName(
+                context, textRenderer, entry.pokemonName,
+                colPokemon, ry + 1
+            )
+            context.drawTextWithShadow(textRenderer, entry.pokemonName, colPokemon + ICON_OFFSET, ry + 2, 0xFFFFFF)
 
             // Action
             context.drawTextWithShadow(textRenderer, entry.action, colAction, ry + 2, 0xCCCCCC)

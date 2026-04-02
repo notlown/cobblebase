@@ -30,7 +30,8 @@ class SkillsPanel(
     private val ROW_HEIGHT = 42
     private val HEADER_HEIGHT = 20
     private val PANEL_PADDING = 8
-    private val NAME_WIDTH = 90
+    private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
+    private val NAME_WIDTH = 90 + ICON_OFFSET
     private val BTN_WIDTH = 58
     private val BTN_HEIGHT = 16
     private val BTN_GAP = 2
@@ -98,7 +99,7 @@ class SkillsPanel(
         val contentBottom = panelY + panelH - 28
         context.enableScissor(panelX, contentY - 2, panelX + panelW, contentBottom)
 
-        // Row backgrounds + Pokemon names
+        // Row backgrounds + Pokemon names with sprite icons
         pokemonList.forEachIndexed { index, pokemonData ->
             val ry = contentY + index * ROW_HEIGHT + scrollY
             if (ry < contentY - ROW_HEIGHT || ry > contentBottom) return@forEachIndexed
@@ -106,9 +107,16 @@ class SkillsPanel(
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
+            // Pokemon sprite icon
             val name = pokemonData.displayName.string
-            context.drawTextWithShadow(textRenderer, name, panelX + PANEL_PADDING, ry + 4, 0xFFFFFF)
-            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", panelX + PANEL_PADDING, ry + 14, 0xAAAAAA)
+            PokemonSpriteHelper.renderIcon(
+                context, textRenderer, pokemonData.species, name,
+                panelX + PANEL_PADDING, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2
+            )
+
+            // Pokemon name + level (shifted right for icon)
+            context.drawTextWithShadow(textRenderer, name, panelX + PANEL_PADDING + ICON_OFFSET, ry + 4, 0xFFFFFF)
+            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", panelX + PANEL_PADDING + ICON_OFFSET, ry + 14, 0xAAAAAA)
         }
 
         // Skill buttons

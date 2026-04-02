@@ -9,6 +9,7 @@ import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import java.util.function.Function
 
@@ -38,6 +39,7 @@ class BuffsPanel(
 
     data class BuffEntry(
         val pokemonName: String,
+        val species: Identifier,
         val level: Int,
         val skillName: String,
         val category: String,
@@ -62,6 +64,7 @@ class BuffsPanel(
             val pokemonId = pokemonData.pokemonId
             val speciesName = pokemonData.species.path
             val pokemonName = pokemonData.displayName.string
+            val species = pokemonData.species
             val level = pokemonData.level
             val assignment = BaseManager.getAssignment(pokemonId)
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
@@ -75,6 +78,7 @@ class BuffsPanel(
                     if (skillDef != null) {
                         result.add(BuffEntry(
                             pokemonName = pokemonName,
+                            species = species,
                             level = level,
                             skillName = skillDef.name,
                             category = skillDef.category,
@@ -89,6 +93,7 @@ class BuffsPanel(
                     val skillDef = SkillRegistry.get(entry.skillId) ?: continue
                     result.add(BuffEntry(
                         pokemonName = pokemonName,
+                        species = species,
                         level = level,
                         skillName = skillDef.name,
                         category = skillDef.category,
@@ -153,11 +158,12 @@ class BuffsPanel(
             return
         }
 
-        // Column headers
+        // Column headers (offset for sprite icon)
+        val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
         val colPokemon = panelX + PADDING
-        val colSkill = panelX + PADDING + 110
-        val colDesc = panelX + PADDING + 180
-        context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", colPokemon, contentTop, 0xFFFF55)
+        val colSkill = panelX + PADDING + 110 + ICON_OFFSET
+        val colDesc = panelX + PADDING + 180 + ICON_OFFSET
+        context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", colPokemon + ICON_OFFSET, contentTop, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eJob", colSkill, contentTop, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eEffect", colDesc, contentTop, 0xFFFF55)
 
@@ -176,9 +182,15 @@ class BuffsPanel(
             val catColor = CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
             context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, catColor)
 
-            // Pokemon name + level
-            context.drawTextWithShadow(textRenderer, entry.pokemonName, colPokemon + 4, ry + 4, 0xFFFFFF)
-            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", colPokemon + 4, ry + 14, 0xAAAAAA)
+            // Pokemon sprite icon
+            PokemonSpriteHelper.renderIcon(
+                context, textRenderer, entry.species, entry.pokemonName,
+                colPokemon + 4, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2
+            )
+
+            // Pokemon name + level (shifted right for icon)
+            context.drawTextWithShadow(textRenderer, entry.pokemonName, colPokemon + 4 + ICON_OFFSET, ry + 4, 0xFFFFFF)
+            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", colPokemon + 4 + ICON_OFFSET, ry + 14, 0xAAAAAA)
 
             // Skill name with category color
             context.drawTextWithShadow(textRenderer, entry.skillName, colSkill, ry + 4, catColor)

@@ -58,4 +58,13 @@ object NavigationHelper {
             speed
         )
     }
+
+    /**
+     * Clears navigation targets and stops the Pokemon's current pathfinding.
+     * Used by the unstuck detector when a Pokemon hasn't moved for too long.
+     */
+    fun clearTargets(pokemonEntity: PokemonEntity) {
+        pokemonEntity.navigation.stop()
+        lastPathfindTick.remove(pokemonEntity.pokemon.uuid)
+    }
 }

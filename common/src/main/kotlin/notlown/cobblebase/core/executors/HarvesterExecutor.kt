@@ -26,8 +26,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.SkillDef
-
 import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
@@ -47,8 +47,10 @@ object HarvesterExecutor : SkillExecutor {
     private val targetBlock = mutableMapOf<UUID, BlockPos>()
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastSearchTime = mutableMapOf<UUID, Long>()
+    private val lastHarvestTime = mutableMapOf<UUID, Long>() // per-pokemon cooldown between harvests
     private val harvestedBlockCooldown = mutableMapOf<BlockPos, Long>() // per-block cooldown to prevent instant re-harvest
     private const val BLOCK_COOLDOWN_TICKS = 1200L // 60 seconds before same block can be harvested again
+    private const val HARVEST_COOLDOWN_TICKS = 200L // 10 seconds between harvests (so Gatherer can keep up)
     private val NAV_TIMEOUT_TICKS = 100L // 5 seconds - auto-harvest if can't reach
     private val SEARCH_INTERVAL_TICKS = 40L // 2 seconds between scans when nothing is ripe
 
@@ -79,6 +81,14 @@ object HarvesterExecutor : SkillExecutor {
             return
         }
 
+        // Cooldown between harvests (so Gatherer can keep up with drops)
+        val lastHarvest = lastHarvestTime[pokemonId] ?: 0L
+        val cooldownTicks = if (CobblebaseConfig.devMode) 40L else HARVEST_COOLDOWN_TICKS
+        if (now - lastHarvest < cooldownTicks) {
+            if (now % 60 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            return
+        }
+
         // Phase 2: navigate to target or harvest
         val target = targetBlock[pokemonId]
         if (target != null) {
@@ -90,6 +100,7 @@ object HarvesterExecutor : SkillExecutor {
                 harvest(world, target, pokemonEntity, pokemonId)
                 targetBlock.remove(pokemonId)
                 targetSetTime.remove(pokemonId)
+                lastHarvestTime[pokemonId] = now // start cooldown before next harvest
                 Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} HARVESTED at $target - calling playSuccess(${skill.effectType})")
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
 

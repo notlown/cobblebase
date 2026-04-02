@@ -3,8 +3,8 @@
   "name": "Item Gatherer",
   "description": "Picks up dropped items from the ground and sorts them into nearby chests",
   "category": "utility",
-  "cooldownSeconds": 10,
-  "searchRadius": 8,
+  "cooldownSeconds": 5,
+  "searchRadius": 24,
   "executor": "gather_items",
   "effectType": "default"
 }

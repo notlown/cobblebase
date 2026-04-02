@@ -44,8 +44,9 @@ object GathererExecutor : SkillExecutor {
      * Prof 1 = 5, Prof 2 = 7, Prof 3 = 8, Prof 4 = 10, Prof 5 = 12
      */
     private fun getRadiusForProficiency(proficiency: Int): Double {
-        // All proficiency levels get max radius — Prof only affects speed + cooldown
-        return 12.0
+        // All proficiency levels get max radius (24 blocks) — Prof only affects speed + cooldown
+        // Must be >= Harvester radius (20) so Gatherer can reach all dropped items
+        return 24.0
     }
 
     /**

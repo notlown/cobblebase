@@ -18,6 +18,11 @@ object BaseManager {
     private var lastSaveTick = 0L
     private val SAVE_INTERVAL = 600L // save every 30 seconds
 
+    // Unstuck detection: track last known position + time it changed
+    private data class PosRecord(val pos: BlockPos, val changedAt: Long)
+    private val lastKnownPos = mutableMapOf<UUID, PosRecord>()
+    private const val STUCK_TIMEOUT_TICKS = 160L // 8 seconds without movement = stuck
+
     fun tickPokemon(world: World, pastureOrigin: BlockPos, pokemonEntity: PokemonEntity) {
         val pokemonId: UUID = pokemonEntity.pokemon.uuid
         val speciesName: String = pokemonEntity.pokemon.species.name.lowercase()
@@ -26,6 +31,20 @@ object BaseManager {
         // Auto-save periodically
         if (dirty && world is ServerWorld && now - lastSaveTick > SAVE_INTERVAL) {
             save(world)
+        }
+
+        // Unstuck check: if Pokemon hasn't moved for 30s, reset its navigation state
+        val currentPos = pokemonEntity.blockPos
+        val record = lastKnownPos[pokemonId]
+        if (record == null || record.pos != currentPos) {
+            lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now)
+        } else if (now - record.changedAt > STUCK_TIMEOUT_TICKS) {
+            // Pokemon is stuck — clear navigation targets to unstick it
+            NavigationHelper.clearTargets(pokemonEntity)
+            lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now) // reset timer
+            if (now % 200 == 0L) {
+                Cobblebase.LOGGER.info("[BaseManager] $speciesName was stuck at $currentPos — resetting navigation")
+            }
         }
 
         val speciesData: SpeciesSkills? = SpeciesSkillRegistry.getSkills(speciesName)

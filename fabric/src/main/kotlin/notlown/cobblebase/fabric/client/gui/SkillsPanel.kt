@@ -117,11 +117,11 @@ class SkillsPanel(
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
-            // Pokemon sprite icon
+            // Pokemon portrait icon
             val name = pokemonData.displayName.string
             PokemonSpriteHelper.renderIcon(
-                context, textRenderer, pokemonData.species, name,
-                panelX + PANEL_PADDING, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2
+                context, textRenderer, pokemonData.species, name, pokemonData.aspects,
+                panelX + PANEL_PADDING, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2, delta
             )
 
             // Pokemon name + level (shifted right for icon)

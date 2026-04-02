@@ -50,6 +50,7 @@ class BuffsPanel(
     data class BuffEntry(
         val pokemonName: String,
         val species: Identifier,
+        val aspects: Set<String>,
         val level: Int,
         val skillName: String,
         val category: String,
@@ -75,6 +76,7 @@ class BuffsPanel(
             val speciesName = pokemonData.species.path
             val pokemonName = pokemonData.displayName.string
             val species = pokemonData.species
+            val aspects = pokemonData.aspects
             val level = pokemonData.level
             val assignment = BaseManager.getAssignment(pokemonId)
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
@@ -89,6 +91,7 @@ class BuffsPanel(
                         result.add(BuffEntry(
                             pokemonName = pokemonName,
                             species = species,
+                            aspects = aspects,
                             level = level,
                             skillName = skillDef.name,
                             category = skillDef.category,
@@ -104,6 +107,7 @@ class BuffsPanel(
                     result.add(BuffEntry(
                         pokemonName = pokemonName,
                         species = species,
+                        aspects = aspects,
                         level = level,
                         skillName = skillDef.name,
                         category = skillDef.category,
@@ -192,10 +196,10 @@ class BuffsPanel(
             val catColor = CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
             context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, catColor)
 
-            // Pokemon sprite icon
+            // Pokemon portrait icon
             PokemonSpriteHelper.renderIcon(
-                context, textRenderer, entry.species, entry.pokemonName,
-                colPokemon + 4, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2
+                context, textRenderer, entry.species, entry.pokemonName, entry.aspects,
+                colPokemon + 4, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2, delta
             )
 
             // Pokemon name + level (shifted right for icon)

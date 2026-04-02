@@ -175,15 +175,22 @@ object HealerExecutor : SkillExecutor {
     private fun selectMonsToHeal(player: ServerPlayerEntity, count: Int): List<Pokemon> {
         try {
             val party = Cobblemon.storage.getParty(player)
-            // Fainted first, then most injured, then status/PP issues
+
+            // Priority: fainted first (by party slot order), then sort remaining by:
+            // 1. Lowest HP% first
+            // 2. If equal HP%, prefer ones with status effects
+            // 3. If still tied, prefer earlier party slot (natural list order)
             val fainted = party.filter { it.isFainted() }
-            // Select mons with HP loss or status - PP is restored as bonus during heal
             val needsHeal = party.filter { mon ->
                 !mon.isFainted() && (
                     mon.currentHealth < mon.maxHealth ||
                     mon.status != null
                 )
-            }.sortedBy { it.currentHealth.toFloat() / it.maxHealth.toFloat() }
+            }.sortedWith(compareBy<Pokemon> {
+                it.currentHealth.toFloat() / it.maxHealth.toFloat() // lowest HP% first
+            }.thenByDescending {
+                if (it.status != null) 1 else 0 // prefer status-afflicted on ties
+            })
 
             val result = mutableListOf<Pokemon>()
             for (mon in fainted + needsHeal) {

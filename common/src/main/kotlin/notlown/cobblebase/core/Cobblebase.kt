@@ -32,10 +32,14 @@ object Cobblebase {
                 val json = JsonParser.parseReader(stream.bufferedReader()).asJsonObject
                 var count = 0
                 for (key in json.keySet()) {
-                    val id = Identifier.of(MODID, key)
-                    Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id))
-                    registeredSounds.add(id)
-                    count++
+                    try {
+                        val id = Identifier.of(MODID, key)
+                        Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id))
+                        registeredSounds.add(id)
+                        count++
+                    } catch (e: Exception) {
+                        // Skip entries with invalid chars (spaces, apostrophes, etc.)
+                    }
                 }
                 LOGGER.info("[Cobblebase] Registered $count sound events")
             } else {

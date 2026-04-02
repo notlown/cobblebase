@@ -719,14 +719,6 @@
       }
     ]
   },
-  "pokemon.brute bonnet.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/brute bonnet/brute bonnet_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.bruxish.cry": {
     "sounds": [
       {
@@ -2191,14 +2183,6 @@
       }
     ]
   },
-  "pokemon.farfetch\u2019d.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/farfetch\u2019d/farfetch\u2019d_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.farigiraf.cry": {
     "sounds": [
       {
@@ -2379,14 +2363,6 @@
     "sounds": [
       {
         "name": "cobblebase:pokemon/florges/florges_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.flutter mane.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/flutter mane/flutter mane_cry",
         "volume": 0.8
       }
     ]
@@ -2839,14 +2815,6 @@
       }
     ]
   },
-  "pokemon.gouging fire.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/gouging fire/gouging fire_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.gourgeist.cry": {
     "sounds": [
       {
@@ -2883,14 +2851,6 @@
     "sounds": [
       {
         "name": "cobblebase:pokemon/graveler/graveler_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.great tusk.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/great tusk/great tusk_cry",
         "volume": 0.8
       }
     ]
@@ -3363,86 +3323,6 @@
     "sounds": [
       {
         "name": "cobblebase:pokemon/inteleon/inteleon_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron boulder.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron boulder/iron boulder_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron bundle.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron bundle/iron bundle_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron crown.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron crown/iron crown_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron hands.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron hands/iron hands_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron jugulis.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron jugulis/iron jugulis_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron leaves.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron leaves/iron leaves_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron moth.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron moth/iron moth_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron thorns.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron thorns/iron thorns_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron treads.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron treads/iron treads_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.iron valiant.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/iron valiant/iron valiant_cry",
         "volume": 0.8
       }
     ]
@@ -4527,14 +4407,6 @@
       }
     ]
   },
-  "pokemon.mime jr..cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/mime jr./mime jr._cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.mimikyu.cry": {
     "sounds": [
       {
@@ -4635,22 +4507,6 @@
     "sounds": [
       {
         "name": "cobblebase:pokemon/mothim/mothim_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.mr. mime.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/mr. mime/mr. mime_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.mr. rime.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/mr. rime/mr. rime_cry",
         "volume": 0.8
       }
     ]
@@ -5439,18 +5295,18 @@
       }
     ]
   },
-  "pokemon.porygon.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/porygon/porygon_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.porygon-z.cry": {
     "sounds": [
       {
         "name": "cobblebase:pokemon/porygon-z/porygon-z_cry",
+        "volume": 0.8
+      }
+    ]
+  },
+  "pokemon.porygon.cry": {
+    "sounds": [
+      {
+        "name": "cobblebase:pokemon/porygon/porygon_cry",
         "volume": 0.8
       }
     ]
@@ -5619,14 +5475,6 @@
     "sounds": [
       {
         "name": "cobblebase:pokemon/rabsca/rabsca_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.raging bolt.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/raging bolt/raging bolt_cry",
         "volume": 0.8
       }
     ]
@@ -5839,14 +5687,6 @@
       }
     ]
   },
-  "pokemon.roaring moon.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/roaring moon/roaring moon_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.rockruff.cry": {
     "sounds": [
       {
@@ -5999,14 +5839,6 @@
       }
     ]
   },
-  "pokemon.sandy shocks.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/sandy shocks/sandy shocks_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.sandygast.cry": {
     "sounds": [
       {
@@ -6091,14 +5923,6 @@
     "sounds": [
       {
         "name": "cobblebase:pokemon/scraggy/scraggy_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.scream tail.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/scream tail/scream tail_cry",
         "volume": 0.8
       }
     ]
@@ -6391,14 +6215,6 @@
       }
     ]
   },
-  "pokemon.sirfetch\u2019d.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/sirfetch\u2019d/sirfetch\u2019d_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.sizzlipede.cry": {
     "sounds": [
       {
@@ -6499,14 +6315,6 @@
     "sounds": [
       {
         "name": "cobblebase:pokemon/sliggoo/sliggoo_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.slither wing.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/slither wing/slither wing_cry",
         "volume": 0.8
       }
     ]
@@ -7055,38 +6863,6 @@
       }
     ]
   },
-  "pokemon.tapu bulu.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/tapu bulu/tapu bulu_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.tapu fini.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/tapu fini/tapu fini_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.tapu koko.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/tapu koko/tapu koko_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.tapu lele.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/tapu lele/tapu lele_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.tarountula.cry": {
     "sounds": [
       {
@@ -7471,14 +7247,6 @@
       }
     ]
   },
-  "pokemon.type: null.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/type: null/type: null_cry",
-        "volume": 0.8
-      }
-    ]
-  },
   "pokemon.typhlosion.cry": {
     "sounds": [
       {
@@ -7787,14 +7555,6 @@
     "sounds": [
       {
         "name": "cobblebase:pokemon/wailord/wailord_cry",
-        "volume": 0.8
-      }
-    ]
-  },
-  "pokemon.walking wake.cry": {
-    "sounds": [
-      {
-        "name": "cobblebase:pokemon/walking wake/walking wake_cry",
         "volume": 0.8
       }
     ]

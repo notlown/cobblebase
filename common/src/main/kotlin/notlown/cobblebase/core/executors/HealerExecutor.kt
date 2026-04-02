@@ -61,6 +61,14 @@ object HealerExecutor : SkillExecutor {
                 if (isFinalPulse) {
                     activeSessions.remove(pokemonId)
                     lastHealTime[pokemonId] = now
+                    // Log healing action
+                    notlown.cobblebase.core.LogManager.log(
+                        origin, now,
+                        pokemonEntity.pokemon.species.name,
+                        "Healed",
+                        "${session.monsToHeal.size} Pokemon fully restored",
+                        notlown.cobblebase.core.LogManager.Rarity.UNCOMMON
+                    )
                 }
             }
             return

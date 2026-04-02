@@ -1,0 +1,13 @@
+{
+  "species": "porygon-z",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    }
+  ]
+}

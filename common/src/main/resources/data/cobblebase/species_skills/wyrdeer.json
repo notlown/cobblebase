@@ -1,0 +1,17 @@
+{
+  "species": "wyrdeer",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 3
+    }
+  ]
+}

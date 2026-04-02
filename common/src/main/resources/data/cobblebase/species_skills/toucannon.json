@@ -1,0 +1,17 @@
+{
+  "species": "toucannon",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    }
+  ]
+}

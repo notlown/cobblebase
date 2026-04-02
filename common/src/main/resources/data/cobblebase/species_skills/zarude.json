@@ -1,0 +1,21 @@
+{
+  "species": "zarude",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 3
+    }
+  ]
+}

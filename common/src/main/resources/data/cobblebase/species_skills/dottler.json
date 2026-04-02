@@ -1,0 +1,17 @@
+{
+  "species": "dottler",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 3
+    }
+  ]
+}

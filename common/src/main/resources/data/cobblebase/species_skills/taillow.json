@@ -1,0 +1,17 @@
+{
+  "species": "taillow",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 1
+    }
+  ]
+}

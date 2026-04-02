@@ -1,0 +1,17 @@
+{
+  "species": "claydol",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "species": "garganacl",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    }
+  ]
+}

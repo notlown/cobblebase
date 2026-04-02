@@ -1,0 +1,21 @@
+{
+  "species": "toedscool",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 1
+    }
+  ]
+}

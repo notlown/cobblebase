@@ -1,0 +1,13 @@
+{
+  "species": "glastrier",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

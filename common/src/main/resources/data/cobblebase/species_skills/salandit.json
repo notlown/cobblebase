@@ -1,0 +1,17 @@
+{
+  "species": "salandit",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 2
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "species": "mandibuzz",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    }
+  ]
+}

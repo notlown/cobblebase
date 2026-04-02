@@ -1,0 +1,21 @@
+{
+  "species": "toxapex",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 3
+    }
+  ]
+}

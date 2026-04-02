@@ -1,0 +1,17 @@
+{
+  "species": "krabby",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 2
+    }
+  ]
+}

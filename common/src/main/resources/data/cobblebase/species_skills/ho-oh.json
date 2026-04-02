@@ -1,0 +1,17 @@
+{
+  "species": "ho-oh",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "species": "shiftry",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    }
+  ]
+}

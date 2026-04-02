@@ -1,0 +1,13 @@
+{
+  "species": "corvisquire",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    }
+  ]
+}

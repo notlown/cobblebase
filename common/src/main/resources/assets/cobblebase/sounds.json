@@ -4511,6 +4511,14 @@
       }
     ]
   },
+  "pokemon.mr_mime.cry": {
+    "sounds": [
+      {
+        "name": "cobblebase:pokemon/mr_mime/mr_mime_cry",
+        "volume": 0.8
+      }
+    ]
+  },
   "pokemon.mudbray.cry": {
     "sounds": [
       {

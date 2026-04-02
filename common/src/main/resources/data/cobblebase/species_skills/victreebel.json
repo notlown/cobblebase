@@ -1,0 +1,21 @@
+{
+  "species": "victreebel",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 3
+    }
+  ]
+}

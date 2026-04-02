@@ -1,0 +1,13 @@
+{
+  "species": "skitty",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder",
+      "proficiency": 2
+    }
+  ]
+}

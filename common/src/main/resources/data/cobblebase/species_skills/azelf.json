@@ -1,0 +1,13 @@
+{
+  "species": "azelf",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
+    }
+  ]
+}

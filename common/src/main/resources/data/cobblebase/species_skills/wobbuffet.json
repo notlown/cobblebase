@@ -1,0 +1,13 @@
+{
+  "species": "wobbuffet",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 1
+    }
+  ]
+}

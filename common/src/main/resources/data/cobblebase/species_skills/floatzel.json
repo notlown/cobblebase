@@ -1,0 +1,17 @@
+{
+  "species": "floatzel",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 3
+    }
+  ]
+}

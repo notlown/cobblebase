@@ -1,0 +1,13 @@
+{
+  "species": "raikou",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "species": "foongus",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 1
+    }
+  ]
+}

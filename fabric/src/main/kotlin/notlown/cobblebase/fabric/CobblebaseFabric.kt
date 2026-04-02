@@ -43,7 +43,7 @@ object CobblebaseFabric : ModInitializer {
         PayloadTypeRegistry.playC2S().register(DiscoveryRequestC2SPacket.ID, DiscoveryRequestC2SPacket.CODEC)
         ServerPlayNetworking.registerGlobalReceiver(DiscoveryRequestC2SPacket.ID) { _, context ->
             context.server().execute {
-                val discoveries = DiscoveryRegistry.getDiscoveries()
+                val discoveries = DiscoveryRegistry.getAllForSync()
                 ServerPlayNetworking.send(context.player(), DiscoverySyncS2CPacket(discoveries))
             }
         }

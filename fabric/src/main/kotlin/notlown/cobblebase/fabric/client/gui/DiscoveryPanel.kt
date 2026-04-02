@@ -4,6 +4,7 @@ import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.DiscoveryRegistry.DiscoveryType
 import notlown.cobblebase.core.net.DiscoveryRequestC2SPacket
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
@@ -47,6 +48,11 @@ class DiscoveryPanel(
 
     private val dateFormat = SimpleDateFormat("MM/dd HH:mm")
 
+    // Coordinate click tracking — stores (x, z, screenX, screenY, width) per visible row
+    private data class CoordHitBox(val worldX: Int, val worldZ: Int, val sx: Int, val sy: Int, val w: Int)
+    private var coordHitBoxes = mutableListOf<CoordHitBox>()
+    private var copiedToast = 0L // timestamp when last copied, for brief toast
+
     fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
         scrollY = 0
 
@@ -74,6 +80,10 @@ class DiscoveryPanel(
         addWidget.apply(ButtonWidget.builder(Text.literal("\u00A7aBiomes")) {
             filterType = DiscoveryType.BIOME; scrollY = 0
         }.dimensions(startX + (btnW + 2) + (btnW + 10) + 2, filterY, btnW, btnH).build())
+
+        addWidget.apply(ButtonWidget.builder(Text.literal("\u00A7ePokemon")) {
+            filterType = DiscoveryType.WILD_POKEMON; scrollY = 0
+        }.dimensions(startX + (btnW + 2) + (btnW + 10) + 2 + btnW + 2, filterY, btnW + 5, btnH).build())
 
         // Done button
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
@@ -120,6 +130,7 @@ class DiscoveryPanel(
         // Scrollable content
         context.enableScissor(panelX, contentTop, panelX + panelW, contentBottom)
 
+        coordHitBoxes.clear()
         for ((index, entry) in entries.withIndex()) {
             val ry = contentTop + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
@@ -135,9 +146,17 @@ class DiscoveryPanel(
             // Name (colored by rarity)
             context.drawTextWithShadow(textRenderer, entry.name, colName, ry + 2, rarityColor)
 
-            // Coordinates
+            // Coordinates — clickable with hover effect
             val coordStr = "${entry.x}, ${entry.z}"
-            context.drawTextWithShadow(textRenderer, coordStr, colCoords, ry + 2, 0x55FFFF)
+            val coordWidth = textRenderer.getWidth(coordStr)
+            val isCoordHovered = mouseX >= colCoords && mouseX <= colCoords + coordWidth && mouseY >= ry + 2 && mouseY <= ry + 2 + 9
+            val coordColor = if (isCoordHovered) 0xAAFFFF else 0x55FFFF
+            context.drawTextWithShadow(textRenderer, coordStr, colCoords, ry + 2, coordColor)
+            // Underline when hovered
+            if (isCoordHovered) {
+                context.fill(colCoords, ry + 11, colCoords + coordWidth, ry + 12, 0xAAFFFF.toInt() or (0xFF shl 24))
+            }
+            coordHitBoxes.add(CoordHitBox(entry.x, entry.z, colCoords, ry + 2, coordWidth))
 
             // Discovered By
             context.drawTextWithShadow(textRenderer, entry.discoveredBy, colBy, ry + 2, 0xFFFFFF)
@@ -148,6 +167,11 @@ class DiscoveryPanel(
         }
 
         context.disableScissor()
+
+        // "Copied!" toast
+        if (System.currentTimeMillis() - copiedToast < 1500) {
+            context.drawCenteredTextWithShadow(textRenderer, "\u00A7aCopied to clipboard!", panelX + panelW / 2, panelY + panelH - 40, 0x55FF55)
+        }
 
         // Scrollbar
         totalContentHeight = entries.size * ROW_HEIGHT
@@ -183,6 +207,18 @@ class DiscoveryPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Check coordinate clicks
+        val mx = mouseX.toInt()
+        val my = mouseY.toInt()
+        for (hit in coordHitBoxes) {
+            if (mx >= hit.sx && mx <= hit.sx + hit.w && my >= hit.sy && my <= hit.sy + 9) {
+                val cmd = "/tp @s ${hit.worldX} ~ ${hit.worldZ}"
+                MinecraftClient.getInstance().keyboard.clipboard = cmd
+                copiedToast = System.currentTimeMillis()
+                return true
+            }
+        }
+
         if (totalContentHeight <= visibleHeight) return false
         if (mouseX >= trackX && mouseX <= trackX + 6 && mouseY >= trackTop && mouseY <= trackTop + trackHeight) {
             isDraggingScrollbar = true

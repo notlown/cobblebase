@@ -89,6 +89,14 @@ object DiscoveryRegistry {
     fun getDiscoveries(): List<Discovery> = permanentDiscoveries.toList()
 
     /**
+     * Get all discoveries for syncing to client: permanent + recent sightings combined.
+     */
+    fun getAllForSync(): List<Discovery> {
+        cleanupOldSightings()
+        return permanentDiscoveries + recentSightings
+    }
+
+    /**
      * Get recent wild Pokemon sightings.
      */
     fun getRecentSightings(): List<Discovery> = recentSightings.toList()

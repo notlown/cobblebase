@@ -131,7 +131,9 @@ class BuffsPanel(
                 val percent = ((multiplier) * 100).toInt()
                 "+${percent}% Bonus XP every 60s"
             }
-            "harvester", "mining" -> "Harvesting crops every ${effectiveCooldown}s"
+            "harvester" -> "Harvesting crops every ${effectiveCooldown}s"
+            "mining" -> "Mining for ores, fossils, and gems"
+            "scout" -> "Scouting for wild Pokemon and structures"
             "fishing" -> "Fishing every ${effectiveCooldown}s"
             "guard" -> "Defending base, repelling wild Pokemon"
             "gather_items" -> "Sorting items into nearby chests"
@@ -175,8 +177,8 @@ class BuffsPanel(
         // Column headers (offset for sprite icon)
         val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
         val colPokemon = panelX + PADDING
-        val colSkill = panelX + PADDING + 110 + ICON_OFFSET
-        val colDesc = panelX + PADDING + 180 + ICON_OFFSET
+        val colSkill = panelX + PADDING + 80 + ICON_OFFSET
+        val colDesc = panelX + PADDING + 150 + ICON_OFFSET
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", colPokemon + ICON_OFFSET, contentTop, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eJob", colSkill, contentTop, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eEffect", colDesc, contentTop, 0xFFFF55)

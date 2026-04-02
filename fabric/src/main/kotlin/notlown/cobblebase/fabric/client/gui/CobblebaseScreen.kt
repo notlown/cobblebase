@@ -147,7 +147,7 @@ class CobblebaseScreen(
                 Tab.SKILLS -> "\u00A7fSkills"
                 Tab.BUFFS -> "\u00A7fBuffs"
                 Tab.LOGS -> "\u00A7fLogs"
-                Tab.DISCOVERY -> "\u00A7fDiscovery"
+                Tab.DISCOVERY -> "\u00A7fScout"
             }
             val labelW = textRenderer.getWidth(label)
             val textColor = if (isActive) 0xFFFFFF else 0x999999

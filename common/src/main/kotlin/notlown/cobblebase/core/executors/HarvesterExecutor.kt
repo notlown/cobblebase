@@ -149,7 +149,7 @@ object HarvesterExecutor : SkillExecutor {
         val candidates = mutableListOf<BlockPos>()
 
         for (x in -radius..radius) {
-            for (y in -radius..radius) {
+            for (y in 0..radius) { // Only search at pasture level and ABOVE, never below
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     // Skip blocks still on cooldown (prevents instant re-harvest with Irrigator)

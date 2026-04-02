@@ -47,6 +47,17 @@ object BaseManager {
             }
         }
 
+        // Safety: prevent drowning — if Pokemon is submerged in water, teleport to pasture origin
+        if (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100) {
+            val safeY = pastureOrigin.y + 1.0
+            pokemonEntity.setPosition(pastureOrigin.x + 0.5, safeY, pastureOrigin.z + 0.5)
+            pokemonEntity.air = pokemonEntity.maxAir
+            NavigationHelper.clearTargets(pokemonEntity)
+            if (now % 100 == 0L) {
+                Cobblebase.LOGGER.info("[BaseManager] $speciesName was drowning — teleported to pasture")
+            }
+        }
+
         val speciesData: SpeciesSkills? = SpeciesSkillRegistry.getSkills(speciesName)
         if (speciesData == null) {
             if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName has NO species skills registered")

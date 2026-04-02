@@ -46,18 +46,15 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
-        // Flying Pokemon: noClip to fly through leaves/branches, but not underground
+        // Flying Pokemon: always noClip (fly through leaves, branches, fences, anything)
         val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
         if (canFly) {
-            // Only enable noClip when above the target Y — prevents flying underground
-            val aboveTarget = pokemonEntity.y >= targetPos.y.toDouble()
-            pokemonEntity.noClip = aboveTarget
+            pokemonEntity.noClip = true
 
-            // Safety: if Pokemon somehow got underground, push it back up
+            // Safety: prevent going underground — push back to surface if below ground level
             val groundY = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING, pokemonEntity.blockX, pokemonEntity.blockZ).toDouble()
             if (pokemonEntity.y < groundY - 1) {
                 pokemonEntity.setPosition(pokemonEntity.x, groundY + 1.0, pokemonEntity.z)
-                pokemonEntity.noClip = false
             }
         }
 

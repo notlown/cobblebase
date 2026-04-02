@@ -46,17 +46,8 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
-        // Flying Pokemon: always noClip (fly through leaves, branches, fences, anything)
-        val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
-        if (canFly) {
-            pokemonEntity.noClip = true
-
-            // Safety: prevent going underground — push back to surface if below ground level
-            val groundY = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING, pokemonEntity.blockX, pokemonEntity.blockZ).toDouble()
-            if (pokemonEntity.y < groundY - 1) {
-                pokemonEntity.setPosition(pokemonEntity.x, groundY + 1.0, pokemonEntity.z)
-            }
-        }
+        // No noClip here — it caused issues with non-working Pokemon (party Pokemon, wild Pokemon)
+        // Flying Pokemon just use standard navigation like ground Pokemon
 
         if (pokemonEntity.navigation.isIdle) {
             pokemonEntity.navigation.stop()

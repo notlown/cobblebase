@@ -19,6 +19,10 @@ object CobblebaseConfig {
     val passiveXpPercent get() = holder.passiveXp.xpPercent
     val passiveXpIntervalSeconds get() = holder.passiveXp.intervalSeconds
 
+    // Mentor
+    val mentorEnabled get() = holder.mentor.mentorEnabled
+    val mentorMaxBoost get() = holder.mentor.mentorMaxBoost
+
     // Skills
     // Irrigator
     val irrigatorEnabled get() = holder.irrigator.irrigatorEnabled

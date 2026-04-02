@@ -18,7 +18,8 @@ Unlike type-based job systems, Cobblebase gives **every Pokemon species its own 
 | Ninjask | Harvester, Scout, Item Gather | 4, 3, 2 |
 | Munchlax | Finder, Item Gatherer | 3, 4 |
 | Furret | Finder, Item Gatherer | 3, 4 |
-| Chansey | Healer | 5 (Master) |
+| Chansey | Healer, Mentor | 4, 1 |
+| Alakazam | Gatherer, Scout, Mentor | 5, 4, 5 (Master) |
 | Mew | Recruiter, Lucky Charm, Aura Boost | 5, 5, 3 |
 | Arceus | Recruiter, Aura, Lucky Charm, Growth | 5, 5, 5, 5 |
 
@@ -56,14 +57,14 @@ Open the Pasture Block and click the **"Skills"** button to assign jobs:
 - **Manual mode** -- Pokemon focuses on one specific skill
 - Scrollable list for many Pokemon and skills
 
-### 21 Skills Across 6 Categories
+### 22 Skills Across 6 Categories
 
 | Category | Skills | Description |
 |----------|--------|-------------|
 | **Gathering** | Harvester, Fishing, Diving, Mining, Honey | Collect resources from the world |
 | **Generation** | Lava Fill, Water Fill, Snow Fill, Furnace Fuel, Brew Fuel | Produce resources in containers |
 | **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
-| **Support** | Healer | Direct % healing for players and Pokemon, revives fainted mons |
+| **Support** | Healer, Mentor | Healer: direct % healing + revive. Mentor: passive XP boost for all Pokemon in the same pasture |
 | **Utility** | Irrigator, Extinguisher, Item Gatherer, Scout, Archeologist, Finder | Various helper jobs (Gatherer picks up dropped items and sorts into chests) |
 | **Fairy/Starters** | Friend Recruiter | Spawns wild Pokemon of same type nearby |
 | **Legendary** | Recruiter, Aura Boost, Lucky Charm, Growth Aura | Exclusive to rare/legendary Pokemon |
@@ -81,9 +82,31 @@ Every skill has themed visual feedback:
 
 ### Passive XP
 All pastured Pokemon slowly gain experience over time:
-- Default: **125 XP every 60 seconds** (~1 level per in-game day at mid-levels)
+- Default: **5% of XP to next level every 60 seconds** (scales equally at all levels)
 - Works even while the Pokemon is idle or sleeping
 - Respects the global level cap
+
+### Mentor Skill
+Certain intelligent Pokemon can boost passive XP gain for **all** Pokemon in the same Pasture Block:
+- **Passive effect** -- always active while the mentor is assigned, no cooldown
+- **Proficiency scaling**: Prof 1 = +20% XP, Prof 2 = +40%, Prof 3 = +60%, Prof 4 = +80%, Prof 5 = +100% (double XP)
+- **No stacking** -- multiple mentors in the same pasture use the highest proficiency only
+- **Configurable** max boost via settings (default 100% at Prof 5)
+- **Visual**: enchant sparkle particles around the mentor Pokemon
+
+| Pokemon | Mentor Proficiency |
+|---------|--------------------|
+| Alakazam | 5 (Master) |
+| Metagross | 4 |
+| Gardevoir | 4 |
+| Slowking | 4 |
+| Oranguru | 4 |
+| Espeon | 3 |
+| Lucario | 3 |
+| Mr. Mime | 3 |
+| Orbeetle | 3 |
+| Blissey | 2 |
+| Chansey | 1 |
 
 ## Data-Driven Design
 

@@ -1,5 +1,17 @@
 # Changelog - Cobblebase
 
+## [0.2.0] - 2026-04-01
+
+### Mentor Skill
+- **MentorExecutor** -- passive XP boost for all Pokemon in the same Pasture Block
+- Proficiency scaling: Prof 1 = +20%, Prof 2 = +40%, Prof 3 = +60%, Prof 4 = +80%, Prof 5 = +100% (double XP)
+- Multiple mentors do NOT stack -- highest proficiency wins
+- Visual: enchant + happy villager particles every 3 seconds around the mentor
+- **11 Pokemon** with Mentor skill: Alakazam (5), Metagross (4), Gardevoir (4), Slowking (4), Oranguru (4), Espeon (3), Lucario (3), Mr. Mime (3), Orbeetle (3), Blissey (2), Chansey (1)
+- **Config options**: mentor_enabled (default true), mentor_max_boost (default 1.0 = 100%)
+- PassiveXp now accepts pasture origin to apply mentor multiplier
+- 5 new species added to SpeciesSkillRegistry: Metagross, Slowking, Mr. Mime, Oranguru, Orbeetle
+
 ## [0.1.1] - 2026-04-01
 
 ### Gatherer Skill (Item Cleanup)

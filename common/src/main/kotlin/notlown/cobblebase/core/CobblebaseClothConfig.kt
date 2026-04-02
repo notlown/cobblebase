@@ -44,6 +44,9 @@ class CobblebaseClothConfig : ConfigData {
     }
 
     @ConfigEntry.Gui.CollapsibleObject
+    var mentor = MentorGroup()
+
+    @ConfigEntry.Gui.CollapsibleObject
     var recruiterRates = RecruiterRatesGroup()
 
     @ConfigEntry.Gui.CollapsibleObject
@@ -63,6 +66,11 @@ class CobblebaseClothConfig : ConfigData {
     class FinderGroup {
         @ConfigEntry.BoundedDiscrete(min = 60, max = 3600)
         var finderCooldownSeconds = 240
+    }
+
+    class MentorGroup {
+        var mentorEnabled = true
+        var mentorMaxBoost = 1.0
     }
 
     class RecruiterRatesGroup {

@@ -116,11 +116,13 @@ magmortar.json
 manaphy.json
 marshtomp.json
 meganium.json
+metagross.json
 meowscarada.json
 meowth.json
 mew.json
 mewtwo.json
 monferno.json
+mr_mime.json
 mudkip.json
 muk.json
 munchlax.json
@@ -130,6 +132,8 @@ ninetales.json
 ninjask.json
 oddish.json
 onix.json
+oranguru.json
+orbeetle.json
 oshawott.json
 pachirisu.json
 persian.json
@@ -168,6 +172,7 @@ shaymin.json
 shedinja.json
 skeledirge.json
 slowbro.json
+slowking.json
 slowpoke.json
 snivy.json
 snorlax.json

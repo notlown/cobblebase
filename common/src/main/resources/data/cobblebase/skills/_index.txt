@@ -16,6 +16,7 @@ honey_collect.json
 irrigator.json
 lava_fill.json
 lucky_charm.json
+mentor.json
 mining.json
 recruiter.json
 scout.json

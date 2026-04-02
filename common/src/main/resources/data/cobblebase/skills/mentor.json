@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:mentor",
+  "name": "Mentor",
+  "description": "Boosts passive XP gain for all Pokemon in the base",
+  "category": "support",
+  "cooldownSeconds": 0,
+  "searchRadius": 10,
+  "executor": "mentor",
+  "effectType": "special"
+}

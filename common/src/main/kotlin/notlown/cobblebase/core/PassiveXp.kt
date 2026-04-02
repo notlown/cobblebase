@@ -3,7 +3,9 @@ package notlown.cobblebase.core
 import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.pokemon.experience.ExperienceSource
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
+import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import notlown.cobblebase.core.executors.MentorExecutor
 import java.util.UUID
 
 object PassiveXp {
@@ -12,7 +14,8 @@ object PassiveXp {
 
     private val intervalTicks get() = CobblebaseConfig.passiveXpIntervalSeconds * 20L
 
-    fun tick(world: World, pokemonEntity: PokemonEntity) {
+    @JvmOverloads
+    fun tick(world: World, pokemonEntity: PokemonEntity, pastureOrigin: BlockPos? = null) {
         if (!CobblebaseConfig.passiveXpEnabled) return
 
         val pokemonId = pokemonEntity.pokemon.uuid
@@ -37,7 +40,12 @@ object PassiveXp {
 
         // Percentage-based: give X% of XP needed for next level each tick
         val xpToNextLevel = pokemon.getExperienceToNextLevel()
-        val xpGain = (xpToNextLevel * CobblebaseConfig.passiveXpPercent / 100.0).toInt().coerceAtLeast(1)
+        val baseXpGain = (xpToNextLevel * CobblebaseConfig.passiveXpPercent / 100.0).toInt().coerceAtLeast(1)
+
+        // Apply mentor XP multiplier if a mentor is active in the same pasture
+        val mentorMultiplier = if (pastureOrigin != null) MentorExecutor.getXpMultiplier(pastureOrigin) else 1.0
+        val xpGain = (baseXpGain * mentorMultiplier).toInt().coerceAtLeast(1)
+
         pokemon.addExperience(CobblebaseExperienceSource, xpGain)
 
         if (pokemon.level >= maxLevel) {

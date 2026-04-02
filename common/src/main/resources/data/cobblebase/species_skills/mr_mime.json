@@ -1,0 +1,13 @@
+{
+  "species": "mr_mime",
+  "skills": [
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    }
+  ]
+}

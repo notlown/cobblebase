@@ -163,6 +163,8 @@ object GathererExecutor : SkillExecutor {
         world.spawnParticles(ParticleTypes.END_ROD, x, y + h * 0.5, z, 5, 0.2, 0.2, 0.2, 0.02)
 
         Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} picked up ${stack.name.string}x${stack.count}")
+        // Play cry + success effect on pickup
+        SkillEffects.playSuccess(world, pokemonEntity, "default")
     }
 
     /**

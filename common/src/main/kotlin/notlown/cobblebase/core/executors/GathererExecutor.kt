@@ -38,7 +38,7 @@ object GathererExecutor : SkillExecutor {
 
     private const val NAV_TIMEOUT_TICKS = 100L       // 5 seconds - auto-pickup if can't reach
     private const val SEARCH_INTERVAL_TICKS = 40L    // 2 seconds between scans when nothing found
-    private const val BASE_COOLDOWN_SECONDS = 10L
+    private const val BASE_COOLDOWN_SECONDS = 5L
 
     /**
      * Returns search radius based on proficiency (1-5).
@@ -121,6 +121,12 @@ object GathererExecutor : SkillExecutor {
         if (found != null) {
             targetItem[pokemonId] = found.id
             targetSetTime[pokemonId] = now
+            Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} targeting ${found.stack.name.string} at ${found.blockPos}")
+        } else if (now % 100 == 0L) {
+            // Debug: log when no items found
+            val searchBox = Box.of(pokemonEntity.pos, radius * 2, radius * 2, radius * 2)
+            val allItems = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { true }
+            Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} searching radius=$radius — found ${allItems.size} items on ground")
         }
     }
 

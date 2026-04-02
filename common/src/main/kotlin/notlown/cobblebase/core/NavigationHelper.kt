@@ -47,18 +47,18 @@ object NavigationHelper {
         lastPathfindTick[id] = now
 
         // Flying Pokemon can't use ground navigation reliably — move them directly
-        if (!pokemonEntity.isOnGround && pokemonEntity.pokemon.species.behaviour.moving.fly.canFly) {
-            // Smoothly move towards target by setting velocity
+        val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
+        if (canFly) {
+            // Move horizontally towards target, but keep current Y (don't dive to ground)
             val dx = (targetPos.x + 0.5) - pokemonEntity.x
-            val dy = (targetPos.y + 0.5) - pokemonEntity.y
             val dz = (targetPos.z + 0.5) - pokemonEntity.z
-            val dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
-            if (dist > 0.5) {
+            val horizontalDist = Math.sqrt(dx * dx + dz * dz)
+            if (horizontalDist > 1.0) {
                 val moveSpeed = speed * 0.15
                 pokemonEntity.setVelocity(
-                    dx / dist * moveSpeed,
-                    dy / dist * moveSpeed,
-                    dz / dist * moveSpeed
+                    dx / horizontalDist * moveSpeed,
+                    0.0, // don't change Y — stay at current altitude
+                    dz / horizontalDist * moveSpeed
                 )
                 pokemonEntity.velocityModified = true
             }

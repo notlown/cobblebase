@@ -31,6 +31,7 @@ object GathererExecutor : SkillExecutor {
 
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
     private val originalHeldItem = mutableMapOf<UUID, ItemStack>()  // backup of Pokemon's real held item
+    private val visualItems = mutableMapOf<UUID, ItemEntity>()  // floating visual item above Pokemon's head
     private val targetItem = mutableMapOf<UUID, Int>()          // entity ID of target ItemEntity
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastPickupTime = mutableMapOf<UUID, Long>()
@@ -70,6 +71,13 @@ object GathererExecutor : SkillExecutor {
         val now = world.time
         val speed = getSpeedForProficiency(skillEntry.proficiency)
         val items = heldItems[pokemonId]
+
+        // Update visual floating item position to follow Pokemon
+        val visual = visualItems[pokemonId]
+        if (visual != null && visual.isAlive) {
+            visual.setPosition(pokemonEntity.x, pokemonEntity.y + pokemonEntity.height + 0.5, pokemonEntity.z)
+            visual.setVelocity(0.0, 0.0, 0.0)
+        }
 
         // Phase 1: deposit items if holding any
         if (!items.isNullOrEmpty()) {
@@ -154,11 +162,17 @@ object GathererExecutor : SkillExecutor {
 
         heldItems[pokemonId] = listOf(stack)
 
-        // Show gathered item visually on the Pokemon using equipment slot (renders all item types)
-        if (!originalHeldItem.containsKey(pokemonId)) {
-            originalHeldItem[pokemonId] = pokemonEntity.getEquippedStack(EquipmentSlot.MAINHAND).copy()
-        }
-        pokemonEntity.equipStack(EquipmentSlot.MAINHAND, stack.copy())
+        // Show gathered item visually — spawn a no-gravity, no-pickup item floating above the Pokemon
+        // Remove any existing visual item first
+        val oldVisual = visualItems.remove(pokemonId)
+        if (oldVisual != null && oldVisual.isAlive) oldVisual.discard()
+        val visualItem = ItemEntity(world, pokemonEntity.x, pokemonEntity.y + pokemonEntity.height + 0.5, pokemonEntity.z, stack.copy())
+        visualItem.setPickupDelay(Short.MAX_VALUE.toInt()) // never pickable
+        visualItem.setNoGravity(true)
+        visualItem.isInvulnerable = true
+        world.spawnEntity(visualItem)
+        visualItems[pokemonId] = visualItem
+        Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} showing visual item above head")
 
         // Pickup particles (item sparkle effect)
         val x = pokemonEntity.x
@@ -220,7 +234,9 @@ object GathererExecutor : SkillExecutor {
      * Restores the Pokemon's original held item (or clears it) after depositing gathered items.
      */
     private fun restoreOriginalHeldItem(pokemonEntity: PokemonEntity, pokemonId: UUID) {
-        val original = originalHeldItem.remove(pokemonId) ?: ItemStack.EMPTY
-        pokemonEntity.equipStack(EquipmentSlot.MAINHAND, original)
+        originalHeldItem.remove(pokemonId)
+        // Remove the floating visual item
+        val visual = visualItems.remove(pokemonId)
+        if (visual != null && visual.isAlive) visual.discard()
     }
 }

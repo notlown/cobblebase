@@ -46,7 +46,26 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
-        // If navigation is stuck, reset it
+        // Flying Pokemon can't use ground navigation reliably — move them directly
+        if (!pokemonEntity.isOnGround && pokemonEntity.pokemon.species.behaviour.moving.fly.canFly) {
+            // Smoothly move towards target by setting velocity
+            val dx = (targetPos.x + 0.5) - pokemonEntity.x
+            val dy = (targetPos.y + 0.5) - pokemonEntity.y
+            val dz = (targetPos.z + 0.5) - pokemonEntity.z
+            val dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+            if (dist > 0.5) {
+                val moveSpeed = speed * 0.15
+                pokemonEntity.setVelocity(
+                    dx / dist * moveSpeed,
+                    dy / dist * moveSpeed,
+                    dz / dist * moveSpeed
+                )
+                pokemonEntity.velocityModified = true
+            }
+            return
+        }
+
+        // Ground navigation for non-flying Pokemon
         if (pokemonEntity.navigation.isIdle) {
             pokemonEntity.navigation.stop()
         }

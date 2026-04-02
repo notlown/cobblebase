@@ -1,5 +1,46 @@
 # Changelog - Cobblebase
 
+## [0.5.0] - 2026-04-01
+
+### Scout Executor
+- **ScoutExecutor** -- Replaces the generic loot placeholder for the Scout skill
+- Pokemon explores the surrounding area and discovers wild Pokemon, structures, and biomes
+- **Wild Pokemon scouting**: Finds real wild Pokemon entities nearby, reports species, level, distance, and direction
+- **Structure discovery** (Prof 3+): Locates Villages, Mineshafts, Ruined Portals, Shipwrecks, and Ocean Ruins
+- **Biome discovery** (Prof 4+): Locates rare biomes like Mushroom Fields, Ice Spikes, Cherry Grove, Deep Dark, and Lush Caves
+- **Proficiency scaling**: Prof 1 = 50 block range (Pokemon only), Prof 5 = 200 blocks (all types, faster cooldown)
+- **Chat notifications**: Colored chat messages sent to nearby players on discovery
+- **Visual feedback**: Enchant particles during scouting, cry + special animation on discovery
+
+### Discovery Registry (Server-side Persistence)
+- **DiscoveryRegistry** -- Tracks all discoveries made by Scout Pokemon
+- Permanent discoveries (structures + biomes) persist forever in `cobblebase_discoveries.json`
+- Wild Pokemon sightings auto-expire after 30 minutes
+- Chunk-based dedup prevents re-reporting the same discovery
+- Loaded/saved with world lifecycle (same pattern as BaseManager and LogManager)
+
+### Discovery Tab (4th GUI Tab)
+- **DiscoveryPanel** -- New tab in the Cobblebase GUI: [Skills] [Buffs] [Logs] [Discovery]
+- Shows all permanent discoveries (structures + biomes) in a scrollable table
+- Columns: Type, Name, Coordinates, Discovered By, When
+- Color-coded by type: Structure=blue, Biome=green
+- Filter buttons: All, Structures, Biomes
+- Discovery count in footer
+- Client-server sync via DiscoverySyncS2CPacket / DiscoveryRequestC2SPacket
+
+### Species Skill Updates
+- **Ninjask**: Scout proficiency 3 -> 5 (fastest scout)
+- **Espeon**: Scout proficiency 3 -> 4
+- **Pidgeot**: Scout proficiency 5 -> 4
+- **Staraptor**: Scout proficiency 5 -> 4
+- **Talonflame**: Added Scout proficiency 4
+- **Eevee**: Added Scout proficiency 2
+- **Growlithe**: Added Scout proficiency 2
+- **Stoutland**: Added Scout proficiency 3
+- **Starly**: Added Scout proficiency 1
+- **Lillipup**: Added Scout proficiency 1
+- Existing scout assignments unchanged: Jolteon (4), Absol (3), Arcanine (3), Lucario (3), Pidgey (1)
+
 ## [0.4.1] - 2026-04-01
 
 ### MiningExecutor (replaces broken HarvesterExecutor for mining)

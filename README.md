@@ -72,6 +72,13 @@ Open the Pasture Block and click the **"Cobblebase"** button to manage your base
 - Color-coded by rarity: Common=gray, Uncommon=green, Rare=blue, Ultra Rare=gold
 - Last 100 events stored per pasture, auto-cleanup after 24 hours
 
+#### Discovery Tab
+- Shows all permanent discoveries (structures and biomes) found by Scout Pokemon
+- Scrollable table: Type, Name, Coordinates, Discovered By, When
+- Filter buttons: All, Structures, Biomes
+- Color-coded by type: Structures=blue, Biomes=green
+- Persistent across sessions -- discoveries are saved to world data
+
 ### 22 Skills Across 6 Categories
 
 | Category | Skills | Description |
@@ -80,7 +87,7 @@ Open the Pasture Block and click the **"Cobblebase"** button to manage your base
 | **Generation** | Lava Fill, Water Fill, Snow Fill, Furnace Fuel, Brew Fuel | Produce resources in containers |
 | **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
 | **Support** | Healer, Mentor | Healer: direct % healing + revive. Mentor: passive XP boost for all Pokemon in the same pasture |
-| **Utility** | Irrigator, Extinguisher, Item Gatherer, Scout, Archeologist, Finder | Various helper jobs (Gatherer picks up dropped items and sorts into chests) |
+| **Utility** | Irrigator, Extinguisher, Item Gatherer, **Scout**, Archeologist, Finder | Various helper jobs (Scout discovers wild Pokemon, structures, and biomes; Gatherer picks up dropped items and sorts into chests) |
 | **Specialized Finders** | Finder Evo, Finder Hea, Finder Bui, Finder Ore, Finder See, Finder Bal, Finder Exp | Themed item finders with dedicated loot tables |
 | **Fairy/Starters** | Friend Recruiter | Spawns wild Pokemon of same type nearby |
 | **Legendary** | Recruiter, Aura Boost, Lucky Charm, Growth Aura | Exclusive to rare/legendary Pokemon |
@@ -228,7 +235,7 @@ cobblebase/
 ├── mixin/                      # Pasture Block integration
 └── fabric/
     ├── CobblebaseFabric.kt     # Fabric entrypoint + packet registration
-    ├── client/gui/             # Tabbed Cobblebase Screen (Skills, Buffs, Logs)
+    ├── client/gui/             # Tabbed Cobblebase Screen (Skills, Buffs, Logs, Discovery)
     └── mixin/                  # Client-side PastureWidget mixin
 ```
 

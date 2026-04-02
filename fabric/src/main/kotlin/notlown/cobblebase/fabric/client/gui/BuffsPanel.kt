@@ -109,24 +109,16 @@ class BuffsPanel(
         return when (executor) {
             "mentor" -> {
                 val multiplier = (prof / 3.0) * CobblebaseConfig.mentorMaxBoost
-                val percent = ((multiplier - 0) * 100).toInt()
-                "$skillName (Prof $prof): +${percent}% Bonus XP every 60s"
+                val percent = ((multiplier) * 100).toInt()
+                "+${percent}% Bonus XP every 60s"
             }
-            "harvester", "mining" -> {
-                "$skillName (Prof $prof): Harvesting crops every ${effectiveCooldown}s"
-            }
-            "fishing" -> {
-                "$skillName (Prof $prof): Fishing every ${effectiveCooldown}s"
-            }
-            "guard" -> {
-                "$skillName (Prof $prof): Defending base, repelling wild Pokemon"
-            }
-            "gather_items" -> {
-                "$skillName (Prof $prof): Sorting items into nearby chests"
-            }
+            "harvester", "mining" -> "Harvesting crops every ${effectiveCooldown}s"
+            "fishing" -> "Fishing every ${effectiveCooldown}s"
+            "guard" -> "Defending base, repelling wild Pokemon"
+            "gather_items" -> "Sorting items into nearby chests"
             "healer" -> {
                 val monsCount = if (prof >= 5) 6 else prof
-                "$skillName (Prof $prof): Healing $monsCount team Pokemon every 180s"
+                "Healing $monsCount team Pokemon every 180s"
             }
             "finder", "finder_evo", "finder_hea", "finder_bui", "finder_ore", "finder_see", "finder_bal", "finder_exp" -> {
                 val typeLabel = when (executor) {
@@ -139,23 +131,13 @@ class BuffsPanel(
                     "finder_exp" -> "XP Candies"
                     else -> "items"
                 }
-                "$skillName (Prof $prof): Finding $typeLabel"
+                "Finding $typeLabel"
             }
-            "irrigate" -> {
-                "$skillName (Prof $prof): Hydrating farmland in radius"
-            }
-            "recruiter" -> {
-                "$skillName (Prof $prof): Attracting wild Pokemon to the area"
-            }
-            "cauldron_fill" -> {
-                "$skillName (Prof $prof): Filling cauldrons with water"
-            }
-            "furnace_fuel", "brew_fuel" -> {
-                "$skillName (Prof $prof): Fueling furnaces/brewers"
-            }
-            else -> {
-                "$skillName (Prof $prof): Active"
-            }
+            "irrigate" -> "Hydrating farmland, boosting growth"
+            "recruiter" -> "Attracting wild Pokemon to the area"
+            "cauldron_fill" -> "Filling cauldrons"
+            "furnace_fuel", "brew_fuel" -> "Fueling furnaces/brewers"
+            else -> "Active"
         }
     }
 

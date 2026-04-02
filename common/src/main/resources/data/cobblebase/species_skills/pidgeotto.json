@@ -4,6 +4,10 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
     }
   ]
 }

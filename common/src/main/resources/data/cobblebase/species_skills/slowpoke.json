@@ -4,6 +4,10 @@
     {
       "skillId": "cobblebase:fishing",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     }
   ]
 }

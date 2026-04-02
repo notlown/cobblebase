@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:finder_hea",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
     }
   ]
 }

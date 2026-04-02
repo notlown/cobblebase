@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:water_fill",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     }
   ]
 }

@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.particle.ParticleTypes
@@ -147,12 +148,11 @@ object GathererExecutor : SkillExecutor {
 
         heldItems[pokemonId] = listOf(stack)
 
-        // Show gathered item visually on the Pokemon (Cobblemon renders held items)
-        val pokemon = pokemonEntity.pokemon
+        // Show gathered item visually on the Pokemon using equipment slot (renders all item types)
         if (!originalHeldItem.containsKey(pokemonId)) {
-            originalHeldItem[pokemonId] = pokemon.heldItem()
+            originalHeldItem[pokemonId] = pokemonEntity.getEquippedStack(EquipmentSlot.MAINHAND).copy()
         }
-        pokemon.swapHeldItem(stack.copy(), decrement = false)
+        pokemonEntity.equipStack(EquipmentSlot.MAINHAND, stack.copy())
 
         // Pickup particles (item sparkle effect)
         val x = pokemonEntity.x
@@ -215,10 +215,6 @@ object GathererExecutor : SkillExecutor {
      */
     private fun restoreOriginalHeldItem(pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val original = originalHeldItem.remove(pokemonId) ?: ItemStack.EMPTY
-        if (original.isEmpty) {
-            pokemonEntity.pokemon.removeHeldItem()
-        } else {
-            pokemonEntity.pokemon.swapHeldItem(original, decrement = false)
-        }
+        pokemonEntity.equipStack(EquipmentSlot.MAINHAND, original)
     }
 }

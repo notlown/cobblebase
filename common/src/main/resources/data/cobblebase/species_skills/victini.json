@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:lucky_charm",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
     }
   ]
 }

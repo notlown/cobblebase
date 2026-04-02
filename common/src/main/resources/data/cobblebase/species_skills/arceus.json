@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:growth_aura",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
     }
   ]
 }

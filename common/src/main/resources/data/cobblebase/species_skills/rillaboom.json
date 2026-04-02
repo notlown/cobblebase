@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:finder_see",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
     }
   ]
 }

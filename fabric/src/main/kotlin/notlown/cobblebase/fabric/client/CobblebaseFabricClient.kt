@@ -8,7 +8,9 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import notlown.cobblebase.core.CobblebaseClothConfig
+import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
 import notlown.cobblebase.core.net.LogSyncS2CPacket
 import org.lwjgl.glfw.GLFW
 
@@ -37,6 +39,13 @@ object CobblebaseFabricClient : ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(LogSyncS2CPacket.ID) { packet, context ->
             context.client().execute {
                 LogManager.setClientLogs(packet.entries)
+            }
+        }
+
+        // Register S2C discovery sync packet receiver
+        ClientPlayNetworking.registerGlobalReceiver(DiscoverySyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                DiscoveryRegistry.setClientDiscoveries(packet.discoveries)
             }
         }
     }

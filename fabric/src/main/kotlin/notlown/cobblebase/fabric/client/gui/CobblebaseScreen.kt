@@ -16,7 +16,7 @@ class CobblebaseScreen(
     private val parentScreen: Screen?
 ) : Screen(Text.literal("Cobblebase")) {
 
-    enum class Tab { SKILLS, BUFFS, LOGS }
+    enum class Tab { SKILLS, BUFFS, LOGS, DISCOVERY }
 
     private var activeTab = Tab.SKILLS
 
@@ -54,6 +54,7 @@ class CobblebaseScreen(
     private lateinit var skillsPanel: SkillsPanel
     private lateinit var buffsPanel: BuffsPanel
     private lateinit var logsPanel: LogsPanel
+    private lateinit var discoveryPanel: DiscoveryPanel
 
     override fun init() {
         super.init()
@@ -67,6 +68,7 @@ class CobblebaseScreen(
         skillsPanel = SkillsPanel(this, pokemonList, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
         buffsPanel = BuffsPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
         logsPanel = LogsPanel(this, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
+        discoveryPanel = DiscoveryPanel(this, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
 
         initCurrentTab()
     }
@@ -77,6 +79,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.init(this::addDrawableChild)
             Tab.BUFFS -> buffsPanel.init(this::addDrawableChild)
             Tab.LOGS -> logsPanel.init(this::addDrawableChild)
+            Tab.DISCOVERY -> discoveryPanel.init(this::addDrawableChild)
         }
     }
 
@@ -104,14 +107,16 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.render(context, mouseX, mouseY, delta)
             Tab.BUFFS -> buffsPanel.render(context, mouseX, mouseY, delta)
             Tab.LOGS -> logsPanel.render(context, mouseX, mouseY, delta)
+            Tab.DISCOVERY -> discoveryPanel.render(context, mouseX, mouseY, delta)
         }
 
         super.render(context, mouseX, mouseY, delta)
     }
 
     private fun renderTabs(context: DrawContext, mouseX: Int, mouseY: Int) {
-        val tabW = (panelW - TAB_GAP * 2) / 3
         val tabs = Tab.entries
+        val tabCount = tabs.size
+        val tabW = (panelW - TAB_GAP * (tabCount - 1)) / tabCount
 
         for ((i, tab) in tabs.withIndex()) {
             val tx = panelX + i * (tabW + TAB_GAP)
@@ -132,6 +137,7 @@ class CobblebaseScreen(
                     Tab.SKILLS -> 0xFF4CAF50.toInt()
                     Tab.BUFFS -> 0xFFFF9800.toInt()
                     Tab.LOGS -> 0xFF2196F3.toInt()
+                    Tab.DISCOVERY -> 0xFF9C27B0.toInt()
                 }
                 context.fill(tx, ty + TAB_HEIGHT - 2, tx + tabW, ty + TAB_HEIGHT, accentColor)
             }
@@ -141,6 +147,7 @@ class CobblebaseScreen(
                 Tab.SKILLS -> "\u00A7fSkills"
                 Tab.BUFFS -> "\u00A7fBuffs"
                 Tab.LOGS -> "\u00A7fLogs"
+                Tab.DISCOVERY -> "\u00A7fDiscovery"
             }
             val labelW = textRenderer.getWidth(label)
             val textColor = if (isActive) 0xFFFFFF else 0x999999
@@ -150,8 +157,9 @@ class CobblebaseScreen(
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         // Check tab clicks
-        val tabW = (panelW - TAB_GAP * 2) / 3
         val tabs = Tab.entries
+        val tabCount = tabs.size
+        val tabW = (panelW - TAB_GAP * (tabCount - 1)) / tabCount
         for ((i, tab) in tabs.withIndex()) {
             val tx = panelX + i * (tabW + TAB_GAP)
             val ty = panelY
@@ -168,6 +176,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseClicked(mouseX, mouseY, button)
             Tab.BUFFS -> buffsPanel.mouseClicked(mouseX, mouseY, button)
             Tab.LOGS -> logsPanel.mouseClicked(mouseX, mouseY, button)
+            Tab.DISCOVERY -> discoveryPanel.mouseClicked(mouseX, mouseY, button)
         }
     }
 
@@ -176,6 +185,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.BUFFS -> buffsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.LOGS -> logsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+            Tab.DISCOVERY -> discoveryPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
         }
         if (handled) return true
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
@@ -186,6 +196,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.BUFFS -> buffsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.LOGS -> logsPanel.mouseReleased(mouseX, mouseY, button)
+            Tab.DISCOVERY -> discoveryPanel.mouseReleased(mouseX, mouseY, button)
         }
         if (handled) return true
         return super.mouseReleased(mouseX, mouseY, button)
@@ -196,6 +207,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
             Tab.BUFFS -> buffsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
             Tab.LOGS -> logsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+            Tab.DISCOVERY -> discoveryPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
         }
     }
 

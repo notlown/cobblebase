@@ -14,6 +14,7 @@ import notlown.cobblebase.core.executors.MiningExecutor
 import notlown.cobblebase.core.executors.HealerExecutor
 import notlown.cobblebase.core.executors.MentorExecutor
 import notlown.cobblebase.core.executors.RecruiterExecutor
+import notlown.cobblebase.core.executors.ScoutExecutor
 
 /**
  * Maps executor names (from Skill JSON) to executor implementations.
@@ -59,7 +60,7 @@ object ExecutorRegistry {
         register("irrigate", IrrigatorExecutor)
         register("extinguish", GenericLootExecutor)        // Placeholder: extinguisher removes fire
         register("gather_items", GathererExecutor)
-        register("scout", GenericLootExecutor)             // Placeholder: scout creates maps
+        register("scout", ScoutExecutor)                     // Scout: discovers wild Pokemon, structures, biomes
 
         // -- Legendary / Fairy --
         register("recruiter", RecruiterExecutor)           // Spawns rare wild Pokemon nearby

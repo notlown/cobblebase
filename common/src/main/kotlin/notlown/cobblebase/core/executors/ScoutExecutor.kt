@@ -238,17 +238,16 @@ object ScoutExecutor : SkillExecutor {
         val pos = pokemonEntity.blockPos
 
         // Pick a random structure tag to search for
-        val shuffledTags = STRUCTURE_TAGS.shuffled(world.random.asJavaRandom())
+        val shuffledTags = STRUCTURE_TAGS.toList().shuffled()
 
         for (tag in shuffledTags) {
             try {
-                val result = world.chunkManager.chunkGenerator.locateStructure(
-                    world, tag, pos, searchRadius / 16, false
+                val result = world.locateStructure(
+                    tag, pos, searchRadius / 16, false
                 )
                 if (result != null) {
-                    val structPos = result.first
-                    val structX = structPos.x
-                    val structZ = structPos.z
+                    val structX = result.x
+                    val structZ = result.z
 
                     // Get display name from tag
                     val tagName = tag.id.path
@@ -309,7 +308,7 @@ object ScoutExecutor : SkillExecutor {
         val pos = pokemonEntity.blockPos
 
         // Pick a random interesting biome to search for
-        val shuffledBiomes = INTERESTING_BIOMES.shuffled(world.random.asJavaRandom())
+        val shuffledBiomes = INTERESTING_BIOMES.shuffled(java.util.Random(world.random.nextLong()))
 
         for (biomeKey in shuffledBiomes) {
             try {
@@ -323,7 +322,7 @@ object ScoutExecutor : SkillExecutor {
                 )
 
                 if (result != null) {
-                    val biomePos = result.first
+                    val biomePos = result.getFirst()
                     val bx = biomePos.x
                     val bz = biomePos.z
 

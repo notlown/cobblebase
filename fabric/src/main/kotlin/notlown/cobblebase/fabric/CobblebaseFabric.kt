@@ -8,7 +8,10 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.util.math.BlockPos
 import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.net.DiscoveryRequestC2SPacket
+import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
 import notlown.cobblebase.core.net.LogRequestC2SPacket
 import notlown.cobblebase.core.net.LogSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
@@ -36,18 +39,32 @@ object CobblebaseFabric : ModInitializer {
         // Register S2C packet for log sync
         PayloadTypeRegistry.playS2C().register(LogSyncS2CPacket.ID, LogSyncS2CPacket.CODEC)
 
-        // Load assignments and logs when world starts
+        // Register C2S packet for discovery requests
+        PayloadTypeRegistry.playC2S().register(DiscoveryRequestC2SPacket.ID, DiscoveryRequestC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(DiscoveryRequestC2SPacket.ID) { _, context ->
+            context.server().execute {
+                val discoveries = DiscoveryRegistry.getDiscoveries()
+                ServerPlayNetworking.send(context.player(), DiscoverySyncS2CPacket(discoveries))
+            }
+        }
+
+        // Register S2C packet for discovery sync
+        PayloadTypeRegistry.playS2C().register(DiscoverySyncS2CPacket.ID, DiscoverySyncS2CPacket.CODEC)
+
+        // Load assignments, logs, and discoveries when world starts
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             val world = server.overworld
             BaseManager.load(world)
             LogManager.load(world)
+            DiscoveryRegistry.load(world)
         }
 
-        // Save assignments and logs when world stops
+        // Save assignments, logs, and discoveries when world stops
         ServerLifecycleEvents.SERVER_STOPPING.register { server ->
             val world = server.overworld
             BaseManager.save(world)
             LogManager.save(world)
+            DiscoveryRegistry.save(world)
         }
     }
 

@@ -15,7 +15,7 @@ Unlike type-based job systems, Cobblebase gives **every Pokemon species its own 
 |---------|--------|-------------|
 | Charizard | Lava Fill, Fuel, Guard, Scout | 4, 4, 3, 4 |
 | Nidoking | Archeology, Guard, Mining | 4, 3, 2 |
-| Ninjask | Harvester, Scout, Item Gather | 4, 3, 2 |
+| Ninjask | Harvester, Scout, Item Gather | 4, 5, 2 |
 | Munchlax | Finder, Item Gatherer | 3, 4 |
 | Furret | Finder, Item Gatherer | 3, 4 |
 | Chansey | Healer, Mentor | 4, 1 |

@@ -244,7 +244,8 @@ object PokemonSpriteHelper {
     ) {
         val speciesId = resolveSpeciesFromName(pokemonName)
         if (speciesId != null) {
-            renderSmallIcon(context, textRenderer, speciesId, pokemonName, x, y, delta)
+            // Use full-size renderIcon for better visibility (16x16 with 3D portrait)
+            renderIcon(context, textRenderer, speciesId, pokemonName, emptySet(), x, y, delta)
         } else {
             renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
         }

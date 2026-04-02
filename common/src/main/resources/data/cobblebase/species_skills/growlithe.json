@@ -2,6 +2,10 @@
   "species": "growlithe",
   "skills": [
     {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:guard",
       "proficiency": 3
     },

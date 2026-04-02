@@ -1,10 +1,10 @@
 {
   "id": "cobblebase:scout",
   "name": "Scout",
-  "description": "Creates explorer maps to structures",
+  "description": "Explores the area to discover wild Pokemon, structures, and biomes",
   "category": "utility",
-  "cooldownSeconds": 80,
-  "searchRadius": 10,
+  "cooldownSeconds": 300,
+  "searchRadius": 100,
   "executor": "scout",
-  "effectType": "default"
+  "effectType": "special"
 }

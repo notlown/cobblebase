@@ -2,6 +2,10 @@
   "species": "lillipup",
   "skills": [
     {
+      "skillId": "cobblebase:scout",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:finder",
       "proficiency": 2
     },

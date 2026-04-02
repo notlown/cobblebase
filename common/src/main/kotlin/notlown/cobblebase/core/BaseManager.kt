@@ -47,6 +47,20 @@ object BaseManager {
             }
         }
 
+        // Safety: prevent Pokemon from wandering too far from pasture (causes despawning)
+        val distFromPasture = kotlin.math.sqrt(
+            pokemonEntity.squaredDistanceTo(
+                pastureOrigin.x + 0.5, pastureOrigin.y.toDouble(), pastureOrigin.z + 0.5
+            )
+        )
+        if (distFromPasture > 30.0) {
+            pokemonEntity.setPosition(pastureOrigin.x + 0.5, pastureOrigin.y + 1.0, pastureOrigin.z + 0.5)
+            NavigationHelper.clearTargets(pokemonEntity)
+            if (now % 100 == 0L) {
+                Cobblebase.LOGGER.info("[BaseManager] $speciesName was ${distFromPasture.toInt()} blocks from pasture — teleported back")
+            }
+        }
+
         // Safety: prevent drowning — if Pokemon is submerged in water, teleport to pasture origin
         if (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100) {
             val safeY = pastureOrigin.y + 1.0

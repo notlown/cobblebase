@@ -21,6 +21,7 @@ import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
 import notlown.cobblebase.core.effects.SkillEffects
+import notlown.cobblebase.core.NavigationHelper
 import java.util.UUID
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -77,6 +78,9 @@ object ScoutExecutor : SkillExecutor {
         "lush_caves" to "Lush Caves"
     )
 
+    private const val MAX_DISTANCE_FROM_PASTURE = 5.0
+    private const val TELEPORT_DISTANCE = 10.0
+
     override fun tick(
         world: World,
         origin: BlockPos,
@@ -88,6 +92,21 @@ object ScoutExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
+        // Safety: keep Scout near the pasture — teleport back if too far
+        val distFromOrigin = sqrt(
+            pokemonEntity.squaredDistanceTo(
+                origin.x + 0.5, origin.y.toDouble(), origin.z + 0.5
+            )
+        )
+        if (distFromOrigin > TELEPORT_DISTANCE) {
+            pokemonEntity.setPosition(origin.x + 0.5, origin.y + 1.0, origin.z + 0.5)
+            NavigationHelper.clearTargets(pokemonEntity)
+            Cobblebase.LOGGER.info("[Scout] ${pokemonEntity.pokemon.species.name} was too far (${distFromOrigin.toInt()} blocks) — teleported back to pasture")
+        } else if (distFromOrigin > MAX_DISTANCE_FROM_PASTURE) {
+            // Gently walk back towards pasture
+            NavigationHelper.navigateTo(pokemonEntity, origin, 0.6)
+        }
+
         // Cooldown: proficiency reduces cooldown
         // Prof 1: 300s, Prof 2: 240s, Prof 3: 180s, Prof 4: 180s, Prof 5: 150s
         val baseCooldown = skill.cooldownSeconds
@@ -96,14 +115,17 @@ object ScoutExecutor : SkillExecutor {
 
         val lastTime = lastScoutTime[pokemonId] ?: now.also { lastScoutTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
-            // Working particles — lookout effect
-            if (now % 60 == 0L) {
+            // Working particles — lookout effect (play frequently so it looks active)
+            if (now % 40 == 0L) {
                 SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+                // "Looking around" animation
+                SkillEffects.sendAnimationPublic(world, pokemonEntity, "cry", "special")
                 // Extra eye particles for "searching"
                 val x = pokemonEntity.x
                 val y = pokemonEntity.y + pokemonEntity.height.toDouble()
                 val z = pokemonEntity.z
                 world.spawnParticles(ParticleTypes.ENCHANT, x, y + 0.5, z, 5, 0.3, 0.3, 0.3, 0.5)
+                world.spawnParticles(ParticleTypes.END_ROD, x, y + 0.8, z, 3, 0.5, 0.3, 0.5, 0.02)
             }
             return
         }

@@ -37,9 +37,11 @@ object MiningExecutor : SkillExecutor {
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
     private val digTarget = mutableMapOf<UUID, BlockPos>()
     private val digStartTime = mutableMapOf<UUID, Long>()
+    private val celebrationUntil = mutableMapOf<UUID, Long>() // short break after finding loot
 
-    private const val DIG_DURATION_TICKS = 60L // 3 seconds of digging animation
+    private const val DIG_DURATION_TICKS = 60L // 3 seconds of digging animation before loot roll
     private const val NAV_TIMEOUT_TICKS = 100L // 5 seconds max navigation
+    private const val CELEBRATION_TICKS = 100L // 5-second break after finding loot
 
     override fun tick(
         world: World,
@@ -57,6 +59,26 @@ object MiningExecutor : SkillExecutor {
         if (!items.isNullOrEmpty()) {
             InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
             heldItems.remove(pokemonId)
+            return
+        }
+
+        // Phase 1.5: Celebration break after finding loot (5 seconds)
+        val celebEnd = celebrationUntil[pokemonId]
+        if (celebEnd != null && now < celebEnd) {
+            // Short break — show success particles occasionally
+            if (now % 40 == 0L) {
+                SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            }
+            return
+        } else if (celebEnd != null) {
+            // Celebration over — clear and immediately start digging again
+            celebrationUntil.remove(pokemonId)
+            // Pick a new dig spot right away
+            val radius = skill.searchRadius.coerceAtLeast(5)
+            val offsetX = world.random.nextInt(radius * 2 + 1) - radius
+            val offsetZ = world.random.nextInt(radius * 2 + 1) - radius
+            digTarget[pokemonId] = origin.add(offsetX, 0, offsetZ)
+            digStartTime[pokemonId] = now
             return
         }
 
@@ -83,23 +105,35 @@ object MiningExecutor : SkillExecutor {
                 }
 
                 // Digging complete — generate loot
-                generateMiningLoot(world, origin, pokemonEntity, pokemonId, skillEntry, skill)
+                val foundLoot = generateMiningLoot(world, origin, pokemonEntity, pokemonId, skillEntry, skill)
                 digTarget.remove(pokemonId)
                 digStartTime.remove(pokemonId)
                 lastMineTime[pokemonId] = now
+
+                if (foundLoot) {
+                    // Found something — short 5-second celebration break
+                    celebrationUntil[pokemonId] = now + CELEBRATION_TICKS
+                } else {
+                    // Nothing found — immediately pick a new spot and keep digging
+                    val radius = skill.searchRadius.coerceAtLeast(5)
+                    val offsetX = world.random.nextInt(radius * 2 + 1) - radius
+                    val offsetZ = world.random.nextInt(radius * 2 + 1) - radius
+                    digTarget[pokemonId] = origin.add(offsetX, 0, offsetZ)
+                    digStartTime[pokemonId] = now
+                }
             }
             return
         }
 
-        // Phase 3: Cooldown check
+        // Phase 3: Cooldown check — but keep digging animation playing!
         val baseCooldown = if (skill.cooldownSeconds > 0) skill.cooldownSeconds.toLong() else 30L
         val cooldownTicks = if (CobblebaseConfig.devMode) 100L
             else (baseCooldown * 20L * (11 - skillEntry.proficiency) / 10)
         val lastTime = lastMineTime[pokemonId] ?: now.also { lastMineTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
-            // Show working particles periodically while waiting
-            if (now % 60 == 0L) {
-                SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            // Play continuous digging animation + particles while waiting for cooldown
+            if (now % 40 == 0L) {
+                playDiggingEffects(world, pokemonEntity)
             }
             return
         }
@@ -150,7 +184,7 @@ object MiningExecutor : SkillExecutor {
         pokemonId: UUID,
         skillEntry: SkillEntry,
         skill: SkillDef
-    ) {
+    ): Boolean {
         try {
             val lootTableName = pickLootTable(world, skillEntry.proficiency)
             val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of(lootTableName))
@@ -184,9 +218,12 @@ object MiningExecutor : SkillExecutor {
                         rarity
                     )
                 }
+                return true
             }
+            return false
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Mining] Error generating loot: ${e.message}")
+            return false
         }
     }
 

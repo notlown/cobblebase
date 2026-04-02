@@ -46,22 +46,31 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
-        // Flying Pokemon can't use ground navigation reliably — move them directly
+        // Flying Pokemon: velocity-based movement with smart altitude handling
         val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
         if (canFly) {
-            // Move horizontally towards target, but keep current Y (don't dive to ground)
             val dx = (targetPos.x + 0.5) - pokemonEntity.x
             val dz = (targetPos.z + 0.5) - pokemonEntity.z
             val horizontalDist = Math.sqrt(dx * dx + dz * dz)
-            if (horizontalDist > 1.0) {
-                val moveSpeed = speed * 0.15
+            val moveSpeed = speed * 0.15
+
+            if (horizontalDist > 2.5) {
+                // Phase 1: Far away — fly horizontally towards target at current altitude
                 pokemonEntity.setVelocity(
                     dx / horizontalDist * moveSpeed,
-                    0.0, // don't change Y — stay at current altitude
+                    0.0,
                     dz / horizontalDist * moveSpeed
                 )
-                pokemonEntity.velocityModified = true
+            } else {
+                // Phase 2: Close enough horizontally — descend to target Y to interact
+                val dy = (targetPos.y + 1.0) - pokemonEntity.y
+                pokemonEntity.setVelocity(
+                    dx / (horizontalDist + 0.1) * moveSpeed * 0.5,
+                    (dy * 0.1).coerceIn(-0.15, 0.15), // gentle descent/ascent
+                    dz / (horizontalDist + 0.1) * moveSpeed * 0.5
+                )
             }
+            pokemonEntity.velocityModified = true
             return
         }
 

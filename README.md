@@ -31,10 +31,10 @@ Pokemon harvest, fish, mine, and collect resources from the world around your ba
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Bulbasaur (3), Tropius (5), Breloom (4) |
-| **Fishing** | Navigates to water and catches fish/loot | Magikarp (1), Gyarados (5), Goldeen (3) |
-| **Mining** | Digs for ores, fossils, gems, and tumblestones | Excadrill (5), Dugtrio (4), Onix (3) |
-| **Honey Collect** | Gathers honey from bee nests | Combee (3), Vespiquen (5), Teddiursa (2) |
+| 🌾 **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Bulbasaur (3), Tropius (5), Breloom (4) |
+| 🎣 **Fishing** | Navigates to water and catches fish/loot | Magikarp (1), Gyarados (5), Goldeen (3) |
+| ⛏️ **Mining** | Digs for ores, fossils, gems, and tumblestones | Excadrill (5), Dugtrio (4), Onix (3) |
+| 🍯 **Honey Collect** | Gathers honey from bee nests | Combee (3), Vespiquen (5), Teddiursa (2) |
 
 ---
 
@@ -44,18 +44,18 @@ Twelve specialized Finder subtypes with dedicated loot tables for targeted item 
 
 | Job | Focus | Example Loot |
 |-----|-------|--------------|
-| **Alchemist** | Evolution items | Fire/Thunder Stone, Linking Cord, Ability Patch |
-| **Pharmacist** | Healing items | Potions, Revives, Sacred Ash |
-| **Architect** | Building materials | Prismarine, Sea Lantern, Crying Obsidian |
-| **Excavator** | Ores and minerals | Raw Iron/Gold, Diamond, Ancient Debris |
-| **Botanist** | Seeds, plants & mulch | Apricorn Seeds, Mint Seeds, Mulch, Torchflower Seeds |
-| **Collector** | Pokeballs | Great Ball, Apricorn Balls, Master Ball |
-| **Scholar** | XP Candies | Exp Candy XS–XL, Rare Candy |
-| **Chef** | Food & cooking | Ponigiri, Lava Cookie, Enchanted Golden Apple |
-| **Trainer** | Vitamins & training | HP Up, Protein, Ability Patch |
-| **Armorer** | Battle held items | Choice Band, Life Orb, Focus Sash |
-| **Prospector** | Relics & treasure | Relic Coins, Gold, Netherite Ingot |
-| **Smith** | Smithing templates & pottery | Armor Trims, Pottery Sherds, Netherite Upgrade |
+| 🧪 **Alchemist** | Evolution items | Fire/Thunder Stone, Linking Cord, Ability Patch |
+| 💊 **Pharmacist** | Healing items | Potions, Revives, Sacred Ash |
+| 🏗️ **Architect** | Building materials | Prismarine, Sea Lantern, Crying Obsidian |
+| ⛏️ **Excavator** | Ores and minerals | Raw Iron/Gold, Diamond, Ancient Debris |
+| 🌱 **Botanist** | Seeds, plants & mulch | Apricorn Seeds, Mint Seeds, Mulch, Torchflower Seeds |
+| 📦 **Collector** | Pokeballs | Great Ball, Apricorn Balls, Master Ball |
+| 📚 **Scholar** | XP Candies | Exp Candy XS–XL, Rare Candy |
+| 🍳 **Chef** | Food & cooking | Ponigiri, Lava Cookie, Enchanted Golden Apple |
+| 💪 **Trainer** | Vitamins & training | HP Up, Protein, Ability Patch |
+| ⚔️ **Armorer** | Battle held items | Choice Band, Life Orb, Focus Sash |
+| 💰 **Prospector** | Relics & treasure | Relic Coins, Gold, Netherite Ingot |
+| 🔨 **Smith** | Smithing templates & pottery | Armor Trims, Pottery Sherds, Netherite Upgrade |
 
 Pharmacist is auto-assigned to Healer Pokemon, Botanist to Harvesters, Scholar to Mentors, and Collector to collectors like Aipom and Zigzagoon.
 
@@ -65,7 +65,7 @@ Pharmacist is auto-assigned to Healer Pokemon, Botanist to Harvesters, Scholar t
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Nidoking (3), Charizard (3), Lucario (3) |
+| 🛡️ **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Nidoking (3), Charizard (3), Lucario (3) |
 
 ---
 
@@ -75,16 +75,16 @@ Healing, mentoring, and 8 buff skills that apply status effects to all players w
 
 | Job | Effect | Example Pokemon |
 |-----|--------|-----------------|
-| **Healer** | Direct % HP healing + revive fainted Pokemon | Blissey (5), Chansey (4), Clefable (3) |
-| **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam (5), Metagross (4), Gardevoir (4) |
-| **Speed Boost** | Speed II | Jolteon (5), Ninjask (4), Rapidash (4) |
-| **Strength Boost** | Strength I | Machamp (5), Hariyama (4), Conkeldurr (4) |
-| **Resistance Boost** | Resistance I | Steelix (5), Aggron (4), Bastiodon (4) |
-| **Night Vision** | Night Vision | Umbreon (5), Noctowl (4), Espeon (3) |
-| **Water Breathing** | Water Breathing | Lapras (5), Vaporeon (4), Milotic (4) |
-| **Jump Boost** | Jump Boost I | Lopunny (4), Hitmonlee (4), Blaziken (3) |
-| **Haste Boost** | Haste I | Alakazam (4), Metagross (3), Kadabra (3) |
-| **Saturation Boost** | Saturation | Snorlax (5), Munchlax (4), Slurpuff (3) |
+| 💚 **Healer** | Direct % HP healing + revive fainted Pokemon | Blissey (5), Chansey (4), Clefable (3) |
+| 🎓 **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam (5), Metagross (4), Gardevoir (4) |
+| ⚡ **Speed Boost** | Speed II | Jolteon (5), Ninjask (4), Rapidash (4) |
+| 💪 **Strength Boost** | Strength I | Machamp (5), Hariyama (4), Conkeldurr (4) |
+| 🛡️ **Resistance Boost** | Resistance I | Steelix (5), Aggron (4), Bastiodon (4) |
+| 👁️ **Night Vision** | Night Vision | Umbreon (5), Noctowl (4), Espeon (3) |
+| 🫧 **Water Breathing** | Water Breathing | Lapras (5), Vaporeon (4), Milotic (4) |
+| 🦘 **Jump Boost** | Jump Boost I | Lopunny (4), Hitmonlee (4), Blaziken (3) |
+| ⚒️ **Haste Boost** | Haste I | Alakazam (4), Metagross (3), Kadabra (3) |
+| 🍖 **Saturation** | Saturation | Snorlax (5), Munchlax (4), Slurpuff (3) |
 
 Buff duration and cooldown scale with proficiency — at Prof 5, buffs are effectively permanent (70s duration, 0s cooldown).
 
@@ -94,7 +94,7 @@ Buff duration and cooldown scale with proficiency — at Prof 5, buffs are effec
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Gatherer** | Picks up dropped items and sorts them into nearby chests | Snorlax (5), Furret (4), Munchlax (4) |
+| 📥 **Gatherer** | Picks up dropped items and sorts them into nearby chests | Snorlax (5), Furret (4), Munchlax (4) |
 
 Smart sorting prioritizes chests already containing the same item type. Search radius scales from 5 blocks (Prof 1) to 12 blocks (Prof 5).
 
@@ -104,7 +104,7 @@ Smart sorting prioritizes chests already containing the same item type. Search r
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Scout** | Discovers wild Pokemon, structures, and biomes | Ninjask (5), Pidgeot (4), Talonflame (4) |
+| 🔭 **Scout** | Discovers wild Pokemon, structures, and biomes | Ninjask (5), Pidgeot (4), Talonflame (4) |
 
 | Proficiency | Range | Discovers |
 |-------------|-------|-----------|
@@ -122,12 +122,12 @@ Pokemon that interact with blocks and containers around your base.
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Irrigator** | Hydrates nearby farmland | Squirtle (3), Lotad (2) |
-| **Lava Fill** | Fills cauldrons with lava | Charizard (4), Magmar (3) |
-| **Water Fill** | Fills cauldrons with water | Vaporeon (4), Poliwag (2) |
-| **Snow Fill** | Fills cauldrons with powder snow | Snover (3), Abomasnow (4) |
-| **Furnace Fuel** | Adds burn time to furnaces | Charizard (4), Magmar (3) |
-| **Brew Fuel** | Fuels brewing stands | Blaze (5), Magcargo (3) |
+| 💧 **Irrigator** | Hydrates nearby farmland | Squirtle (3), Lotad (2) |
+| 🌋 **Lava Fill** | Fills cauldrons with lava | Charizard (4), Magmar (3) |
+| 💦 **Water Fill** | Fills cauldrons with water | Vaporeon (4), Poliwag (2) |
+| ❄️ **Snow Fill** | Fills cauldrons with powder snow | Snover (3), Abomasnow (4) |
+| 🔥 **Furnace Fuel** | Adds burn time to furnaces | Charizard (4), Magmar (3) |
+| 🧪 **Brew Fuel** | Fuels brewing stands | Blaze (5), Magcargo (3) |
 
 ---
 
@@ -137,8 +137,8 @@ Pokemon that attract and spawn new wild Pokemon near your base.
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Friend Recruiter** | Spawns wild Pokemon of same type | All starters, Fairy Pokemon |
-| **Legendary Recruiter** | Spawns rare/legendary Pokemon (longer cooldown) | Mew (5), Jirachi (4), Arceus (5) |
+| 🤝 **Friend Recruiter** | Spawns wild Pokemon of same type | All starters, Fairy Pokemon |
+| ⭐ **Legendary Recruiter** | Spawns rare/legendary Pokemon (longer cooldown) | Mew (5), Jirachi (4), Arceus (5) |
 
 Friend Recruiter uses official Cobblemon 1.7.3 spawn bucket data for accurate rarity distribution:
 

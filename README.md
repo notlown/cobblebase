@@ -224,6 +224,31 @@ Output JAR in `fabric/build/libs/`. Requires **Java 21**.
 
 ---
 
+## 💬 Community & Support
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://discord.gg/6As3sVZgVT">
+        <img src="https://img.shields.io/badge/Discord-Join%20our%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" width="100%">
+      </a>
+      <br><br>
+      <b>Join the Cobblebase Discord!</b><br>
+      Chat, share your bases, report bugs,<br>request features, and get support.
+    </td>
+    <td align="center" width="50%">
+      <a href="https://ko-fi.com/notlown">
+        <img src="https://img.shields.io/badge/Ko--fi-Support%20the%20Developer-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-fi" width="100%">
+      </a>
+      <br><br>
+      <b>Support on Ko-fi!</b><br>
+      Cobblebase is free and open-source.<br>Your support keeps development going! ☕
+    </td>
+  </tr>
+</table>
+
+---
+
 ## Credits
 
 - Inspired by [Cobbleworkers](https://github.com/Accieo/cobbleworkers) by [Accieo](https://github.com/Accieo)

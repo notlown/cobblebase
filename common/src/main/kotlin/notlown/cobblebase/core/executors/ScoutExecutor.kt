@@ -186,16 +186,21 @@ object ScoutExecutor : SkillExecutor {
 
         val targetName = target.pokemon.species.name
         val targetLevel = target.pokemon.level
-        val distance = sqrt(pos.squaredDistanceTo(target.pos)).toInt()
-        val direction = getDirection(pos.x, pos.z, target.x, target.z)
+        val targetX = target.blockX
+        val targetZ = target.blockZ
 
-        // Determine rarity based on Pokemon level
-        val rarity = if (targetLevel >= 50) LogManager.Rarity.UNCOMMON else LogManager.Rarity.COMMON
+        // Determine rarity based on Pokemon level — skip commons entirely
+        val rarity = when {
+            targetLevel >= 60 -> LogManager.Rarity.ULTRA_RARE
+            targetLevel >= 45 -> LogManager.Rarity.RARE
+            targetLevel >= 25 -> LogManager.Rarity.UNCOMMON
+            else -> return false // Skip common Pokemon — nobody cares about Lv.5 Rattata
+        }
 
         val discovery = DiscoveryRegistry.Discovery(
             type = DiscoveryRegistry.DiscoveryType.WILD_POKEMON,
             name = "$targetName (Lv.$targetLevel)",
-            x = target.blockX, y = target.blockY, z = target.blockZ,
+            x = targetX, y = target.blockY, z = targetZ,
             discoveredBy = scoutName,
             timestamp = System.currentTimeMillis(),
             rarity = rarity
@@ -207,19 +212,32 @@ object ScoutExecutor : SkillExecutor {
         LogManager.log(
             origin, world.time,
             scoutName, "Spotted",
-            "$targetName Lv.$targetLevel (${distance}b $direction)",
+            "$targetName Lv.$targetLevel at ($targetX, $targetZ)",
             rarity
         )
 
-        // Chat notification
-        val rarityColor = if (rarity == LogManager.Rarity.UNCOMMON) Formatting.GREEN else Formatting.WHITE
+        // Chat notification with clickable coordinates
+        val rarityColor = when (rarity) {
+            LogManager.Rarity.ULTRA_RARE -> Formatting.GOLD
+            LogManager.Rarity.RARE -> Formatting.BLUE
+            else -> Formatting.GREEN
+        }
+        val coordText = Text.literal("[$targetX, $targetZ]")
+            .styled { it
+                .withColor(Formatting.AQUA)
+                .withUnderline(true)
+                .withClickEvent(net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND, "/tp @s $targetX ~ $targetZ"))
+                .withHoverEvent(net.minecraft.text.HoverEvent(net.minecraft.text.HoverEvent.Action.SHOW_TEXT, Text.literal("Click to copy /tp command")))
+            }
+
         val message = Text.literal("")
-            .append(Text.literal("[Cobblebase] ").formatted(Formatting.AQUA))
+            .append(Text.literal("[Scout] ").formatted(Formatting.AQUA))
             .append(Text.literal(scoutName).formatted(Formatting.YELLOW))
             .append(Text.literal(" spotted a wild ").formatted(Formatting.GRAY))
             .append(Text.literal(targetName).formatted(rarityColor, Formatting.BOLD))
-            .append(Text.literal(" (Lv.$targetLevel)").formatted(Formatting.GRAY))
-            .append(Text.literal(" $distance blocks $direction!").formatted(Formatting.GRAY))
+            .append(Text.literal(" (Lv.$targetLevel) ").formatted(Formatting.GRAY))
+            .append(Text.literal("at ").formatted(Formatting.GRAY))
+            .append(coordText)
 
         notifyNearbyPlayers(world, pokemonEntity, message)
         return true
@@ -275,13 +293,21 @@ object ScoutExecutor : SkillExecutor {
                         LogManager.Rarity.RARE
                     )
 
-                    // Chat notification
+                    // Chat notification with clickable coordinates
+                    val structCoord = Text.literal("[$structX, $structZ]")
+                        .styled { it
+                            .withColor(Formatting.AQUA)
+                            .withUnderline(true)
+                            .withClickEvent(net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND, "/tp @s $structX ~ $structZ"))
+                            .withHoverEvent(net.minecraft.text.HoverEvent(net.minecraft.text.HoverEvent.Action.SHOW_TEXT, Text.literal("Click to copy /tp command")))
+                        }
                     val message = Text.literal("")
-                        .append(Text.literal("[Cobblebase] ").formatted(Formatting.AQUA))
+                        .append(Text.literal("[Scout] ").formatted(Formatting.AQUA))
                         .append(Text.literal(scoutName).formatted(Formatting.YELLOW))
                         .append(Text.literal(" discovered a ").formatted(Formatting.GRAY))
                         .append(Text.literal(displayName).formatted(Formatting.BLUE, Formatting.BOLD))
-                        .append(Text.literal(" at ($structX, $structZ)!").formatted(Formatting.GRAY))
+                        .append(Text.literal(" at ").formatted(Formatting.GRAY))
+                        .append(structCoord)
 
                     notifyNearbyPlayers(world, pokemonEntity, message)
                     return true
@@ -347,13 +373,21 @@ object ScoutExecutor : SkillExecutor {
                         LogManager.Rarity.ULTRA_RARE
                     )
 
-                    // Chat notification
+                    // Chat notification with clickable coordinates
+                    val biomeCoord = Text.literal("[$bx, $bz]")
+                        .styled { it
+                            .withColor(Formatting.AQUA)
+                            .withUnderline(true)
+                            .withClickEvent(net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND, "/tp @s $bx ~ $bz"))
+                            .withHoverEvent(net.minecraft.text.HoverEvent(net.minecraft.text.HoverEvent.Action.SHOW_TEXT, Text.literal("Click to copy /tp command")))
+                        }
                     val message = Text.literal("")
-                        .append(Text.literal("[Cobblebase] ").formatted(Formatting.AQUA))
+                        .append(Text.literal("[Scout] ").formatted(Formatting.AQUA))
                         .append(Text.literal(scoutName).formatted(Formatting.YELLOW))
                         .append(Text.literal(" discovered ").formatted(Formatting.GRAY))
                         .append(Text.literal("$displayName biome").formatted(Formatting.GOLD, Formatting.BOLD))
-                        .append(Text.literal(" at ($bx, $bz)!").formatted(Formatting.GRAY))
+                        .append(Text.literal(" at ").formatted(Formatting.GRAY))
+                        .append(biomeCoord)
 
                     notifyNearbyPlayers(world, pokemonEntity, message)
 

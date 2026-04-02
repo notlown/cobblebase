@@ -37,9 +37,9 @@ object GathererExecutor : SkillExecutor {
     private val lastPickupTime = mutableMapOf<UUID, Long>()
     private val lastSearchTime = mutableMapOf<UUID, Long>()
 
-    private const val NAV_TIMEOUT_TICKS = 100L       // 5 seconds - auto-pickup if can't reach
-    private const val SEARCH_INTERVAL_TICKS = 40L    // 2 seconds between scans when nothing found
-    private const val BASE_COOLDOWN_SECONDS = 5L
+    private const val NAV_TIMEOUT_TICKS = 60L         // 3 seconds - auto-pickup if can't reach
+    private const val SEARCH_INTERVAL_TICKS = 20L    // 1 second between scans when nothing found
+    private const val BASE_COOLDOWN_SECONDS = 2L     // 2 seconds between pickups (was 5)
 
     /**
      * Returns search radius based on proficiency (1-5).
@@ -56,7 +56,7 @@ object GathererExecutor : SkillExecutor {
      * Prof 1 = 0.4 (slow), Prof 5 = 1.2 (fast)
      */
     private fun getSpeedForProficiency(proficiency: Int): Double {
-        return 0.2 + (proficiency * 0.2)
+        return 0.5 + (proficiency * 0.3) // faster: Prof 1 = 0.8, Prof 5 = 2.0
     }
 
     override fun tick(

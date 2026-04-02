@@ -46,35 +46,12 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
-        // Flying Pokemon: velocity-based movement with smart altitude handling
+        // Flying Pokemon: use normal navigation but with noClip so they fly through leaves/branches
         val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
         if (canFly) {
-            val dx = (targetPos.x + 0.5) - pokemonEntity.x
-            val dz = (targetPos.z + 0.5) - pokemonEntity.z
-            val horizontalDist = Math.sqrt(dx * dx + dz * dz)
-            val moveSpeed = speed * 0.15
-
-            if (horizontalDist > 2.5) {
-                // Phase 1: Far away — fly horizontally towards target at current altitude
-                pokemonEntity.setVelocity(
-                    dx / horizontalDist * moveSpeed,
-                    0.0,
-                    dz / horizontalDist * moveSpeed
-                )
-            } else {
-                // Phase 2: Close enough horizontally — descend to target Y to interact
-                val dy = (targetPos.y + 1.0) - pokemonEntity.y
-                pokemonEntity.setVelocity(
-                    dx / (horizontalDist + 0.1) * moveSpeed * 0.5,
-                    (dy * 0.1).coerceIn(-0.15, 0.15), // gentle descent/ascent
-                    dz / (horizontalDist + 0.1) * moveSpeed * 0.5
-                )
-            }
-            pokemonEntity.velocityModified = true
-            return
+            pokemonEntity.noClip = true // fly through blocks (leaves, branches, fences, etc.)
         }
 
-        // Ground navigation for non-flying Pokemon
         if (pokemonEntity.navigation.isIdle) {
             pokemonEntity.navigation.stop()
         }

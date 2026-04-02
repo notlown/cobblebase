@@ -95,20 +95,9 @@ object HarvesterExecutor : SkillExecutor {
             NavigationHelper.navigateTo(pokemonEntity, target, speed)
             val navStarted = targetSetTime[pokemonId] ?: now
 
-            // Flying Pokemon get more time to descend to the block
-            val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
-            val effectiveTimeout = if (canFly) NAV_TIMEOUT_TICKS * 2 else NAV_TIMEOUT_TICKS
-            val timedOutFinal = now - navStarted >= effectiveTimeout
+            val timedOut = now - navStarted >= NAV_TIMEOUT_TICKS
 
-            if (timedOutFinal && !NavigationHelper.isPokemonAtPosition(pokemonEntity, target, 3.0)) {
-                // Truly can't reach — skip this block
-                targetBlock.remove(pokemonId)
-                targetSetTime.remove(pokemonId)
-                Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} timed out reaching $target — skipping")
-                return
-            }
-
-            if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target, 3.0) || timedOutFinal) {
+            if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target, 3.0) || timedOut) {
                 harvest(world, target, pokemonEntity, pokemonId)
                 targetBlock.remove(pokemonId)
                 targetSetTime.remove(pokemonId)

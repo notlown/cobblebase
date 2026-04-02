@@ -1,5 +1,17 @@
 # Changelog - Cobblebase
 
+## [0.1.1] - 2026-04-01
+
+### Gatherer Skill (Item Cleanup)
+- **GathererExecutor** -- Pokemon picks up dropped ItemEntities from the ground and deposits them in nearby chests/barrels
+- **Smart sorting** -- Uses InventoryHelper to prioritize chests already containing the same item type
+- **Proficiency scaling** -- Search radius (Prof 1: 5 blocks, Prof 5: 12 blocks) and movement speed scale with proficiency
+- **10-second base cooldown** between pickups, affected by proficiency
+- **Visual feedback** -- Enchant sparkle particles on pickup, happy villager particles on deposit
+- **Navigation timeout** -- Auto-pickup after 5 seconds if pathfinding fails (same pattern as Harvester)
+- **Species assignments:** Munchlax (4), Snorlax (5), Zigzagoon (2), Linoone (3), Pachirisu (3), Aipom (2), Ambipom (3), Sentret (2), Furret (4)
+- Replaces GenericLootExecutor placeholder for `gather_items`
+
 ## [0.1.0] - 2026-03-21
 
 ### Foundation

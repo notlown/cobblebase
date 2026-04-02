@@ -1,5 +1,5 @@
 {
-  "species": "pachirisu",
+  "species": "furret",
   "skills": [
     {
       "skillId": "cobblebase:finder",
@@ -7,7 +7,7 @@
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 3
+      "proficiency": 4
     }
   ]
 }

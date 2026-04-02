@@ -16,6 +16,8 @@ Unlike type-based job systems, Cobblebase gives **every Pokemon species its own 
 | Charizard | Lava Fill, Fuel, Guard, Scout | 4, 4, 3, 4 |
 | Nidoking | Archeology, Guard, Mining | 4, 3, 2 |
 | Ninjask | Harvester, Scout, Item Gather | 4, 3, 2 |
+| Munchlax | Finder, Item Gatherer | 3, 4 |
+| Furret | Finder, Item Gatherer | 3, 4 |
 | Chansey | Healer | 5 (Master) |
 | Mew | Recruiter, Lucky Charm, Aura Boost | 5, 5, 3 |
 | Arceus | Recruiter, Aura, Lucky Charm, Growth | 5, 5, 5, 5 |
@@ -62,7 +64,7 @@ Open the Pasture Block and click the **"Skills"** button to assign jobs:
 | **Generation** | Lava Fill, Water Fill, Snow Fill, Furnace Fuel, Brew Fuel | Produce resources in containers |
 | **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
 | **Support** | Healer | Direct % healing for players and Pokemon, revives fainted mons |
-| **Utility** | Irrigator, Extinguisher, Item Gatherer, Scout, Archeologist, Finder | Various helper jobs |
+| **Utility** | Irrigator, Extinguisher, Item Gatherer, Scout, Archeologist, Finder | Various helper jobs (Gatherer picks up dropped items and sorts into chests) |
 | **Fairy/Starters** | Friend Recruiter | Spawns wild Pokemon of same type nearby |
 | **Legendary** | Recruiter, Aura Boost, Lucky Charm, Growth Aura | Exclusive to rare/legendary Pokemon |
 

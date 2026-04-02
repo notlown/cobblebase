@@ -209,3 +209,5 @@ zigzagoon.json
 zubat.json
 metapod.json
 wishiwashi.json
+sentret.json
+furret.json

@@ -4,12 +4,14 @@ import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.executors.CauldronFillExecutor
 import notlown.cobblebase.core.executors.FishingExecutor
 import notlown.cobblebase.core.executors.FurnaceFuelExecutor
+import notlown.cobblebase.core.executors.GathererExecutor
 import notlown.cobblebase.core.executors.GenericLootExecutor
 import notlown.cobblebase.core.executors.GuardExecutor
 import notlown.cobblebase.core.executors.HarvesterExecutor
 import notlown.cobblebase.core.executors.FinderExecutor
 import notlown.cobblebase.core.executors.IrrigatorExecutor
 import notlown.cobblebase.core.executors.HealerExecutor
+import notlown.cobblebase.core.executors.MentorExecutor
 import notlown.cobblebase.core.executors.RecruiterExecutor
 
 /**
@@ -41,11 +43,12 @@ object ExecutorRegistry {
 
         // -- Support --
         register("healer", HealerExecutor)
+        register("mentor", MentorExecutor)
 
         // -- Utility --
         register("irrigate", IrrigatorExecutor)
         register("extinguish", GenericLootExecutor)        // Placeholder: extinguisher removes fire
-        register("gather_items", GenericLootExecutor)      // Placeholder: item gatherer
+        register("gather_items", GathererExecutor)
         register("scout", GenericLootExecutor)             // Placeholder: scout creates maps
 
         // -- Legendary / Fairy --

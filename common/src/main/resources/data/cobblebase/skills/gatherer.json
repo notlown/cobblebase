@@ -1,10 +1,10 @@
 {
   "id": "cobblebase:gatherer",
   "name": "Item Gatherer",
-  "description": "Picks up items on the ground",
+  "description": "Picks up dropped items from the ground and sorts them into nearby chests",
   "category": "utility",
-  "cooldownSeconds": 0,
-  "searchRadius": 10,
+  "cooldownSeconds": 10,
+  "searchRadius": 8,
   "executor": "gather_items",
   "effectType": "default"
 }

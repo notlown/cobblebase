@@ -133,14 +133,13 @@ object PokemonSpriteHelper {
             val matrixStack = context.matrices
 
             matrixStack.push()
-            // Position: drawProfilePokemon renders the Pokemon ABOVE the translate point
-            // So we translate to the bottom-center of where we want the icon
+            // drawProfilePokemon renders the Pokemon above the translate point
             matrixStack.translate(
                 (x + ICON_SIZE / 2.0),
-                (y.toDouble() + 4.0),
+                (y.toDouble() + 1.0),
                 0.0
             )
-            matrixStack.scale(1.2F, 1.2F, 1F)
+            matrixStack.scale(1.5F, 1.5F, 1F)
 
             drawProfilePokemon(
                 species = species,
@@ -178,7 +177,7 @@ object PokemonSpriteHelper {
 
     /**
      * Renders a smaller icon (for compact rows like logs).
-     * Size: 12x12 pixels. Keeps the type-colored badge approach (3D at 12px is too small).
+     * Size: 12x12 pixels. Uses 3D portrait at smaller scale.
      */
     fun renderSmallIcon(
         context: DrawContext,
@@ -186,11 +185,11 @@ object PokemonSpriteHelper {
         species: Identifier,
         displayName: String,
         x: Int,
-        y: Int
+        y: Int,
+        delta: Float = 0f
     ) {
         val size = 12
         val color = getTypeColor(species)
-        val initial = if (displayName.isNotEmpty()) displayName[0].uppercase() else "?"
         val bgColor = darkenColor(color, 0.35f)
 
         // Background
@@ -204,11 +203,32 @@ object PokemonSpriteHelper {
         context.fill(x, y + 1, x + 1, y + size - 1, color)
         context.fill(x + size - 1, y + 1, x + size, y + size - 1, color)
 
-        // Single initial centered
-        val textWidth = textRenderer.getWidth(initial)
+        // Render small 3D portrait
+        try {
+            val cacheKey = "${species}_small"
+            val state = getOrCreateState(cacheKey, emptySet())
+            val matrixStack = context.matrices
+            matrixStack.push()
+            matrixStack.translate((x + size / 2.0), (y.toDouble() + 1.0), 0.0)
+            matrixStack.scale(0.9F, 0.9F, 1F)
+            drawProfilePokemon(
+                species = species,
+                matrixStack = matrixStack,
+                rotation = Quaternionf().fromEulerXYZDegrees(Vector3f(13F, 35F, 0F)),
+                state = state,
+                partialTicks = delta,
+                scale = 4.5F
+            )
+            matrixStack.pop()
+            return
+        } catch (_: Exception) { }
+
+        // Fallback: single initial centered
+        val fallbackInitial = if (displayName.isNotEmpty()) displayName[0].uppercase() else "?"
+        val textWidth = textRenderer.getWidth(fallbackInitial)
         val textX = x + (size - textWidth) / 2
         val textY = y + (size - 8) / 2
-        context.drawTextWithShadow(textRenderer, initial, textX, textY, 0xFFFFFF)
+        context.drawTextWithShadow(textRenderer, fallbackInitial, textX, textY, 0xFFFFFF)
     }
 
     /**
@@ -219,11 +239,12 @@ object PokemonSpriteHelper {
         textRenderer: TextRenderer,
         pokemonName: String,
         x: Int,
-        y: Int
+        y: Int,
+        delta: Float = 0f
     ) {
         val speciesId = resolveSpeciesFromName(pokemonName)
         if (speciesId != null) {
-            renderSmallIcon(context, textRenderer, speciesId, pokemonName, x, y)
+            renderSmallIcon(context, textRenderer, speciesId, pokemonName, x, y, delta)
         } else {
             renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
         }

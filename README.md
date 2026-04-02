@@ -1,6 +1,10 @@
-# Cobblebase ⚡
+<p align="center">
+  <img src="cobblebase_header.png" alt="Cobblebase" width="100%">
+</p>
 
-**Palworld-style base management for Cobblemon — assign jobs, watch Pokemon work, build the ultimate base.**
+<h1 align="center">Cobblebase ⚡</h1>
+
+<p align="center"><b>Palworld-style base management for Cobblemon — assign jobs, watch Pokemon work, build the ultimate base.</b></p>
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=minecraft)](https://minecraft.net)
 [![Cobblemon](https://img.shields.io/badge/Cobblemon-1.7.0+-E8532E?style=flat-square)](https://cobblemon.com)

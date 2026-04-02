@@ -52,13 +52,13 @@ object SkillEffects {
         val h = pokemonEntity.height.toDouble()
         val z = pokemonEntity.z
 
-        // Play cry sound from Cobblebase's own sound pack (all 1025 Pokemon)
+        // Play cry sound from Cobblebase's own sound pack (registered during init)
         val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
         val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
-        // Register sound event on-the-fly if not yet registered, then play
         val soundEvent = Registries.SOUND_EVENT.get(cryId)
-            ?: Registry.register(Registries.SOUND_EVENT, cryId, SoundEvent.of(cryId))
-        world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, 0.8f, 1.0f)
+        if (soundEvent != null) {
+            world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, 0.8f, 1.0f)
+        }
 
         when (effectType) {
             "harvest" -> {

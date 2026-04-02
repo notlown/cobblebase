@@ -13,6 +13,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.CobblebaseConfig
+import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -63,8 +64,18 @@ object FishingExecutor : SkillExecutor {
 
             // Generate fishing loot
             generateLoot(world, pokemonEntity, pokemonId, now)
-            if (!heldItems[pokemonId].isNullOrEmpty()) {
+            val fished = heldItems[pokemonId]
+            if (!fished.isNullOrEmpty()) {
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+                for (item in fished) {
+                    LogManager.log(
+                        origin, world.time,
+                        pokemonEntity.pokemon.species.name,
+                        "Fished",
+                        "${item.name.string} x${item.count}",
+                        LogManager.Rarity.COMMON
+                    )
+                }
             }
         } else {
             // Navigate to water

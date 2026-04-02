@@ -1,5 +1,52 @@
 # Changelog - Cobblebase
 
+## [0.4.0] - 2026-04-01
+
+### Tabbed Cobblebase GUI
+- **CobblebaseScreen** -- New tabbed interface replaces direct SkillAssignmentScreen
+- Button renamed from "Skills" to "Cobblebase" in the Pasture Block UI
+- **3 tabs**: Skills, Buffs, Logs -- each with its own colored accent bar
+
+### Skills Tab
+- All existing skill assignment functionality preserved
+- Same dark-themed UI with category-colored buttons and proficiency stars
+- Refactored into SkillsPanel for clean tab embedding
+
+### Buffs Tab
+- Shows all currently active jobs/effects for the Pasture
+- Displays Pokemon Name, Job Name, Effect Description for each active skill
+- Color-coded category bars (gathering=green, generation=orange, combat=red, support=pink, utility=blue, legendary=gold)
+- Proficiency stars and human-readable effect descriptions (e.g., "Mentor (Prof 5): +166% Bonus XP every 60s")
+- Scrollable for pastures with many active Pokemon
+
+### Logs Tab
+- Activity log showing recent events for the Pasture
+- Scrollable table: Time, Pokemon, Action, Item, Rarity
+- Filter buttons: All, Uncommon+, Rare+, Ultra Rare
+- Color-coded by rarity: Common=gray, Uncommon=green, Rare=blue, Ultra Rare=gold
+- Synced from server via LogSyncS2CPacket
+
+### LogManager (Backend)
+- **LogManager** object in core/ -- stores activity log entries per pasture BlockPos
+- `LogEntry` data class: timestamp, pokemonName, action, itemName, rarity, worldTime
+- `Rarity` enum: COMMON, UNCOMMON, RARE, ULTRA_RARE with display colors
+- Max 100 entries per pasture, auto-cleanup of entries older than 24 hours
+- Persistent: saved to `cobblebase_logs.json` alongside skill assignments
+- Client-side cache populated via S2C packet
+
+### Log Integration with Executors
+- **FinderExecutor** (all 8 types) -- logs finds with rarity from loot table tier
+- **HarvesterExecutor** -- logs harvested items as COMMON
+- **FishingExecutor** -- logs fished items as COMMON
+- **GuardExecutor** -- logs repelled Pokemon + guard loot drops
+- **GathererExecutor** -- logs sorted/deposited items
+- **GenericLootExecutor** -- logs all loot table drops
+
+### Networking
+- **LogRequestC2SPacket** -- Client requests logs when opening Cobblebase screen
+- **LogSyncS2CPacket** -- Server sends log entries to client
+- Server finds nearest pasture block entity to player for log lookup
+
 ## [0.3.1] - 2026-04-01
 
 ### 2 New Specialized Finder Subtypes
@@ -123,7 +170,7 @@
 - **Level cap aware** -- Pokemon at max level permanently skipped (no spam alerts)
 
 ### Skill Assignment GUI
-- **"Skills" button** in Pasture Block UI (PastureWidget Mixin)
+- **"Cobblebase" button** in Pasture Block UI (PastureWidget Mixin)
 - **Dark panel** with color-coded skill buttons by category
 - **Proficiency stars** displayed below each skill
 - **Scrollable** (vertical + horizontal)

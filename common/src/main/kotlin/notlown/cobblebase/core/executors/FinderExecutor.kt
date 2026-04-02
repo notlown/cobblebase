@@ -18,6 +18,7 @@ import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
 import notlown.cobblebase.core.NavigationHelper
+import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.effects.SkillEffects
 import java.util.UUID
 
@@ -91,6 +92,23 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
                 heldItems[pokemonId] = drops
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
                 Cobblebase.LOGGER.info("$logTag ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) found: ${drops.map { "${it.name.string}x${it.count}" }}")
+
+                // Log to activity log
+                val rarity = when {
+                    lootTableName.endsWith("_ultra_rare") -> LogManager.Rarity.ULTRA_RARE
+                    lootTableName.endsWith("_rare") -> LogManager.Rarity.RARE
+                    lootTableName.endsWith("_uncommon") -> LogManager.Rarity.UNCOMMON
+                    else -> LogManager.Rarity.COMMON
+                }
+                for (drop in drops) {
+                    LogManager.log(
+                        origin, world.time,
+                        pokemonEntity.pokemon.species.name,
+                        "Found",
+                        "${drop.name.string} x${drop.count}",
+                        rarity
+                    )
+                }
             }
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("$logTag Error generating loot: ${e.message}")

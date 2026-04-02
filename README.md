@@ -49,13 +49,28 @@ Each Pokemon has a proficiency level (1-5) for each of its skills:
 
 A Magikarp with Fishing proficiency 1 is slow. A Gyarados with Fishing proficiency 5 is a machine.
 
-### Skill Assignment GUI
-Open the Pasture Block and click the **"Skills"** button to assign jobs:
+### Cobblebase GUI (Tabbed Interface)
+Open the Pasture Block and click the **"Cobblebase"** button to manage your base:
+
+#### Skills Tab
 - Each Pokemon shows **only the skills it can perform**
 - Click a skill to assign it (green = active)
 - **Auto mode** (default) -- Pokemon performs all its skills
 - **Manual mode** -- Pokemon focuses on one specific skill
 - Scrollable list for many Pokemon and skills
+
+#### Buffs Tab
+- Shows all currently active jobs/effects for this Pasture
+- Each active Pokemon displays: Pokemon Name, Job Name, Effect Description
+- Color-coded by category (green=gathering, orange=generation, red=combat, pink=support, blue=utility, gold=legendary)
+- Proficiency stars and detailed effect descriptions
+
+#### Logs Tab
+- Activity log showing recent events for this Pasture
+- Scrollable table: Time, Pokemon, Action, Item, Rarity
+- Filter buttons: All, Uncommon+, Rare+, Ultra Rare
+- Color-coded by rarity: Common=gray, Uncommon=green, Rare=blue, Ultra Rare=gold
+- Last 100 events stored per pasture, auto-cleanup after 24 hours
 
 ### 22 Skills Across 6 Categories
 
@@ -194,13 +209,14 @@ cobblebase/
 │   ├── ExecutorRegistry.kt    # Maps executor names to implementations
 │   ├── SkillExecutor.kt       # Executor interface
 │   ├── PassiveXp.kt           # Passive XP system
+│   ├── LogManager.kt          # Activity log storage + persistence
 │   ├── executors/              # All skill executor implementations
 │   ├── effects/                # Visual effects (particles, animations)
-│   └── net/                    # Network packets
+│   └── net/                    # Network packets (skill assign, log sync)
 ├── mixin/                      # Pasture Block integration
 └── fabric/
     ├── CobblebaseFabric.kt     # Fabric entrypoint + packet registration
-    ├── client/gui/             # Skill Assignment Screen
+    ├── client/gui/             # Tabbed Cobblebase Screen (Skills, Buffs, Logs)
     └── mixin/                  # Client-side PastureWidget mixin
 ```
 

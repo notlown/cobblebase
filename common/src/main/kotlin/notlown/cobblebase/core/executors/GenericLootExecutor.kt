@@ -14,6 +14,7 @@ import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.CobblebaseConfig
+import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -72,6 +73,17 @@ object GenericLootExecutor : SkillExecutor {
             lastLootTime[pokemonId] = now
             heldItems[pokemonId] = drops
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+
+            // Log loot
+            for (drop in drops) {
+                LogManager.log(
+                    origin, world.time,
+                    pokemonEntity.pokemon.species.name,
+                    skill.name,
+                    "${drop.name.string} x${drop.count}",
+                    LogManager.Rarity.COMMON
+                )
+            }
         }
     }
 

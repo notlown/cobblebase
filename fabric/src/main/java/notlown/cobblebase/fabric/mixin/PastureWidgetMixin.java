@@ -1,9 +1,11 @@
 package notlown.cobblebase.fabric.mixin;
 
-import notlown.cobblebase.fabric.client.gui.SkillAssignmentScreen;
+import notlown.cobblebase.fabric.client.gui.CobblebaseScreen;
+import notlown.cobblebase.core.net.LogRequestC2SPacket;
 import com.cobblemon.mod.common.client.gui.pasture.PasturePCGUIConfiguration;
 import com.cobblemon.mod.common.client.gui.pasture.PastureWidget;
 import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -18,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.UUID;
 
 @Mixin(PastureWidget.class)
 public abstract class PastureWidgetMixin {
@@ -25,7 +28,7 @@ public abstract class PastureWidgetMixin {
     @Shadow @Final private PasturePCGUIConfiguration pasturePCGUIConfiguration;
 
     @Unique
-    private ButtonWidget cobblebase$skillsButton;
+    private ButtonWidget cobblebase$mainButton;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void cobblebase$onInit(
@@ -34,34 +37,43 @@ public abstract class PastureWidgetMixin {
         int x, int y,
         CallbackInfo ci
     ) {
-        cobblebase$skillsButton = ButtonWidget.builder(Text.literal("\u00A7bSkills"), btn -> {
-            cobblebase$openSkillScreen();
+        cobblebase$mainButton = ButtonWidget.builder(Text.literal("\u00A7bCobblebase"), btn -> {
+            cobblebase$openCobblebaseScreen();
         }).dimensions(x + 2, y - 18, 78, 16).build();
     }
 
     @Inject(method = "renderWidget", at = @At("TAIL"))
     private void cobblebase$onRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (cobblebase$skillsButton != null) {
-            cobblebase$skillsButton.render(context, mouseX, mouseY, delta);
+        if (cobblebase$mainButton != null) {
+            cobblebase$mainButton.render(context, mouseX, mouseY, delta);
         }
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void cobblebase$onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (cobblebase$skillsButton != null && cobblebase$skillsButton.isMouseOver(mouseX, mouseY)) {
-            cobblebase$openSkillScreen();
+        if (cobblebase$mainButton != null && cobblebase$mainButton.isMouseOver(mouseX, mouseY)) {
+            cobblebase$openCobblebaseScreen();
             cir.setReturnValue(true);
         }
     }
 
     @Unique
-    private void cobblebase$openSkillScreen() {
+    private void cobblebase$openCobblebaseScreen() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client == null) return;
 
         List<OpenPasturePacket.PasturePokemonDataDTO> pokemonList =
             pasturePCGUIConfiguration.getPasturedPokemon().get();
 
-        client.setScreen(new SkillAssignmentScreen(pokemonList, client.currentScreen));
+        UUID pastureId = pasturePCGUIConfiguration.getPastureId();
+
+        // Request logs from server
+        try {
+            ClientPlayNetworking.send(new LogRequestC2SPacket(pastureId));
+        } catch (Exception ignored) {
+            // Packet might not be registered yet on first join
+        }
+
+        client.setScreen(new CobblebaseScreen(pokemonList, null, client.currentScreen));
     }
 }

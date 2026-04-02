@@ -28,6 +28,7 @@ import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.SkillDef
 
+import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.effects.SkillEffects
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -89,6 +90,20 @@ object HarvesterExecutor : SkillExecutor {
                 targetSetTime.remove(pokemonId)
                 Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} HARVESTED at $target - calling playSuccess(${skill.effectType})")
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+
+                // Log harvested items
+                val harvested = heldItems[pokemonId]
+                if (!harvested.isNullOrEmpty()) {
+                    for (item in harvested) {
+                        LogManager.log(
+                            origin, world.time,
+                            pokemonEntity.pokemon.species.name,
+                            "Harvested",
+                            "${item.name.string} x${item.count}",
+                            LogManager.Rarity.COMMON
+                        )
+                    }
+                }
             }
             return
         }

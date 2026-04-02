@@ -1,11 +1,16 @@
 package notlown.cobblebase.fabric
 
+import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.minecraft.util.math.BlockPos
 import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.net.LogRequestC2SPacket
+import notlown.cobblebase.core.net.LogSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
 
 object CobblebaseFabric : ModInitializer {
@@ -20,16 +25,69 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
-        // Load assignments when world starts
+        // Register C2S packet for log requests
+        PayloadTypeRegistry.playC2S().register(LogRequestC2SPacket.ID, LogRequestC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(LogRequestC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                handleLogRequest(context.player(), packet)
+            }
+        }
+
+        // Register S2C packet for log sync
+        PayloadTypeRegistry.playS2C().register(LogSyncS2CPacket.ID, LogSyncS2CPacket.CODEC)
+
+        // Load assignments and logs when world starts
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             val world = server.overworld
             BaseManager.load(world)
+            LogManager.load(world)
         }
 
-        // Save assignments when world stops
+        // Save assignments and logs when world stops
         ServerLifecycleEvents.SERVER_STOPPING.register { server ->
             val world = server.overworld
             BaseManager.save(world)
+            LogManager.save(world)
         }
+    }
+
+    /**
+     * Handles a log request from the client.
+     * Finds the nearest pasture block entity to the player and sends its logs.
+     */
+    private fun handleLogRequest(player: net.minecraft.server.network.ServerPlayerEntity, packet: LogRequestC2SPacket) {
+        val world = player.serverWorld
+        val playerPos = player.blockPos
+
+        // Search nearby block entities for a PokemonPastureBlockEntity
+        var nearestPos: BlockPos? = null
+        var nearestDist = Double.MAX_VALUE
+        val searchRadius = 16
+
+        for (x in -searchRadius..searchRadius) {
+            for (y in -searchRadius..searchRadius) {
+                for (z in -searchRadius..searchRadius) {
+                    val pos = playerPos.add(x, y, z)
+                    val blockEntity = world.getBlockEntity(pos)
+                    if (blockEntity is PokemonPastureBlockEntity) {
+                        val dist = pos.getSquaredDistance(playerPos)
+                        if (dist < nearestDist) {
+                            nearestDist = dist
+                            nearestPos = pos
+                        }
+                    }
+                }
+            }
+        }
+
+        val pasturePos = nearestPos
+        if (pasturePos == null) {
+            // No pasture found, send empty logs
+            ServerPlayNetworking.send(player, LogSyncS2CPacket(emptyList()))
+            return
+        }
+
+        val entries = LogManager.getEntries(pasturePos)
+        ServerPlayNetworking.send(player, LogSyncS2CPacket(entries))
     }
 }

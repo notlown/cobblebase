@@ -10,6 +10,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.world.World
 import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -186,6 +187,17 @@ object GathererExecutor : SkillExecutor {
             val h = pokemonEntity.height.toDouble()
             val z = pokemonEntity.z
             world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y + h, z, 12, 0.4, 0.3, 0.4, 0.03)
+
+            // Log the deposit
+            for (item in items) {
+                LogManager.log(
+                    origin, world.time,
+                    pokemonEntity.pokemon.species.name,
+                    "Sorted",
+                    "${item.name.string} x${item.count}",
+                    LogManager.Rarity.COMMON
+                )
+            }
 
             Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} deposited items at $chestPos")
         }

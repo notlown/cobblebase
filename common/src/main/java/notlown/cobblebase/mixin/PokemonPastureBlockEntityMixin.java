@@ -2,6 +2,7 @@ package notlown.cobblebase.mixin;
 
 import notlown.cobblebase.core.BaseManager;
 import notlown.cobblebase.core.Cobblebase;
+import notlown.cobblebase.core.LogManager;
 import notlown.cobblebase.core.PassiveXp;
 import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;

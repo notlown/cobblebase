@@ -38,10 +38,10 @@ Pokemon harvest, fish, mine, and collect resources from the world around your ba
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 🌾 **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Bulbasaur (3), Tropius (5), Breloom (4) |
-| 🎣 **Fishing** | Navigates to water and catches fish/loot | Magikarp (1), Gyarados (5), Goldeen (3) |
-| ⛏️ **Mining** | Digs for ores, fossils, gems, and tumblestones | Excadrill (5), Dugtrio (4), Onix (3) |
-| 🍯 **Honey Collect** | Gathers honey from bee nests | Combee (3), Vespiquen (5), Teddiursa (2) |
+| 🌾 **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Venusaur (5), Scizor (5), Celebi (5) |
+| 🎣 **Fishing** | Navigates to water and catches fish/loot | Gyarados (5), Blastoise (5), Kyogre (5) |
+| ⛏️ **Mining** | Digs for ores, fossils, gems, and tumblestones | Steelix (5), Golem (5), Excadrill (5) |
+| 🍯 **Honey Collect** | Gathers honey from bee nests | Vespiquen (5), Beedrill (4), Combee (4) |
 
 ---
 
@@ -72,7 +72,7 @@ Pharmacist is auto-assigned to Healer Pokemon, Botanist to Harvesters, Scholar t
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 🛡️ **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Nidoking (3), Charizard (3), Lucario (3) |
+| 🛡️ **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Gallade (4), Scizor (4), Incineroar (4) |
 
 ---
 
@@ -82,16 +82,16 @@ Healing, mentoring, and 8 buff skills that apply status effects to all players w
 
 | Job | Effect | Example Pokemon |
 |-----|--------|-----------------|
-| 💚 **Healer** | Direct % HP healing + revive fainted Pokemon | Blissey (5), Chansey (4), Clefable (3) |
+| 💚 **Healer** | Direct % HP healing + revive fainted Pokemon | Blissey (5), Togekiss (4), Chansey (4) |
 | 🎓 **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam (5), Metagross (4), Gardevoir (4) |
-| ⚡ **Speed Boost** | Speed II | Jolteon (5), Ninjask (4), Rapidash (4) |
-| 💪 **Strength Boost** | Strength I | Machamp (5), Hariyama (4), Conkeldurr (4) |
+| ⚡ **Speed Boost** | Speed II | Ninjask (5), Jolteon (4), Rapidash (4) |
+| 💪 **Strength Boost** | Strength I | Machamp (4), Hariyama (4), Conkeldurr (4) |
 | 🛡️ **Resistance Boost** | Resistance I | Steelix (5), Aggron (4), Bastiodon (4) |
 | 👁️ **Night Vision** | Night Vision | Umbreon (5), Noctowl (4), Espeon (3) |
 | 🫧 **Water Breathing** | Water Breathing | Lapras (5), Vaporeon (4), Milotic (4) |
 | 🦘 **Jump Boost** | Jump Boost I | Lopunny (4), Hitmonlee (4), Blaziken (3) |
 | ⚒️ **Haste Boost** | Haste I | Alakazam (4), Metagross (3), Kadabra (3) |
-| 🍖 **Saturation** | Saturation | Snorlax (5), Munchlax (4), Slurpuff (3) |
+| 🍖 **Saturation** | Saturation | Slurpuff (5), Snorlax (4), Munchlax (4) |
 
 Buff duration and cooldown scale with proficiency — at Prof 5, buffs are effectively permanent (70s duration, 0s cooldown).
 
@@ -101,7 +101,7 @@ Buff duration and cooldown scale with proficiency — at Prof 5, buffs are effec
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 📥 **Gatherer** | Picks up dropped items and sorts them into nearby chests | Snorlax (5), Furret (4), Munchlax (4) |
+| 📥 **Gatherer** | Picks up dropped items and sorts them into nearby chests | Ambipom (5), Furret (4), Munchlax (4) |
 
 Smart sorting prioritizes chests already containing the same item type. Search radius scales from 5 blocks (Prof 1) to 12 blocks (Prof 5).
 
@@ -129,12 +129,12 @@ Pokemon that interact with blocks and containers around your base.
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 💧 **Irrigator** | Hydrates nearby farmland | Squirtle (3), Lotad (2) |
-| 🌋 **Lava Fill** | Fills cauldrons with lava | Charizard (4), Magmar (3) |
-| 💦 **Water Fill** | Fills cauldrons with water | Vaporeon (4), Poliwag (2) |
-| ❄️ **Snow Fill** | Fills cauldrons with powder snow | Snover (3), Abomasnow (4) |
-| 🔥 **Furnace Fuel** | Adds burn time to furnaces | Charizard (4), Magmar (3) |
-| 🧪 **Brew Fuel** | Fuels brewing stands | Blaze (5), Magcargo (3) |
+| 💧 **Irrigator** | Hydrates nearby farmland | Venusaur (4), Sceptile (3), Meganium (3) |
+| 🌋 **Lava Fill** | Fills cauldrons with lava | Magmortar (5), Charizard (4), Magmar (4) |
+| 💦 **Water Fill** | Fills cauldrons with water | Vaporeon (5), Blastoise (4), Swanna (3) |
+| ❄️ **Snow Fill** | Fills cauldrons with powder snow | Articuno (5), Glaceon (4), Abomasnow (3) |
+| 🔥 **Furnace Fuel** | Adds burn time to furnaces | Moltres (5), Entei (5), Charizard (4) |
+| 🧪 **Brew Fuel** | Fuels brewing stands | Weezing (4), Dragonite (3), Koffing (2) |
 
 ---
 
@@ -144,8 +144,8 @@ Pokemon that attract and spawn new wild Pokemon near your base.
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 🤝 **Friend Recruiter** | Spawns wild Pokemon of same type | All starters, Fairy Pokemon |
-| ⭐ **Legendary Recruiter** | Spawns rare/legendary Pokemon (longer cooldown) | Mew (5), Jirachi (4), Arceus (5) |
+| 🤝 **Friend Recruiter** | Spawns wild Pokemon of same type | Togekiss (5), Sylveon (4), Gardevoir (4) |
+| ⭐ **Legendary Recruiter** | Spawns rare/legendary Pokemon (longer cooldown) | Arceus (5), Mew (5), Jirachi (5) |
 
 Friend Recruiter uses official Cobblemon 1.7.3 spawn bucket data for accurate rarity distribution:
 

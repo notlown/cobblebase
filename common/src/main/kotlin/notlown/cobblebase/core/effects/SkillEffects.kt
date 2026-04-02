@@ -6,9 +6,11 @@ import notlown.cobblebase.core.Cobblebase
 import com.cobblemon.mod.common.net.messages.client.animation.PlayPosableAnimationPacket
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.registry.Registries
+import net.minecraft.registry.Registry
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Box
 import net.minecraft.world.World
@@ -53,10 +55,10 @@ object SkillEffects {
         // Play cry sound from Cobblebase's own sound pack (all 1025 Pokemon)
         val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
         val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
+        // Register sound event on-the-fly if not yet registered, then play
         val soundEvent = Registries.SOUND_EVENT.get(cryId)
-        if (soundEvent != null) {
-            world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, 0.8f, 1.0f)
-        }
+            ?: Registry.register(Registries.SOUND_EVENT, cryId, SoundEvent.of(cryId))
+        world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, 0.8f, 1.0f)
 
         when (effectType) {
             "harvest" -> {

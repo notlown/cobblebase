@@ -9,7 +9,10 @@
   ],
   "contact": {
     "issues": "https://github.com/notlown/cobblebase/issues",
-    "sources": "https://github.com/notlown/cobblebase"
+    "sources": "https://github.com/notlown/cobblebase",
+    "homepage": "https://modrinth.com/project/cobblebase",
+    "discord": "https://discord.gg/6As3sVZgVT",
+    "kofi": "https://ko-fi.com/notlown"
   },
   "icon": "cobblebase_icon.png",
   "license": "MPL-2.0",

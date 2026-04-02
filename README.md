@@ -6,10 +6,17 @@
 
 <p align="center"><b>Palworld-style base management for Cobblemon — assign jobs, watch Pokemon work, build the ultimate base.</b></p>
 
+<p align="center">
+
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=minecraft)](https://minecraft.net)
 [![Cobblemon](https://img.shields.io/badge/Cobblemon-1.7.0+-E8532E?style=flat-square)](https://cobblemon.com)
 [![Fabric](https://img.shields.io/badge/Fabric-0.16.14+-DBD0B4?style=flat-square)](https://fabricmc.net)
 [![License: MPL-2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg?style=flat-square)](https://opensource.org/licenses/MPL-2.0)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/6As3sVZgVT)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20Us-FF5E5B?style=flat-square&logo=ko-fi&logoColor=white)](https://ko-fi.com/notlown)
+[![Modrinth](https://img.shields.io/badge/Modrinth-Download-00AF5C?style=flat-square&logo=modrinth&logoColor=white)](https://modrinth.com/project/cobblebase)
+
+</p>
 
 ---
 

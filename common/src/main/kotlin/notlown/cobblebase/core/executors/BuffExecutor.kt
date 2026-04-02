@@ -35,8 +35,6 @@ class BuffExecutor(
     // Track which players already received the buff this cycle (to log only on first apply)
     private val activeBuffPlayers = mutableMapOf<UUID, MutableSet<UUID>>()
 
-    private val BUFF_RANGE = 16.0
-
     override fun tick(
         world: World,
         origin: BlockPos,
@@ -54,12 +52,25 @@ class BuffExecutor(
         val lastTime = lastBuffTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) return
 
-        // Find all players within range of the PASTURE ORIGIN (not the Pokemon)
-        val searchBox = Box.of(
-            origin.toCenterPos(),
-            BUFF_RANGE * 2, BUFF_RANGE * 2, BUFF_RANGE * 2
-        )
-        val players = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
+        // Find players based on proficiency range
+        val players: List<ServerPlayerEntity>
+        if (prof >= 5) {
+            // Prof 5: GLOBAL — but only for the pasture owner
+            val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
+            players = if (ownerUuid != null) {
+                world.players.filter { it.uuid == ownerUuid }
+            } else {
+                // Fallback: all nearby players if no owner
+                val range = getBuffRange(prof)
+                world.getEntitiesByClass(ServerPlayerEntity::class.java,
+                    Box.of(origin.toCenterPos(), range * 2, range * 2, range * 2)) { true }
+            }
+        } else {
+            // Prof 1-4: radius-based (30/50/100/200 blocks)
+            val range = getBuffRange(prof)
+            val searchBox = Box.of(origin.toCenterPos(), range * 2, range * 2, range * 2)
+            players = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
+        }
         if (players.isEmpty()) return
 
         // Apply buff to all players in range
@@ -127,6 +138,19 @@ class BuffExecutor(
         if (prof == 3) return 600L
         if (prof == 4) return 300L
         return 0L // prof 5 — no cooldown, effectively permanent
+    }
+
+    /**
+     * Buff range in blocks based on proficiency.
+     * Prof 1: 30 (small base), Prof 2: 50, Prof 3: 100, Prof 4: 200
+     * Prof 5: global (handled separately — owner only)
+     */
+    private fun getBuffRange(prof: Int): Double {
+        if (prof == 1) return 30.0
+        if (prof == 2) return 50.0
+        if (prof == 3) return 100.0
+        if (prof == 4) return 200.0
+        return 200.0 // fallback for prof 5 (shouldn't be used — global is handled above)
     }
 
     private fun getBuffDisplayName(): String {

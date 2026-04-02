@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:saturation_boost",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 5
     }
   ]
 }

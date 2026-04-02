@@ -1,6 +1,6 @@
 {
   "id": "cobblebase:finder_bal",
-  "name": "Finder Bal",
+  "name": "Collector",
   "description": "Searches the area for Pokeballs of all types",
   "category": "gathering",
   "cooldownSeconds": 240,

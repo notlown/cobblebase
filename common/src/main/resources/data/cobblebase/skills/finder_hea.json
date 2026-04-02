@@ -1,6 +1,6 @@
 {
   "id": "cobblebase:finder_hea",
-  "name": "Finder Hea",
+  "name": "Pharmacist",
   "description": "Searches the area for healing items and berries",
   "category": "gathering",
   "cooldownSeconds": 240,

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:pp_up", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:x_attack", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:x_defense", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:x_speed", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:dire_hit", "weight": 8 }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "id": "cobblebase:finder_see",
-  "name": "Finder See",
+  "name": "Botanist",
   "description": "Searches the area for seeds and plantable items",
   "category": "gathering",
   "cooldownSeconds": 240,

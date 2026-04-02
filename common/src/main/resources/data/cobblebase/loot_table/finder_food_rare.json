@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:rage_candy_bar", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:lava_cookie", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:old_gateau", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:casteliacone", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:big_malasada", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:lumiose_galette", "weight": 8 }
+      ]
+    }
+  ]
+}

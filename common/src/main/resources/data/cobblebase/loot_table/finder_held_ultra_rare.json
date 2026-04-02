@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:focus_sash", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:eviolite", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:expert_belt", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:weakness_policy", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:lucky_egg", "weight": 5 }
+      ]
+    }
+  ]
+}

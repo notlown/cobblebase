@@ -1,6 +1,6 @@
 {
   "id": "cobblebase:finder_ore",
-  "name": "Finder Ore",
+  "name": "Excavator",
   "description": "Searches the area for ores and raw minerals",
   "category": "gathering",
   "cooldownSeconds": 240,

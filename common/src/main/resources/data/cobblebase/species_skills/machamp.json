@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:strength_boost",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 5
     }
   ]
 }

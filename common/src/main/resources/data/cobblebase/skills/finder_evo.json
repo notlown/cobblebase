@@ -1,6 +1,6 @@
 {
   "id": "cobblebase:finder_evo",
-  "name": "Finder Evo",
+  "name": "Alchemist",
   "description": "Searches the area for evolution items and stones",
   "category": "gathering",
   "cooldownSeconds": 240,

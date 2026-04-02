@@ -36,19 +36,24 @@ Pokemon harvest, fish, mine, and collect resources from the world around your ba
 
 ## 🔍 Finding
 
-Seven specialized Finder subtypes with dedicated loot tables for targeted item discovery.
+Twelve specialized Finder subtypes with dedicated loot tables for targeted item discovery.
 
 | Job | Focus | Example Loot |
 |-----|-------|--------------|
-| **Finder Evo** | Evolution items | Fire/Thunder Stone, Linking Cord, Ability Patch |
-| **Finder Hea** | Healing items | Potions, Revives, Sacred Ash |
-| **Finder Bui** | Building materials | Prismarine, Sea Lantern, Crying Obsidian |
-| **Finder Ore** | Ores and minerals | Raw Iron/Gold, Diamond, Ancient Debris |
-| **Finder See** | Seeds and plants | Apricorn Seeds, Mint Seeds, Torchflower Seeds |
-| **Finder Bal** | Pokeballs | Great Ball, Apricorn Balls, Master Ball |
-| **Finder Exp** | XP Candies | Exp Candy XS–XL, Rare Candy |
+| **Alchemist** | Evolution items | Fire/Thunder Stone, Linking Cord, Ability Patch |
+| **Pharmacist** | Healing items | Potions, Revives, Sacred Ash |
+| **Architect** | Building materials | Prismarine, Sea Lantern, Crying Obsidian |
+| **Excavator** | Ores and minerals | Raw Iron/Gold, Diamond, Ancient Debris |
+| **Botanist** | Seeds, plants & mulch | Apricorn Seeds, Mint Seeds, Mulch, Torchflower Seeds |
+| **Collector** | Pokeballs | Great Ball, Apricorn Balls, Master Ball |
+| **Scholar** | XP Candies | Exp Candy XS–XL, Rare Candy |
+| **Chef** | Food & cooking | Ponigiri, Lava Cookie, Enchanted Golden Apple |
+| **Trainer** | Vitamins & training | HP Up, Protein, Ability Patch |
+| **Armorer** | Battle held items | Choice Band, Life Orb, Focus Sash |
+| **Prospector** | Relics & treasure | Relic Coins, Gold, Netherite Ingot |
+| **Smith** | Smithing templates & pottery | Armor Trims, Pottery Sherds, Netherite Upgrade |
 
-Finder Hea is auto-assigned to Healer Pokemon, Finder See to Harvesters, Finder Exp to Mentors, and Finder Bal to collectors like Aipom and Zigzagoon.
+Pharmacist is auto-assigned to Healer Pokemon, Botanist to Harvesters, Scholar to Mentors, and Collector to collectors like Aipom and Zigzagoon.
 
 ---
 

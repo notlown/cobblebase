@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:pp_max", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:ability_capsule", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:health_feather", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:muscle_feather", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:resist_feather", "weight": 8 }
+      ]
+    }
+  ]
+}

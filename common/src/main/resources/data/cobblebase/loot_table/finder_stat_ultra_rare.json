@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:ability_patch", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:hyper_training_candy", "weight": 5 }
+      ]
+    }
+  ]
+}

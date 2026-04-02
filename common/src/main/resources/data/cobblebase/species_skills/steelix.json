@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:resistance_boost",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 3
     }
   ]
 }

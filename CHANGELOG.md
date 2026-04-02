@@ -4,6 +4,35 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [0.7.0] - 2026-04-01
+
+### Finder Jobs Renamed to Themed Names
+All Finder jobs have been renamed to thematic profession names for better immersion. Internal IDs remain unchanged for backward compatibility.
+
+| Old Name | New Name |
+|----------|----------|
+| Finder Evo | Alchemist |
+| Finder Hea | Pharmacist |
+| Finder Bui | Architect |
+| Finder Ore | Excavator |
+| Finder See | Botanist |
+| Finder Bal | Collector |
+| Finder Exp | Scholar |
+
+### 5 New Finder Jobs
+| Job | Focus | Key Pokemon |
+|-----|-------|-------------|
+| Chef | Food & cooking items | Snorlax (5), Munchlax (4), Alcremie (4) |
+| Trainer | Vitamins & training items | Machamp (5), Lucario (4), Blaziken (4) |
+| Armorer | Battle held items | Aegislash (5), Kingambit (5), Scizor (4) |
+| Prospector | Relics & treasure | Gholdengo (5), Persian (4), Honchkrow (4) |
+| Smith | Smithing templates & pottery | Tinkaton (5), Aegislash (4), Excadrill (3) |
+
+### Botanist Mulch
+- Added mulch variants (Growth, Rich, Surprise, Loamy) to Botanist common loot table
+
+---
+
 ## [0.6.0] - 2026-04-01
 
 ### Support Buff System

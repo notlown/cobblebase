@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:relic_coin_pouch", "weight": 5, "functions": [{ "function": "set_count", "count": 2 }] },
+        { "type": "minecraft:item", "name": "minecraft:emerald_block", "weight": 4 },
+        { "type": "minecraft:item", "name": "minecraft:netherite_ingot", "weight": 3 }
+      ]
+    }
+  ]
+}

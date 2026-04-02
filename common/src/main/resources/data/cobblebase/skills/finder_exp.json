@@ -1,6 +1,6 @@
 {
   "id": "cobblebase:finder_exp",
-  "name": "Finder Exp",
+  "name": "Scholar",
   "description": "Searches the area for XP Candies and Rare Candies",
   "category": "gathering",
   "cooldownSeconds": 240,

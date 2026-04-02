@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:silk_scarf", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:charcoal_stick", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:mystic_water", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:miracle_seed", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:magnet", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:soft_sand", "weight": 10 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:muscle_band", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:wise_glasses", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:scope_lens", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:wide_lens", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:shell_bell", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:leftovers", "weight": 8 }
+      ]
+    }
+  ]
+}

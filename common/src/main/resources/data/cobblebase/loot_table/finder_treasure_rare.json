@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:relic_coin_pouch", "weight": 8 },
+        { "type": "minecraft:item", "name": "minecraft:gold_block", "weight": 6 },
+        { "type": "minecraft:item", "name": "minecraft:diamond", "weight": 6 }
+      ]
+    }
+  ]
+}

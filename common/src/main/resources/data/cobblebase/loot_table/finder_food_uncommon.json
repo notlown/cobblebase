@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:leek_and_potato_stew", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:vivichoke_dip", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:moomoo_milk", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:pewter_crunchies", "weight": 8 },
+        { "type": "minecraft:item", "name": "minecraft:golden_apple", "weight": 6 },
+        { "type": "minecraft:item", "name": "minecraft:pumpkin_pie", "weight": 8 }
+      ]
+    }
+  ]
+}

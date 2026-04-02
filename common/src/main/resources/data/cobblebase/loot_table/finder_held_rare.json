@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:choice_band", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:choice_specs", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:choice_scarf", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:assault_vest", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:life_orb", "weight": 8 },
+        { "type": "minecraft:item", "name": "cobblemon:rocky_helmet", "weight": 8 }
+      ]
+    }
+  ]
+}

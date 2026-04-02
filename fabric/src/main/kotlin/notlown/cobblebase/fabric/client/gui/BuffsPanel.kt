@@ -141,15 +141,21 @@ class BuffsPanel(
                 val monsCount = if (prof >= 5) 6 else prof
                 "Healing $monsCount team Pokemon every 180s"
             }
-            "finder", "finder_evo", "finder_hea", "finder_bui", "finder_ore", "finder_see", "finder_bal", "finder_exp" -> {
+            "finder", "finder_evo", "finder_hea", "finder_bui", "finder_ore", "finder_see", "finder_bal", "finder_exp",
+            "finder_food", "finder_stat", "finder_held", "finder_treasure", "finder_smith" -> {
                 val typeLabel = when (executor) {
                     "finder_evo" -> "evolution items"
                     "finder_hea" -> "healing items"
                     "finder_bui" -> "building materials"
                     "finder_ore" -> "ores"
-                    "finder_see" -> "seeds"
+                    "finder_see" -> "seeds & mulch"
                     "finder_bal" -> "Pokeballs"
                     "finder_exp" -> "XP Candies"
+                    "finder_food" -> "food & cooking items"
+                    "finder_stat" -> "vitamins & training items"
+                    "finder_held" -> "battle held items"
+                    "finder_treasure" -> "relics & treasure"
+                    "finder_smith" -> "smithing templates & pottery"
                     else -> "items"
                 }
                 "Finding $typeLabel"

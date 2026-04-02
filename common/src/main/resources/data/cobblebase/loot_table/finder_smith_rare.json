@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "minecraft:eye_armor_trim_smithing_template", "weight": 8 },
+        { "type": "minecraft:item", "name": "minecraft:snout_armor_trim_smithing_template", "weight": 8 },
+        { "type": "minecraft:item", "name": "minecraft:rib_armor_trim_smithing_template", "weight": 8 },
+        { "type": "minecraft:item", "name": "minecraft:spire_armor_trim_smithing_template", "weight": 8 }
+      ]
+    }
+  ]
+}

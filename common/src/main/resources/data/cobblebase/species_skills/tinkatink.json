@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 2
     }
   ]
 }

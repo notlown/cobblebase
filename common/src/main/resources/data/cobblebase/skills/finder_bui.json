@@ -1,6 +1,6 @@
 {
   "id": "cobblebase:finder_bui",
-  "name": "Finder Bui",
+  "name": "Architect",
   "description": "Searches the area for building materials",
   "category": "gathering",
   "cooldownSeconds": 240,

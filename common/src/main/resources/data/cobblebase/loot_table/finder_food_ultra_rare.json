@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:jubilife_muffin", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:potato_mochi", "weight": 5 },
+        { "type": "minecraft:item", "name": "cobblemon:candied_berries", "weight": 5 },
+        { "type": "minecraft:item", "name": "minecraft:enchanted_golden_apple", "weight": 3 }
+      ]
+    }
+  ]
+}

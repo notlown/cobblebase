@@ -9,7 +9,11 @@
         { "type": "minecraft:item", "name": "cobblemon:red_apricorn_seed", "weight": 8 },
         { "type": "minecraft:item", "name": "cobblemon:blue_apricorn_seed", "weight": 8 },
         { "type": "minecraft:item", "name": "cobblemon:green_apricorn_seed", "weight": 8 },
-        { "type": "minecraft:item", "name": "cobblemon:vivichoke_seeds", "weight": 6 }
+        { "type": "minecraft:item", "name": "cobblemon:vivichoke_seeds", "weight": 6 },
+        { "type": "minecraft:item", "name": "cobblemon:growth_mulch", "weight": 6 },
+        { "type": "minecraft:item", "name": "cobblemon:rich_mulch", "weight": 6 },
+        { "type": "minecraft:item", "name": "cobblemon:surprise_mulch", "weight": 4 },
+        { "type": "minecraft:item", "name": "cobblemon:loamy_mulch", "weight": 6 }
       ]
     }
   ]

@@ -7,6 +7,11 @@ finder_bal.json
 finder_bui.json
 finder_evo.json
 finder_exp.json
+finder_food.json
+finder_held.json
+finder_smith.json
+finder_stat.json
+finder_treasure.json
 finder_hea.json
 finder_ore.json
 finder_see.json

@@ -51,6 +51,11 @@ object ExecutorRegistry {
         register("finder_see", FinderExecutor.See)
         register("finder_bal", FinderExecutor.Bal)
         register("finder_exp", FinderExecutor.Exp)
+        register("finder_food", FinderExecutor.Food)
+        register("finder_stat", FinderExecutor.Stat)
+        register("finder_held", FinderExecutor.Held)
+        register("finder_treasure", FinderExecutor.Treasure)
+        register("finder_smith", FinderExecutor.Smith)
 
         // -- Support --
         register("healer", HealerExecutor)

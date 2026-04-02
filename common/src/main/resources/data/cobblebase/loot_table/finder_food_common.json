@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cobblemon:roasted_leek", "weight": 10 },
+        { "type": "minecraft:item", "name": "cobblemon:ponigiri", "weight": 10 },
+        { "type": "minecraft:item", "name": "minecraft:bread", "weight": 10, "functions": [{ "function": "set_count", "count": 2 }] },
+        { "type": "minecraft:item", "name": "minecraft:cooked_beef", "weight": 10 },
+        { "type": "minecraft:item", "name": "minecraft:cooked_porkchop", "weight": 10 },
+        { "type": "minecraft:item", "name": "minecraft:cookie", "weight": 10, "functions": [{ "function": "set_count", "count": 3 }] }
+      ]
+    }
+  ]
+}

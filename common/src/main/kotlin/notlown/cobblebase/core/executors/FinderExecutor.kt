@@ -146,25 +146,40 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
         /** The original generic Finder instance (backward compatible). */
         val Generic = FinderExecutor("finder")
 
-        /** Finder Evo -- Evolution items only. */
+        /** Alchemist -- Evolution items only. */
         val Evo = FinderExecutor("finder_evo")
 
-        /** Finder Hea -- Healing items only. */
+        /** Pharmacist -- Healing items only. */
         val Hea = FinderExecutor("finder_hea")
 
-        /** Finder Bui -- Building materials only (no ores). */
+        /** Architect -- Building materials only (no ores). */
         val Bui = FinderExecutor("finder_bui")
 
-        /** Finder Ore -- Ores and raw materials only. */
+        /** Excavator -- Ores and raw materials only. */
         val Ore = FinderExecutor("finder_ore")
 
-        /** Finder See -- Seeds and plantable items only. */
+        /** Botanist -- Seeds and plantable items only. */
         val See = FinderExecutor("finder_see")
 
-        /** Finder Bal -- Pokeballs only. */
+        /** Collector -- Pokeballs only. */
         val Bal = FinderExecutor("finder_bal")
 
-        /** Finder Exp -- XP Candies only. */
+        /** Scholar -- XP Candies only. */
         val Exp = FinderExecutor("finder_exp")
+
+        /** Chef -- Food and cooking items. */
+        val Food = FinderExecutor("finder_food")
+
+        /** Trainer -- Stat vitamins and training items. */
+        val Stat = FinderExecutor("finder_stat")
+
+        /** Armorer -- Battle held items. */
+        val Held = FinderExecutor("finder_held")
+
+        /** Prospector -- Relics and treasure items. */
+        val Treasure = FinderExecutor("finder_treasure")
+
+        /** Smith -- Smithing templates and pottery. */
+        val Smith = FinderExecutor("finder_smith")
     }
 }

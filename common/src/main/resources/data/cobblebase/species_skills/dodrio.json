@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:finder_see",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 3
     }
   ]
 }

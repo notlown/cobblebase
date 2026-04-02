@@ -79,7 +79,7 @@ Open the Pasture Block and click the **"Cobblebase"** button to manage your base
 - Color-coded by type: Structures=blue, Biomes=green
 - Persistent across sessions -- discoveries are saved to world data
 
-### 22 Skills Across 6 Categories
+### 30 Skills Across 7 Categories
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -87,10 +87,33 @@ Open the Pasture Block and click the **"Cobblebase"** button to manage your base
 | **Generation** | Lava Fill, Water Fill, Snow Fill, Furnace Fuel, Brew Fuel | Produce resources in containers |
 | **Combat** | Guard | Patrol and repel wild Pokemon for XP and loot |
 | **Support** | Healer, Mentor | Healer: direct % healing + revive. Mentor: passive XP boost for all Pokemon in the same pasture |
+| **Support Buffs** | Speed, Strength, Resistance, Night Vision, Water Breathing, Jump, Haste, Saturation | Apply Minecraft status effects to all players near the base |
 | **Utility** | Irrigator, Extinguisher, Item Gatherer, **Scout**, Archeologist, Finder | Various helper jobs (Scout discovers wild Pokemon, structures, and biomes; Gatherer picks up dropped items and sorts into chests) |
 | **Specialized Finders** | Finder Evo, Finder Hea, Finder Bui, Finder Ore, Finder See, Finder Bal, Finder Exp | Themed item finders with dedicated loot tables |
 | **Fairy/Starters** | Friend Recruiter | Spawns wild Pokemon of same type nearby |
 | **Legendary** | Recruiter, Aura Boost, Lucky Charm, Growth Aura | Exclusive to rare/legendary Pokemon |
+
+### Support Buff Skills
+Pokemon stationed at the pasture apply status effects to all players within 16 blocks of the base. Duration and cooldown scale with proficiency -- at Prof 5, buffs are effectively permanent with no cooldown.
+
+| Buff | Effect | Key Pokemon (Prof) |
+|------|--------|-------------------|
+| **Speed Boost** | Speed II | Jolteon (5), Ninjask (4), Rapidash (4), Arcanine (3) |
+| **Strength Boost** | Strength I | Machamp (5), Hariyama (4), Conkeldurr (4), Lucario (3) |
+| **Resistance Boost** | Resistance I | Steelix (5), Aggron (4), Bastiodon (4), Shuckle (4) |
+| **Night Vision** | Night Vision | Umbreon (5), Noctowl (4), Espeon (3), Hoothoot (3) |
+| **Water Breathing** | Water Breathing | Lapras (5), Vaporeon (4), Milotic (4), Golduck (3) |
+| **Jump Boost** | Jump Boost I | Lopunny (4), Hitmonlee (4), Blaziken (3), Spoink (2) |
+| **Haste Boost** | Haste I | Alakazam (4), Metagross (3), Kadabra (3), Abra (2) |
+| **Saturation Boost** | Saturation | Snorlax (5), Munchlax (4), Slurpuff (3), Chansey (3) |
+
+| Proficiency | Duration | Cooldown |
+|-------------|----------|----------|
+| 1 (Novice) | 15s | 60s |
+| 2 (Apprentice) | 25s | 45s |
+| 3 (Skilled) | 35s | 30s |
+| 4 (Expert) | 50s | 15s |
+| 5 (Master) | 70s | 0s (permanent) |
 
 ### Visual Effects
 Every skill has themed visual feedback:

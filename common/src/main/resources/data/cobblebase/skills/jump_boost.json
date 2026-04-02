@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:jump_boost",
+  "name": "Jump Boost",
+  "description": "Grants Jump Boost I to nearby players",
+  "category": "support",
+  "cooldownSeconds": 60,
+  "searchRadius": 16,
+  "executor": "jump_boost",
+  "effectType": "heal"
+}

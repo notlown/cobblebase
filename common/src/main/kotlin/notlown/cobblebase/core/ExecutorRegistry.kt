@@ -14,6 +14,7 @@ import notlown.cobblebase.core.executors.MiningExecutor
 import notlown.cobblebase.core.executors.HealerExecutor
 import notlown.cobblebase.core.executors.MentorExecutor
 import notlown.cobblebase.core.executors.RecruiterExecutor
+import notlown.cobblebase.core.executors.BuffExecutor
 import notlown.cobblebase.core.executors.ScoutExecutor
 
 /**
@@ -54,6 +55,16 @@ object ExecutorRegistry {
         // -- Support --
         register("healer", HealerExecutor)
         register("mentor", MentorExecutor)
+
+        // -- Support Buffs --
+        register("speed_boost", BuffExecutor.SpeedBoost)
+        register("strength_boost", BuffExecutor.StrengthBoost)
+        register("resistance_boost", BuffExecutor.ResistanceBoost)
+        register("night_vision", BuffExecutor.NightVision)
+        register("water_breathing", BuffExecutor.WaterBreathing)
+        register("jump_boost", BuffExecutor.JumpBoost)
+        register("haste_boost", BuffExecutor.HasteBoost)
+        register("saturation_boost", BuffExecutor.SaturationBoost)
 
         // -- Utility --
         register("irrigate", IrrigatorExecutor)

@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:water_breathing",
+  "name": "Water Breathing",
+  "description": "Grants Water Breathing to nearby players",
+  "category": "support",
+  "cooldownSeconds": 60,
+  "searchRadius": 16,
+  "executor": "water_breathing",
+  "effectType": "heal"
+}

@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 5
     }
   ]
 }

@@ -1,5 +1,27 @@
 # Changelog - Cobblebase
 
+## [0.6.0] - 2026-04-01
+
+### Support Buff System (8 new skills)
+- **BuffExecutor** -- Flexible class-based executor that applies Minecraft status effects to all players within 16 blocks of the pasture origin
+- Duration scales with proficiency: Prof 1 = 15s, Prof 2 = 25s, Prof 3 = 35s, Prof 4 = 50s, Prof 5 = 70s (effectively permanent)
+- Cooldown scales with proficiency: Prof 1 = 60s, Prof 2 = 45s, Prof 3 = 30s, Prof 4 = 15s, Prof 5 = 0s (reapplies every tick)
+- Subtle themed particles at the pasture origin when buffs are applied (different per buff type)
+- Activity log entries when a player first receives a buff
+
+### 8 Buff Skills
+- **Speed Boost** (Speed II): Jolteon (5), Ninjask (4), Rapidash (4), Arcanine (3), Dodrio (3), Ponyta (2), Voltorb (2)
+- **Strength Boost** (Strength I): Machamp (5), Hariyama (4), Conkeldurr (4), Lucario (3), Pangoro (3), Machoke (2)
+- **Resistance Boost** (Resistance I): Steelix (5), Aggron (4), Bastiodon (4), Shuckle (4), Onix (3), Geodude (2)
+- **Night Vision**: Umbreon (5), Noctowl (4), Hoothoot (3), Espeon (3), Zubat (2)
+- **Water Breathing**: Lapras (5), Vaporeon (4), Milotic (4), Tentacruel (3), Golduck (3), Psyduck (2)
+- **Jump Boost** (Jump Boost I): Lopunny (4), Hitmonlee (4), Blaziken (3), Spoink (2), Buneary (2)
+- **Haste Boost** (Haste I): Alakazam (4), Metagross (3), Kadabra (3), Abra (2)
+- **Saturation Boost**: Snorlax (5), Munchlax (4), Slurpuff (3), Chansey (3)
+
+### GUI Updates
+- BuffsPanel now shows descriptions for all 8 buff skills
+
 ## [0.5.0] - 2026-04-01
 
 ### Scout Executor

@@ -4,6 +4,10 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:jump_boost",
+      "proficiency": 2
     }
   ]
 }

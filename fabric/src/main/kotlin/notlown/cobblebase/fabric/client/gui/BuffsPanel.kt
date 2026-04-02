@@ -158,6 +158,14 @@ class BuffsPanel(
             "recruiter" -> "Attracting wild Pokemon to the area"
             "cauldron_fill" -> "Filling cauldrons"
             "furnace_fuel", "brew_fuel" -> "Fueling furnaces/brewers"
+            "speed_boost" -> "Speed II boost for nearby players"
+            "strength_boost" -> "Strength boost for nearby players"
+            "resistance_boost" -> "Resistance boost for nearby players"
+            "night_vision" -> "Night Vision for nearby players"
+            "water_breathing" -> "Water Breathing for nearby players"
+            "jump_boost" -> "Jump Boost for nearby players"
+            "haste_boost" -> "Haste boost for nearby players"
+            "saturation_boost" -> "Saturation for nearby players"
             else -> "Active"
         }
     }

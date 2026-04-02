@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:furnace_fuel",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 2
     }
   ]
 }

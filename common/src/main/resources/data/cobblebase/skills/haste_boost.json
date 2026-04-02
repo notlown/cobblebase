@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:haste_boost",
+  "name": "Haste Boost",
+  "description": "Grants Haste I to nearby players",
+  "category": "support",
+  "cooldownSeconds": 60,
+  "searchRadius": 16,
+  "executor": "haste_boost",
+  "effectType": "heal"
+}

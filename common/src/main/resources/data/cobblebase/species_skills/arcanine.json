@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 3
     }
   ]
 }

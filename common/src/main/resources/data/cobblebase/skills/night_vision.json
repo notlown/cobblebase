@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:night_vision",
+  "name": "Night Vision",
+  "description": "Grants Night Vision to nearby players",
+  "category": "support",
+  "cooldownSeconds": 60,
+  "searchRadius": 16,
+  "executor": "night_vision",
+  "effectType": "heal"
+}

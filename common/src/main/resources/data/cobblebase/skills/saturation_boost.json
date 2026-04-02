@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:saturation_boost",
+  "name": "Saturation Boost",
+  "description": "Grants Saturation to nearby players",
+  "category": "support",
+  "cooldownSeconds": 60,
+  "searchRadius": 16,
+  "executor": "saturation_boost",
+  "effectType": "heal"
+}

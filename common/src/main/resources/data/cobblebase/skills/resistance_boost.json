@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:resistance_boost",
+  "name": "Resistance Boost",
+  "description": "Grants Resistance I to nearby players",
+  "category": "support",
+  "cooldownSeconds": 60,
+  "searchRadius": 16,
+  "executor": "resistance_boost",
+  "effectType": "heal"
+}

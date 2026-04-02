@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:finder_evo",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 3
     }
   ]
 }

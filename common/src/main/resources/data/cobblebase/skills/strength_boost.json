@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:strength_boost",
+  "name": "Strength Boost",
+  "description": "Grants Strength I to nearby players",
+  "category": "support",
+  "cooldownSeconds": 60,
+  "searchRadius": 16,
+  "executor": "strength_boost",
+  "effectType": "heal"
+}

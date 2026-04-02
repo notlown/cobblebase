@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:speed_boost",
+  "name": "Speed Boost",
+  "description": "Grants Speed II to nearby players",
+  "category": "support",
+  "cooldownSeconds": 60,
+  "searchRadius": 16,
+  "executor": "speed_boost",
+  "effectType": "heal"
+}

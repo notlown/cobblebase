@@ -2,6 +2,14 @@
   "species": "overqwil",
   "skills": [
     {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
@@ -10,8 +18,8 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_hea",
-      "proficiency": 2
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
     }
   ]
 }

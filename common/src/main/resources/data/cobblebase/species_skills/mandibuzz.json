@@ -2,6 +2,14 @@
   "species": "mandibuzz",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
@@ -10,7 +18,11 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
       "proficiency": 2
     }
   ]

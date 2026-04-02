@@ -2,7 +2,11 @@
   "species": "machamp",
   "skills": [
     {
-      "skillId": "cobblebase:guard",
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
       "proficiency": 5
     },
     {
@@ -10,16 +14,12 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_bui",
-      "proficiency": 4
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:strength_boost",
-      "proficiency": 5
-    },
-    {
-      "skillId": "cobblebase:finder_stat",
-      "proficiency": 5
+      "proficiency": 4
     }
   ]
 }

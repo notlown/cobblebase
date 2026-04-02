@@ -2,6 +2,18 @@
   "species": "houndoom",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
@@ -10,7 +22,7 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:furnace_fuel",
+      "skillId": "cobblebase:night_vision",
       "proficiency": 3
     }
   ]

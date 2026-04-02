@@ -2,12 +2,16 @@
   "species": "tentacruel",
   "skills": [
     {
-      "skillId": "cobblebase:fishing",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:diving",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",

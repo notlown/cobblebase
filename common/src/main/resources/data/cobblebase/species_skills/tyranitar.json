@@ -2,16 +2,28 @@
   "species": "tyranitar",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_treasure",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:mining",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:guard",
-      "proficiency": 4
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 2
     }
   ]
 }

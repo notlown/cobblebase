@@ -2,12 +2,8 @@
   "species": "growlithe",
   "skills": [
     {
-      "skillId": "cobblebase:scout",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:guard",
-      "proficiency": 3
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
     },
     {
       "skillId": "cobblebase:furnace_fuel",
@@ -15,6 +11,14 @@
     },
     {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
       "proficiency": 2
     }
   ]

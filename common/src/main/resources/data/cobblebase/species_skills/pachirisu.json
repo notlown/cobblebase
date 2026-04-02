@@ -2,11 +2,15 @@
   "species": "pachirisu",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_bal",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_bal",
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 3
     }
   ]

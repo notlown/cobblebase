@@ -2,6 +2,10 @@
   "species": "bunnelby",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     }

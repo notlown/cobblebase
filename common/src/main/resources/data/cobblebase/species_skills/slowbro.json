@@ -2,7 +2,19 @@
   "species": "slowbro",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:fishing",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
     {
@@ -10,11 +22,11 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_hea",
+      "skillId": "cobblebase:mentor",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 3
     }
   ]

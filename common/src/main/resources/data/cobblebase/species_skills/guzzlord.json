@@ -2,12 +2,28 @@
   "species": "guzzlord",
   "skills": [
     {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 3
     }
   ]
 }

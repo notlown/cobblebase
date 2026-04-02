@@ -2,11 +2,19 @@
   "species": "wailord",
   "skills": [
     {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:fishing",
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 3
     },
     {

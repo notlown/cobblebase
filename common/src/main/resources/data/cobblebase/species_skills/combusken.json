@@ -2,6 +2,14 @@
   "species": "combusken",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },
@@ -10,11 +18,11 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:guard",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:guard",
       "proficiency": 2
     }
   ]

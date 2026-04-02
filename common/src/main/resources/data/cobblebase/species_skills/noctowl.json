@@ -2,7 +2,7 @@
   "species": "noctowl",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_bal",
       "proficiency": 2
     },
     {
@@ -10,8 +10,16 @@
       "proficiency": 2
     },
     {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:night_vision",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

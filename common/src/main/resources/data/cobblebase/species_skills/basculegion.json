@@ -2,11 +2,15 @@
   "species": "basculegion",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:fishing",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:diving",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
@@ -14,8 +18,16 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 3
     }
   ]
 }

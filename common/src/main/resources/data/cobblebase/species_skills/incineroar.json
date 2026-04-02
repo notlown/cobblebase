@@ -2,6 +2,14 @@
   "species": "incineroar",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },
@@ -10,12 +18,16 @@
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:guard",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
     }
   ]
 }

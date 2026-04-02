@@ -3,11 +3,23 @@
   "skills": [
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 3
     }
   ]
 }

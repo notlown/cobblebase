@@ -2,6 +2,14 @@
   "species": "sneasler",
   "skills": [
     {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
@@ -10,7 +18,11 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_hea",
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
       "proficiency": 2
     }
   ]

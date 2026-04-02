@@ -2,7 +2,7 @@
   "species": "swanna",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_see",
       "proficiency": 2
     },
     {
@@ -10,12 +10,20 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:water_fill",
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_see",
-      "proficiency": 2
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 3
     }
   ]
 }

@@ -2,20 +2,32 @@
   "species": "wigglytuff",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:healer",
-      "proficiency": 3
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:finder_hea",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 2
     }
   ]
 }

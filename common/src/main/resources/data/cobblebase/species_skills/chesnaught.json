@@ -2,11 +2,19 @@
   "species": "chesnaught",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:harvester",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
@@ -14,12 +22,12 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:harvester",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 3
     }
   ]
 }

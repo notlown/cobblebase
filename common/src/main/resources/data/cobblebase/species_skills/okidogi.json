@@ -2,12 +2,16 @@
   "species": "okidogi",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 5
     },
     {
-      "skillId": "cobblebase:finder_hea",
+      "skillId": "cobblebase:finder_stat",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:guard",

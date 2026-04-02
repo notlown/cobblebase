@@ -2,6 +2,18 @@
   "species": "bisharp",
   "skills": [
     {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
@@ -14,8 +26,8 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_held",
-      "proficiency": 4
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
     }
   ]
 }

@@ -2,6 +2,14 @@
   "species": "gligar",
   "skills": [
     {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
@@ -10,7 +18,7 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:scout",
       "proficiency": 1
     }
   ]

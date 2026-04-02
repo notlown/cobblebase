@@ -8,6 +8,18 @@
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
     }
   ]
 }

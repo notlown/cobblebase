@@ -2,7 +2,11 @@
   "species": "empoleon",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
       "proficiency": 3
     },
     {
@@ -10,11 +14,19 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:guard",
+      "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 4
     }
   ]

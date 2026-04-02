@@ -2,24 +2,28 @@
   "species": "scyther",
   "skills": [
     {
-      "skillId": "cobblebase:harvester",
-      "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:guard",
-      "proficiency": 3
+      "skillId": "cobblebase:finder_evo",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:finder_see",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:finder_evo",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 1
     }
   ]
 }

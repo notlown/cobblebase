@@ -2,11 +2,11 @@
   "species": "seviper",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_hea",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 1
     }
   ]

@@ -2,16 +2,32 @@
   "species": "cobalion",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_held",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mining",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:guard",
-      "proficiency": 5
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 3
     }
   ]
 }

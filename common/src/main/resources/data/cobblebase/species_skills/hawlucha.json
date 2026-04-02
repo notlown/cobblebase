@@ -2,20 +2,24 @@
   "species": "hawlucha",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:guard",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:finder_see",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:finder_stat",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

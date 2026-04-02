@@ -2,16 +2,32 @@
   "species": "mewtwo",
   "skills": [
     {
-      "skillId": "cobblebase:guard",
-      "proficiency": 5
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:aura_boost",
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 3
     }
   ]
 }

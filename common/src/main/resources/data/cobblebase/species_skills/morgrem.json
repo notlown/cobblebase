@@ -2,6 +2,10 @@
   "species": "morgrem",
   "skills": [
     {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
@@ -10,8 +14,16 @@
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:healer",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:mentor",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
     }
   ]
 }

@@ -2,6 +2,18 @@
   "species": "houndour",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
@@ -10,8 +22,8 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:furnace_fuel",
-      "proficiency": 2
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 1
     }
   ]
 }

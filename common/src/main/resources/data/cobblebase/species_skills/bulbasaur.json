@@ -2,15 +2,7 @@
   "species": "bulbasaur",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:harvester",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:irrigator",
+      "skillId": "cobblebase:finder_hea",
       "proficiency": 1
     },
     {
@@ -18,7 +10,19 @@
       "proficiency": 2
     },
     {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:irrigator",
       "proficiency": 1
     }
   ]

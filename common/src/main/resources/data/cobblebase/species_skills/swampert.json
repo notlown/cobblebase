@@ -2,24 +2,36 @@
   "species": "swampert",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 3
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:fishing",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:water_fill",
+      "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 3
     }
   ]
 }

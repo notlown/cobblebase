@@ -2,7 +2,15 @@
   "species": "ursaring",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
       "proficiency": 2
     }
   ]

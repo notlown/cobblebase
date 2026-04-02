@@ -2,12 +2,20 @@
   "species": "genesect",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:harvester",
-      "proficiency": 3
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mining",

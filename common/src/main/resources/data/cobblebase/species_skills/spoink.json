@@ -2,16 +2,20 @@
   "species": "spoink",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_exp",
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:mentor",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:jump_boost",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 1
     }
   ]
 }

@@ -2,7 +2,15 @@
   "species": "spearow",
   "skills": [
     {
-      "skillId": "cobblebase:scout",
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
@@ -10,7 +18,7 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:scout",
       "proficiency": 2
     }
   ]

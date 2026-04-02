@@ -2,15 +2,27 @@
   "species": "forretress",
   "skills": [
     {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:harvester",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:mining",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
       "proficiency": 3
     }
   ]

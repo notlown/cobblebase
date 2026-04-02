@@ -2,12 +2,16 @@
   "species": "cryogonal",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:snow_fill",
-      "proficiency": 2
+      "proficiency": 3
     }
   ]
 }

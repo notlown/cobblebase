@@ -2,6 +2,14 @@
   "species": "inkay",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
@@ -11,6 +19,10 @@
     },
     {
       "skillId": "cobblebase:mentor",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:night_vision",
       "proficiency": 1
     }
   ]

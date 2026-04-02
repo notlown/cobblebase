@@ -8,6 +8,18 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

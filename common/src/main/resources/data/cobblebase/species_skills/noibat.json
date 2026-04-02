@@ -2,16 +2,24 @@
   "species": "noibat",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_see",
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 1
     }
   ]
 }

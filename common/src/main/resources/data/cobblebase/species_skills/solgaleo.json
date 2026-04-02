@@ -2,8 +2,20 @@
   "species": "solgaleo",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_exp",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mentor",
@@ -12,6 +24,14 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 3
     }
   ]
 }

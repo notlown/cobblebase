@@ -2,12 +2,20 @@
   "species": "beartic",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:snow_fill",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 2
     }
   ]
 }

@@ -2,7 +2,15 @@
   "species": "ralts",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:healer",
       "proficiency": 1
     },
     {

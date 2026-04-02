@@ -2,6 +2,10 @@
   "species": "vulpix",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:furnace_fuel",
       "proficiency": 2
     },

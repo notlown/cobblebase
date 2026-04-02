@@ -2,16 +2,28 @@
   "species": "bronzor",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mentor",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:mining",
       "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:mentor",
-      "proficiency": 1
     }
   ]
 }

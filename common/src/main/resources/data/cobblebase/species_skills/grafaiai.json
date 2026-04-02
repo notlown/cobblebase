@@ -2,12 +2,16 @@
   "species": "grafaiai",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_bal",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:finder_hea",
-      "proficiency": 1
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     }
   ]
 }

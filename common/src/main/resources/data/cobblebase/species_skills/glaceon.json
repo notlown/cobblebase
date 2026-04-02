@@ -2,12 +2,20 @@
   "species": "glaceon",
   "skills": [
     {
-      "skillId": "cobblebase:snow_fill",
-      "proficiency": 4
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 4
     }
   ]
 }

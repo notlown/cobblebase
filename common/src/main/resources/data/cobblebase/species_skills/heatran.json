@@ -2,12 +2,28 @@
   "species": "heatran",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
       "proficiency": 4
     },
     {
       "skillId": "cobblebase:furnace_fuel",
-      "proficiency": 4
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:mining",

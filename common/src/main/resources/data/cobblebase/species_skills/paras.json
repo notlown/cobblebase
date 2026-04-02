@@ -2,6 +2,10 @@
   "species": "paras",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },

@@ -2,16 +2,24 @@
   "species": "clodsire",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_hea",
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:mining",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 2
     }
   ]
 }

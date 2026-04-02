@@ -2,12 +2,16 @@
   "species": "toedscruel",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_ore",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:mining",
-      "proficiency": 3
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:harvester",
@@ -16,6 +20,10 @@
     {
       "skillId": "cobblebase:irrigator",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
     }
   ]
 }

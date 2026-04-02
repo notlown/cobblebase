@@ -2,6 +2,10 @@
   "species": "glalie",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },

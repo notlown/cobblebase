@@ -2,15 +2,19 @@
   "species": "drizzile",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:fishing",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 2
     }
   ]

@@ -2,11 +2,23 @@
   "species": "glastrier",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_bui",
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:snow_fill",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
       "proficiency": 3
     }
   ]

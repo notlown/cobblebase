@@ -2,8 +2,20 @@
   "species": "meganium",
   "skills": [
     {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:harvester",
@@ -14,16 +26,8 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_hea",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:finder_see",
-      "proficiency": 5
-    },
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 3
     }
   ]
 }

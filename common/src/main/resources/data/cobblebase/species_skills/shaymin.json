@@ -2,19 +2,23 @@
   "species": "shaymin",
   "skills": [
     {
-      "skillId": "cobblebase:growth_aura",
-      "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:harvester",
-      "proficiency": 4
-    },
-    {
       "skillId": "cobblebase:finder_see",
       "proficiency": 4
     },
     {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:irrigator",
       "proficiency": 4
     }
   ]

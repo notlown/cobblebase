@@ -2,20 +2,28 @@
   "species": "kingdra",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:fishing",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:water_fill",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 3
     }
   ]
 }

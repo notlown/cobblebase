@@ -2,12 +2,20 @@
   "species": "unfezant",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 3
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:finder_see",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

@@ -2,12 +2,20 @@
   "species": "zorua",
   "skills": [
     {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 1
     }
   ]
 }

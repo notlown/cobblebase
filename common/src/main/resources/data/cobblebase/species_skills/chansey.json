@@ -2,6 +2,26 @@
   "species": "chansey",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:healer",
       "proficiency": 4
     },
@@ -10,24 +30,8 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:finder_hea",
-      "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:finder_exp",
-      "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:saturation_boost",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:finder_food",
-      "proficiency": 2
     }
   ]
 }

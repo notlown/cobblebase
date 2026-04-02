@@ -2,7 +2,7 @@
   "species": "kilowattrel",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_see",
       "proficiency": 2
     },
     {
@@ -10,7 +10,15 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
       "proficiency": 2
     }
   ]

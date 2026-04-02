@@ -2,8 +2,16 @@
   "species": "brambleghast",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:harvester",
@@ -14,8 +22,12 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:guard",
-      "proficiency": 3
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

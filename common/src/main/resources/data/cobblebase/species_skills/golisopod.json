@@ -2,16 +2,24 @@
   "species": "golisopod",
   "skills": [
     {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:fishing",
-      "proficiency": 3
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:water_fill",

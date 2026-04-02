@@ -2,24 +2,36 @@
   "species": "aegislash",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:mining",
-      "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:guard",
-      "proficiency": 4
-    },
-    {
       "skillId": "cobblebase:finder_held",
       "proficiency": 5
     },
     {
       "skillId": "cobblebase:finder_smith",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

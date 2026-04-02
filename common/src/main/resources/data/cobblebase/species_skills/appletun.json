@@ -2,8 +2,16 @@
   "species": "appletun",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:harvester",
@@ -14,8 +22,8 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:guard",
-      "proficiency": 5
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 1
     }
   ]
 }

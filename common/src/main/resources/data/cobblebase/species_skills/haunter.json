@@ -2,7 +2,19 @@
   "species": "haunter",
   "skills": [
     {
-      "skillId": "cobblebase:harvester",
+      "skillId": "cobblebase:finder_evo",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
@@ -10,15 +22,15 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:harvester",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_evo",
+      "skillId": "cobblebase:night_vision",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:scout",
       "proficiency": 2
     }
   ]

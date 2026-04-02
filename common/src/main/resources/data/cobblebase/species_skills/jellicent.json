@@ -2,19 +2,31 @@
   "species": "jellicent",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:fishing",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:water_fill",
-      "proficiency": 3
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_fill",
       "proficiency": 3
     }
   ]

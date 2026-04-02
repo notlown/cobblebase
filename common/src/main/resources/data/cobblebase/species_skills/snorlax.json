@@ -2,19 +2,23 @@
   "species": "snorlax",
   "skills": [
     {
-      "skillId": "cobblebase:guard",
-      "proficiency": 4
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:saturation_boost",
-      "proficiency": 5
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
     },
     {
-      "skillId": "cobblebase:finder_food",
+      "skillId": "cobblebase:saturation_boost",
       "proficiency": 5
     }
   ]

@@ -2,7 +2,7 @@
   "species": "magcargo",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_food",
       "proficiency": 2
     },
     {
@@ -10,8 +10,16 @@
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:mining",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 2
     }
   ]
 }

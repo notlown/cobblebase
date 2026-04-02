@@ -2,11 +2,19 @@
   "species": "pyukumuku",
   "skills": [
     {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:fishing",
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 2
     },
     {

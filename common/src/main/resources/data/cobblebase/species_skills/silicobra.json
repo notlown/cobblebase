@@ -2,6 +2,10 @@
   "species": "silicobra",
   "skills": [
     {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },

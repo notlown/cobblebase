@@ -7,7 +7,11 @@
     },
     {
       "skillId": "cobblebase:harvester",
-      "proficiency": 2
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 3
     }
   ]
 }

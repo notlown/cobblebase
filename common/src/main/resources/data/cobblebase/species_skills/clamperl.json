@@ -6,7 +6,15 @@
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 1
     }
   ]

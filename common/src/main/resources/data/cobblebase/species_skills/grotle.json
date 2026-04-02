@@ -2,20 +2,24 @@
   "species": "grotle",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:harvester",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_see",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 1
     }
   ]
 }

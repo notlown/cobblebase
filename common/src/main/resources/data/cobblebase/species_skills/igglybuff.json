@@ -2,7 +2,7 @@
   "species": "igglybuff",
   "skills": [
     {
-      "skillId": "cobblebase:healer",
+      "skillId": "cobblebase:finder_bal",
       "proficiency": 1
     },
     {
@@ -11,6 +11,14 @@
     },
     {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mentor",
       "proficiency": 1
     }
   ]

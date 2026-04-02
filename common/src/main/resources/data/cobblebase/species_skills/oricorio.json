@@ -2,7 +2,11 @@
   "species": "oricorio",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_see",
       "proficiency": 1
     },
     {
@@ -10,7 +14,11 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:scout",
       "proficiency": 1
     }
   ]

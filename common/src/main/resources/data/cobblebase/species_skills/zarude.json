@@ -2,8 +2,16 @@
   "species": "zarude",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:guard",
@@ -16,6 +24,10 @@
     {
       "skillId": "cobblebase:irrigator",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 5
     }
   ]
 }

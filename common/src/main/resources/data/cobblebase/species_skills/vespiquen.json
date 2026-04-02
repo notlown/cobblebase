@@ -2,11 +2,11 @@
   "species": "vespiquen",
   "skills": [
     {
-      "skillId": "cobblebase:honey_collect",
-      "proficiency": 5
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
     },
     {
-      "skillId": "cobblebase:harvester",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
     {
@@ -14,12 +14,16 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:harvester",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 3
+      "skillId": "cobblebase:honey_collect",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

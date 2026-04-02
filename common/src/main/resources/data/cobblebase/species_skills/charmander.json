@@ -2,12 +2,12 @@
   "species": "charmander",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 3
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
     },
     {
-      "skillId": "cobblebase:lava_fill",
-      "proficiency": 2
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:furnace_fuel",
@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:lava_fill",
+      "proficiency": 2
     }
   ]
 }

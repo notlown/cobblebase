@@ -2,8 +2,12 @@
   "species": "latias",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:guard",
@@ -12,6 +16,10 @@
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 4
     }
   ]
 }

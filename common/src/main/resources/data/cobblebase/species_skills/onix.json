@@ -2,10 +2,6 @@
   "species": "onix",
   "skills": [
     {
-      "skillId": "cobblebase:mining",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:archeologist",
       "proficiency": 2
     },
@@ -18,8 +14,12 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:resistance_boost",
+      "skillId": "cobblebase:mining",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 4
     }
   ]
 }

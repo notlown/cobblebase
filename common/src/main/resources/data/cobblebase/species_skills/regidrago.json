@@ -3,11 +3,19 @@
   "skills": [
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 4
     }
   ]
 }

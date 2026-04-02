@@ -2,16 +2,28 @@
   "species": "salamence",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:guard",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:scout",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 2
     }
   ]
 }

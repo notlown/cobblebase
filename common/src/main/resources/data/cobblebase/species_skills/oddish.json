@@ -2,7 +2,7 @@
   "species": "oddish",
   "skills": [
     {
-      "skillId": "cobblebase:harvester",
+      "skillId": "cobblebase:finder_hea",
       "proficiency": 1
     },
     {
@@ -11,6 +11,14 @@
     },
     {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:irrigator",
       "proficiency": 1
     }
   ]

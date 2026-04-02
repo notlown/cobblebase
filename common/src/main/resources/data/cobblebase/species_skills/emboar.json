@@ -2,6 +2,14 @@
   "species": "emboar",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },
@@ -10,12 +18,12 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:guard",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
     }
   ]
 }

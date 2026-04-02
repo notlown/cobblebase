@@ -2,7 +2,7 @@
   "species": "carvanha",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_treasure",
       "proficiency": 1
     },
     {
@@ -10,11 +10,23 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:water_fill",
-      "proficiency": 2
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
     },
     {
       "skillId": "cobblebase:guard",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:water_fill",
       "proficiency": 2
     }
   ]

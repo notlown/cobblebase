@@ -2,28 +2,32 @@
   "species": "gardevoir",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:healer",
+      "skillId": "cobblebase:finder_exp",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:mentor",
-      "proficiency": 4
     },
     {
       "skillId": "cobblebase:finder_hea",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_exp",
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
     }
   ]
 }

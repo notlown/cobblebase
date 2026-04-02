@@ -2,8 +2,16 @@
   "species": "porygon-z",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 2
     }
   ]
 }

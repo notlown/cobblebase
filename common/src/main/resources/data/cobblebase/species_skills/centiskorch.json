@@ -2,12 +2,16 @@
   "species": "centiskorch",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_food",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:furnace_fuel",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:harvester",

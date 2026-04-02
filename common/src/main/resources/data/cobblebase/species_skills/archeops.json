@@ -2,6 +2,10 @@
   "species": "archeops",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
@@ -10,7 +14,11 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
       "proficiency": 2
     }
   ]

@@ -2,6 +2,14 @@
   "species": "snover",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },

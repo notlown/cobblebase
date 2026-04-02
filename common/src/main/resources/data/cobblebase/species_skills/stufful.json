@@ -2,7 +2,19 @@
   "species": "stufful",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
       "proficiency": 1
     }
   ]

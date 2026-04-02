@@ -2,24 +2,28 @@
   "species": "espeon",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:scout",
-      "proficiency": 4
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_exp",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:night_vision",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
     }
   ]
 }

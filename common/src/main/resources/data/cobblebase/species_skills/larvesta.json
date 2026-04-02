@@ -2,16 +2,20 @@
   "species": "larvesta",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:harvester",
       "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:furnace_fuel",
-      "proficiency": 2
     }
   ]
 }

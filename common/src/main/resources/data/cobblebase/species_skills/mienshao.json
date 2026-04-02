@@ -2,6 +2,10 @@
   "species": "mienshao",
   "skills": [
     {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },

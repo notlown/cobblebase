@@ -2,7 +2,19 @@
   "species": "jirachi",
   "skills": [
     {
-      "skillId": "cobblebase:recruiter",
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 5
     },
     {
@@ -10,8 +22,12 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:mentor",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
     }
   ]
 }

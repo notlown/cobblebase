@@ -2,6 +2,10 @@
   "species": "torchic",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },

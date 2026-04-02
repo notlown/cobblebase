@@ -2,7 +2,15 @@
   "species": "mew",
   "skills": [
     {
-      "skillId": "cobblebase:recruiter",
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 5
     },
     {
@@ -10,12 +18,12 @@
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:aura_boost",
-      "proficiency": 3
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
     }
   ]
 }

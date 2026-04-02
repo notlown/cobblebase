@@ -2,15 +2,35 @@
   "species": "lunala",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_exp",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:guard",
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
       "proficiency": 4
     }
   ]

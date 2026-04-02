@@ -2,7 +2,15 @@
   "species": "crobat",
   "skills": [
     {
-      "skillId": "cobblebase:scout",
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
@@ -10,8 +18,12 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:scout",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 2
     }
   ]
 }

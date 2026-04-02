@@ -2,8 +2,20 @@
   "species": "clefairy",
   "skills": [
     {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:harvester",
@@ -14,16 +26,8 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_hea",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:finder_see",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
+      "skillId": "cobblebase:mentor",
+      "proficiency": 1
     }
   ]
 }

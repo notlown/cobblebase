@@ -2,11 +2,15 @@
   "species": "alakazam",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:scout",
+      "skillId": "cobblebase:haste_boost",
       "proficiency": 4
     },
     {
@@ -14,12 +18,12 @@
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:finder_exp",
+      "skillId": "cobblebase:scout",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:haste_boost",
-      "proficiency": 4
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 2
     }
   ]
 }

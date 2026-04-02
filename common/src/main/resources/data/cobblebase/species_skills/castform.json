@@ -2,8 +2,12 @@
   "species": "castform",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_bal",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     }
   ]
 }

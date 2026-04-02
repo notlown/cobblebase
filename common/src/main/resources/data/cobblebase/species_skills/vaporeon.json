@@ -2,24 +2,28 @@
   "species": "vaporeon",
   "skills": [
     {
-      "skillId": "cobblebase:fishing",
-      "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:water_fill",
-      "proficiency": 5
-    },
-    {
       "skillId": "cobblebase:diving",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:water_breathing",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 5
     }
   ]
 }

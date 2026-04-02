@@ -6,12 +6,20 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:mining",
+      "skillId": "cobblebase:healer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 3
     }
   ]
 }

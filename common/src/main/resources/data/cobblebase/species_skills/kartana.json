@@ -2,6 +2,18 @@
   "species": "kartana",
   "skills": [
     {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
@@ -16,6 +28,14 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 4
     }
   ]
 }

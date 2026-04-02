@@ -2,6 +2,22 @@
   "species": "blissey",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:healer",
       "proficiency": 5
     },
@@ -10,15 +26,7 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_hea",
-      "proficiency": 5
-    },
-    {
-      "skillId": "cobblebase:finder_exp",
-      "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:saturation_boost",
       "proficiency": 3
     }
   ]

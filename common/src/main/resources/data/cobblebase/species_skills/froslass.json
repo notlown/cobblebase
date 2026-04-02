@@ -2,15 +2,27 @@
   "species": "froslass",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:snow_fill",
+      "skillId": "cobblebase:guard",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:guard",
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
       "proficiency": 3
     }
   ]

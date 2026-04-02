@@ -2,6 +2,10 @@
   "species": "palossand",
   "skills": [
     {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
@@ -11,6 +15,14 @@
     },
     {
       "skillId": "cobblebase:mining",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
       "proficiency": 3
     }
   ]

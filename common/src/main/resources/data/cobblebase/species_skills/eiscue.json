@@ -2,6 +2,10 @@
   "species": "eiscue",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },

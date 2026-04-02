@@ -2,6 +2,14 @@
   "species": "roserade",
   "skills": [
     {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
@@ -11,10 +19,6 @@
     },
     {
       "skillId": "cobblebase:irrigator",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:finder_hea",
       "proficiency": 3
     }
   ]

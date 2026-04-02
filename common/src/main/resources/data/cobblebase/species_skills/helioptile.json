@@ -2,12 +2,16 @@
   "species": "helioptile",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_bal",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:furnace_fuel",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
     }
   ]
 }

@@ -2,16 +2,24 @@
   "species": "revavroom",
   "skills": [
     {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:mining",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:finder_hea",
-      "proficiency": 2
     }
   ]
 }

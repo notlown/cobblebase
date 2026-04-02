@@ -6,8 +6,16 @@
       "proficiency": 2
     },
     {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 1
     }
   ]
 }

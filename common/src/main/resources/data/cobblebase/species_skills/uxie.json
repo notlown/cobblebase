@@ -2,12 +2,20 @@
   "species": "uxie",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_exp",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 3
     }
   ]
 }

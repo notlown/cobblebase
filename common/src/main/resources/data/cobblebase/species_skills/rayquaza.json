@@ -2,19 +2,35 @@
   "species": "rayquaza",
   "skills": [
     {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:guard",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:scout",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:aura_boost",
-      "proficiency": 5
-    },
-    {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:strength_boost",
       "proficiency": 4
     }
   ]

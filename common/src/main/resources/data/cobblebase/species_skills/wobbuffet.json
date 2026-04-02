@@ -2,12 +2,20 @@
   "species": "wobbuffet",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 1
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 3
     }
   ]
 }

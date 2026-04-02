@@ -2,16 +2,24 @@
   "species": "tentacool",
   "skills": [
     {
-      "skillId": "cobblebase:fishing",
+      "skillId": "cobblebase:diving",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:diving",
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:fishing",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 1
     }
   ]
 }

@@ -2,16 +2,20 @@
   "species": "glimmora",
   "skills": [
     {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:mining",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:finder_hea",
-      "proficiency": 2
     }
   ]
 }

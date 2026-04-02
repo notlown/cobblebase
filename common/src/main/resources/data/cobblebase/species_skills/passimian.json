@@ -2,6 +2,10 @@
   "species": "passimian",
   "skills": [
     {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },

@@ -2,12 +2,16 @@
   "species": "dedenne",
   "skills": [
     {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:furnace_fuel",
-      "proficiency": 2
+      "skillId": "cobblebase:healer",
+      "proficiency": 1
     },
     {
       "skillId": "cobblebase:mentor",

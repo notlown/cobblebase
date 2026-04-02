@@ -2,12 +2,20 @@
   "species": "abra",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:haste_boost",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 1
     }
   ]
 }

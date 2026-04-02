@@ -2,19 +2,23 @@
   "species": "mudkip",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:fishing",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:water_fill",
-      "proficiency": 1
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:water_fill",
       "proficiency": 1
     }
   ]

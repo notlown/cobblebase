@@ -2,11 +2,15 @@
   "species": "manaphy",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:fishing",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:diving",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 5
     },
     {
@@ -14,8 +18,8 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 5
     }
   ]
 }

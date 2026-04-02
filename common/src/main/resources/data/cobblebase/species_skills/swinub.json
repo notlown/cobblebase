@@ -2,15 +2,23 @@
   "species": "swinub",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:snow_fill",
+      "skillId": "cobblebase:mining",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:mining",
+      "skillId": "cobblebase:snow_fill",
       "proficiency": 2
     }
   ]

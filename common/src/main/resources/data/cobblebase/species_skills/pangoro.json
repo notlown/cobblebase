@@ -6,8 +6,24 @@
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:strength_boost",

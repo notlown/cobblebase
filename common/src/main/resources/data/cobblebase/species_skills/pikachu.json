@@ -2,6 +2,10 @@
   "species": "pikachu",
   "skills": [
     {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },

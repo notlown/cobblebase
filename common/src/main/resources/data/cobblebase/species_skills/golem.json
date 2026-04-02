@@ -2,16 +2,24 @@
   "species": "golem",
   "skills": [
     {
-      "skillId": "cobblebase:mining",
-      "proficiency": 5
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 3
+      "skillId": "cobblebase:mining",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 2
     }
   ]
 }

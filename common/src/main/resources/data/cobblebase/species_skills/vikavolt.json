@@ -2,6 +2,10 @@
   "species": "vikavolt",
   "skills": [
     {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
@@ -10,8 +14,8 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:furnace_fuel",
-      "proficiency": 3
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 2
     }
   ]
 }

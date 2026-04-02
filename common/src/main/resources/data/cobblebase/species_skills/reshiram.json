@@ -2,15 +2,27 @@
   "species": "reshiram",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:furnace_fuel",
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
       "proficiency": 4
     }
   ]

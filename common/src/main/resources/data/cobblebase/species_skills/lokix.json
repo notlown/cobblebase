@@ -2,16 +2,24 @@
   "species": "lokix",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_treasure",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:harvester",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
     }
   ]
 }

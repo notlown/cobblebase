@@ -2,6 +2,14 @@
   "species": "walrein",
   "skills": [
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
@@ -10,8 +18,8 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:fishing",
-      "proficiency": 4
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:water_fill",

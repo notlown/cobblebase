@@ -2,20 +2,36 @@
   "species": "doublade",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:mining",
-      "proficiency": 3
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:finder_held",
+      "skillId": "cobblebase:mining",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 1
     }
   ]
 }

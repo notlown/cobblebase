@@ -2,7 +2,7 @@
   "species": "wooper",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_ore",
       "proficiency": 1
     },
     {
@@ -10,11 +10,19 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:water_fill",
-      "proficiency": 2
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
     },
     {
       "skillId": "cobblebase:mining",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:water_fill",
       "proficiency": 2
     }
   ]

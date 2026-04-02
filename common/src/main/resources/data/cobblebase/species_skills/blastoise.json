@@ -2,15 +2,15 @@
   "species": "blastoise",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:fishing",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:water_fill",
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
@@ -18,7 +18,11 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:water_fill",
       "proficiency": 4
     }
   ]

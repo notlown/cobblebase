@@ -2,8 +2,8 @@
   "species": "flareon",
   "skills": [
     {
-      "skillId": "cobblebase:lava_fill",
-      "proficiency": 4
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:furnace_fuel",
@@ -12,6 +12,14 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:lava_fill",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 2
     }
   ]
 }

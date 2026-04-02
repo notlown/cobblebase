@@ -2,7 +2,19 @@
   "species": "tinkaton",
   "skills": [
     {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:healer",
       "proficiency": 3
     },
     {
@@ -12,10 +24,6 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:finder_smith",
-      "proficiency": 5
     }
   ]
 }

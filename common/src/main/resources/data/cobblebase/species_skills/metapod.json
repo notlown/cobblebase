@@ -2,16 +2,16 @@
   "species": "metapod",
   "skills": [
     {
-      "skillId": "cobblebase:harvester",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:finder_see",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
     }
   ]
 }

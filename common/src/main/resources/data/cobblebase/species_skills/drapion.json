@@ -2,16 +2,24 @@
   "species": "drapion",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_hea",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
     }
   ]
 }

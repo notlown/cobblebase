@@ -2,6 +2,14 @@
   "species": "blaziken",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },
@@ -10,20 +18,16 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:guard",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:guard",
       "proficiency": 4
     },
     {
       "skillId": "cobblebase:jump_boost",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:finder_stat",
-      "proficiency": 4
     }
   ]
 }

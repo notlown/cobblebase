@@ -2,6 +2,18 @@
   "species": "celebi",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:growth_aura",
       "proficiency": 5
     },
@@ -10,12 +22,12 @@
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:finder_see",
-      "proficiency": 5
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
     }
   ]
 }

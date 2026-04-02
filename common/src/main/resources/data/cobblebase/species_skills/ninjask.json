@@ -2,6 +2,14 @@
   "species": "ninjask",
   "skills": [
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:harvester",
       "proficiency": 4
     },
@@ -10,16 +18,8 @@
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:finder_see",
-      "proficiency": 4
-    },
-    {
       "skillId": "cobblebase:speed_boost",
-      "proficiency": 4
+      "proficiency": 5
     }
   ]
 }

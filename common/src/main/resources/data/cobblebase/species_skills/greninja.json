@@ -2,7 +2,7 @@
   "species": "greninja",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
+      "skillId": "cobblebase:finder_treasure",
       "proficiency": 3
     },
     {
@@ -10,11 +10,27 @@
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:guard",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 4
     }
   ]

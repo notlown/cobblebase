@@ -7,11 +7,15 @@
     },
     {
       "skillId": "cobblebase:harvester",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:mining",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 2
     }
   ]
 }

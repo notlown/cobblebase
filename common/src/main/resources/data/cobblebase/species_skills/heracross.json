@@ -2,7 +2,15 @@
   "species": "heracross",
   "skills": [
     {
-      "skillId": "cobblebase:harvester",
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
     {
@@ -10,15 +18,11 @@
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:mining",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:finder_see",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:gatherer",
       "proficiency": 3
     }
   ]

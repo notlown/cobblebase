@@ -2,8 +2,16 @@
   "species": "slurpuff",
   "skills": [
     {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:mentor",
@@ -11,10 +19,6 @@
     },
     {
       "skillId": "cobblebase:saturation_boost",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:finder_food",
       "proficiency": 3
     }
   ]

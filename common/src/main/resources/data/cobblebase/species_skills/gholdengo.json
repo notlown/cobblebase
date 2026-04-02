@@ -2,7 +2,27 @@
   "species": "gholdengo",
   "skills": [
     {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
       "proficiency": 2
     },
     {
@@ -10,12 +30,12 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:guard",
-      "proficiency": 3
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_treasure",
-      "proficiency": 5
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

@@ -2,8 +2,12 @@
   "species": "cresselia",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_exp",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mentor",

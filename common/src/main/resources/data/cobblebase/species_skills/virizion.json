@@ -2,20 +2,28 @@
   "species": "virizion",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_see",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:harvester",
-      "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:irrigator",
+      "skillId": "cobblebase:finder_stat",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 4
     }
   ]
 }

@@ -2,15 +2,27 @@
   "species": "primarina",
   "skills": [
     {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:fishing",
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:healer",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:mentor",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 4
     }
   ]

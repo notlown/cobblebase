@@ -2,7 +2,11 @@
   "species": "zubat",
   "skills": [
     {
-      "skillId": "cobblebase:scout",
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_see",
       "proficiency": 1
     },
     {
@@ -12,6 +16,10 @@
     {
       "skillId": "cobblebase:night_vision",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 1
     }
   ]
 }

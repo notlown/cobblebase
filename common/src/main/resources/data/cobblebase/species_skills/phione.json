@@ -2,12 +2,16 @@
   "species": "phione",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "skillId": "cobblebase:fishing",
+      "proficiency": 5
     },
     {
-      "skillId": "cobblebase:fishing",
-      "proficiency": 4
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:water_fill",

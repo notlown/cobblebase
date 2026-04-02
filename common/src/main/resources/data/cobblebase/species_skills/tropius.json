@@ -2,20 +2,24 @@
   "species": "tropius",
   "skills": [
     {
-      "skillId": "cobblebase:harvester",
-      "proficiency": 5
-    },
-    {
-      "skillId": "cobblebase:scout",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:finder_see",
       "proficiency": 5
     },
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
     }
   ]
 }

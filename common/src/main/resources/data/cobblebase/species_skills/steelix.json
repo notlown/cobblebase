@@ -2,28 +2,32 @@
   "species": "steelix",
   "skills": [
     {
-      "skillId": "cobblebase:mining",
-      "proficiency": 5
-    },
-    {
       "skillId": "cobblebase:archeologist",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:finder_ore",
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:resistance_boost",
+      "skillId": "cobblebase:mining",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:finder_smith",
-      "proficiency": 3
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 5
     }
   ]
 }

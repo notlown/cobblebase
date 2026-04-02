@@ -2,20 +2,28 @@
   "species": "jigglypuff",
   "skills": [
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:healer",
-      "proficiency": 2
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 1
     },
     {
       "skillId": "cobblebase:finder_hea",
       "proficiency": 2
     },
     {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 1
     }
   ]
 }

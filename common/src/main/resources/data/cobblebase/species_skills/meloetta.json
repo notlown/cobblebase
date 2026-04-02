@@ -2,8 +2,20 @@
   "species": "meloetta",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_bal",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:mentor",

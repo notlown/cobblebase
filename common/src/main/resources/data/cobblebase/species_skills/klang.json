@@ -2,6 +2,14 @@
   "species": "klang",
   "skills": [
     {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },

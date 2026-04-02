@@ -2,8 +2,8 @@
   "species": "bellsprout",
   "skills": [
     {
-      "skillId": "cobblebase:harvester",
-      "proficiency": 2
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 1
     },
     {
       "skillId": "cobblebase:finder_see",
@@ -11,6 +11,14 @@
     },
     {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:irrigator",
       "proficiency": 1
     }
   ]

@@ -2,11 +2,15 @@
   "species": "samurott",
   "skills": [
     {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:fishing",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
     {
@@ -14,7 +18,7 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:water_breathing",
       "proficiency": 4
     }
   ]

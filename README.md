@@ -245,7 +245,6 @@ Output JAR in `fabric/build/libs/`. Requires **Java 21**.
 
 ## Credits
 
-- Inspired by [Cobbleworkers](https://github.com/Accieo/cobbleworkers) by [Accieo](https://github.com/Accieo)
 - Built by [notlown](https://github.com/notlown)
 
 ## License

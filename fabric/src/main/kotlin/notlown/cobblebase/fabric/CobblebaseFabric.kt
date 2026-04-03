@@ -141,11 +141,12 @@ object CobblebaseFabric : ModInitializer {
      * skill assignments, and override info, then sends to the requesting player.
      */
     private fun handleAdminSpeciesRequest(player: net.minecraft.server.network.ServerPlayerEntity) {
-        // Get all species from Cobblemon
+        // Get all species from Cobblemon + any custom overrides (fakemons etc.)
         val allSpecies = try {
-            com.cobblemon.mod.common.api.pokemon.PokemonSpecies.species
+            val cobblemonSpecies = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.species
                 .map { it.name.lowercase() }
-                .sorted()
+            val overrideSpecies = SpeciesSkillOverrides.getAllOverriddenSpecies()
+            (cobblemonSpecies + overrideSpecies).distinct().sorted()
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to get Cobblemon species: ${e.message}")
             emptyList()

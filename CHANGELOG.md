@@ -46,6 +46,13 @@ Skills auto-assigned by typing, base stats, and BST tiers:
 - **Water tethering mixin** — Prevents Cobblemon from teleporting swimming Pokemon out of water
 - **Diving mons stay in water** — `canWalkOnWater` set via reflection for diving Pokemon
 
+### Balance & Immersion
+- **Standardized cooldowns** — All loot-producing jobs now use 300s base cooldown (Prof 1: ~8 min, Prof 3: 5 min, Prof 5: ~1.7 min)
+- **Swim speed capped** — Water mons (Sharpedo, Basculegion etc.) limited to 0.15 swimSpeed to prevent zooming
+- **Movement speed halved** — NavigationHelper default speed reduced from 1.0 to 0.5 for calmer base gameplay
+- **Gatherer speed reduced** — Prof 1: 0.4, Prof 5: 0.6 (was 0.8 - 2.0)
+- **Idle wandering** — All mons now wander randomly (15 block radius) when idle instead of standing still on the pasture box
+
 **Total species: 8,426**
 
 ---

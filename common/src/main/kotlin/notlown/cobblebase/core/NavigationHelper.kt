@@ -37,7 +37,7 @@ object NavigationHelper {
      * Throttled to once per second to avoid pathfinding spam.
      * Same logic as Cobbleworkers' navigateTo.
      */
-    fun navigateTo(pokemonEntity: PokemonEntity, targetPos: BlockPos, speed: Double = 1.0) {
+    fun navigateTo(pokemonEntity: PokemonEntity, targetPos: BlockPos, speed: Double = 0.5) {
         val world = pokemonEntity.world
         val now = world.time
         val id = pokemonEntity.pokemon.uuid

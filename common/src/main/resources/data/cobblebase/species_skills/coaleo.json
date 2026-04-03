@@ -3,31 +3,35 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_bui",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:finder_ore",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:furnace_fuel",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:mentor",
+      "skillId": "cobblebase:healer",
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:mining",
-      "proficiency": 4
+      "proficiency": 5
     }
   ]
 }

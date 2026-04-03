@@ -2,24 +2,36 @@
   "species": "mesopolin",
   "skills": [
     {
-      "skillId": "cobblebase:finder_bui",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:finder_ore",
+      "skillId": "cobblebase:aura_boost",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:mining",
+      "skillId": "cobblebase:healer",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 5
     }
   ]
 }

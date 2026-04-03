@@ -2,16 +2,20 @@
   "species": "hoglog",
   "skills": [
     {
-      "skillId": "cobblebase:finder_exp",
-      "proficiency": 2
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
     },
     {
-      "skillId": "cobblebase:finder_see",
+      "skillId": "cobblebase:finder_exp",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
@@ -19,19 +23,27 @@
     },
     {
       "skillId": "cobblebase:harvester",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:healer",
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:healer",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:irrigator",
-      "proficiency": 2
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 3
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
     }
   ]
 }

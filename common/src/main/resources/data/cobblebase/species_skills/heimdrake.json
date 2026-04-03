@@ -3,11 +3,11 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_ore",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",

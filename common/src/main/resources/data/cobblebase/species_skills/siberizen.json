@@ -3,15 +3,19 @@
   "skills": [
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:mining",
+      "skillId": "cobblebase:healer",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:scout",
@@ -19,7 +23,7 @@
     },
     {
       "skillId": "cobblebase:snow_fill",
-      "proficiency": 3
+      "proficiency": 4
     }
   ]
 }

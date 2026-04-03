@@ -2,16 +2,20 @@
   "species": "asphere",
   "skills": [
     {
-      "skillId": "cobblebase:finder_ore",
-      "proficiency": 2
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
     },
     {
-      "skillId": "cobblebase:furnace_fuel",
+      "skillId": "cobblebase:finder_ore",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
@@ -19,15 +23,23 @@
     },
     {
       "skillId": "cobblebase:healer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
       "proficiency": 4
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 4
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:scout",

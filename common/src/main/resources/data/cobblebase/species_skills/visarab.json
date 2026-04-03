@@ -2,24 +2,40 @@
   "species": "visarab",
   "skills": [
     {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:finder_see",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:mentor",
+      "skillId": "cobblebase:healer",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:mining",
+      "skillId": "cobblebase:lucky_charm",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:scout",

@@ -3,19 +3,19 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_see",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:harvester",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:irrigator",
-      "proficiency": 2
+      "proficiency": 3
     }
   ]
 }

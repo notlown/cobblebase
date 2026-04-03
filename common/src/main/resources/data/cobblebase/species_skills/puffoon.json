@@ -11,11 +11,15 @@
     },
     {
       "skillId": "cobblebase:guard",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:irrigator",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:scout",

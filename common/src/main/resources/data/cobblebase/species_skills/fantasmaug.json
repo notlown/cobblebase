@@ -3,19 +3,19 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_hea",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:guard",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:mentor",
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
     }
   ]
 }

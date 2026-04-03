@@ -3,31 +3,31 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_exp",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:fishing",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:healer",
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:irrigator",
+      "skillId": "cobblebase:gatherer",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:mentor",
+      "skillId": "cobblebase:healer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:irrigator",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:water_fill",
-      "proficiency": 2
+      "proficiency": 3
     }
   ]
 }

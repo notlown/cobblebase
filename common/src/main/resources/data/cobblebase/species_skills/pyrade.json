@@ -3,15 +3,15 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_ore",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:furnace_fuel",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",

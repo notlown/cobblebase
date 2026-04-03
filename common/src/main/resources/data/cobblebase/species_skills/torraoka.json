@@ -2,28 +2,36 @@
   "species": "torraoka",
   "skills": [
     {
-      "skillId": "cobblebase:finder_ore",
+      "skillId": "cobblebase:aura_boost",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:finder_stat",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:mentor",
+      "skillId": "cobblebase:healer",
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:mining",
-      "proficiency": 3
+      "proficiency": 4
     }
   ]
 }

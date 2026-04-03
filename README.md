@@ -11,6 +11,7 @@
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=minecraft)](https://minecraft.net)
 [![Cobblemon](https://img.shields.io/badge/Cobblemon-1.7.0+-E8532E?style=flat-square)](https://cobblemon.com)
 [![Fabric](https://img.shields.io/badge/Fabric-0.16.14+-DBD0B4?style=flat-square)](https://fabricmc.net)
+[![NeoForge](https://img.shields.io/badge/NeoForge-21.1+-F16436?style=flat-square)](https://neoforged.net)
 [![License: MPL-2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg?style=flat-square)](https://opensource.org/licenses/MPL-2.0)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/6As3sVZgVT)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20Us-FF5E5B?style=flat-square&logo=ko-fi&logoColor=white)](https://ko-fi.com/notlown)
@@ -205,22 +206,24 @@ Everything is also JSON-configurable and customizable via **datapacks** — serv
 
 ### Requirements
 - Minecraft **1.21.1**
-- Fabric Loader **0.16.14+**
-- Fabric Language Kotlin
 - Cobblemon **1.7.0+**
+- **Fabric**: Fabric Loader 0.16.14+ and Fabric Language Kotlin
+- **NeoForge**: NeoForge 21.1+ and Kotlin for Forge 5.x
 
 ### Steps
-1. Download the latest JAR from [Releases](https://github.com/notlown/cobblebase/releases)
-2. Place it in your `mods/` folder alongside Cobblemon and Fabric Language Kotlin
+1. Download the latest JAR for your platform (Fabric or NeoForge) from [Releases](https://github.com/notlown/cobblebase/releases)
+2. Place it in your `mods/` folder alongside Cobblemon and the Kotlin language adapter for your platform
 3. Launch the game — press **K** to configure settings
 
 ### Building from Source
 ```bash
 git clone https://github.com/notlown/cobblebase.git
 cd cobblebase
-./gradlew fabric:build
+./gradlew build          # builds both Fabric and NeoForge
+./gradlew fabric:build   # Fabric only
+./gradlew neoforge:build # NeoForge only
 ```
-Output JAR in `fabric/build/libs/`. Requires **Java 21**.
+Output JARs in `fabric/build/libs/` and `neoforge/build/libs/`. Requires **Java 21**.
 
 ---
 

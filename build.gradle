@@ -46,6 +46,16 @@ subprojects {
             name = "Mod menu"
             url = "https://maven.terraformersmc.com/releases/"
         }
+        // NeoForge
+        maven {
+            name = "NeoForge"
+            url = "https://maven.neoforged.net/releases"
+        }
+        // Kotlin for Forge
+        maven {
+            name = "Kotlin for Forge"
+            url = "https://thedarkcolour.github.io/KotlinForForge/"
+        }
     }
 
     loom {

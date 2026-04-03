@@ -164,10 +164,8 @@ object MiningExecutor : SkillExecutor {
         val y = pokemonEntity.y
         val z = pokemonEntity.z
 
-        // Digging animation (physical attack motions)
-        SkillEffects.sendAnimationPublic(world, pokemonEntity, "dig", "scratch", "pound", "physical")
-
-        // Stone/gravel/dust particles at ground level
+        // Only particles during digging — NO animation/cry (would spam)
+        // The cry plays only on successful find via playSuccess
         world.spawnParticles(ParticleTypes.ASH, x, y + 0.3, z, 12, 0.4, 0.1, 0.4, 0.02)
         world.spawnParticles(ParticleTypes.SMOKE, x, y + 0.2, z, 6, 0.3, 0.1, 0.3, 0.01)
         world.spawnParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, x, y + 0.5, z, 3, 0.2, 0.2, 0.2, 0.005)

@@ -1,5 +1,6 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.LogManager
 import com.cobblemon.mod.common.CobblemonEntities
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
@@ -121,18 +122,14 @@ object RecruiterExecutor : SkillExecutor {
             pendingCry[entity.id] = world.time + 20L // cry after 1 second
 
             // Notify nearby players
-            val bucketColor = when (bucket) {
-                SpawnData.Bucket.ULTRA_RARE -> Formatting.GOLD
-                SpawnData.Bucket.RARE -> Formatting.LIGHT_PURPLE
-                SpawnData.Bucket.UNCOMMON -> Formatting.GREEN
-                else -> Formatting.WHITE
-            }
-            val bucketLabel = when (bucket) {
-                SpawnData.Bucket.ULTRA_RARE -> "Ultra Rare"
-                SpawnData.Bucket.RARE -> "Rare"
-                SpawnData.Bucket.UNCOMMON -> "Uncommon"
-                else -> "Common"
-            }
+            val bucketColor = if (bucket == SpawnData.Bucket.ULTRA_RARE) Formatting.GOLD
+                else if (bucket == SpawnData.Bucket.RARE) Formatting.LIGHT_PURPLE
+                else if (bucket == SpawnData.Bucket.UNCOMMON) Formatting.GREEN
+                else Formatting.WHITE
+            val bucketLabel = if (bucket == SpawnData.Bucket.ULTRA_RARE) "Ultra Rare"
+                else if (bucket == SpawnData.Bucket.RARE) "Rare"
+                else if (bucket == SpawnData.Bucket.UNCOMMON) "Uncommon"
+                else "Common"
             val message = Text.literal("")
                 .append(Text.literal("[Cobblebase] ").formatted(Formatting.AQUA))
                 .append(Text.literal("${pokemonEntity.pokemon.species.name}").formatted(Formatting.YELLOW))
@@ -149,6 +146,13 @@ object RecruiterExecutor : SkillExecutor {
                     player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f)
                 }
             }
+
+            // Log to activity log
+            val logRarity = if (bucket == SpawnData.Bucket.ULTRA_RARE) LogManager.Rarity.ULTRA_RARE
+                else if (bucket == SpawnData.Bucket.RARE) LogManager.Rarity.RARE
+                else if (bucket == SpawnData.Bucket.UNCOMMON) LogManager.Rarity.UNCOMMON
+                else LogManager.Rarity.COMMON
+            LogManager.log(origin, world.time, pokemonEntity.pokemon.species.name, "Recruited", "$speciesName (Lv.$level)", logRarity)
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Recruiter] Failed to spawn $speciesName: ${e.message}")
         }

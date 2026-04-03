@@ -200,8 +200,7 @@ class BuffsPanel(
         val contentTop = panelY + HEADER_HEIGHT
         val contentBottom = panelY + panelH - 28
 
-        // Header
-        context.drawCenteredTextWithShadow(textRenderer, "\u00A7fActive Buffs & Jobs", panelX + panelW / 2, panelY + 4, 0xFFFFFF)
+
 
         if (entries.isEmpty()) {
             context.drawCenteredTextWithShadow(textRenderer, "\u00A77No Pokemon in this Pasture", panelX + panelW / 2, panelY + panelH / 2 - 4, 0x888888)

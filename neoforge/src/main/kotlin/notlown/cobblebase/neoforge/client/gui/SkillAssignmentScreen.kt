@@ -105,7 +105,6 @@ class SkillAssignmentScreen(
         context.fill(panelX, panelY, panelX + panelW, panelY + HEADER_HEIGHT, PANEL_HEADER)
         context.fill(panelX, panelY + HEADER_HEIGHT, panelX + panelW, panelY + HEADER_HEIGHT + 1, PANEL_BORDER)
         context.drawCenteredTextWithShadow(textRenderer, "\u00A7l\u00A7fSkill Assignment", panelX + panelW / 2, panelY + 6, 0xFFFFFF)
-        context.drawCenteredTextWithShadow(textRenderer, "\u00A77Click to assign \u00A78| \u00A77Scroll: \u2191\u2193 \u00A78| \u00A77Shift+Scroll: \u2190\u2192", panelX + panelW / 2, panelY + 20, 0x888888)
 
         val headerY = contentY - 12
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", panelX + PANEL_PADDING, headerY, 0xFFFF55)

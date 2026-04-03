@@ -104,8 +104,7 @@ class DiscoveryPanel(
         val contentTop = panelY + HEADER_HEIGHT + FILTER_HEIGHT + 6
         val contentBottom = panelY + panelH - 28
 
-        // Header
-        context.drawCenteredTextWithShadow(textRenderer, "\u00A7fDiscovery Map", panelX + panelW / 2, panelY + 4, 0xFFFFFF)
+
 
         val entries = getFilteredDiscoveries()
 

@@ -26,11 +26,13 @@ class SkillsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    private val ROW_HEIGHT = 42
-    private val HEADER_HEIGHT = 20
+    private val ROW_HEIGHT_SMALL = 24
+    private val ROW_HEIGHT_LARGE = 42
+    private val HEADER_HEIGHT = 14
     private val PANEL_PADDING = 8
     private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4
     private val NAME_WIDTH = 90 + ICON_OFFSET
+    private val AURA_ICON_WIDTH = 15
     private val BTN_WIDTH = 58
     private val BTN_HEIGHT = 16
     private val BTN_GAP = 2
@@ -44,6 +46,9 @@ class SkillsPanel(
     private var contentY = 0
     private var isDraggingScrollbar = false
 
+    private val rowOffsets = mutableListOf<Int>()
+    private val rowHeights = mutableListOf<Int>()
+
     private var trackX = 0
     private var trackTop = 0
     private var trackHeight = 0
@@ -54,12 +59,16 @@ class SkillsPanel(
 
     fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
         allButtons.clear()
+        rowOffsets.clear()
+        rowHeights.clear()
         scrollX = 0
         scrollY = 0
         contentY = panelY + HEADER_HEIGHT + PANEL_PADDING
 
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
             .dimensions(panelX + panelW - 54, panelY + panelH - 22, 46, 16).build())
+
+        var cumulativeY = 0
 
         pokemonList.forEachIndexed { index, pokemonData ->
             val pokemonId = pokemonData.pokemonId
@@ -68,9 +77,26 @@ class SkillsPanel(
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
 
-            val rowY = contentY + index * ROW_HEIGHT
-            val btnStartX = panelX + PANEL_PADDING + NAME_WIDTH
+            val hasAura = availableSkills.any { entry ->
+                val skillDef = SkillRegistry.get(entry.skillId)
+                skillDef != null && BaseManager.isBuffExecutor(skillDef.executor)
+            }
+
+            val assignableCount = 1 + availableSkills.count { entry ->
+                val skillDef = SkillRegistry.get(entry.skillId)
+                skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor)
+            }
+
+            val btnStartX = panelX + PANEL_PADDING + NAME_WIDTH + (if (hasAura) AURA_ICON_WIDTH else 0)
             val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
+            val btnsPerRow = ((maxBtnX - btnStartX) / (BTN_WIDTH + BTN_GAP)) + 1
+            val needsTwoRows = assignableCount > btnsPerRow
+            val rowH = if (needsTwoRows) ROW_HEIGHT_LARGE else ROW_HEIGHT_SMALL
+
+            rowOffsets.add(cumulativeY)
+            rowHeights.add(rowH)
+
+            val rowY = contentY + cumulativeY
             var btnX = btnStartX
             var btnY = rowY
 
@@ -79,7 +105,6 @@ class SkillsPanel(
 
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
-                // Skip buff skills — they are passive and not assignable
                 if (BaseManager.isBuffExecutor(skillDef.executor)) continue
                 if (btnX > maxBtnX) {
                     btnX = btnStartX
@@ -91,25 +116,26 @@ class SkillsPanel(
                 ))
                 btnX += BTN_WIDTH + BTN_GAP
             }
+
+            cumulativeY += rowH
         }
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val headerY = contentY - 12
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", panelX + PANEL_PADDING, headerY, 0xFFFF55)
-        context.drawTextWithShadow(textRenderer, "\u00A7eSkills", panelX + PANEL_PADDING + NAME_WIDTH, headerY, 0xFFFF55)
-
-        context.drawCenteredTextWithShadow(textRenderer, "\u00A77Click to assign \u00A78| \u00A77Scroll: \u2191\u2193 \u00A78| \u00A77Shift+Scroll: \u2190\u2192", panelX + panelW / 2, panelY + 3, 0x888888)
+        context.drawTextWithShadow(textRenderer, "\u00A7eSkills", panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH, headerY, 0xFFFF55)
 
         val contentBottom = panelY + panelH - 28
         context.enableScissor(panelX, contentY - 2, panelX + panelW, contentBottom)
 
         pokemonList.forEachIndexed { index, pokemonData ->
-            val ry = contentY + index * ROW_HEIGHT + scrollY
-            if (ry < contentY - ROW_HEIGHT || ry > contentBottom) return@forEachIndexed
+            val rowH = rowHeights[index]
+            val ry = contentY + rowOffsets[index] + scrollY
+            if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) return@forEachIndexed
 
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
-            context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
+            context.fill(panelX + 1, ry, panelX + panelW - 1, ry + rowH - 1, rowColor)
 
             val name = pokemonData.displayName.string
             PokemonSpriteHelper.renderIcon(
@@ -119,13 +145,29 @@ class SkillsPanel(
 
             context.drawTextWithShadow(textRenderer, name, panelX + PANEL_PADDING + ICON_OFFSET, ry + 4, 0xFFFFFF)
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", panelX + PANEL_PADDING + ICON_OFFSET, ry + 14, 0xAAAAAA)
+
+            // Aura icon between Pokemon and Skills (only if mon has buff)
+            val speciesName = pokemonData.species.path
+            val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
+            if (speciesSkills != null) {
+                val buffEmoji = speciesSkills.skills.firstNotNullOfOrNull { entry ->
+                    val skillDef = SkillRegistry.get(entry.skillId)
+                    if (skillDef != null && BaseManager.isBuffExecutor(skillDef.executor))
+                        getBuffEmoji(skillDef.executor)
+                    else null
+                }
+                if (buffEmoji != null) {
+                    val auraX = panelX + PANEL_PADDING + NAME_WIDTH
+                    context.drawTextWithShadow(textRenderer, buffEmoji, auraX, ry + 4, 0xFFFFFF)
+                }
+            }
         }
 
         for (btn in allButtons) {
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
 
-            if (ry < contentY - ROW_HEIGHT || ry > contentBottom) continue
+            if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) continue
             if (rx + BTN_WIDTH < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
 
             val hovered = mouseX in rx..(rx + BTN_WIDTH) && mouseY in ry..(ry + BTN_HEIGHT)
@@ -164,7 +206,7 @@ class SkillsPanel(
 
         context.disableScissor()
 
-        totalContentHeight = pokemonList.size * ROW_HEIGHT
+        totalContentHeight = if (rowOffsets.isEmpty()) 0 else rowOffsets.last() + rowHeights.last()
         visibleHeight = contentBottom - contentY
         if (totalContentHeight > visibleHeight) {
             trackX = panelX + panelW - 8
@@ -254,5 +296,17 @@ class SkillsPanel(
             }
         }
         PacketDistributor.sendToServer(SkillAssignmentC2SPacket(pokemonId, skillId ?: ""))
+    }
+
+    private fun getBuffEmoji(executor: String): String? {
+        if (executor == "speed_boost") return "\u26A1"
+        if (executor == "strength_boost") return "\uD83D\uDCAA"
+        if (executor == "resistance_boost") return "\uD83D\uDEE1"
+        if (executor == "night_vision") return "\uD83D\uDC41"
+        if (executor == "water_breathing") return "\uD83E\uDEE7"
+        if (executor == "jump_boost") return "\uD83E\uDD98"
+        if (executor == "haste_boost") return "\u2692"
+        if (executor == "saturation_boost") return "\uD83C\uDF56"
+        return null
     }
 }

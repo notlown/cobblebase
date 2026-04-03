@@ -60,63 +60,43 @@ object DivingExecutor : SkillExecutor {
             return
         }
 
-        val inWater = isInWater(world, pokemonEntity)
+        // Passive approach (like CobbleWorkersPlus):
+        // Don't navigate the mon to water — let Cobblemon's wander AI do it naturally.
+        // Only generate loot when the mon happens to be touching water.
+        if (!pokemonEntity.isTouchingWater) return
 
-        // Track if mon has ever reached water
-        if (inWater) {
-            hasReachedWater[pokemonId] = true
+        // Mon is in water — check cooldown
+        val lastTime = lastDiveTime[pokemonId] ?: 0L
+        if (now - lastTime < cooldownTicks) {
+            // Bubble particles while diving
+            if (now % 20 == 0L) {
+                world.spawnParticles(
+                    ParticleTypes.BUBBLE,
+                    pokemonEntity.x, pokemonEntity.y + 0.5, pokemonEntity.z,
+                    5, 0.3, 0.2, 0.3, 0.01
+                )
+            }
+            return
         }
 
-        // Once the mon has reached water, run the cooldown timer regardless
-        // of whether Cobblemon's tethering pulls it back out briefly
-        val reachedWater = hasReachedWater[pokemonId] == true
-
-        if (reachedWater) {
-            val lastTime = lastDiveTime[pokemonId] ?: now.also { lastDiveTime[pokemonId] = now }
-            if (now - lastTime < cooldownTicks) {
-                // Keep navigating to water while waiting
-                if (!inWater) {
-                    val target = waterTarget[pokemonId] ?: findWater(world, origin, skill.searchRadius)
-                    if (target != null) {
-                        waterTarget[pokemonId] = target
-                        NavigationHelper.navigateTo(pokemonEntity, target)
-                    }
-                } else if (now % 20 == 0L) {
-                    world.spawnParticles(
-                        ParticleTypes.BUBBLE,
-                        pokemonEntity.x, pokemonEntity.y + 0.5, pokemonEntity.z,
-                        5, 0.3, 0.2, 0.3, 0.01
-                    )
-                }
-                return
-            }
-
-            // Cooldown done — generate loot (even if briefly out of water due to tethering)
-            generateDiveLoot(world, pokemonEntity, pokemonId, now, skill)
-            val treasure = heldItems[pokemonId]
-            if (!treasure.isNullOrEmpty()) {
-                world.spawnParticles(
-                    ParticleTypes.BUBBLE_COLUMN_UP,
-                    pokemonEntity.x, pokemonEntity.y, pokemonEntity.z,
-                    20, 0.5, 0.5, 0.5, 0.1
+        // Cooldown done — generate dive loot
+        generateDiveLoot(world, pokemonEntity, pokemonId, now, skill)
+        val treasure = heldItems[pokemonId]
+        if (!treasure.isNullOrEmpty()) {
+            world.spawnParticles(
+                ParticleTypes.BUBBLE_COLUMN_UP,
+                pokemonEntity.x, pokemonEntity.y, pokemonEntity.z,
+                20, 0.5, 0.5, 0.5, 0.1
+            )
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            for (item in treasure) {
+                LogManager.log(
+                    origin, world.time,
+                    pokemonEntity.pokemon.species.name,
+                    "Dived",
+                    "${item.name.string} x${item.count}",
+                    LogManager.Rarity.UNCOMMON
                 )
-                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
-                for (item in treasure) {
-                    LogManager.log(
-                        origin, world.time,
-                        pokemonEntity.pokemon.species.name,
-                        "Dived",
-                        "${item.name.string} x${item.count}",
-                        LogManager.Rarity.UNCOMMON
-                    )
-                }
-            }
-        } else {
-            // Haven't reached water yet — navigate there
-            val target = waterTarget[pokemonId] ?: findWater(world, origin, skill.searchRadius)
-            if (target != null) {
-                waterTarget[pokemonId] = target
-                NavigationHelper.navigateTo(pokemonEntity, target)
             }
         }
     }

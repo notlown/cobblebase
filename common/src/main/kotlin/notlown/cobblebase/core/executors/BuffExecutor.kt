@@ -108,8 +108,8 @@ class BuffExecutor(
 
         lastBuffTime[pokemonId] = now
 
-        // Subtle particles at the pasture origin when buff is applied
-        if (appliedCount > 0) {
+        // Very subtle particles at the pasture origin — only every 5 seconds
+        if (appliedCount > 0 && now % 100 == 0L) {
             playBuffParticles(world, origin)
         }
     }
@@ -169,24 +169,25 @@ class BuffExecutor(
         val y = origin.y + 1.0
         val z = origin.z + 0.5
 
+        // Very minimal particles — just a hint that a buff is active
         if (buffType == "speed_boost") {
-            world.spawnParticles(ParticleTypes.CLOUD, x, y, z, 5, 0.5, 0.3, 0.5, 0.02)
+            world.spawnParticles(ParticleTypes.CLOUD, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         } else if (buffType == "strength_boost") {
-            world.spawnParticles(ParticleTypes.CRIT, x, y, z, 8, 0.5, 0.3, 0.5, 0.05)
+            world.spawnParticles(ParticleTypes.CRIT, x, y, z, 2, 0.3, 0.2, 0.3, 0.01)
         } else if (buffType == "resistance_boost") {
-            world.spawnParticles(ParticleTypes.ENCHANT, x, y, z, 8, 0.5, 0.5, 0.5, 0.3)
+            world.spawnParticles(ParticleTypes.ENCHANT, x, y, z, 2, 0.3, 0.3, 0.3, 0.1)
         } else if (buffType == "night_vision") {
-            world.spawnParticles(ParticleTypes.END_ROD, x, y, z, 5, 0.5, 0.3, 0.5, 0.02)
+            world.spawnParticles(ParticleTypes.END_ROD, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         } else if (buffType == "water_breathing") {
-            world.spawnParticles(ParticleTypes.BUBBLE_POP, x, y, z, 8, 0.5, 0.3, 0.5, 0.03)
+            world.spawnParticles(ParticleTypes.BUBBLE_POP, x, y, z, 2, 0.3, 0.2, 0.3, 0.01)
         } else if (buffType == "jump_boost") {
-            world.spawnParticles(ParticleTypes.FIREWORK, x, y, z, 5, 0.5, 0.3, 0.5, 0.03)
+            world.spawnParticles(ParticleTypes.FIREWORK, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         } else if (buffType == "haste_boost") {
-            world.spawnParticles(ParticleTypes.INSTANT_EFFECT, x, y, z, 6, 0.5, 0.3, 0.5, 0.3)
+            world.spawnParticles(ParticleTypes.INSTANT_EFFECT, x, y, z, 1, 0.3, 0.2, 0.3, 0.05)
         } else if (buffType == "saturation_boost") {
-            world.spawnParticles(ParticleTypes.HEART, x, y, z, 4, 0.5, 0.3, 0.5, 0.02)
+            world.spawnParticles(ParticleTypes.HEART, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         } else {
-            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 5, 0.5, 0.3, 0.5, 0.02)
+            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         }
     }
 

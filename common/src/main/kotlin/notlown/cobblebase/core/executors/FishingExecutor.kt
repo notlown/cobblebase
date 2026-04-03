@@ -11,6 +11,7 @@ import net.minecraft.loot.context.LootContextTypes
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.LogManager
@@ -22,6 +23,7 @@ import java.util.UUID
 
 /**
  * Fishing executor: Pokemon navigates to water, generates fishing loot, deposits in chest.
+ * Also used for Diving (same water navigation logic).
  */
 object FishingExecutor : SkillExecutor {
 
@@ -30,6 +32,7 @@ object FishingExecutor : SkillExecutor {
     private val successTime = mutableMapOf<UUID, Long>()
     private val waterTarget = mutableMapOf<UUID, BlockPos>()
     private const val SUCCESS_PAUSE_TICKS = 40L
+    private val waterModeApplied = mutableSetOf<UUID>()
 
     override fun tick(
         world: World,
@@ -43,6 +46,21 @@ object FishingExecutor : SkillExecutor {
         val now = world.time
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val items = heldItems[pokemonId]
+
+        // For diving mons: force canWalkOnWater=true so they stay in/on water
+        val isDiving = skill.executor == "diving"
+        if (isDiving && pokemonId !in waterModeApplied) {
+            try {
+                val swimBehaviour = pokemonEntity.behaviour.moving.swim
+                val field = swimBehaviour.javaClass.getDeclaredField("canWalkOnWater")
+                field.isAccessible = true
+                field.set(swimBehaviour, true)
+                waterModeApplied.add(pokemonId)
+                Cobblebase.LOGGER.info("[FishingExecutor] Set canWalkOnWater=true for ${pokemonEntity.pokemon.species.name}")
+            } catch (e: Exception) {
+                Cobblebase.LOGGER.warn("[FishingExecutor] Could not set canWalkOnWater: ${e.message}")
+            }
+        }
 
         if (!items.isNullOrEmpty()) {
             // Has items - wait for success pause, then deposit

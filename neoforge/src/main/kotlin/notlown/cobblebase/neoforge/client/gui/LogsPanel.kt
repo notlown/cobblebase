@@ -70,7 +70,7 @@ class LogsPanel(
         }.dimensions(startX + (btnW + 2) * 3, filterY, btnW, btnH).build())
 
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
-            .dimensions(panelX + panelW - 54, panelY + panelH - 22, 46, 16).build())
+            .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
     }
 
     private fun getFilteredEntries(): List<LogManager.LogEntry> {
@@ -80,7 +80,7 @@ class LogsPanel(
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val contentTop = panelY + HEADER_HEIGHT + FILTER_HEIGHT + 6
-        val contentBottom = panelY + panelH - 28
+        val contentBottom = panelY + panelH - 18
 
 
 
@@ -90,7 +90,7 @@ class LogsPanel(
             val msg = if (pastureOrigin == null) "\u00A77No pasture data available"
                 else "\u00A77No activity logged yet"
             context.drawCenteredTextWithShadow(textRenderer, msg, panelX + panelW / 2, panelY + panelH / 2 - 4, 0x888888)
-            context.fill(panelX, panelY + panelH - 28, panelX + panelW, panelY + panelH - 27, CobblebaseScreen.PANEL_BORDER)
+            context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
             return
         }
 
@@ -118,17 +118,37 @@ class LogsPanel(
             val rarityColor = entry.rarity.color
             context.fill(panelX + 1, ry, panelX + 3, ry + ROW_HEIGHT - 1, rarityColor)
 
+            val scale = 0.75f
+
             val timeStr = timeFormat.format(Date(entry.timestamp))
-            context.drawTextWithShadow(textRenderer, timeStr, colTime, ry + 2, 0x999999)
+            context.matrices.push()
+            context.matrices.translate(colTime.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, timeStr, 0, 0, 0x999999)
+            context.matrices.pop()
 
             PokemonSpriteHelper.renderSmallIconByName(
                 context, textRenderer, entry.pokemonName,
-                colPokemon, ry + (ROW_HEIGHT - ICON_SIZE) / 2, delta
+                colPokemon, ry + 2, delta
             )
 
-            context.drawTextWithShadow(textRenderer, entry.action, colAction, ry + 2, 0xCCCCCC)
-            context.drawTextWithShadow(textRenderer, entry.itemName, colItem, ry + 2, 0xCCCCCC)
-            context.drawTextWithShadow(textRenderer, entry.rarity.displayName, colRarity, ry + 2, rarityColor)
+            context.matrices.push()
+            context.matrices.translate(colAction.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.action, 0, 0, 0xCCCCCC)
+            context.matrices.pop()
+
+            context.matrices.push()
+            context.matrices.translate(colItem.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.itemName, 0, 0, 0xCCCCCC)
+            context.matrices.pop()
+
+            context.matrices.push()
+            context.matrices.translate(colRarity.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.rarity.displayName, 0, 0, rarityColor)
+            context.matrices.pop()
         }
 
         context.disableScissor()
@@ -149,10 +169,10 @@ class LogsPanel(
             context.fill(trackX, thumbY, trackX + 6, thumbY + thumbHeight, thumbColor)
         }
 
-        context.fill(panelX, panelY + panelH - 28, panelX + panelW, panelY + panelH - 27, CobblebaseScreen.PANEL_BORDER)
+        context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
 
         val filterLabel = if (filterRarity != null) " (${filterRarity!!.displayName}+)" else ""
-        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} events$filterLabel", panelX + PADDING, panelY + panelH - 22, 0x666666)
+        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} events$filterLabel", panelX + PADDING, panelY + panelH - 14, 0x666666)
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {

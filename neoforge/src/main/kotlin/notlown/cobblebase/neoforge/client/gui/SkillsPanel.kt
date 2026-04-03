@@ -66,7 +66,7 @@ class SkillsPanel(
         contentY = panelY + HEADER_HEIGHT + PANEL_PADDING
 
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
-            .dimensions(panelX + panelW - 54, panelY + panelH - 22, 46, 16).build())
+            .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
 
         var cumulativeY = 0
 
@@ -122,7 +122,7 @@ class SkillsPanel(
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", panelX + PANEL_PADDING, headerY, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eSkills", panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH, headerY, 0xFFFF55)
 
-        val contentBottom = panelY + panelH - 28
+        val contentBottom = panelY + panelH - 18
         context.enableScissor(panelX, contentY - 2, panelX + panelW, contentBottom)
 
         pokemonList.forEachIndexed { index, pokemonData ->
@@ -218,7 +218,7 @@ class SkillsPanel(
             context.fill(trackX, thumbY, trackX + 6, thumbY + thumbHeight, thumbColor)
         }
 
-        context.fill(panelX, panelY + panelH - 28, panelX + panelW, panelY + panelH - 27, CobblebaseScreen.PANEL_BORDER)
+        context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
@@ -231,7 +231,7 @@ class SkillsPanel(
             return true
         }
 
-        val contentBottom = panelY + panelH - 28
+        val contentBottom = panelY + panelH - 18
         for (btn in allButtons) {
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY

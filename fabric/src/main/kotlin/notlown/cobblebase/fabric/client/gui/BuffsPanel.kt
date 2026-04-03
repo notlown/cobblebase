@@ -66,7 +66,7 @@ class BuffsPanel(
         entries = buildBuffEntries()
 
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
-            .dimensions(panelX + panelW - 54, panelY + panelH - 22, 46, 16).build())
+            .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
     }
 
     private fun buildBuffEntries(): List<BuffEntry> {
@@ -198,7 +198,7 @@ class BuffsPanel(
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val contentTop = panelY + HEADER_HEIGHT
-        val contentBottom = panelY + panelH - 28
+        val contentBottom = panelY + panelH - 18
 
 
 
@@ -232,25 +232,41 @@ class BuffsPanel(
                 else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
             context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, catColor)
 
-            // Pokemon portrait icon
+            val scale = 0.75f
+
+            // Pokemon portrait icon (top-aligned)
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, entry.species, entry.pokemonName, entry.aspects,
-                colPokemon + 4, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2, delta
+                colPokemon + 4, ry + 4, delta
             )
 
-            // Pokemon name + level (shifted right for icon)
-            context.drawTextWithShadow(textRenderer, entry.pokemonName, colPokemon + 4 + ICON_OFFSET, ry + 4, 0xFFFFFF)
-            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", colPokemon + 4 + ICON_OFFSET, ry + 14, 0xAAAAAA)
+            // Pokemon name + level (shifted right for icon, scaled 0.75x)
+            val nameX = (colPokemon + 4 + ICON_OFFSET).toFloat()
+            context.matrices.push()
+            context.matrices.translate(nameX, (ry + 4).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.pokemonName, 0, 0, 0xFFFFFF)
+            context.matrices.pop()
 
-            // Skill name with category color + PASSIVE tag for buff skills
+            context.matrices.push()
+            context.matrices.translate(nameX, (ry + 14).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", 0, 0, 0xAAAAAA)
+            context.matrices.pop()
+
+            // Skill name with category color + PASSIVE tag for buff skills (scaled 0.75x)
+            context.matrices.push()
+            context.matrices.translate(colSkill.toFloat(), (ry + 4).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
             if (entry.isPassiveBuff) {
-                context.drawTextWithShadow(textRenderer, entry.skillName, colSkill, ry + 4, 0x55FFAA)
-                context.drawTextWithShadow(textRenderer, "\u00A72PASSIVE", colSkill + textRenderer.getWidth(entry.skillName) + 4, ry + 4, 0x55FF55)
+                context.drawTextWithShadow(textRenderer, entry.skillName, 0, 0, 0x55FFAA)
+                context.drawTextWithShadow(textRenderer, "\u00A72PASSIVE", textRenderer.getWidth(entry.skillName) + 4, 0, 0x55FF55)
             } else {
-                context.drawTextWithShadow(textRenderer, entry.skillName, colSkill, ry + 4, catColor)
+                context.drawTextWithShadow(textRenderer, entry.skillName, 0, 0, catColor)
             }
+            context.matrices.pop()
 
-            // Proficiency stars
+            // Proficiency stars (scaled 0.75x)
             val stars = "\u2605".repeat(entry.proficiency) + "\u2606".repeat(5 - entry.proficiency)
             val starColor = when {
                 entry.proficiency >= 5 -> 0xFFD700
@@ -258,11 +274,19 @@ class BuffsPanel(
                 entry.proficiency >= 3 -> 0x88CC88
                 else -> 0x888888
             }
-            context.drawText(textRenderer, stars, colSkill, ry + 14, starColor, false)
+            context.matrices.push()
+            context.matrices.translate(colSkill.toFloat(), (ry + 14).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawText(textRenderer, stars, 0, 0, starColor, false)
+            context.matrices.pop()
 
-            // Effect description
+            // Effect description (scaled 0.75x)
             val descColor = if (entry.isPassiveBuff) 0x88DDAA else 0xCCCCCC
-            context.drawTextWithShadow(textRenderer, entry.description, colDesc, ry + 9, descColor)
+            context.matrices.push()
+            context.matrices.translate(colDesc.toFloat(), (ry + 9).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.description, 0, 0, descColor)
+            context.matrices.pop()
         }
 
         context.disableScissor()
@@ -288,10 +312,10 @@ class BuffsPanel(
         }
 
         // Footer line
-        context.fill(panelX, panelY + panelH - 28, panelX + panelW, panelY + panelH - 27, CobblebaseScreen.PANEL_BORDER)
+        context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
 
         // Entry count
-        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} active", panelX + PADDING, panelY + panelH - 22, 0x666666)
+        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} active", panelX + PADDING, panelY + panelH - 14, 0x666666)
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {

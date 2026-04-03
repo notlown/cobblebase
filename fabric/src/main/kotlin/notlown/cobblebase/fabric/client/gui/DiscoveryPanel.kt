@@ -87,7 +87,7 @@ class DiscoveryPanel(
 
         // Done button
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
-            .dimensions(panelX + panelW - 54, panelY + panelH - 22, 46, 16).build())
+            .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
     }
 
     private fun getFilteredDiscoveries(): List<DiscoveryRegistry.Discovery> {
@@ -102,7 +102,7 @@ class DiscoveryPanel(
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val contentTop = panelY + HEADER_HEIGHT + FILTER_HEIGHT + 6
-        val contentBottom = panelY + panelH - 28
+        val contentBottom = panelY + panelH - 18
 
 
 
@@ -112,7 +112,7 @@ class DiscoveryPanel(
             val msg = "\u00A77No discoveries yet \u2014 assign a Scout to explore!"
             context.drawCenteredTextWithShadow(textRenderer, msg, panelX + panelW / 2, panelY + panelH / 2 - 4, 0x888888)
             // Still render footer
-            context.fill(panelX, panelY + panelH - 28, panelX + panelW, panelY + panelH - 27, CobblebaseScreen.PANEL_BORDER)
+            context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
             return
         }
 
@@ -142,27 +142,45 @@ class DiscoveryPanel(
             val rarityColor = entry.rarity.color
             context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, rarityColor)
 
-            // Name (colored by rarity)
-            context.drawTextWithShadow(textRenderer, entry.name, colName, ry + 2, rarityColor)
+            val scale = 0.75f
 
-            // Coordinates — clickable with hover effect
+            // Name (colored by rarity, scaled 0.75x)
+            context.matrices.push()
+            context.matrices.translate(colName.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.name, 0, 0, rarityColor)
+            context.matrices.pop()
+
+            // Coordinates — clickable with hover effect (scaled 0.75x)
             val coordStr = "${entry.x}, ${entry.z}"
-            val coordWidth = textRenderer.getWidth(coordStr)
+            val coordWidth = (textRenderer.getWidth(coordStr) * scale).toInt()
             val isCoordHovered = mouseX >= colCoords && mouseX <= colCoords + coordWidth && mouseY >= ry + 2 && mouseY <= ry + 2 + 9
             val coordColor = if (isCoordHovered) 0xAAFFFF else 0x55FFFF
-            context.drawTextWithShadow(textRenderer, coordStr, colCoords, ry + 2, coordColor)
+            context.matrices.push()
+            context.matrices.translate(colCoords.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, coordStr, 0, 0, coordColor)
+            context.matrices.pop()
             // Underline when hovered
             if (isCoordHovered) {
-                context.fill(colCoords, ry + 11, colCoords + coordWidth, ry + 12, 0xAAFFFF.toInt() or (0xFF shl 24))
+                context.fill(colCoords, ry + 9, colCoords + coordWidth, ry + 10, 0xAAFFFF.toInt() or (0xFF shl 24))
             }
             coordHitBoxes.add(CoordHitBox(entry.x, entry.z, colCoords, ry + 2, coordWidth))
 
-            // Discovered By
-            context.drawTextWithShadow(textRenderer, entry.discoveredBy, colBy, ry + 2, 0xFFFFFF)
+            // Discovered By (scaled 0.75x)
+            context.matrices.push()
+            context.matrices.translate(colBy.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.discoveredBy, 0, 0, 0xFFFFFF)
+            context.matrices.pop()
 
-            // When
+            // When (scaled 0.75x)
             val whenStr = dateFormat.format(Date(entry.timestamp))
-            context.drawTextWithShadow(textRenderer, whenStr, colWhen, ry + 2, 0x999999)
+            context.matrices.push()
+            context.matrices.translate(colWhen.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, whenStr, 0, 0, 0x999999)
+            context.matrices.pop()
         }
 
         context.disableScissor()
@@ -192,11 +210,11 @@ class DiscoveryPanel(
         }
 
         // Footer line
-        context.fill(panelX, panelY + panelH - 28, panelX + panelW, panelY + panelH - 27, CobblebaseScreen.PANEL_BORDER)
+        context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
 
         // Discovery count
         val filterLabel = if (filterType != null) " (${filterType!!.displayName}s)" else ""
-        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} discoveries$filterLabel", panelX + PADDING, panelY + panelH - 22, 0x666666)
+        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} discoveries$filterLabel", panelX + PADDING, panelY + panelH - 14, 0x666666)
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {

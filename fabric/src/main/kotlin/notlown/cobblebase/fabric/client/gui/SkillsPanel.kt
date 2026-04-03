@@ -31,7 +31,8 @@ class SkillsPanel(
     private val HEADER_HEIGHT = 20
     private val PANEL_PADDING = 8
     private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
-    private val NAME_WIDTH = 90 + ICON_OFFSET
+    private val NAME_WIDTH = 70 + ICON_OFFSET
+    private val AURA_WIDTH = 30
     private val BTN_WIDTH = 58
     private val BTN_HEIGHT = 16
     private val BTN_GAP = 2
@@ -73,7 +74,7 @@ class SkillsPanel(
 
             val rowY = contentY + index * ROW_HEIGHT
             val btnStartX = panelX + PANEL_PADDING + NAME_WIDTH
-            val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
+            val maxBtnX = panelX + panelW - PANEL_PADDING - AURA_WIDTH - BTN_WIDTH
             var btnX = btnStartX
             var btnY = rowY
 
@@ -103,6 +104,8 @@ class SkillsPanel(
         val headerY = contentY - 2
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", panelX + PANEL_PADDING, headerY, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eSkills", panelX + PANEL_PADDING + NAME_WIDTH, headerY, 0xFFFF55)
+        val auraHeaderX = panelX + panelW - PANEL_PADDING - AURA_WIDTH
+        context.drawTextWithShadow(textRenderer, "\u00A7eAura", auraHeaderX, headerY, 0xFFFF55)
 
         // Subtitle
         context.drawCenteredTextWithShadow(textRenderer, "\u00A77Click to assign \u00A78| \u00A77Scroll: \u2191\u2193 \u00A78| \u00A77Shift+Scroll: \u2190\u2192", panelX + panelW / 2, panelY + 3, 0x888888)
@@ -126,9 +129,44 @@ class SkillsPanel(
                 panelX + PANEL_PADDING, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2, delta
             )
 
-            // Pokemon name + level (shifted right for icon)
-            context.drawTextWithShadow(textRenderer, name, panelX + PANEL_PADDING + ICON_OFFSET, ry + 4, 0xFFFFFF)
-            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", panelX + PANEL_PADDING + ICON_OFFSET, ry + 14, 0xAAAAAA)
+            // Pokemon name + level (shifted right for icon, scaled 0.75x)
+            val nameX = panelX + PANEL_PADDING + ICON_OFFSET
+            val nameScale = 0.75f
+            context.matrices.push()
+            context.matrices.translate(nameX.toFloat(), (ry + 4).toFloat(), 0f)
+            context.matrices.scale(nameScale, nameScale, 1f)
+            context.drawTextWithShadow(textRenderer, name, 0, 0, 0xFFFFFF)
+            context.matrices.pop()
+
+            context.matrices.push()
+            context.matrices.translate(nameX.toFloat(), (ry + 14).toFloat(), 0f)
+            context.matrices.scale(nameScale, nameScale, 1f)
+            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", 0, 0, 0xAAAAAA)
+            context.matrices.pop()
+
+            // Aura column — show buff emojis for this species
+            val speciesName = pokemonData.species.path
+            val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
+            val buffEmojis = mutableListOf<String>()
+            if (speciesSkills != null) {
+                for (entry in speciesSkills.skills) {
+                    val skillDef = SkillRegistry.get(entry.skillId) ?: continue
+                    if (BaseManager.isBuffExecutor(skillDef.executor)) {
+                        val emoji = getBuffEmoji(skillDef.executor)
+                        if (emoji != null) buffEmojis.add(emoji)
+                    }
+                }
+            }
+            val auraColX = panelX + panelW - PANEL_PADDING - AURA_WIDTH
+            val auraText = if (buffEmojis.isEmpty()) "\u00A78\u2014" else buffEmojis.joinToString(" ")
+            val auraScale = 0.75f
+            val auraTextWidth = (textRenderer.getWidth(auraText) * auraScale).toInt()
+            val auraCenterX = auraColX + (AURA_WIDTH - auraTextWidth) / 2
+            context.matrices.push()
+            context.matrices.translate(auraCenterX.toFloat(), (ry + (ROW_HEIGHT - 9) / 2).toFloat(), 0f)
+            context.matrices.scale(auraScale, auraScale, 1f)
+            context.drawTextWithShadow(textRenderer, auraText, 0, 0, 0xFFFFFF)
+            context.matrices.pop()
         }
 
         // Skill buttons
@@ -285,5 +323,17 @@ class SkillsPanel(
             }
         }
         ClientPlayNetworking.send(SkillAssignmentC2SPacket(pokemonId, skillId ?: ""))
+    }
+
+    private fun getBuffEmoji(executor: String): String? {
+        if (executor == "speed_boost") return "\u26A1"
+        if (executor == "strength_boost") return "\uD83D\uDCAA"
+        if (executor == "resistance_boost") return "\uD83D\uDEE1"
+        if (executor == "night_vision") return "\uD83D\uDC41"
+        if (executor == "water_breathing") return "\uD83E\uDEE7"
+        if (executor == "jump_boost") return "\uD83E\uDD98"
+        if (executor == "haste_boost") return "\u2692"
+        if (executor == "saturation_boost") return "\uD83C\uDF56"
+        return null
     }
 }

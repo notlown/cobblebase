@@ -1,0 +1,9 @@
+{
+  "species": "tamanozzle",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

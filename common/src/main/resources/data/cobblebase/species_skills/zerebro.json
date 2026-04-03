@@ -1,0 +1,25 @@
+{
+  "species": "zerebro",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

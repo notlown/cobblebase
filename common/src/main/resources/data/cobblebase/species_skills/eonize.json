@@ -1,0 +1,21 @@
+{
+  "species": "eonize",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 5
+    }
+  ]
+}

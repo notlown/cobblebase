@@ -1,0 +1,29 @@
+{
+  "species": "notifant",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 2
+    }
+  ]
+}

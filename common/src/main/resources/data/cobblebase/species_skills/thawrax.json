@@ -1,0 +1,21 @@
+{
+  "species": "thawrax",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "species": "vitellion",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 4
+    }
+  ]
+}

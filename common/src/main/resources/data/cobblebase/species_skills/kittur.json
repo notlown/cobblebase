@@ -1,0 +1,9 @@
+{
+  "species": "kittur",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    }
+  ]
+}

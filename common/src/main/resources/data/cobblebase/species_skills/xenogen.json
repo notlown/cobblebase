@@ -1,0 +1,9 @@
+{
+  "species": "xenogen",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    }
+  ]
+}

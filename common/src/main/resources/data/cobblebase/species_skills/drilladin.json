@@ -1,0 +1,25 @@
+{
+  "species": "drilladin",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    }
+  ]
+}

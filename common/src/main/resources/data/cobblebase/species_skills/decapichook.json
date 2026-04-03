@@ -1,0 +1,13 @@
+{
+  "species": "decapichook",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    }
+  ]
+}

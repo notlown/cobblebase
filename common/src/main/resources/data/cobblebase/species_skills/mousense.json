@@ -1,0 +1,9 @@
+{
+  "species": "mousense",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

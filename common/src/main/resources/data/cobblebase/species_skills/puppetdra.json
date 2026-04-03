@@ -1,0 +1,21 @@
+{
+  "species": "puppetdra",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    }
+  ]
+}

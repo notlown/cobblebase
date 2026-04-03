@@ -1,0 +1,37 @@
+{
+  "species": "cocancer",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

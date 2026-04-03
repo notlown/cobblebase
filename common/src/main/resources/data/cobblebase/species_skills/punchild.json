@@ -1,0 +1,25 @@
+{
+  "species": "punchild",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

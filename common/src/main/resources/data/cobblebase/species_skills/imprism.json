@@ -1,0 +1,17 @@
+{
+  "species": "imprism",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

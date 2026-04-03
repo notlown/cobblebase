@@ -1,0 +1,21 @@
+{
+  "species": "chromagen",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 2
+    }
+  ]
+}

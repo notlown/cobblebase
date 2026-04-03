@@ -1,0 +1,9 @@
+{
+  "species": "xichu",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "doppole",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

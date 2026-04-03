@@ -1,0 +1,21 @@
+{
+  "species": "dulswoop",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

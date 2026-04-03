@@ -1,0 +1,17 @@
+{
+  "species": "phantape",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "species": "goombear",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

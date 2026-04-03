@@ -1,0 +1,25 @@
+{
+  "species": "fistiscuff",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    }
+  ]
+}

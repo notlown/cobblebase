@@ -1,0 +1,29 @@
+{
+  "species": "xenoscorp",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    }
+  ]
+}

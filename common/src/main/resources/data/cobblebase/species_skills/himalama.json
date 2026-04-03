@@ -1,0 +1,17 @@
+{
+  "species": "himalama",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

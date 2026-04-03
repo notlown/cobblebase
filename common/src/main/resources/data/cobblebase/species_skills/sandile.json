@@ -20,10 +20,6 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:night_vision",
-      "proficiency": 1
     }
   ]
 }

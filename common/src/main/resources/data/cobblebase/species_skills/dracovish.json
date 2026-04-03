@@ -18,10 +18,6 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:water_breathing",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:water_fill",
       "proficiency": 2
     }

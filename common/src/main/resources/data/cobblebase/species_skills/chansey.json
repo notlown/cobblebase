@@ -28,10 +28,6 @@
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:saturation_boost",
-      "proficiency": 3
     }
   ]
 }

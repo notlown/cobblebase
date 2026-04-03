@@ -16,10 +16,6 @@
     {
       "skillId": "cobblebase:lava_fill",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:strength_boost",
-      "proficiency": 2
     }
   ]
 }

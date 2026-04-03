@@ -95,7 +95,7 @@ class SkillsPanel(
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val headerY = contentY - 2
+        val headerY = contentY - 12
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", panelX + PANEL_PADDING, headerY, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eSkills", panelX + PANEL_PADDING + NAME_WIDTH, headerY, 0xFFFF55)
 
@@ -114,7 +114,7 @@ class SkillsPanel(
             val name = pokemonData.displayName.string
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, pokemonData.species, name, pokemonData.aspects,
-                panelX + PANEL_PADDING, ry + (ROW_HEIGHT - PokemonSpriteHelper.ICON_SIZE) / 2, delta
+                panelX + PANEL_PADDING, ry + 4, delta
             )
 
             context.drawTextWithShadow(textRenderer, name, panelX + PANEL_PADDING + ICON_OFFSET, ry + 4, 0xFFFFFF)

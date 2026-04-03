@@ -12,10 +12,6 @@
     {
       "skillId": "cobblebase:snow_fill",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:strength_boost",
-      "proficiency": 2
     }
   ]
 }

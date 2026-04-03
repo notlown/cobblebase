@@ -12,10 +12,6 @@
     {
       "skillId": "cobblebase:harvester",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:haste_boost",
-      "proficiency": 2
     }
   ]
 }

@@ -24,10 +24,6 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:water_breathing",
-      "proficiency": 3
     }
   ]
 }

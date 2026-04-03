@@ -10,19 +10,11 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:night_vision",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:recruiter",
       "proficiency": 3
     },
     {
       "skillId": "cobblebase:scout",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:speed_boost",
       "proficiency": 3
     }
   ]

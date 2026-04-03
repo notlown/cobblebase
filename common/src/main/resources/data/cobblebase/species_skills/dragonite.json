@@ -24,10 +24,6 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 5
-    },
-    {
-      "skillId": "cobblebase:strength_boost",
-      "proficiency": 2
     }
   ]
 }

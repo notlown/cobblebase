@@ -18,10 +18,6 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:night_vision",
-      "proficiency": 1
-    },
-    {
       "skillId": "cobblebase:snow_fill",
       "proficiency": 2
     }

@@ -16,14 +16,6 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:resistance_boost",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:strength_boost",
-      "proficiency": 2
     }
   ]
 }

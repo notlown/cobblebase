@@ -28,10 +28,6 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:strength_boost",
-      "proficiency": 2
     }
   ]
 }

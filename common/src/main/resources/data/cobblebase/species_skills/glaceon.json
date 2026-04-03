@@ -10,10 +10,6 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:haste_boost",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:snow_fill",
       "proficiency": 4
     }

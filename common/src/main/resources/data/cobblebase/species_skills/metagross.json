@@ -22,20 +22,8 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:haste_boost",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:mentor",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:resistance_boost",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:strength_boost",
-      "proficiency": 2
     }
   ]
 }

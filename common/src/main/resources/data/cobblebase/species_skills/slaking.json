@@ -8,14 +8,6 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:saturation_boost",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:strength_boost",
-      "proficiency": 3
     }
   ]
 }

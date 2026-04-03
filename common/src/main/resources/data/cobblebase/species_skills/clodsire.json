@@ -16,10 +16,6 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:saturation_boost",
-      "proficiency": 2
     }
   ]
 }

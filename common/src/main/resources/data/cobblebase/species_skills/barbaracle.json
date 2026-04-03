@@ -12,10 +12,6 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:water_breathing",
-      "proficiency": 2
     }
   ]
 }

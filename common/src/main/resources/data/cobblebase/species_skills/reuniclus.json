@@ -10,10 +10,6 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:haste_boost",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:mentor",
       "proficiency": 4
     }

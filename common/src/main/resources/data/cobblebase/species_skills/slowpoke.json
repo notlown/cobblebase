@@ -16,10 +16,6 @@
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:water_breathing",
-      "proficiency": 1
     }
   ]
 }

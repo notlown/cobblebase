@@ -16,10 +16,6 @@
     {
       "skillId": "cobblebase:recruiter",
       "proficiency": 1
-    },
-    {
-      "skillId": "cobblebase:speed_boost",
-      "proficiency": 2
     }
   ]
 }

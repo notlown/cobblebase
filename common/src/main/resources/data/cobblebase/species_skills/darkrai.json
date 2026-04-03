@@ -14,16 +14,8 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:haste_boost",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:night_vision",
       "proficiency": 5
-    },
-    {
-      "skillId": "cobblebase:speed_boost",
-      "proficiency": 3
     }
   ]
 }

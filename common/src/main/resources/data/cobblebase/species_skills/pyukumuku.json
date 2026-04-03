@@ -10,14 +10,6 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:resistance_boost",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:water_breathing",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:water_fill",
       "proficiency": 2
     }

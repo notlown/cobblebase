@@ -16,10 +16,6 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:water_breathing",
-      "proficiency": 1
     }
   ]
 }

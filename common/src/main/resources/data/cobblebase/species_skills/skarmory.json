@@ -22,10 +22,6 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:resistance_boost",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:scout",
       "proficiency": 1
     }

@@ -20,14 +20,6 @@
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:night_vision",
-      "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:strength_boost",
-      "proficiency": 3
     }
   ]
 }

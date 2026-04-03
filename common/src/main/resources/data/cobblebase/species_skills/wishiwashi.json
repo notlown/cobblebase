@@ -12,10 +12,6 @@
     {
       "skillId": "cobblebase:irrigator",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:water_breathing",
-      "proficiency": 1
     }
   ]
 }

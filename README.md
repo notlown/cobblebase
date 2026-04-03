@@ -209,6 +209,25 @@ Open any Pasture Block and click the **"Cobblebase"** button to access the manag
 
 ---
 
+## 🔧 Admin GUI — Species Skill Editor
+
+Server admins and operators can manage skill assignments for any Pokemon species directly in-game — no JSON editing or restarts needed. This is especially useful for **Fakemon mods** that don't have built-in skill assignments.
+
+**Open with:** `/cobblebase admin` (requires OP level 2)
+
+| Feature | Description |
+|---------|-------------|
+| **Species Browser** | Searchable list of ALL loaded Pokemon species, including fakemons from other mods |
+| **Skill Editor** | Toggle skills on/off with checkboxes, set proficiency (1-5) with clickable stars |
+| **Live Updates** | Changes take effect immediately — no restart required |
+| **Persistence** | Custom assignments saved to `cobblebase_species_overrides.json` in the world folder |
+| **Reset** | "Reset to Default" button reverts a species to built-in assignments |
+| **Fakemon Support** | Assign skills to ANY species, even those without built-in data |
+
+Custom assignments fully override built-in data per species. All Cobblemon-compatible species (including fakemons from mods like Alatias Pack, Mythical Collection, etc.) appear in the list automatically.
+
+---
+
 ## Configuration
 
 Press **K** to open the Cloth Config settings screen. Key options:

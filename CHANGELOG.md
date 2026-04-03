@@ -21,6 +21,30 @@ All notable changes to Cobblebase are documented here.
 - **Click+drag scrollbars** — both panels have functional draggable scrollbars
 - **Buff particles disabled** — player particles from aura buffs (speed swirls, haste glitter etc.) removed
 
+### Fakemon Pack Support — 7,430 New Species
+Built-in skill assignments for 5 popular Fakemon mods:
+
+| Pack | Species |
+|------|---------|
+| Lively Mons | 59 |
+| Alatias Fakemon Pack | 87 |
+| Laser's Fakemon Pack | 53 |
+| Wilbayan's Fakemons | 37 |
+| Gravelmon | 7,194 |
+
+Skills auto-assigned by typing, base stats, and BST tiers:
+- **BST 600+** (Legendary): Recruiter, Lucky Charm, Aura Boost, Prof 5
+- **BST 570+** (Pseudo): Aura Boost, high Mentor
+- **BST 530+**: +2 proficiency bonus
+- **BST 480+**: +1 proficiency bonus
+
+### Also New
+- **Diving loot table** — Prismarine, Nautilus Shells, Heart of the Sea, Trident
+- **Chest deposit for all loot jobs** — Diving, Archeologist, Honey Collect now deposit into nearby chests instead of dropping on ground
+- **Farfetch'd crash fix** — Species names with special characters no longer crash the GUI
+
+**Total species: 8,426**
+
 ---
 
 ## [1.2.0] - 2026-04-03

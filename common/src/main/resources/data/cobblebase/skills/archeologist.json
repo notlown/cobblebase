@@ -3,7 +3,7 @@
   "name": "Archeologist",
   "description": "Digs for fossils and ancient treasures",
   "category": "gathering",
-  "cooldownSeconds": 80,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "archeology",
   "effectType": "default",

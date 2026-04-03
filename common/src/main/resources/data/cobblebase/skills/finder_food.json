@@ -3,7 +3,7 @@
   "name": "Chef",
   "description": "Searches the area for food and cooking ingredients",
   "category": "gathering",
-  "cooldownSeconds": 240,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "finder_food",
   "effectType": "default"

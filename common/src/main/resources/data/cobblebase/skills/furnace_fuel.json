@@ -3,7 +3,7 @@
   "name": "Furnace Fuel",
   "description": "Adds fuel to furnaces",
   "category": "generation",
-  "cooldownSeconds": 80,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "furnace_fuel",
   "effectType": "fire"

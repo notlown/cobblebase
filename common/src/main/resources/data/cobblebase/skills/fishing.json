@@ -3,7 +3,7 @@
   "name": "Fishing",
   "description": "Catches fish from nearby water",
   "category": "gathering",
-  "cooldownSeconds": 540,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "fishing",
   "effectType": "water",

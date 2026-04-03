@@ -3,7 +3,7 @@
   "name": "Architect",
   "description": "Searches the area for building materials",
   "category": "gathering",
-  "cooldownSeconds": 240,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "finder_bui",
   "effectType": "default"

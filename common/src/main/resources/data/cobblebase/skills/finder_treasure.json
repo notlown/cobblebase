@@ -3,7 +3,7 @@
   "name": "Prospector",
   "description": "Searches the area for relics and treasure",
   "category": "gathering",
-  "cooldownSeconds": 240,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "finder_treasure",
   "effectType": "default"

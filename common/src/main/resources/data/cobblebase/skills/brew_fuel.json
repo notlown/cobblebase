@@ -3,7 +3,7 @@
   "name": "Brewing Fuel",
   "description": "Adds fuel to brewing stands",
   "category": "generation",
-  "cooldownSeconds": 80,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "brew_fuel",
   "effectType": "fire"

@@ -52,6 +52,7 @@ class AdminSkillEditorPanel(
     private var saveButton: ButtonWidget? = null
     private var resetButton: ButtonWidget? = null
     private var dirty = false
+    private var lastGridRows = listOf<Any>()
 
     fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
         saveButton = ButtonWidget.builder(Text.literal("\u00A72Save")) { saveChanges() }
@@ -144,87 +145,101 @@ class AdminSkillEditorPanel(
         }
         context.matrices.pop()
 
-        // Skill list
+        // 3-column grid layout per category
+        val COLS = 3
+        val colW = (w - PADDING * 2) / COLS
         val listY = y + PADDING + 14
         val listH = h - PADDING * 2 - 32
-        val maxVisible = listH / ROW_HEIGHT
+        val scale = 0.75f
 
-        // Build render list with category headers
-        data class RenderRow(val isHeader: Boolean, val category: String = "", val skillIndex: Int = -1)
-        val renderRows = mutableListOf<RenderRow>()
+        // Build grid rows: category header (full width) + skill rows (3 per row)
+        data class GridRow(val isHeader: Boolean, val category: String = "", val skills: List<Int> = emptyList())
+        val gridRows = mutableListOf<GridRow>()
         var lastCategory = ""
-        for ((i, skill) in skillEdits.withIndex()) {
-            if (skill.category != lastCategory) {
-                renderRows.add(RenderRow(isHeader = true, category = skill.category))
-                lastCategory = skill.category
+        var currentCatSkills = mutableListOf<Int>()
+
+        fun flushCategory() {
+            if (currentCatSkills.isEmpty()) return
+            for (chunk in currentCatSkills.chunked(COLS)) {
+                gridRows.add(GridRow(isHeader = false, skills = chunk))
             }
-            renderRows.add(RenderRow(isHeader = false, skillIndex = i))
+            currentCatSkills = mutableListOf()
         }
 
-        val maxScroll = (renderRows.size - maxVisible).coerceAtLeast(0)
+        for ((i, skill) in skillEdits.withIndex()) {
+            if (skill.category != lastCategory) {
+                flushCategory()
+                gridRows.add(GridRow(isHeader = true, category = skill.category))
+                lastCategory = skill.category
+            }
+            currentCatSkills.add(i)
+        }
+        flushCategory()
+
+        val maxVisible = listH / ROW_HEIGHT
+        val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
         scrollOffset = scrollOffset.coerceIn(0, maxScroll)
 
-        // Enable scissor for clipping
         context.enableScissor(x, listY, x + w, listY + listH)
 
-        for (i in 0 until maxVisible + 1) {
+        // Store grid rows for click handling
+        lastGridRows = gridRows
+
+        for (i in 0 until maxVisible + 2) {
             val idx = i + scrollOffset
-            if (idx >= renderRows.size) break
-            val row = renderRows[idx]
+            if (idx >= gridRows.size) break
+            val row = gridRows[idx]
             val rowY = listY + i * ROW_HEIGHT
 
             if (row.isHeader) {
-                // Category header
                 val catColor = CATEGORY_COLORS[row.category] ?: 0xFFAAAAAA.toInt()
                 context.fill(x + 2, rowY, x + w - 2, rowY + ROW_HEIGHT, 0x22FFFFFF)
                 context.fill(x + 2, rowY + ROW_HEIGHT - 1, x + w - 2, rowY + ROW_HEIGHT, catColor)
                 val catName = row.category.replaceFirstChar { it.uppercase() }
-                val scale = 0.75f
                 context.matrices.push()
                 context.matrices.translate((x + PADDING).toFloat(), (rowY + 4).toFloat(), 0f)
                 context.matrices.scale(scale, scale, 1f)
                 context.drawTextWithShadow(textRenderer, "\u00A7l$catName", 0, 0, catColor)
                 context.matrices.pop()
             } else {
-                val skill = skillEdits[row.skillIndex]
-                val scale = 0.75f
-                val colW = (w - PADDING * 2) / 2
+                for ((col, skillIdx) in row.skills.withIndex()) {
+                    val skill = skillEdits[skillIdx]
+                    val cellX = x + PADDING + col * colW
 
-                // Determine which column (odd skillIndex = right column)
-                // Actually render in single column but scaled — 2-column done via render pairs below
-                val cbX = x + PADDING
-                val cbY = rowY + 3
-                val cbSize = 8
-                val cbColor = if (skill.assigned) CHECKBOX_ON else CHECKBOX_OFF
-                context.fill(cbX, cbY, cbX + cbSize, cbY + cbSize, cbColor)
-                if (skill.assigned) {
-                    context.matrices.push()
-                    context.matrices.translate((cbX + 1).toFloat(), (cbY).toFloat(), 0f)
-                    context.matrices.scale(scale, scale, 1f)
-                    context.drawTextWithShadow(textRenderer, "\u2713", 0, 0, 0xFFFFFF)
-                    context.matrices.pop()
-                }
-
-                // Skill name (0.75x)
-                val nameColor = if (skill.assigned) 0xFFFFFF else 0x888888
-                context.matrices.push()
-                context.matrices.translate((cbX + cbSize + 3).toFloat(), (rowY + 4).toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
-                context.drawTextWithShadow(textRenderer, skill.displayName, 0, 0, nameColor)
-                context.matrices.pop()
-
-                // Proficiency stars (only if assigned, 0.75x)
-                if (skill.assigned) {
-                    val starsX = x + w - 55
-                    context.matrices.push()
-                    context.matrices.translate(starsX.toFloat(), (rowY + 4).toFloat(), 0f)
-                    context.matrices.scale(scale, scale, 1f)
-                    for (star in 1..5) {
-                        val starOff = (star - 1) * (STAR_SIZE + 1)
-                        val color = if (star <= skill.proficiency) STAR_FILLED else STAR_EMPTY
-                        context.drawTextWithShadow(textRenderer, "\u2605", starOff, 0, color)
+                    // Checkbox
+                    val cbX = cellX
+                    val cbY = rowY + 3
+                    val cbSize = 8
+                    val cbColor = if (skill.assigned) CHECKBOX_ON else CHECKBOX_OFF
+                    context.fill(cbX, cbY, cbX + cbSize, cbY + cbSize, cbColor)
+                    if (skill.assigned) {
+                        context.matrices.push()
+                        context.matrices.translate((cbX + 1).toFloat(), cbY.toFloat(), 0f)
+                        context.matrices.scale(scale, scale, 1f)
+                        context.drawTextWithShadow(textRenderer, "\u2713", 0, 0, 0xFFFFFF)
+                        context.matrices.pop()
                     }
+
+                    // Skill name
+                    val nameColor = if (skill.assigned) 0xFFFFFF else 0x888888
+                    context.matrices.push()
+                    context.matrices.translate((cbX + cbSize + 2).toFloat(), (rowY + 4).toFloat(), 0f)
+                    context.matrices.scale(scale, scale, 1f)
+                    context.drawTextWithShadow(textRenderer, skill.displayName, 0, 0, nameColor)
                     context.matrices.pop()
+
+                    // Stars (if assigned)
+                    if (skill.assigned) {
+                        val starsX = cellX + colW - 42
+                        context.matrices.push()
+                        context.matrices.translate(starsX.toFloat(), (rowY + 4).toFloat(), 0f)
+                        context.matrices.scale(scale, scale, 1f)
+                        for (star in 1..5) {
+                            val color = if (star <= skill.proficiency) STAR_FILLED else STAR_EMPTY
+                            context.drawTextWithShadow(textRenderer, "\u2605", (star - 1) * (STAR_SIZE + 1), 0, color)
+                        }
+                        context.matrices.pop()
+                    }
                 }
             }
         }
@@ -232,10 +247,10 @@ class AdminSkillEditorPanel(
         context.disableScissor()
 
         // Scrollbar
-        if (renderRows.size > maxVisible) {
+        if (gridRows.size > maxVisible) {
             val trackX = x + w - 3
             val trackH = listH
-            val thumbH = ((maxVisible.toFloat() / renderRows.size) * trackH).toInt().coerceAtLeast(10)
+            val thumbH = ((maxVisible.toFloat() / gridRows.size) * trackH).toInt().coerceAtLeast(10)
             val thumbY = listY + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
             context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
@@ -245,47 +260,59 @@ class AdminSkillEditorPanel(
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         val species = selectedSpecies ?: return false
 
+        val COLS = 3
+        val colW = (w - PADDING * 2) / COLS
         val listY = y + PADDING + 14
         val listH = h - PADDING * 2 - 32
-        val maxVisible = listH / ROW_HEIGHT
-
-        // Build render list
-        data class RenderRow(val isHeader: Boolean, val category: String = "", val skillIndex: Int = -1)
-        val renderRows = mutableListOf<RenderRow>()
-        var lastCategory = ""
-        for ((i, skill) in skillEdits.withIndex()) {
-            if (skill.category != lastCategory) {
-                renderRows.add(RenderRow(isHeader = true, category = skill.category))
-                lastCategory = skill.category
-            }
-            renderRows.add(RenderRow(isHeader = false, skillIndex = i))
-        }
 
         if (mouseX >= x && mouseX <= x + w && mouseY >= listY && mouseY <= listY + listH) {
-            val rowIdx = ((mouseY - listY) / ROW_HEIGHT).toInt() + scrollOffset
-            if (rowIdx in renderRows.indices) {
-                val row = renderRows[rowIdx]
+            val rowVisIdx = ((mouseY - listY) / ROW_HEIGHT).toInt()
+            val rowIdx = rowVisIdx + scrollOffset
+
+            // Rebuild grid rows for click handling
+            data class GridRow(val isHeader: Boolean, val skills: List<Int> = emptyList())
+            val gridRows = mutableListOf<GridRow>()
+            var lastCat = ""
+            var catSkills = mutableListOf<Int>()
+            fun flush() { if (catSkills.isNotEmpty()) { for (c in catSkills.chunked(COLS)) gridRows.add(GridRow(false, c)); catSkills = mutableListOf() } }
+            for ((i, skill) in skillEdits.withIndex()) {
+                if (skill.category != lastCat) { flush(); gridRows.add(GridRow(true)); lastCat = skill.category }
+                catSkills.add(i)
+            }
+            flush()
+
+            if (rowIdx in gridRows.indices) {
+                val row = gridRows[rowIdx]
                 if (!row.isHeader) {
-                    val skill = skillEdits[row.skillIndex]
+                    // Determine which column was clicked
+                    val col = ((mouseX - x - PADDING) / colW).toInt().coerceIn(0, COLS - 1)
+                    if (col < row.skills.size) {
+                        val skillIdx = row.skills[col]
+                        val skill = skillEdits[skillIdx]
+                        val cellX = x + PADDING + col * colW
 
-                    // Check if clicking checkbox area
-                    val cbX = x + PADDING
-                    val cbSize = 10
-                    if (mouseX >= cbX && mouseX <= cbX + cbSize + 4) {
-                        skill.assigned = !skill.assigned
-                        dirty = true
-                        return true
-                    }
-
-                    // Check if clicking star area
-                    if (skill.assigned) {
-                        val starsX = x + w - 60
-                        if (mouseX >= starsX && mouseX <= starsX + 5 * (STAR_SIZE + 2)) {
-                            val starClicked = ((mouseX - starsX) / (STAR_SIZE + 2)).toInt() + 1
-                            skill.proficiency = starClicked.coerceIn(1, 5)
+                        // Checkbox area
+                        if (mouseX >= cellX && mouseX <= cellX + 12) {
+                            skill.assigned = !skill.assigned
                             dirty = true
                             return true
                         }
+
+                        // Star area
+                        if (skill.assigned) {
+                            val starsX = cellX + colW - 42
+                            if (mouseX >= starsX && mouseX <= starsX + 5 * (STAR_SIZE + 1)) {
+                                val starClicked = ((mouseX - starsX) / (STAR_SIZE + 1)).toInt() + 1
+                                skill.proficiency = starClicked.coerceIn(1, 5)
+                                dirty = true
+                                return true
+                            }
+                        }
+
+                        // Clicking anywhere on the skill row toggles it
+                        skill.assigned = !skill.assigned
+                        dirty = true
+                        return true
                     }
                 }
             }

@@ -38,7 +38,28 @@ object NavigationHelper {
      * Throttled to once per second to avoid pathfinding spam.
      * Same logic as Cobbleworkers' navigateTo.
      */
-    fun navigateTo(pokemonEntity: PokemonEntity, targetPos: BlockPos, speed: Double = 0.5) {
+    private const val MAX_SPEED = 0.4
+
+    /**
+     * Gets the Pokemon's natural walkSpeed from its species definition, capped at MAX_SPEED.
+     */
+    fun getSpeciesSpeed(pokemonEntity: PokemonEntity): Double {
+        return try {
+            val walkBehaviour = pokemonEntity.behaviour.moving.walk
+            val speedField = walkBehaviour.javaClass.getDeclaredField("walkSpeed")
+            speedField.isAccessible = true
+            val expr = speedField.get(walkBehaviour)
+            // walkSpeed is a MoLang Expression — try to evaluate it
+            val resolveMethod = expr.javaClass.getMethod("get")
+            val value = (resolveMethod.invoke(expr) as? Number)?.toDouble() ?: 0.2
+            value.coerceAtMost(MAX_SPEED)
+        } catch (e: Exception) {
+            0.2 // Default fallback
+        }
+    }
+
+    fun navigateTo(pokemonEntity: PokemonEntity, targetPos: BlockPos, speed: Double = -1.0) {
+        val actualSpeed = if (speed < 0) getSpeciesSpeed(pokemonEntity) else speed.coerceAtMost(MAX_SPEED)
         val world = pokemonEntity.world
         val now = world.time
         val id = pokemonEntity.pokemon.uuid
@@ -51,7 +72,7 @@ object NavigationHelper {
             targetPos.x + 0.5,
             targetPos.y.toDouble(),
             targetPos.z + 0.5,
-            speed
+            actualSpeed
         )
     }
 
@@ -89,11 +110,12 @@ object NavigationHelper {
         val targetZ = origin.z + dz
         val targetY = origin.y
 
+        val wanderSpeed = getSpeciesSpeed(pokemonEntity)
         pokemonEntity.navigation.startMovingTo(
             targetX + 0.5,
             targetY.toDouble(),
             targetZ + 0.5,
-            0.35 // Slow, calm walking
+            wanderSpeed
         )
     }
 }

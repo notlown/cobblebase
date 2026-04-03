@@ -272,7 +272,7 @@ class AdminSkillEditorPanel(
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
             scrollOffset = (scrollOffset - verticalAmount.toInt() * 3).coerceAtLeast(0)
-            val totalSkills = allSkills.size
+            val totalSkills = SkillRegistry.getAll().size
             val maxScroll = (totalSkills - ((h - 40) / ROW_HEIGHT)).coerceAtLeast(0)
             scrollOffset = scrollOffset.coerceAtMost(maxScroll)
             return true

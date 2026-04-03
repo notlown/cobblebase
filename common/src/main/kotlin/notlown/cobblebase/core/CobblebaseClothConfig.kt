@@ -17,7 +17,6 @@ class CobblebaseClothConfig : ConfigData {
     var skills = SkillsGroup()
 
     class GeneralGroup {
-        var devMode = false
         @ConfigEntry.BoundedDiscrete(min = 5, max = 20)
         var defaultSearchRadius = 10
     }

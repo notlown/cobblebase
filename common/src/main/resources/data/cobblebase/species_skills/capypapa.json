@@ -2,6 +2,10 @@
   "species": "capypapa",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:fishing",
       "proficiency": 3
     },

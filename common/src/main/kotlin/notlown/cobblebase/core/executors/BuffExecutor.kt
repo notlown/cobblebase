@@ -149,7 +149,7 @@ class BuffExecutor(
     }
 
     private fun getBuffDisplayName(): String {
-        if (buffType == "speed_boost") return "Speed II"
+        if (buffType == "speed_boost") return "Speed III"
         if (buffType == "strength_boost") return "Strength I"
         if (buffType == "resistance_boost") return "Resistance I"
         if (buffType == "night_vision") return "Night Vision"
@@ -192,7 +192,7 @@ class BuffExecutor(
     }
 
     companion object {
-        val SpeedBoost = BuffExecutor("speed_boost", StatusEffects.SPEED, 1)
+        val SpeedBoost = BuffExecutor("speed_boost", StatusEffects.SPEED, 2)
         val StrengthBoost = BuffExecutor("strength_boost", StatusEffects.STRENGTH, 0)
         val ResistanceBoost = BuffExecutor("resistance_boost", StatusEffects.RESISTANCE, 0)
         val NightVision = BuffExecutor("night_vision", StatusEffects.NIGHT_VISION, 0)

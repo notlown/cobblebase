@@ -60,43 +60,54 @@ object DivingExecutor : SkillExecutor {
             return
         }
 
-        // Passive approach (like CobbleWorkersPlus):
-        // Don't navigate the mon to water — let Cobblemon's wander AI do it naturally.
-        // Only generate loot when the mon happens to be touching water.
-        if (!pokemonEntity.isTouchingWater) return
+        val inWater = pokemonEntity.isTouchingWater
 
-        // Mon is in water — check cooldown
-        val lastTime = lastDiveTime[pokemonId] ?: 0L
-        if (now - lastTime < cooldownTicks) {
-            // Bubble particles while diving
-            if (now % 20 == 0L) {
-                world.spawnParticles(
-                    ParticleTypes.BUBBLE,
-                    pokemonEntity.x, pokemonEntity.y + 0.5, pokemonEntity.z,
-                    5, 0.3, 0.2, 0.3, 0.01
-                )
+        if (inWater) {
+            // In water — check cooldown
+            val lastTime = lastDiveTime[pokemonId] ?: 0L
+            if (now - lastTime < cooldownTicks) {
+                if (now % 20 == 0L) {
+                    world.spawnParticles(
+                        ParticleTypes.BUBBLE,
+                        pokemonEntity.x, pokemonEntity.y + 0.5, pokemonEntity.z,
+                        5, 0.3, 0.2, 0.3, 0.01
+                    )
+                }
+                return
             }
-            return
-        }
 
-        // Cooldown done — generate dive loot
-        generateDiveLoot(world, pokemonEntity, pokemonId, now, skill)
-        val treasure = heldItems[pokemonId]
-        if (!treasure.isNullOrEmpty()) {
-            world.spawnParticles(
-                ParticleTypes.BUBBLE_COLUMN_UP,
-                pokemonEntity.x, pokemonEntity.y, pokemonEntity.z,
-                20, 0.5, 0.5, 0.5, 0.1
-            )
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
-            for (item in treasure) {
-                LogManager.log(
-                    origin, world.time,
-                    pokemonEntity.pokemon.species.name,
-                    "Dived",
-                    "${item.name.string} x${item.count}",
-                    LogManager.Rarity.UNCOMMON
+            // Cooldown done — generate dive loot
+            generateDiveLoot(world, pokemonEntity, pokemonId, now, skill)
+            val treasure = heldItems[pokemonId]
+            if (!treasure.isNullOrEmpty()) {
+                world.spawnParticles(
+                    ParticleTypes.BUBBLE_COLUMN_UP,
+                    pokemonEntity.x, pokemonEntity.y, pokemonEntity.z,
+                    20, 0.5, 0.5, 0.5, 0.1
                 )
+                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+                for (item in treasure) {
+                    LogManager.log(
+                        origin, world.time,
+                        pokemonEntity.pokemon.species.name,
+                        "Dived",
+                        "${item.name.string} x${item.count}",
+                        LogManager.Rarity.UNCOMMON
+                    )
+                }
+            }
+        } else {
+            // Not in water — actively navigate to nearest water within pasture range
+            // Use a short radius around the PASTURE ORIGIN (not the mon) to stay within tether range
+            val target = waterTarget[pokemonId]
+            if (target != null && target.getSquaredDistance(origin) < 20.0 * 20.0) {
+                NavigationHelper.navigateTo(pokemonEntity, target)
+            } else {
+                val newTarget = findWater(world, origin, 16) // Stay within ~16 blocks of pasture
+                if (newTarget != null) {
+                    waterTarget[pokemonId] = newTarget
+                    NavigationHelper.navigateTo(pokemonEntity, newTarget)
+                }
             }
         }
     }

@@ -230,6 +230,30 @@ Custom assignments fully override built-in data per species. All Cobblemon-compa
 
 ---
 
+## 🎨 Supported Fakemon Packs
+
+Cobblebase includes **built-in skill assignments** for all species in these Fakemon mods — they work out of the box with no configuration needed:
+
+| Fakemon Pack | Species | Skills |
+|-------------|---------|--------|
+| 🐾 **Cobblemon** (official) | 996 | Hand-crafted, individually tuned |
+| 🌿 **Lively Mons** | 59 | Auto-assigned by typing + stats |
+| 🔥 **Alatias Fakemon Pack** (AFP) | 87 | Auto-assigned by typing + stats |
+| ⚡ **Laser's Fakemon Pack** | 53 | Auto-assigned by typing + stats |
+| 🎭 **Wilbayan's Fakemons** (Vol 1-3 + G) | 37 | Auto-assigned by typing + stats |
+| 🌍 **Gravelmon** | 7,194 | Auto-assigned by typing + stats |
+
+**Total: 8,426 species with skill assignments**
+
+Fakemon skills are assigned based on:
+- **Typing** — Water types get Fishing, Fire types get Furnace Fuel, etc.
+- **Base Stats** — High ATK → Guard, High SPE → Scout, High SPA → Mentor
+- **BST Tiers** — BST 600+ → Legendary skills (Recruiter, Lucky Charm, Aura Boost), BST 570+ → Pseudo-legendary bonuses
+
+Not using one of these packs? Use `/cobblebase admin` to assign skills to any species manually!
+
+---
+
 ## Configuration
 
 Press **K** to open the Cloth Config settings screen. Key options:

@@ -61,23 +61,13 @@ object LuckyCharmExecutor : SkillExecutor {
         val shinyMultiplier = getShinyMultiplier(prof)
         val range = getRange(prof)
 
-        // Prof 5: scan around OWNER globally, Prof 1-4: scan around pasture
-        val wildMons: List<PokemonEntity>
-        if (prof >= 5) {
-            val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
-            val owner = if (ownerUuid != null) world.players.find { it.uuid == ownerUuid } else null
-            if (owner == null) return
-            val searchBox = Box.of(owner.pos, range * 2, range * 2, range * 2)
-            wildMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { entity ->
-                entity.pokemon.isWild() && entity.isAlive && !entity.pokemon.shiny
-                    && entity.pokemon.uuid !in processedPokemon
-            }
-        } else {
-            val searchBox = Box.of(origin.toCenterPos(), range * 2, range * 2, range * 2)
-            wildMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { entity ->
-                entity.pokemon.isWild() && entity.isAlive && !entity.pokemon.shiny
-                    && entity.pokemon.uuid !in processedPokemon
-            }
+        // Always scan around the OWNER player (not the pasture)
+        val ownerUuid = pokemonEntity.pokemon.getOwnerUUID() ?: return
+        val owner = world.players.find { it.uuid == ownerUuid } ?: return
+        val searchBox = Box.of(owner.pos, range * 2, range * 2, range * 2)
+        val wildMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { entity ->
+            entity.pokemon.isWild() && entity.isAlive && !entity.pokemon.shiny
+                && entity.pokemon.uuid !in processedPokemon
         }
 
         for (wildMon in wildMons) {
@@ -131,14 +121,14 @@ object LuckyCharmExecutor : SkillExecutor {
     }
 
     /**
-     * Scan range based on proficiency (matches buff executor ranges).
-     * Prof 5: scans around the owner instead of pasture.
+     * Scan range around the owner player.
+     * Kept small so it only affects Pokemon the player actually encounters.
      */
     private fun getRange(prof: Int): Double {
-        if (prof == 1) return 30.0
-        if (prof == 2) return 50.0
-        if (prof == 3) return 100.0
-        if (prof == 4) return 200.0
-        return 200.0 // prof 5 — centered on owner, not pasture
+        if (prof == 1) return 10.0
+        if (prof == 2) return 12.0
+        if (prof == 3) return 15.0
+        if (prof == 4) return 18.0
+        return 20.0 // prof 5
     }
 }

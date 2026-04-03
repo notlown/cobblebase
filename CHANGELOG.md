@@ -6,6 +6,15 @@ All notable changes to Cobblebase are documented here.
 
 ## [1.2.0] - 2026-04-03
 
+### Admin GUI — In-Game Species Skill Editor
+- **`/cobblebase admin`** command opens a two-pane admin screen (OP level 2 required)
+- **Left pane:** Searchable species list showing ALL loaded Pokemon including fakemons
+- **Right pane:** Skill editor with checkbox toggles and proficiency stars (1-5)
+- **Live updates** — changes take effect immediately without restart
+- **Persistence** — custom assignments saved to `cobblebase_species_overrides.json` per world
+- **Reset to Default** — reverts a species to built-in assignments
+- **Fakemon support** — assign skills to any species, even those without built-in data
+
 ### Bug Fixes
 - **Fixed GUI blur on Minecraft 1.21+** — Vanilla `Screen.render()` applies a Gaussian blur shader by default in 1.21+. Replaced `super.render()` with manual widget rendering to prevent blur without breaking button functionality
 - **Fixed NeoForge crash** — Removed `@JvmStatic` from event subscribers causing `IllegalArgumentException` with Kotlin for Forge

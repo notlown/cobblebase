@@ -226,6 +226,8 @@ Server admins and operators can manage skill assignments for any Pokemon species
 
 Custom assignments fully override built-in data per species. All Cobblemon-compatible species (including fakemons from mods like Alatias Pack, Mythical Collection, etc.) appear in the list automatically.
 
+**Adding Fakemons:** If your Fakemon doesn't appear in the species list, simply type its name in the search bar. A green **"+ Add"** option will appear — click it to create the species entry, assign skills, and save. The Fakemon will persist across restarts and show up in the list whenever you reopen the admin GUI.
+
 ---
 
 ## Configuration

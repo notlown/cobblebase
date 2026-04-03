@@ -2,12 +2,16 @@
   "species": "xenoscorp",
   "skills": [
     {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:finder_see",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:guard",
@@ -15,15 +19,23 @@
     },
     {
       "skillId": "cobblebase:healer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
       "proficiency": 4
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 4
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
     }
   ]
 }

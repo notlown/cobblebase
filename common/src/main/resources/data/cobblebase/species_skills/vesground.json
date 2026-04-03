@@ -2,16 +2,20 @@
   "species": "vesground",
   "skills": [
     {
-      "skillId": "cobblebase:finder_ore",
+      "skillId": "cobblebase:aura_boost",
       "proficiency": 3
     },
     {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:finder_see",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:guard",
@@ -19,11 +23,15 @@
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 4
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 4
+      "proficiency": 5
     }
   ]
 }

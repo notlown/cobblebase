@@ -2,16 +2,20 @@
   "species": "drostya",
   "skills": [
     {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:fishing",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:guard",
@@ -19,19 +23,27 @@
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:irrigator",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
-      "skillId": "cobblebase:mentor",
+      "skillId": "cobblebase:lucky_charm",
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:water_fill",
-      "proficiency": 2
+      "proficiency": 3
     }
   ]
 }

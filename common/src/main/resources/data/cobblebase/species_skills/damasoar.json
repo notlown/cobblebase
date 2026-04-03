@@ -3,15 +3,15 @@
   "skills": [
     {
       "skillId": "cobblebase:fishing",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:irrigator",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:scout",
@@ -19,11 +19,11 @@
     },
     {
       "skillId": "cobblebase:snow_fill",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:water_fill",
-      "proficiency": 2
+      "proficiency": 3
     }
   ]
 }

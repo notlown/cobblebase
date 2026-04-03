@@ -3,15 +3,15 @@
   "skills": [
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:snow_fill",
-      "proficiency": 3
+      "proficiency": 4
     }
   ]
 }

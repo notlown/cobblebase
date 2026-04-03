@@ -3,7 +3,7 @@
   "skills": [
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:guard",
@@ -11,11 +11,11 @@
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 4
+      "proficiency": 5
     }
   ]
 }

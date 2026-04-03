@@ -2,16 +2,28 @@
   "species": "eonize",
   "skills": [
     {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:guard",
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:mining",
+      "skillId": "cobblebase:healer",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:scout",

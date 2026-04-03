@@ -2,10 +2,6 @@
   "species": "thoraxe",
   "skills": [
     {
-      "skillId": "cobblebase:finder_held",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:finder_see",
       "proficiency": 2
     },
@@ -19,7 +15,7 @@
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 2
+      "proficiency": 3
     }
   ]
 }

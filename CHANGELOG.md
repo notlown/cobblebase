@@ -4,7 +4,7 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
-## [1.2.0] - 2026-04-03
+## [1.3.0] - Unreleased
 
 ### Admin GUI — In-Game Species Skill Editor
 - **`/cobblebase admin`** command opens a two-pane admin screen (OP level 2 required)
@@ -20,6 +20,10 @@ All notable changes to Cobblebase are documented here.
 - **0.75x font scaling** — consistent compact text across all panels
 - **Click+drag scrollbars** — both panels have functional draggable scrollbars
 - **Buff particles disabled** — player particles from aura buffs (speed swirls, haste glitter etc.) removed
+
+---
+
+## [1.2.0] - 2026-04-03
 
 ### Bug Fixes
 - **Fixed GUI blur on Minecraft 1.21+** — Vanilla `Screen.render()` applies a Gaussian blur shader by default in 1.21+. Replaced `super.render()` with manual widget rendering to prevent blur without breaking button functionality

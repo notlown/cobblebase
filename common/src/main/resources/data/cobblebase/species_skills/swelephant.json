@@ -2,6 +2,10 @@
   "species": "swelephant",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:finder_stat",
       "proficiency": 3
     },

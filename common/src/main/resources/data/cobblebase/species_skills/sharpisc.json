@@ -2,6 +2,10 @@
   "species": "sharpisc",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:finder_held",
       "proficiency": 2
     },

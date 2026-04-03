@@ -2,6 +2,10 @@
   "species": "ironblaster",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:finder_ore",
       "proficiency": 3
     },

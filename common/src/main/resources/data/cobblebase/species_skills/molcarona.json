@@ -2,6 +2,10 @@
   "species": "molcarona",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:finder_exp",
       "proficiency": 3
     },

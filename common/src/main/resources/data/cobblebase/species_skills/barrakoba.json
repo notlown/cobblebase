@@ -2,6 +2,10 @@
   "species": "barrakoba",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:finder_held",
       "proficiency": 3
     },

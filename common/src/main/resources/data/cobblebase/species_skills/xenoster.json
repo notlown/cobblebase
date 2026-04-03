@@ -2,6 +2,10 @@
   "species": "xenoster",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:finder_exp",
       "proficiency": 2
     },

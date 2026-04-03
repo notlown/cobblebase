@@ -2,6 +2,10 @@
   "species": "mareanie",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:finder_hea",
       "proficiency": 1
     },

@@ -2,6 +2,10 @@
   "species": "buizel",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:fishing",
       "proficiency": 2
     },

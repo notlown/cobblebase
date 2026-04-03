@@ -2,6 +2,10 @@
   "species": "blastoise",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:fishing",
       "proficiency": 5
     },

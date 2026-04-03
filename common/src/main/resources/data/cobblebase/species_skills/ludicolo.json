@@ -2,6 +2,10 @@
   "species": "ludicolo",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:finder_see",
       "proficiency": 1
     },

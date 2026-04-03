@@ -2,6 +2,10 @@
   "species": "keldeo",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:finder_stat",
       "proficiency": 3
     },

@@ -2,6 +2,10 @@
   "species": "relido",
   "skills": [
     {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:finder_bui",
       "proficiency": 3
     },

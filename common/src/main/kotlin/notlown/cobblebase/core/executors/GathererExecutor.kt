@@ -38,8 +38,8 @@ object GathererExecutor : SkillExecutor {
     private val lastSearchTime = mutableMapOf<UUID, Long>()
 
     private const val NAV_TIMEOUT_TICKS = 60L         // 3 seconds - auto-pickup if can't reach
-    private const val SEARCH_INTERVAL_TICKS = 20L    // 1 second between scans when nothing found
-    private const val BASE_COOLDOWN_SECONDS = 2L     // 2 seconds between pickups (was 5)
+    private const val SEARCH_INTERVAL_TICKS = 20L    // 1 second between scans
+    private const val BASE_COOLDOWN_SECONDS = 2L     // 2 seconds between pickups
 
     /**
      * Returns search radius based on proficiency (1-5).
@@ -157,10 +157,21 @@ object GathererExecutor : SkillExecutor {
         val stack = itemEntity.stack.copy()
         if (stack.isEmpty) return
 
-        // Remove the item entity from the world
+        // Remove the target item
         itemEntity.discard()
 
-        heldItems[pokemonId] = listOf(stack)
+        // Also grab ALL other items within 3 blocks (batch pickup)
+        val nearbyItems = world.getEntitiesByClass(ItemEntity::class.java,
+            net.minecraft.util.math.Box.of(pokemonEntity.pos, 6.0, 4.0, 6.0)
+        ) { it.isAlive && !it.stack.isEmpty && it.id != itemEntity.id }
+
+        val allStacks = mutableListOf(stack)
+        for (nearby in nearbyItems.take(15)) { // max 15 items per batch
+            allStacks.add(nearby.stack.copy())
+            nearby.discard()
+        }
+
+        heldItems[pokemonId] = allStacks
 
         // Show gathered item visually — spawn a no-gravity, no-pickup item floating above the Pokemon
         // Remove any existing visual item first

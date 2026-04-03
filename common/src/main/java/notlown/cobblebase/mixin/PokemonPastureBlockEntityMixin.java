@@ -148,7 +148,7 @@ public class PokemonPastureBlockEntityMixin {
             // Keep mons moving naturally — if idle, wander near the pasture
             if (pokemonEntity.getNavigation().isIdle()) {
                 try {
-                    NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 5);
+                    NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
                 } catch (Exception ignored) { }
             }
         }

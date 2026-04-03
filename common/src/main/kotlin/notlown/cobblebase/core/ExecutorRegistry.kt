@@ -17,6 +17,9 @@ import notlown.cobblebase.core.executors.RecruiterExecutor
 import notlown.cobblebase.core.executors.BuffExecutor
 import notlown.cobblebase.core.executors.ScoutExecutor
 import notlown.cobblebase.core.executors.LuckyCharmExecutor
+import notlown.cobblebase.core.executors.ExtinguisherExecutor
+import notlown.cobblebase.core.executors.AuraBoostExecutor
+import notlown.cobblebase.core.executors.GrowthAuraExecutor
 
 /**
  * Maps executor names (from Skill JSON) to executor implementations.
@@ -74,15 +77,15 @@ object ExecutorRegistry {
 
         // -- Utility --
         register("irrigate", IrrigatorExecutor)
-        register("extinguish", GenericLootExecutor)        // Placeholder: extinguisher removes fire
+        register("extinguish", ExtinguisherExecutor)
         register("gather_items", GathererExecutor)
         register("scout", ScoutExecutor)                     // Scout: discovers wild Pokemon, structures, biomes
 
         // -- Legendary / Fairy --
         register("recruiter", RecruiterExecutor)           // Spawns rare wild Pokemon nearby
-        register("aura", GenericLootExecutor)              // Placeholder: passive aura buff
+        register("aura", AuraBoostExecutor)
         register("lucky_charm", LuckyCharmExecutor)          // Boosts shiny rate for nearby wild Pokemon
-        register("growth", GenericLootExecutor)            // Placeholder: growth aura
+        register("growth", GrowthAuraExecutor)
 
         Cobblebase.LOGGER.info("ExecutorRegistry: ${executors.size} executors registered")
     }

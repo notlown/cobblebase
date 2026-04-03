@@ -155,19 +155,33 @@ class SkillsPanel(
 
             val textColor = if (btn.selected) 0xFFFFFF else 0xBBBBBB
             val nameText = btn.displayName
-            val nameWidth = textRenderer.getWidth(nameText)
-            context.drawTextWithShadow(textRenderer, nameText, rx + (BTN_WIDTH - nameWidth) / 2, ry + 4, textColor)
+
+            // Scale text to 0.75x for better readability in small buttons
+            val scale = 0.75f
+            val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
+            val textX = rx + (BTN_WIDTH - nameWidth) / 2
+            val textY = ry + 4
+
+            context.matrices.push()
+            context.matrices.translate(textX.toFloat(), textY.toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
+            context.matrices.pop()
 
             if (btn.proficiency > 0) {
                 val stars = "\u2605".repeat(btn.proficiency) + "\u2606".repeat(5 - btn.proficiency)
-                val starColor = when {
-                    btn.proficiency >= 5 -> 0xFFD700
-                    btn.proficiency >= 4 -> 0xFFA500
-                    btn.proficiency >= 3 -> 0x88CC88
-                    else -> 0x888888
-                }
-                val starWidth = textRenderer.getWidth(stars)
-                context.drawText(textRenderer, stars, rx + (BTN_WIDTH - starWidth) / 2, ry + 13, starColor, false)
+                val starColor = if (btn.proficiency >= 5) 0xFFD700
+                    else if (btn.proficiency >= 4) 0xFFA500
+                    else if (btn.proficiency >= 3) 0x88CC88
+                    else 0x888888
+                val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
+                val starX = rx + (BTN_WIDTH - starWidth) / 2
+
+                context.matrices.push()
+                context.matrices.translate(starX.toFloat(), (ry + 12).toFloat(), 0f)
+                context.matrices.scale(scale, scale, 1f)
+                context.drawText(textRenderer, stars, 0, 0, starColor, false)
+                context.matrices.pop()
             }
         }
 

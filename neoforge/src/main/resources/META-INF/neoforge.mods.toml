@@ -1,0 +1,45 @@
+modLoader = "kotlinforforge"
+loaderVersion = "[5,)"
+license = "MPL-2.0"
+
+[[mods]]
+modId = "cobblebase"
+version = "${version}"
+displayName = "Cobblebase"
+description = "Palworld-style Pokemon base management for Cobblemon. Every Pokemon has unique job skills."
+authors = "notlown"
+logoFile = "cobblebase_icon.png"
+
+[[dependencies.cobblebase]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.cobblebase]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.21.2)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.cobblebase]]
+modId = "cobblemon"
+type = "required"
+versionRange = "[1.7.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.cobblebase]]
+modId = "kotlinforforge"
+type = "required"
+versionRange = "[5.0.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[mixins]]
+config = "cobblebase.mixins.json"
+
+[[mixins]]
+config = "cobblebase-neoforge.mixins.json"

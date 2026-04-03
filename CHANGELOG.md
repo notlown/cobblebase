@@ -42,6 +42,9 @@ Skills auto-assigned by typing, base stats, and BST tiers:
 - **Diving loot table** — Prismarine, Nautilus Shells, Heart of the Sea, Trident
 - **Chest deposit for all loot jobs** — Diving, Archeologist, Honey Collect now deposit into nearby chests instead of dropping on ground
 - **Farfetch'd crash fix** — Species names with special characters no longer crash the GUI
+- **Skill selection GUI fix** — Selected skills no longer reset to "Auto" on tab switch or scroll
+- **Water tethering mixin** — Prevents Cobblemon from teleporting swimming Pokemon out of water
+- **Diving mons stay in water** — `canWalkOnWater` set via reflection for diving Pokemon
 
 **Total species: 8,426**
 

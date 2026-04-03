@@ -255,9 +255,16 @@ object PokemonSpriteHelper {
      * Try to resolve a species Identifier from a display name.
      */
     private fun resolveSpeciesFromName(name: String): Identifier? {
-        val normalized = name.trim().lowercase().replace(" ", "_").replace("-", "_")
-        val id = Identifier.of("cobblemon", normalized)
-        return if (PokemonSpecies.getByIdentifier(id) != null) id else null
+        val normalized = name.trim().lowercase()
+            .replace(" ", "_").replace("-", "_")
+            .replace(Regex("[^a-z0-9/._-]"), "") // Strip invalid identifier chars
+        if (normalized.isEmpty()) return null
+        return try {
+            val id = Identifier.of("cobblemon", normalized)
+            if (PokemonSpecies.getByIdentifier(id) != null) id else null
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /**

@@ -139,14 +139,17 @@ object GathererExecutor : SkillExecutor {
     }
 
     /**
-     * Finds the nearest dropped ItemEntity within the search radius.
+     * Finds the OLDEST dropped ItemEntity within the search radius.
+     * Prioritizes by age (oldest first) so far-away items don't get starved
+     * by constantly spawning nearby items.
      */
     private fun findNearestDroppedItem(world: ServerWorld, pokemonEntity: PokemonEntity, radius: Double): ItemEntity? {
         val searchBox = Box.of(pokemonEntity.pos, radius * 2, radius * 2, radius * 2)
         val items = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { entity ->
             entity.isAlive && !entity.stack.isEmpty
         }
-        return items.minByOrNull { it.squaredDistanceTo(pokemonEntity) }
+        // Pick oldest item (highest age = been on ground longest)
+        return items.maxByOrNull { it.age }
     }
 
     /**

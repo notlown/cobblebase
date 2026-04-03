@@ -47,18 +47,35 @@ object FishingExecutor : SkillExecutor {
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val items = heldItems[pokemonId]
 
-        // For diving mons: force canWalkOnWater=true so they stay in/on water
-        val isDiving = skill.executor == "diving"
-        if (isDiving && pokemonId !in waterModeApplied) {
+        // Adjust swim behaviour for water mons: cap swimSpeed + enable canWalkOnWater for diving
+        if (pokemonId !in waterModeApplied) {
             try {
                 val swimBehaviour = pokemonEntity.behaviour.moving.swim
-                val field = swimBehaviour.javaClass.getDeclaredField("canWalkOnWater")
-                field.isAccessible = true
-                field.set(swimBehaviour, true)
+
+                // Cap swimSpeed to 0.15 for a more immersive, calm swimming animation
+                // swimSpeed is a MoLang Expression — use reflection to create one
+                val speedField = swimBehaviour.javaClass.getDeclaredField("swimSpeed")
+                speedField.isAccessible = true
+                val exprClass = Class.forName("com.bedrockk.molang.Expression")
+                val companionField = exprClass.getDeclaredField("Companion")
+                companionField.isAccessible = true
+                val companion = companionField.get(null)
+                val ofMethod = companion.javaClass.getMethod("of", Double::class.java)
+                val newSpeed = ofMethod.invoke(companion, 0.15)
+                speedField.set(swimBehaviour, newSpeed)
+
+                // For diving mons: also force canWalkOnWater=true
+                val isDiving = skill.executor == "diving"
+                if (isDiving) {
+                    val walkField = swimBehaviour.javaClass.getDeclaredField("canWalkOnWater")
+                    walkField.isAccessible = true
+                    walkField.set(swimBehaviour, true)
+                }
+
                 waterModeApplied.add(pokemonId)
-                Cobblebase.LOGGER.info("[FishingExecutor] Set canWalkOnWater=true for ${pokemonEntity.pokemon.species.name}")
             } catch (e: Exception) {
-                Cobblebase.LOGGER.warn("[FishingExecutor] Could not set canWalkOnWater: ${e.message}")
+                Cobblebase.LOGGER.warn("[FishingExecutor] Could not adjust swim behaviour: ${e.message}")
+                waterModeApplied.add(pokemonId) // Don't retry
             }
         }
 

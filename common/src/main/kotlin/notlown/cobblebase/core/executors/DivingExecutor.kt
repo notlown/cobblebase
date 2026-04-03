@@ -44,6 +44,10 @@ object DivingExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+
+        if (now % 100 == 0L) {
+            notlown.cobblebase.core.Cobblebase.LOGGER.info("[DivingExecutor] ${pokemonEntity.pokemon.species.name} ticking, inWater=${isInWater(world, pokemonEntity)}, pos=${pokemonEntity.blockPos}")
+        }
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val items = heldItems[pokemonId]
 

@@ -46,13 +46,6 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
-        // No noClip here — it caused issues with non-working Pokemon (party Pokemon, wild Pokemon)
-        // Flying Pokemon just use standard navigation like ground Pokemon
-
-        if (pokemonEntity.navigation.isIdle) {
-            pokemonEntity.navigation.stop()
-        }
-
         pokemonEntity.navigation.startMovingTo(
             targetPos.x + 0.5,
             targetPos.y.toDouble(),

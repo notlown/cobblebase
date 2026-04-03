@@ -1,10 +1,11 @@
 {
   "id": "cobblebase:honey_collect",
   "name": "Honey Collect",
-  "description": "Collects honey from beehives",
+  "description": "Produces honey and honeycomb",
   "category": "gathering",
   "cooldownSeconds": 120,
   "searchRadius": 10,
   "executor": "honey",
-  "effectType": "harvest"
+  "effectType": "harvest",
+  "lootTable": "cobblebase:honey_collect"
 }

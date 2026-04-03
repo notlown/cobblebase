@@ -4,6 +4,34 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [0.8.0] - 2026-04-03
+
+### Skills Tab Redesign
+- **Dynamic row height** — Mons with few skills use compact rows (24px), mons with many skills get tall rows (42px) for a tighter layout
+- **Aura icon inline** — Removed the separate Aura column; buff icon now appears between Pokemon name and Skills buttons (only if the mon has an aura buff)
+- **Sprite alignment fix** — Pokemon sprite icon is now top-aligned to match name/level text
+- **Column headers fix** — Headers no longer overlap with the first row entries
+
+### Aura Buff Rarity Overhaul
+All aura buffs are now significantly rarer — only the most thematic Pokemon retain them.
+
+| Buff | Before | After | Example Keepers |
+|------|--------|-------|-----------------|
+| Water Breathing | 133 | 18 | Kyogre, Milotic, Lapras, Vaporeon, Wailord |
+| Night Vision | 132 | 15 | Giratina, Umbreon, Darkrai, Yveltal, Spectrier |
+| Speed Boost | 45 | 12 | Ninjask, Regieleki, Rapidash, Jolteon, Zeraora |
+| Strength Boost | 55 | 12 | Kartana, Rayquaza, Groudon, Machamp, Regigigas |
+| Resistance Boost | 58 | 12 | Regirock, Steelix, Melmetal, Aggron, Shuckle |
+| Haste Boost | 53 | 12 | Palkia, Dialga, Rayquaza, Mewtwo, Alakazam |
+| Saturation Boost | 27 | 10 | Slurpuff, Snorlax, Munchlax, Ting-Lu, Blissey |
+| Jump Boost | 5 | 5 | *(unchanged)* |
+
+### UI Cleanup
+- Removed tab title lines ("Active Buffs & Jobs", "Activity Log", "Discovery Map") from all tabs for more content space
+- Removed "Click to assign | Scroll" hint text
+
+---
+
 ## [0.7.0] - 2026-04-01
 
 ### Finder Jobs Renamed to Themed Names

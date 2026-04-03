@@ -56,7 +56,7 @@ object GathererExecutor : SkillExecutor {
      * Prof 1 = 0.4 (slow), Prof 5 = 1.2 (fast)
      */
     private fun getSpeedForProficiency(proficiency: Int): Double {
-        return 0.5 + (proficiency * 0.3) // faster: Prof 1 = 0.8, Prof 5 = 2.0
+        return 0.35 + (proficiency * 0.05) // Calm: Prof 1 = 0.4, Prof 5 = 0.6
     }
 
     override fun tick(

@@ -345,6 +345,8 @@ class SkillsPanel(
                 btn.selected = btn.skillId == skillId
             }
         }
+        // Update local client-side assignment so GUI shows correct state on re-init
+        BaseManager.assignSkill(pokemonId, skillId)
         ClientPlayNetworking.send(SkillAssignmentC2SPacket(pokemonId, skillId ?: ""))
     }
 

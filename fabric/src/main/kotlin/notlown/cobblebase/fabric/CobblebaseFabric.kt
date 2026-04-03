@@ -10,6 +10,11 @@ import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.SpeciesSkillOverrides
+import notlown.cobblebase.core.SpeciesSkillRegistry
+import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
+import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
+import notlown.cobblebase.core.net.AdminSpeciesUpdateC2SPacket
 import notlown.cobblebase.core.net.DiscoveryRequestC2SPacket
 import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
 import notlown.cobblebase.core.net.LogRequestC2SPacket
@@ -51,20 +56,43 @@ object CobblebaseFabric : ModInitializer {
         // Register S2C packet for discovery sync
         PayloadTypeRegistry.playS2C().register(DiscoverySyncS2CPacket.ID, DiscoverySyncS2CPacket.CODEC)
 
-        // Load assignments, logs, and discoveries when world starts
+        // Register C2S packet for admin species requests
+        PayloadTypeRegistry.playC2S().register(AdminSpeciesRequestC2SPacket.ID, AdminSpeciesRequestC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(AdminSpeciesRequestC2SPacket.ID) { _, context ->
+            context.server().execute {
+                val player = context.player()
+                if (!player.hasPermissionLevel(2)) return@execute
+                handleAdminSpeciesRequest(player)
+            }
+        }
+
+        // Register S2C packet for admin species sync
+        PayloadTypeRegistry.playS2C().register(AdminSpeciesSyncS2CPacket.ID, AdminSpeciesSyncS2CPacket.CODEC)
+
+        // Register C2S packet for admin species updates
+        PayloadTypeRegistry.playC2S().register(AdminSpeciesUpdateC2SPacket.ID, AdminSpeciesUpdateC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(AdminSpeciesUpdateC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                packet.handle(context.player())
+            }
+        }
+
+        // Load assignments, logs, discoveries, and overrides when world starts
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             val world = server.overworld
             BaseManager.load(world)
             LogManager.load(world)
             DiscoveryRegistry.load(world)
+            SpeciesSkillOverrides.load(world)
         }
 
-        // Save assignments, logs, and discoveries when world stops
+        // Save assignments, logs, discoveries, and overrides when world stops
         ServerLifecycleEvents.SERVER_STOPPING.register { server ->
             val world = server.overworld
             BaseManager.save(world)
             LogManager.save(world)
             DiscoveryRegistry.save(world)
+            SpeciesSkillOverrides.save(world)
         }
     }
 
@@ -106,5 +134,30 @@ object CobblebaseFabric : ModInitializer {
 
         val entries = LogManager.getEntries(pasturePos)
         ServerPlayNetworking.send(player, LogSyncS2CPacket(entries))
+    }
+
+    /**
+     * Handles an admin species request. Gathers all Cobblemon species,
+     * skill assignments, and override info, then sends to the requesting player.
+     */
+    private fun handleAdminSpeciesRequest(player: net.minecraft.server.network.ServerPlayerEntity) {
+        // Get all species from Cobblemon
+        val allSpecies = try {
+            com.cobblemon.mod.common.api.pokemon.PokemonSpecies.species
+                .map { it.name.lowercase() }
+                .sorted()
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.error("[Cobblebase] Failed to get Cobblemon species: ${e.message}")
+            emptyList()
+        }
+
+        // Get all assigned species skills
+        val assigned = SpeciesSkillRegistry.getAllAssigned()
+        val speciesSkills = assigned.mapValues { (_, v) -> v.skills }
+
+        // Get overridden species
+        val overridden = SpeciesSkillOverrides.getAllOverriddenSpecies()
+
+        ServerPlayNetworking.send(player, AdminSpeciesSyncS2CPacket(allSpecies, speciesSkills, overridden))
     }
 }

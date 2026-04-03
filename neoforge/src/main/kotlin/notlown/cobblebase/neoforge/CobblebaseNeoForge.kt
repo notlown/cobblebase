@@ -15,6 +15,11 @@ import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.SpeciesSkillOverrides
+import notlown.cobblebase.core.SpeciesSkillRegistry
+import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
+import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
+import notlown.cobblebase.core.net.AdminSpeciesUpdateC2SPacket
 import notlown.cobblebase.core.net.DiscoveryRequestC2SPacket
 import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
 import notlown.cobblebase.core.net.LogRequestC2SPacket
@@ -89,6 +94,42 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 DiscoveryRegistry.setClientDiscoveries(packet.discoveries)
             }
         }
+
+        // C2S: Admin species request
+        registrar.playToServer(
+            AdminSpeciesRequestC2SPacket.ID,
+            AdminSpeciesRequestC2SPacket.CODEC
+        ) { _, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!player.hasPermissionLevel(2)) return@enqueueWork
+                handleAdminSpeciesRequest(player, context)
+            }
+        }
+
+        // S2C: Admin species sync
+        registrar.playToClient(
+            AdminSpeciesSyncS2CPacket.ID,
+            AdminSpeciesSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.AdminDataCache.update(
+                    packet.allSpecies,
+                    packet.speciesSkills,
+                    packet.overriddenSpecies
+                )
+            }
+        }
+
+        // C2S: Admin species update
+        registrar.playToServer(
+            AdminSpeciesUpdateC2SPacket.ID,
+            AdminSpeciesUpdateC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
+            }
+        }
     }
 
     private fun onServerStarted(event: ServerStartedEvent) {
@@ -96,6 +137,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         BaseManager.load(world)
         LogManager.load(world)
         DiscoveryRegistry.load(world)
+        SpeciesSkillOverrides.load(world)
     }
 
     private fun onServerStopping(event: ServerStoppingEvent) {
@@ -103,6 +145,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         BaseManager.save(world)
         LogManager.save(world)
         DiscoveryRegistry.save(world)
+        SpeciesSkillOverrides.save(world)
     }
 
     /**
@@ -143,5 +186,29 @@ class CobblebaseNeoForge(modBus: IEventBus) {
 
         val entries = LogManager.getEntries(pasturePos)
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, LogSyncS2CPacket(entries))
+    }
+
+    /**
+     * Handles an admin species request. Gathers all Cobblemon species,
+     * skill assignments, and override info, then sends to the requesting player.
+     */
+    private fun handleAdminSpeciesRequest(
+        player: net.minecraft.server.network.ServerPlayerEntity,
+        context: net.neoforged.neoforge.network.handling.IPayloadContext
+    ) {
+        val allSpecies = try {
+            com.cobblemon.mod.common.api.pokemon.PokemonSpecies.species
+                .map { it.name.lowercase() }
+                .sorted()
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.error("[Cobblebase] Failed to get Cobblemon species: ${e.message}")
+            emptyList()
+        }
+
+        val assigned = SpeciesSkillRegistry.getAllAssigned()
+        val speciesSkills = assigned.mapValues { (_, v) -> v.skills }
+        val overridden = SpeciesSkillOverrides.getAllOverriddenSpecies()
+
+        context.reply(AdminSpeciesSyncS2CPacket(allSpecies, speciesSkills, overridden))
     }
 }

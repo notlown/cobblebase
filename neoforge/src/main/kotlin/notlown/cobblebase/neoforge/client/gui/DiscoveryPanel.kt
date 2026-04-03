@@ -126,22 +126,40 @@ class DiscoveryPanel(
             val rarityColor = entry.rarity.color
             context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, rarityColor)
 
-            context.drawTextWithShadow(textRenderer, entry.name, colName, ry + 2, rarityColor)
+            val scale = 0.75f
+
+            context.matrices.push()
+            context.matrices.translate(colName.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.name, 0, 0, rarityColor)
+            context.matrices.pop()
 
             val coordStr = "${entry.x}, ${entry.z}"
-            val coordWidth = textRenderer.getWidth(coordStr)
+            val coordWidth = (textRenderer.getWidth(coordStr) * scale).toInt()
             val isCoordHovered = mouseX >= colCoords && mouseX <= colCoords + coordWidth && mouseY >= ry + 2 && mouseY <= ry + 2 + 9
             val coordColor = if (isCoordHovered) 0xAAFFFF else 0x55FFFF
-            context.drawTextWithShadow(textRenderer, coordStr, colCoords, ry + 2, coordColor)
+            context.matrices.push()
+            context.matrices.translate(colCoords.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, coordStr, 0, 0, coordColor)
+            context.matrices.pop()
             if (isCoordHovered) {
                 context.fill(colCoords, ry + 9, colCoords + coordWidth, ry + 10, 0xAAFFFF.toInt() or (0xFF shl 24))
             }
             coordHitBoxes.add(CoordHitBox(entry.x, entry.z, colCoords, ry + 2, coordWidth))
 
-            context.drawTextWithShadow(textRenderer, entry.discoveredBy, colBy, ry + 2, 0xFFFFFF)
+            context.matrices.push()
+            context.matrices.translate(colBy.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.discoveredBy, 0, 0, 0xFFFFFF)
+            context.matrices.pop()
 
             val whenStr = dateFormat.format(Date(entry.timestamp))
-            context.drawTextWithShadow(textRenderer, whenStr, colWhen, ry + 2, 0x999999)
+            context.matrices.push()
+            context.matrices.translate(colWhen.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, whenStr, 0, 0, 0x999999)
+            context.matrices.pop()
         }
 
         context.disableScissor()

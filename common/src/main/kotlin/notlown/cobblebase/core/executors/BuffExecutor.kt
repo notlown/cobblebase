@@ -12,7 +12,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
-import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -90,16 +89,7 @@ class BuffExecutor(
             player.addStatusEffect(effectInstance)
             appliedCount++
 
-            // Log only when a player first receives the buff (not every reapply)
-            if (trackedPlayers.add(player.uuid)) {
-                LogManager.log(
-                    origin, now,
-                    pokemonEntity.pokemon.species.name,
-                    "Buffed",
-                    "${getBuffDisplayName()} on ${player.name.string}",
-                    LogManager.Rarity.UNCOMMON
-                )
-            }
+            trackedPlayers.add(player.uuid)
         }
 
         // Clean up tracked players who are no longer in range

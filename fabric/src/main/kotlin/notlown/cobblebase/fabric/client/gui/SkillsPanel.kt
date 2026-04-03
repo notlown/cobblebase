@@ -32,7 +32,7 @@ class SkillsPanel(
     private val HEADER_HEIGHT = 14
     private val PANEL_PADDING = 8
     private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
-    private val NAME_WIDTH = 70 + ICON_OFFSET
+    private val NAME_WIDTH = 50 + ICON_OFFSET
     private val AURA_ICON_WIDTH = 15
     private val BTN_WIDTH = 58
     private val BTN_HEIGHT = 16
@@ -81,19 +81,14 @@ class SkillsPanel(
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
 
-            // Check if this mon has an aura buff
-            val hasAura = availableSkills.any { entry ->
-                val skillDef = SkillRegistry.get(entry.skillId)
-                skillDef != null && BaseManager.isBuffExecutor(skillDef.executor)
-            }
-
             // Count assignable (non-buff) skills + Auto button
             val assignableCount = 1 + availableSkills.count { entry ->
                 val skillDef = SkillRegistry.get(entry.skillId)
                 skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor)
             }
 
-            val btnStartX = panelX + PANEL_PADDING + NAME_WIDTH + (if (hasAura) AURA_ICON_WIDTH else 0)
+            // Aura column is always reserved so buttons stay aligned
+            val btnStartX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
             val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
             val btnsPerRow = ((maxBtnX - btnStartX) / (BTN_WIDTH + BTN_GAP)) + 1
             val needsTwoRows = assignableCount > btnsPerRow

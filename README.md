@@ -226,20 +226,11 @@ Output JAR in `fabric/build/libs/`. Requires **Java 21**.
 
 ## 💬 Community & Support
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <a href="https://discord.gg/6As3sVZgVT">
-        <img src="discord_banner.png" alt="Join us on Discord" width="320">
-      </a>
-    </td>
-    <td align="center" width="50%">
-      <a href="https://ko-fi.com/notlown">
-        <img src="kofi_banner.png" alt="Support me on Ko-fi" width="320">
-      </a>
-    </td>
-  </tr>
-</table>
+<div align="center">
+<a href="https://discord.gg/6As3sVZgVT"><img src="discord_banner.png" alt="Join us on Discord" height="80"></a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://ko-fi.com/notlown"><img src="kofi_banner.png" alt="Support me on Ko-fi" height="80"></a>
+</div>
 
 ---
 

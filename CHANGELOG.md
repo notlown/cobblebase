@@ -52,6 +52,8 @@ Skills auto-assigned by typing, base stats, and BST tiers:
 - **Movement speed halved** — NavigationHelper default speed reduced from 1.0 to 0.5 for calmer base gameplay
 - **Gatherer speed reduced** — Prof 1: 0.4, Prof 5: 0.6 (was 0.8 - 2.0)
 - **Idle wandering** — All mons now wander randomly (15 block radius) when idle instead of standing still on the pasture box
+- **Natural species speed** — Mons use their Cobblemon walkSpeed (capped at 0.4) instead of hardcoded values
+- **Item dupe glitch fixed** — Gatherer now claims items immediately on targeting (sets pickupDelay to prevent simultaneous player pickup)
 
 **Total species: 8,426**
 

@@ -1,0 +1,9 @@
+{
+  "species": "typecast",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

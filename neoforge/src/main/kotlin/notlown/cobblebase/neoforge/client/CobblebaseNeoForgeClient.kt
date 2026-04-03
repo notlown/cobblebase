@@ -22,7 +22,6 @@ object CobblebaseNeoForgeClient {
     )
 
     @SubscribeEvent
-    @JvmStatic
     fun onClientTick(event: ClientTickEvent.Post) {
         val client = net.minecraft.client.MinecraftClient.getInstance()
         if (settingsKey.wasPressed()) {
@@ -36,7 +35,6 @@ object CobblebaseNeoForgeClient {
 object CobblebaseNeoForgeClientModEvents {
 
     @SubscribeEvent
-    @JvmStatic
     fun onRegisterKeyMappings(event: RegisterKeyMappingsEvent) {
         event.register(CobblebaseNeoForgeClient.settingsKey)
     }

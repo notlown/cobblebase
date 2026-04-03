@@ -2,21 +2,28 @@ package notlown.cobblebase.fabric.client
 
 import me.shedaniel.autoconfig.AutoConfig
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
+import notlown.cobblebase.core.AdminDataCache
 import notlown.cobblebase.core.CobblebaseClothConfig
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
+import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
 import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
 import notlown.cobblebase.core.net.LogSyncS2CPacket
+import notlown.cobblebase.fabric.client.gui.AdminScreen
 import org.lwjgl.glfw.GLFW
 
 object CobblebaseFabricClient : ClientModInitializer {
 
     private lateinit var settingsKey: KeyBinding
+    private var pendingAdminScreen = false
 
     override fun onInitializeClient() {
         // Register keybinding: K = open Cobblebase settings
@@ -33,6 +40,12 @@ object CobblebaseFabricClient : ClientModInitializer {
                 val screen = AutoConfig.getConfigScreen(CobblebaseClothConfig::class.java, client.currentScreen).get()
                 client.setScreen(screen)
             }
+
+            // Open admin screen once data arrives
+            if (pendingAdminScreen && AdminDataCache.allSpecies.isNotEmpty()) {
+                pendingAdminScreen = false
+                client.setScreen(AdminScreen())
+            }
         }
 
         // Register S2C log sync packet receiver
@@ -47,6 +60,25 @@ object CobblebaseFabricClient : ClientModInitializer {
             context.client().execute {
                 DiscoveryRegistry.setClientDiscoveries(packet.discoveries)
             }
+        }
+
+        // Register S2C admin species sync packet receiver
+        ClientPlayNetworking.registerGlobalReceiver(AdminSpeciesSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                AdminDataCache.update(packet.allSpecies, packet.speciesSkills, packet.overriddenSpecies)
+            }
+        }
+
+        // Register /cobblebase admin client command
+        ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
+            dispatcher.register(
+                ClientCommandManager.literal("cobblebase")
+                    .then(ClientCommandManager.literal("admin").executes { _ ->
+                        pendingAdminScreen = true
+                        ClientPlayNetworking.send(AdminSpeciesRequestC2SPacket())
+                        1
+                    })
+            )
         }
     }
 }

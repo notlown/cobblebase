@@ -7,9 +7,16 @@ import net.neoforged.api.distmarker.Dist
 import net.neoforged.bus.api.SubscribeEvent
 import net.neoforged.fml.common.EventBusSubscriber
 import net.neoforged.neoforge.client.event.ClientTickEvent
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent
+import net.neoforged.neoforge.network.PacketDistributor
+import notlown.cobblebase.core.AdminDataCache
 import notlown.cobblebase.core.CobblebaseClothConfig
+import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
+import notlown.cobblebase.neoforge.client.gui.AdminScreen
 import org.lwjgl.glfw.GLFW
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
+import net.minecraft.server.command.ServerCommandSource
 
 @EventBusSubscriber(modid = "cobblebase", value = [Dist.CLIENT], bus = EventBusSubscriber.Bus.GAME)
 object CobblebaseNeoForgeClient {
@@ -21,6 +28,8 @@ object CobblebaseNeoForgeClient {
         "Cobblebase"
     )
 
+    private var pendingAdminScreen = false
+
     @SubscribeEvent
     fun onClientTick(event: ClientTickEvent.Post) {
         val client = net.minecraft.client.MinecraftClient.getInstance()
@@ -28,6 +37,24 @@ object CobblebaseNeoForgeClient {
             val screen = AutoConfig.getConfigScreen(CobblebaseClothConfig::class.java, client.currentScreen).get()
             client.setScreen(screen)
         }
+
+        // Open admin screen once data arrives
+        if (pendingAdminScreen && AdminDataCache.allSpecies.isNotEmpty()) {
+            pendingAdminScreen = false
+            client.setScreen(AdminScreen())
+        }
+    }
+
+    @SubscribeEvent
+    fun onRegisterClientCommands(event: RegisterClientCommandsEvent) {
+        event.dispatcher.register(
+            LiteralArgumentBuilder.literal<ServerCommandSource>("cobblebase")
+                .then(LiteralArgumentBuilder.literal<ServerCommandSource>("admin").executes { _ ->
+                    pendingAdminScreen = true
+                    PacketDistributor.sendToServer(AdminSpeciesRequestC2SPacket())
+                    1
+                })
+        )
     }
 }
 

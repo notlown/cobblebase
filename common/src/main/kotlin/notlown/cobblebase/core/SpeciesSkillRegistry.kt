@@ -11,6 +11,7 @@ import java.io.InputStreamReader
 object SpeciesSkillRegistry {
     private val gson = Gson()
     private val speciesMap = mutableMapOf<String, SpeciesSkills>()
+    private val builtInMap = mutableMapOf<String, SpeciesSkills>()
 
     fun init() {
         loadFromResources()
@@ -18,6 +19,8 @@ object SpeciesSkillRegistry {
     }
 
     fun getSkills(species: String): SpeciesSkills? = speciesMap[species.lowercase()]
+    fun getBuiltInSkills(species: String): SpeciesSkills? = builtInMap[species.lowercase()]
+    fun getAllAssigned(): Map<String, SpeciesSkills> = speciesMap.toMap()
     fun register(speciesSkills: SpeciesSkills) { speciesMap[speciesSkills.species.lowercase()] = speciesSkills }
 
     private fun loadFromResources() {
@@ -47,6 +50,7 @@ object SpeciesSkillRegistry {
                 }
                 if (speciesSkills != null) {
                     register(speciesSkills)
+                    builtInMap[speciesSkills.species.lowercase()] = speciesSkills
                 } else {
                     Cobblebase.LOGGER.warn("[Cobblebase] Failed to parse species skills from $fileName")
                 }

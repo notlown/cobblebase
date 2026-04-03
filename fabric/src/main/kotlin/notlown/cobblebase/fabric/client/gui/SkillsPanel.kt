@@ -34,6 +34,7 @@ class SkillsPanel(
     private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
     private val NAME_WIDTH = 50 + ICON_OFFSET
     private val AURA_ICON_WIDTH = 15
+    private val AUTO_BTN_WIDTH = 36
     private val BTN_WIDTH = 58
     private val BTN_HEIGHT = 16
     private val BTN_GAP = 2
@@ -81,36 +82,37 @@ class SkillsPanel(
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
 
-            // Count assignable (non-buff) skills + Auto button
-            val assignableCount = 1 + availableSkills.count { entry ->
+            // Count assignable (non-buff) skills (without Auto)
+            val skillCount = availableSkills.count { entry ->
                 val skillDef = SkillRegistry.get(entry.skillId)
                 skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor)
             }
 
-            // Aura column is always reserved so buttons stay aligned
-            val btnStartX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
+            // Auto button has its own column, skills start after it
+            val autoX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
+            val skillStartX = autoX + AUTO_BTN_WIDTH + BTN_GAP
             val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
-            val btnsPerRow = ((maxBtnX - btnStartX) / (BTN_WIDTH + BTN_GAP)) + 1
-            val needsTwoRows = assignableCount > btnsPerRow
+            val btnsPerRow = ((maxBtnX - skillStartX) / (BTN_WIDTH + BTN_GAP)) + 1
+            val needsTwoRows = skillCount > btnsPerRow
             val rowH = if (needsTwoRows) ROW_HEIGHT_LARGE else ROW_HEIGHT_SMALL
 
             rowOffsets.add(cumulativeY)
             rowHeights.add(rowH)
 
             val rowY = contentY + cumulativeY
-            var btnX = btnStartX
-            var btnY = rowY
 
-            // Auto button
-            allButtons.add(SkillButtonData(pokemonId, null, "Auto", 0, "", btnX, btnY, currentAssignment == null))
-            btnX += BTN_WIDTH + BTN_GAP
+            // Auto button in its own column
+            allButtons.add(SkillButtonData(pokemonId, null, "Auto", 0, "", autoX, rowY, currentAssignment == null))
+
+            // Skill buttons start after Auto column
+            var btnX = skillStartX
+            var btnY = rowY
 
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
-                // Skip buff skills — they are passive and not assignable
                 if (BaseManager.isBuffExecutor(skillDef.executor)) continue
                 if (btnX > maxBtnX) {
-                    btnX = btnStartX
+                    btnX = skillStartX
                     btnY = rowY + BTN_HEIGHT + BTN_GAP
                 }
                 allButtons.add(SkillButtonData(
@@ -191,11 +193,13 @@ class SkillsPanel(
         for (btn in allButtons) {
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
+            val isAutoBtn = btn.skillId == null
+            val bw = if (isAutoBtn) AUTO_BTN_WIDTH else BTN_WIDTH
 
             if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) continue
-            if (rx + BTN_WIDTH < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
+            if (rx + bw < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
 
-            val hovered = mouseX in rx..(rx + BTN_WIDTH) && mouseY in ry..(ry + BTN_HEIGHT)
+            val hovered = mouseX in rx..(rx + bw) && mouseY in ry..(ry + BTN_HEIGHT)
 
             val categoryColor = CobblebaseScreen.CATEGORY_COLORS[btn.category] ?: 0xFF666666.toInt()
             val bg = when {
@@ -203,13 +207,13 @@ class SkillsPanel(
                 hovered -> 0xFF4A4A6A.toInt()
                 else -> 0xFF2A2A3E.toInt()
             }
-            context.fill(rx, ry + 2, rx + BTN_WIDTH, ry + 2 + BTN_HEIGHT, bg)
+            context.fill(rx, ry + 2, rx + bw, ry + 2 + BTN_HEIGHT, bg)
 
             val border = if (btn.selected) 0xFFFFFFFF.toInt() else 0xFF555577.toInt()
-            context.drawHorizontalLine(rx, rx + BTN_WIDTH - 1, ry + 2, border)
-            context.drawHorizontalLine(rx, rx + BTN_WIDTH - 1, ry + 1 + BTN_HEIGHT, border)
+            context.drawHorizontalLine(rx, rx + bw - 1, ry + 2, border)
+            context.drawHorizontalLine(rx, rx + bw - 1, ry + 1 + BTN_HEIGHT, border)
             context.drawVerticalLine(rx, ry + 2, ry + 1 + BTN_HEIGHT, border)
-            context.drawVerticalLine(rx + BTN_WIDTH - 1, ry + 2, ry + 1 + BTN_HEIGHT, border)
+            context.drawVerticalLine(rx + bw - 1, ry + 2, ry + 1 + BTN_HEIGHT, border)
 
             val textColor = if (btn.selected) 0xFFFFFF else 0xBBBBBB
             val nameText = btn.displayName
@@ -217,7 +221,7 @@ class SkillsPanel(
             // Scale text to 0.75x for better readability in small buttons
             val scale = 0.75f
             val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
-            val textX = rx + (BTN_WIDTH - nameWidth) / 2
+            val textX = rx + (bw - nameWidth) / 2
             val textY = ry + 4
 
             context.matrices.push()
@@ -233,7 +237,7 @@ class SkillsPanel(
                     else if (btn.proficiency >= 3) 0x88CC88
                     else 0x888888
                 val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
-                val starX = rx + (BTN_WIDTH - starWidth) / 2
+                val starX = rx + (bw - starWidth) / 2
 
                 context.matrices.push()
                 context.matrices.translate(starX.toFloat(), (ry + 12).toFloat(), 0f)
@@ -284,7 +288,8 @@ class SkillsPanel(
         for (btn in allButtons) {
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
-            if (mouseX >= rx && mouseX <= rx + BTN_WIDTH &&
+            val bw = if (btn.skillId == null) AUTO_BTN_WIDTH else BTN_WIDTH
+            if (mouseX >= rx && mouseX <= rx + bw &&
                 mouseY >= ry + 2 && mouseY <= ry + 2 + BTN_HEIGHT &&
                 mouseY >= contentY && mouseY < contentBottom
             ) {

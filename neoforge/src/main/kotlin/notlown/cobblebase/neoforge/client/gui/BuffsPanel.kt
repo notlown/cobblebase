@@ -52,7 +52,8 @@ class BuffsPanel(
         val skillName: String,
         val category: String,
         val proficiency: Int,
-        val description: String
+        val description: String,
+        val isPassiveBuff: Boolean = false
     )
 
     private var entries = listOf<BuffEntry>()
@@ -79,11 +80,30 @@ class BuffsPanel(
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
 
+            // Always add passive buff skills (they are always active in the pasture)
+            for (entry in availableSkills) {
+                val skillDef = SkillRegistry.get(entry.skillId) ?: continue
+                if (BaseManager.isBuffExecutor(skillDef.executor)) {
+                    result.add(BuffEntry(
+                        pokemonName = pokemonName,
+                        species = species,
+                        aspects = aspects,
+                        level = level,
+                        skillName = skillDef.name,
+                        category = skillDef.category,
+                        proficiency = entry.proficiency,
+                        description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds),
+                        isPassiveBuff = true
+                    ))
+                }
+            }
+
+            // Add assigned job (non-buff skills only)
             if (assignment != null) {
                 val entry = availableSkills.find { it.skillId == assignment }
                 if (entry != null) {
                     val skillDef = SkillRegistry.get(entry.skillId)
-                    if (skillDef != null) {
+                    if (skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor)) {
                         result.add(BuffEntry(
                             pokemonName = pokemonName,
                             species = species,
@@ -97,8 +117,10 @@ class BuffsPanel(
                     }
                 }
             } else {
+                // Auto mode: all non-buff skills active
                 for (entry in availableSkills) {
                     val skillDef = SkillRegistry.get(entry.skillId) ?: continue
+                    if (BaseManager.isBuffExecutor(skillDef.executor)) continue
                     result.add(BuffEntry(
                         pokemonName = pokemonName,
                         species = species,
@@ -199,7 +221,8 @@ class BuffsPanel(
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
-            val catColor = CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
+            val catColor = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
+                else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
             context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, catColor)
 
             PokemonSpriteHelper.renderIcon(
@@ -210,7 +233,13 @@ class BuffsPanel(
             context.drawTextWithShadow(textRenderer, entry.pokemonName, colPokemon + 4 + ICON_OFFSET, ry + 4, 0xFFFFFF)
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", colPokemon + 4 + ICON_OFFSET, ry + 14, 0xAAAAAA)
 
-            context.drawTextWithShadow(textRenderer, entry.skillName, colSkill, ry + 4, catColor)
+            // Skill name with PASSIVE tag for buff skills
+            if (entry.isPassiveBuff) {
+                context.drawTextWithShadow(textRenderer, entry.skillName, colSkill, ry + 4, 0x55FFAA)
+                context.drawTextWithShadow(textRenderer, "\u00A72PASSIVE", colSkill + textRenderer.getWidth(entry.skillName) + 4, ry + 4, 0x55FF55)
+            } else {
+                context.drawTextWithShadow(textRenderer, entry.skillName, colSkill, ry + 4, catColor)
+            }
 
             val stars = "\u2605".repeat(entry.proficiency) + "\u2606".repeat(5 - entry.proficiency)
             val starColor = when {
@@ -221,7 +250,8 @@ class BuffsPanel(
             }
             context.drawText(textRenderer, stars, colSkill, ry + 14, starColor, false)
 
-            context.drawTextWithShadow(textRenderer, entry.description, colDesc, ry + 9, 0xCCCCCC)
+            val descColor = if (entry.isPassiveBuff) 0x88DDAA else 0xCCCCCC
+            context.drawTextWithShadow(textRenderer, entry.description, colDesc, ry + 9, descColor)
         }
 
         context.disableScissor()

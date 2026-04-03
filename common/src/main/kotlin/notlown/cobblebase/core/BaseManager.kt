@@ -81,19 +81,47 @@ object BaseManager {
         val assignedSkillId: String? = assignments[pokemonId]
 
         if (assignedSkillId != null) {
-            val entry: SkillEntry? = speciesData.skills.find { e -> e.skillId == assignedSkillId }
-            if (entry == null) {
-                if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName assigned=$assignedSkillId but skill NOT FOUND in species skills: ${speciesData.skills.map { it.skillId }}")
-                return
+            // Skip if the assigned skill is a buff (buffs are handled passively below)
+            if (!isBuffSkill(assignedSkillId)) {
+                val entry: SkillEntry? = speciesData.skills.find { e -> e.skillId == assignedSkillId }
+                if (entry == null) {
+                    if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName assigned=$assignedSkillId but skill NOT FOUND in species skills: ${speciesData.skills.map { it.skillId }}")
+                } else {
+                    executeSkill(world, pastureOrigin, pokemonEntity, entry)
+                }
             }
-            executeSkill(world, pastureOrigin, pokemonEntity, entry)
         } else {
-            if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName has no assignment, running all ${speciesData.skills.size} skills")
+            if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName has no assignment, running all ${speciesData.skills.size} non-buff skills")
             for (entry: SkillEntry in speciesData.skills) {
+                val skillDef: SkillDef? = SkillRegistry.get(entry.skillId)
+                if (skillDef != null && isBuffSkill(skillDef.executor)) continue
                 executeSkill(world, pastureOrigin, pokemonEntity, entry)
             }
         }
+
+        // Passive buffs: always tick buff skills regardless of job assignment
+        for (entry: SkillEntry in speciesData.skills) {
+            val skillDef: SkillDef = SkillRegistry.get(entry.skillId) ?: continue
+            if (!isBuffSkill(skillDef.executor)) continue
+            val exec: SkillExecutor = ExecutorRegistry.get(skillDef.executor) ?: continue
+            exec.tick(world, pastureOrigin, pokemonEntity, skillDef, entry)
+        }
     }
+
+    private fun isBuffSkill(executorOrSkillId: String): Boolean {
+        // Check directly against executor names
+        if (executorOrSkillId in BUFF_EXECUTORS) return true
+        // Also check if a skillId resolves to a buff executor
+        val skillDef = SkillRegistry.get(executorOrSkillId)
+        if (skillDef != null && skillDef.executor in BUFF_EXECUTORS) return true
+        return false
+    }
+
+    private val BUFF_EXECUTORS = listOf(
+        "speed_boost", "strength_boost", "resistance_boost",
+        "night_vision", "water_breathing", "jump_boost",
+        "haste_boost", "saturation_boost"
+    )
 
     private fun executeSkill(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, entry: SkillEntry) {
         val skillDef: SkillDef? = SkillRegistry.get(entry.skillId)
@@ -119,6 +147,13 @@ object BaseManager {
     fun getAvailableSkills(pokemonEntity: PokemonEntity): List<SkillEntry> {
         val speciesName: String = pokemonEntity.pokemon.species.name.lowercase()
         return SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
+    }
+
+    /**
+     * Check if a skill executor name is a passive buff (not assignable as a job).
+     */
+    fun isBuffExecutor(executor: String): Boolean {
+        return executor in BUFF_EXECUTORS
     }
 
     // -- Persistence --

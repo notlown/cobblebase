@@ -83,6 +83,8 @@ class SkillsPanel(
 
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
+                // Skip buff skills — they are passive and not assignable
+                if (BaseManager.isBuffExecutor(skillDef.executor)) continue
                 if (btnX > maxBtnX) {
                     btnX = btnStartX
                     btnY = rowY + BTN_HEIGHT + BTN_GAP

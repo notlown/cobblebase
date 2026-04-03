@@ -115,17 +115,13 @@ object ScoutExecutor : SkillExecutor {
 
         val lastTime = lastScoutTime[pokemonId] ?: now.also { lastScoutTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
-            // Working particles — lookout effect (play frequently so it looks active)
-            if (now % 40 == 0L) {
-                SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
-                // "Looking around" animation
-                SkillEffects.sendAnimationPublic(world, pokemonEntity, "cry", "special")
-                // Extra eye particles for "searching"
+            // Subtle searching particles only — no cry/animation during cooldown
+            if (now % 80 == 0L) {
                 val x = pokemonEntity.x
                 val y = pokemonEntity.y + pokemonEntity.height.toDouble()
                 val z = pokemonEntity.z
-                world.spawnParticles(ParticleTypes.ENCHANT, x, y + 0.5, z, 5, 0.3, 0.3, 0.3, 0.5)
-                world.spawnParticles(ParticleTypes.END_ROD, x, y + 0.8, z, 3, 0.5, 0.3, 0.5, 0.02)
+                world.spawnParticles(ParticleTypes.ENCHANT, x, y + 0.5, z, 3, 0.3, 0.3, 0.3, 0.3)
+                world.spawnParticles(ParticleTypes.END_ROD, x, y + 0.8, z, 1, 0.5, 0.3, 0.5, 0.01)
             }
             return
         }

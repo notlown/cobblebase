@@ -35,6 +35,7 @@ public class PokemonPastureBlockEntityMixin {
         if (world == null || world.isClient) return;
 
         Map<UUID, Vec3d> waterPositions = new HashMap<>();
+        Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] checkPokemon HEAD firing");
         for (PokemonPastureBlockEntity.Tethering tethering : self.getTetheredPokemon()) {
             if (tethering == null) continue;
             try {
@@ -67,6 +68,7 @@ public class PokemonPastureBlockEntityMixin {
         if (world == null || world.isClient) return;
 
         Map<UUID, Vec3d> saved = cobblebase$savedWaterPositions;
+        Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] checkPokemon TAIL firing, saved {} water positions", saved != null ? saved.size() : 0);
         if (saved == null || saved.isEmpty()) return;
 
         for (PokemonPastureBlockEntity.Tethering tethering : self.getTetheredPokemon()) {
@@ -79,8 +81,13 @@ public class PokemonPastureBlockEntityMixin {
 
                 Vec3d savedPos = saved.get(entity.getUuid());
                 if (savedPos != null) {
-                    // Restore position — undo the teleport
-                    entity.refreshPositionAndAngles(savedPos.x, savedPos.y, savedPos.z, entity.getYaw(), entity.getPitch());
+                    Vec3d currentPos = entity.getPos();
+                    double moved = savedPos.distanceTo(currentPos);
+                    if (moved > 1.0) {
+                        // Was teleported — restore position
+                        entity.refreshPositionAndAngles(savedPos.x, savedPos.y, savedPos.z, entity.getYaw(), entity.getPitch());
+                        Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] RESTORED {} from teleport (moved {})", pokemon.getSpecies().getName(), String.format("%.1f", moved));
+                    }
                 }
             } catch (Exception ignored) { }
         }

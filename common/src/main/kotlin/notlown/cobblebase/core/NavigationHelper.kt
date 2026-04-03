@@ -13,7 +13,7 @@ import java.util.UUID
 object NavigationHelper {
 
     private val lastPathfindTick = mutableMapOf<UUID, Long>()
-    private const val PATHFIND_INTERVAL_TICKS = 20L
+    private const val PATHFIND_INTERVAL_TICKS = 5L
 
     /**
      * Checks if the Pokemon's bounding box intersects with the target block area.

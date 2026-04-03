@@ -3,7 +3,7 @@
   "name": "Guard",
   "description": "Repels wild Pokemon, earns XP or loot",
   "category": "combat",
-  "cooldownSeconds": 120,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "guard",
   "effectType": "combat",

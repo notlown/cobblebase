@@ -3,7 +3,7 @@
   "name": "Botanist",
   "description": "Searches the area for seeds and plantable items",
   "category": "gathering",
-  "cooldownSeconds": 240,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "finder_see",
   "effectType": "harvest"

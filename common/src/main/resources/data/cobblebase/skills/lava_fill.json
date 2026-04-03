@@ -3,7 +3,7 @@
   "name": "Lava Fill",
   "description": "Fills cauldrons with lava",
   "category": "generation",
-  "cooldownSeconds": 90,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "cauldron_fill",
   "effectType": "fire"

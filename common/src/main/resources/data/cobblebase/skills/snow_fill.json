@@ -3,7 +3,7 @@
   "name": "Snow Fill",
   "description": "Fills cauldrons with powder snow",
   "category": "generation",
-  "cooldownSeconds": 90,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "cauldron_fill",
   "effectType": "water"

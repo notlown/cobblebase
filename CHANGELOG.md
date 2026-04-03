@@ -14,6 +14,12 @@ All notable changes to Cobblebase are documented here.
 - **Persistence** — custom assignments saved to `cobblebase_species_overrides.json` per world
 - **Reset to Default** — reverts a species to built-in assignments
 - **Fakemon support** — assign skills to any species, even those without built-in data
+- **Add new species** — type a Fakemon name in the search bar and click "+ Add" to create it
+- **Pokemon sprites** in the species list with fallback for unknown species
+- **3-column skill grid** — skills displayed in a compact 3-column layout per category
+- **0.75x font scaling** — consistent compact text across all panels
+- **Click+drag scrollbars** — both panels have functional draggable scrollbars
+- **Buff particles disabled** — player particles from aura buffs (speed swirls, haste glitter etc.) removed
 
 ### Bug Fixes
 - **Fixed GUI blur on Minecraft 1.21+** — Vanilla `Screen.render()` applies a Gaussian blur shader by default in 1.21+. Replaced `super.render()` with manual widget rendering to prevent blur without breaking button functionality

@@ -49,6 +49,7 @@ class AdminSkillEditorPanel(
     // Mutable skill data for editing
     private val skillEdits = mutableListOf<AdminButtonData>()
     private var scrollOffset = 0
+    private var isDraggingScrollbar = false
     private var saveButton: ButtonWidget? = null
     private var resetButton: ButtonWidget? = null
     private var dirty = false
@@ -265,6 +266,30 @@ class AdminSkillEditorPanel(
         val listY = y + PADDING + 14
         val listH = h - PADDING * 2 - 32
 
+        // Check scrollbar click (8px wide hitbox around the 2px scrollbar track)
+        val trackX = x + w - 3
+        val maxVisible = listH / ROW_HEIGHT
+        // Rebuild grid rows to compute maxScroll
+        data class SbGridRow(val isHeader: Boolean, val skills: List<Int> = emptyList())
+        val sbGridRows = mutableListOf<SbGridRow>()
+        var sbLastCat = ""
+        var sbCatSkills = mutableListOf<Int>()
+        fun sbFlush() { if (sbCatSkills.isNotEmpty()) { for (c in sbCatSkills.chunked(COLS)) sbGridRows.add(SbGridRow(false, c)); sbCatSkills = mutableListOf() } }
+        for ((i, skill) in skillEdits.withIndex()) {
+            if (skill.category != sbLastCat) { sbFlush(); sbGridRows.add(SbGridRow(true)); sbLastCat = skill.category }
+            sbCatSkills.add(i)
+        }
+        sbFlush()
+        val maxScroll = (sbGridRows.size - maxVisible).coerceAtLeast(0)
+
+        if (maxScroll > 0 && mouseX >= trackX - 4 && mouseX <= trackX + 4 && mouseY >= listY && mouseY <= listY + listH) {
+            isDraggingScrollbar = true
+            val trackHeight = listH
+            val relativeY = ((mouseY - listY) / trackHeight.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (relativeY * maxScroll).toInt()
+            return true
+        }
+
         if (mouseX >= x && mouseX <= x + w && mouseY >= listY && mouseY <= listY + listH) {
             val rowVisIdx = ((mouseY - listY) / ROW_HEIGHT).toInt()
             val rowIdx = rowVisIdx + scrollOffset
@@ -316,6 +341,41 @@ class AdminSkillEditorPanel(
                     }
                 }
             }
+        }
+        return false
+    }
+
+    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        if (isDraggingScrollbar) {
+            val COLS = 3
+            val listY = y + PADDING + 14
+            val listH = h - PADDING * 2 - 32
+            val maxVisible = listH / ROW_HEIGHT
+
+            data class DgGridRow(val isHeader: Boolean, val skills: List<Int> = emptyList())
+            val dgGridRows = mutableListOf<DgGridRow>()
+            var dgLastCat = ""
+            var dgCatSkills = mutableListOf<Int>()
+            fun dgFlush() { if (dgCatSkills.isNotEmpty()) { for (c in dgCatSkills.chunked(COLS)) dgGridRows.add(DgGridRow(false, c)); dgCatSkills = mutableListOf() } }
+            for ((i, skill) in skillEdits.withIndex()) {
+                if (skill.category != dgLastCat) { dgFlush(); dgGridRows.add(DgGridRow(true)); dgLastCat = skill.category }
+                dgCatSkills.add(i)
+            }
+            dgFlush()
+
+            val maxScroll = (dgGridRows.size - maxVisible).coerceAtLeast(0)
+            val trackHeight = listH
+            val relativeY = ((mouseY - listY) / trackHeight.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (relativeY * maxScroll).toInt()
+            return true
+        }
+        return false
+    }
+
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (isDraggingScrollbar) {
+            isDraggingScrollbar = false
+            return true
         }
         return false
     }

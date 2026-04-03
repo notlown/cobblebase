@@ -100,6 +100,18 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         return false
     }
 
+    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        if (speciesListPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+        if (skillEditorPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+    }
+
+    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (speciesListPanel.mouseReleased(mouseX, mouseY, button)) return true
+        if (skillEditorPanel.mouseReleased(mouseX, mouseY, button)) return true
+        return super.mouseReleased(mouseX, mouseY, button)
+    }
+
     override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (speciesListPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
         if (skillEditorPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true

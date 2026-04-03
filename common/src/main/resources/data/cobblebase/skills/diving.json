@@ -3,7 +3,7 @@
   "name": "Diving",
   "description": "Dives for underwater treasure",
   "category": "gathering",
-  "cooldownSeconds": 210,
+  "cooldownSeconds": 90,
   "searchRadius": 10,
   "executor": "diving",
   "effectType": "water",

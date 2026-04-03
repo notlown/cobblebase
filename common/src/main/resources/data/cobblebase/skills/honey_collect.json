@@ -3,7 +3,7 @@
   "name": "Honey Collect",
   "description": "Produces honey and honeycomb",
   "category": "gathering",
-  "cooldownSeconds": 120,
+  "cooldownSeconds": 300,
   "searchRadius": 10,
   "executor": "honey",
   "effectType": "harvest",

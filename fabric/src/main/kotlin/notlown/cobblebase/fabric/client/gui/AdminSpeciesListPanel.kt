@@ -33,6 +33,7 @@ class AdminSpeciesListPanel(
     var selectedSpecies: String? = null
         private set
     private var scrollOffset = 0
+    private var isDraggingScrollbar = false
 
     fun init(addWidget: Function<TextFieldWidget, TextFieldWidget>) {
         searchField = TextFieldWidget(textRenderer, x + PADDING, y + PADDING, w - PADDING * 2, SEARCH_HEIGHT, Text.literal("Search..."))
@@ -160,6 +161,18 @@ class AdminSpeciesListPanel(
         val listY = y + PADDING + SEARCH_HEIGHT + 16
         val listH = h - PADDING - SEARCH_HEIGHT - 20
 
+        // Check scrollbar click (8px wide hitbox around the 2px scrollbar track)
+        val trackX = x + w - 3
+        val maxVisible = listH / ROW_HEIGHT
+        val maxScroll = (filteredSpecies.size - maxVisible).coerceAtLeast(0)
+        if (maxScroll > 0 && mouseX >= trackX - 4 && mouseX <= trackX + 4 && mouseY >= listY && mouseY <= listY + listH) {
+            isDraggingScrollbar = true
+            val trackHeight = listH
+            val relativeY = ((mouseY - listY) / trackHeight.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (relativeY * maxScroll).toInt()
+            return true
+        }
+
         if (mouseX >= x && mouseX <= x + w && mouseY >= listY && mouseY <= listY + listH) {
             val row = ((mouseY - listY) / ROW_HEIGHT).toInt()
 
@@ -183,6 +196,28 @@ class AdminSpeciesListPanel(
                 select(filteredSpecies[idx])
                 return true
             }
+        }
+        return false
+    }
+
+    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        if (isDraggingScrollbar) {
+            val listY = y + PADDING + SEARCH_HEIGHT + 16
+            val listH = h - PADDING - SEARCH_HEIGHT - 20
+            val maxVisible = listH / ROW_HEIGHT
+            val maxScroll = (filteredSpecies.size - maxVisible).coerceAtLeast(0)
+            val trackHeight = listH
+            val relativeY = ((mouseY - listY) / trackHeight.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (relativeY * maxScroll).toInt()
+            return true
+        }
+        return false
+    }
+
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (isDraggingScrollbar) {
+            isDraggingScrollbar = false
+            return true
         }
         return false
     }

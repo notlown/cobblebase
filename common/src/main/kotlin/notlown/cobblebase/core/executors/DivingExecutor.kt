@@ -32,7 +32,8 @@ object DivingExecutor : SkillExecutor {
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
     private val successTime = mutableMapOf<UUID, Long>()
     private val waterTarget = mutableMapOf<UUID, BlockPos>()
-    private const val SUCCESS_PAUSE_TICKS = 60L // Longer pause for diving animation
+    private val hasReachedWater = mutableMapOf<UUID, Boolean>() // Track if mon ever reached water
+    private const val SUCCESS_PAUSE_TICKS = 60L
 
     override fun tick(
         world: World,
@@ -52,7 +53,6 @@ object DivingExecutor : SkillExecutor {
         val items = heldItems[pokemonId]
 
         if (!items.isNullOrEmpty()) {
-            // Has items — wait for success pause, then deposit
             val diveTime = successTime[pokemonId]
             if (diveTime != null && now - diveTime < SUCCESS_PAUSE_TICKS) return
             successTime.remove(pokemonId)
@@ -60,13 +60,28 @@ object DivingExecutor : SkillExecutor {
             return
         }
 
-        if (isInWater(world, pokemonEntity)) {
-            waterTarget.remove(pokemonId)
-            // In water — check cooldown
-            val lastTime = lastDiveTime[pokemonId] ?: 0L
+        val inWater = isInWater(world, pokemonEntity)
+
+        // Track if mon has ever reached water
+        if (inWater) {
+            hasReachedWater[pokemonId] = true
+        }
+
+        // Once the mon has reached water, run the cooldown timer regardless
+        // of whether Cobblemon's tethering pulls it back out briefly
+        val reachedWater = hasReachedWater[pokemonId] == true
+
+        if (reachedWater) {
+            val lastTime = lastDiveTime[pokemonId] ?: now.also { lastDiveTime[pokemonId] = now }
             if (now - lastTime < cooldownTicks) {
-                // Bubble particles while waiting
-                if (now % 20 == 0L) {
+                // Keep navigating to water while waiting
+                if (!inWater) {
+                    val target = waterTarget[pokemonId] ?: findWater(world, origin, skill.searchRadius)
+                    if (target != null) {
+                        waterTarget[pokemonId] = target
+                        NavigationHelper.navigateTo(pokemonEntity, target)
+                    }
+                } else if (now % 20 == 0L) {
                     world.spawnParticles(
                         ParticleTypes.BUBBLE,
                         pokemonEntity.x, pokemonEntity.y + 0.5, pokemonEntity.z,
@@ -76,11 +91,10 @@ object DivingExecutor : SkillExecutor {
                 return
             }
 
-            // Dive and generate loot
+            // Cooldown done — generate loot (even if briefly out of water due to tethering)
             generateDiveLoot(world, pokemonEntity, pokemonId, now, skill)
             val treasure = heldItems[pokemonId]
             if (!treasure.isNullOrEmpty()) {
-                // Dive particles
                 world.spawnParticles(
                     ParticleTypes.BUBBLE_COLUMN_UP,
                     pokemonEntity.x, pokemonEntity.y, pokemonEntity.z,
@@ -98,7 +112,7 @@ object DivingExecutor : SkillExecutor {
                 }
             }
         } else {
-            // Navigate to water
+            // Haven't reached water yet — navigate there
             val target = waterTarget[pokemonId] ?: findWater(world, origin, skill.searchRadius)
             if (target != null) {
                 waterTarget[pokemonId] = target

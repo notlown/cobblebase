@@ -17,7 +17,6 @@ import notlown.cobblebase.core.executors.RecruiterExecutor
 import notlown.cobblebase.core.executors.BuffExecutor
 import notlown.cobblebase.core.executors.ScoutExecutor
 import notlown.cobblebase.core.executors.LuckyCharmExecutor
-import notlown.cobblebase.core.executors.DivingExecutor
 import notlown.cobblebase.core.executors.ExtinguisherExecutor
 import notlown.cobblebase.core.executors.AuraBoostExecutor
 import notlown.cobblebase.core.executors.GrowthAuraExecutor
@@ -37,7 +36,7 @@ object ExecutorRegistry {
         // -- Loot-table based (pickup, archeology, honey) --
         register("pickup", GenericLootExecutor)
         register("archeology", GenericLootExecutor)
-        register("diving", DivingExecutor)                   // Navigates to water + dives for treasure
+        register("diving", FishingExecutor)                    // Uses same water navigation as fishing
         register("honey", GenericLootExecutor)
 
         // -- Generation --

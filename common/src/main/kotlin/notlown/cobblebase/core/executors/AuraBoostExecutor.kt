@@ -81,7 +81,7 @@ object AuraBoostExecutor : SkillExecutor {
                 durationTicks,
                 amplifier,
                 true,   // ambient (subtle particles)
-                true,   // showParticles
+                false,  // showParticles — disabled to avoid annoying player particles
                 true    // showIcon
             )
             player.addStatusEffect(effectInstance)

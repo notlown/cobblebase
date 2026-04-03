@@ -83,7 +83,7 @@ class BuffExecutor(
                 durationTicks,
                 baseAmplifier,
                 true,   // ambient (subtle particles)
-                true,   // showParticles
+                false,  // showParticles — disabled to avoid annoying player particles
                 true    // showIcon
             )
             player.addStatusEffect(effectInstance)

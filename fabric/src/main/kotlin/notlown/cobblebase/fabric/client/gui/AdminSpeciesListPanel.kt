@@ -42,6 +42,9 @@ class AdminSpeciesListPanel(
         updateFilter()
     }
 
+    private var showAddOption = false
+    private var addQuery = ""
+
     private fun updateFilter() {
         val query = searchField?.text?.lowercase()?.trim() ?: ""
         val allSpecies = AdminDataCache.allSpecies
@@ -50,6 +53,9 @@ class AdminSpeciesListPanel(
         } else {
             allSpecies.filter { it.contains(query) }
         }
+        // Show "Add new species" option when query doesn't match any existing species exactly
+        showAddOption = query.isNotEmpty() && query !in allSpecies
+        addQuery = query
         scrollOffset = 0
     }
 
@@ -77,12 +83,28 @@ class AdminSpeciesListPanel(
         val speciesSkills = AdminDataCache.speciesSkills
         val overridden = AdminDataCache.overriddenSpecies
 
-        for (i in 0 until maxVisible) {
+        // "Add new species" row at top when search doesn't match
+        var addRowOffset = 0
+        if (showAddOption) {
+            val addRowY = listY
+            val isHovered = mouseX in x..(x + w) && mouseY in addRowY..(addRowY + ROW_HEIGHT)
+            val bg = if (isHovered) 0x4400AA00.toInt() else 0x33006600.toInt()
+            context.fill(x + 2, addRowY, x + w - 2, addRowY + ROW_HEIGHT, bg)
+            val scale = 0.75f
+            context.matrices.push()
+            context.matrices.translate((x + 12).toFloat(), (addRowY + 5).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, "\u00A7a+ Add \"${addQuery}\"", 0, 0, 0x55FF55)
+            context.matrices.pop()
+            addRowOffset = 1
+        }
+
+        for (i in 0 until maxVisible - addRowOffset) {
             val idx = i + scrollOffset
             if (idx >= filteredSpecies.size) break
 
             val species = filteredSpecies[idx]
-            val rowY = listY + i * ROW_HEIGHT
+            val rowY = listY + (i + addRowOffset) * ROW_HEIGHT
             val isSelected = species == selectedSpecies
             val isHovered = mouseX in x..(x + w) && mouseY in rowY..(rowY + ROW_HEIGHT)
 
@@ -99,16 +121,28 @@ class AdminSpeciesListPanel(
                 context.fill(x + 4, rowY + 6, x + 8, rowY + 10, OVERRIDE_INDICATOR)
             }
 
-            // Species name
-            val nameX = x + 12
-            val displayName = species.replaceFirstChar { it.uppercase() }
-            context.drawTextWithShadow(textRenderer, displayName, nameX, rowY + 5, if (isSelected) 0xFFFFFF else 0xCCCCCC)
+            // Pokemon sprite
+            PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, species, x + 10, rowY + 3, delta)
 
-            // Skill count
+            // Species name (0.75x scaled)
+            val nameX = x + 26
+            val displayName = species.replaceFirstChar { it.uppercase() }
+            val scale = 0.75f
+            context.matrices.push()
+            context.matrices.translate(nameX.toFloat(), (rowY + 5).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, displayName, 0, 0, if (isSelected) 0xFFFFFF else 0xCCCCCC)
+            context.matrices.pop()
+
+            // Skill count (0.75x scaled)
             val skills = speciesSkills[species]
             val countText = if (skills != null) "${skills.size}" else "0"
             val countColor = if (skills != null && skills.isNotEmpty()) 0x88FF88 else 0x666666
-            context.drawTextWithShadow(textRenderer, countText, x + w - 20, rowY + 5, countColor)
+            context.matrices.push()
+            context.matrices.translate((x + w - 20).toFloat(), (rowY + 5).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, countText, 0, 0, countColor)
+            context.matrices.pop()
         }
 
         // Scrollbar
@@ -125,11 +159,26 @@ class AdminSpeciesListPanel(
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         val listY = y + PADDING + SEARCH_HEIGHT + 16
         val listH = h - PADDING - SEARCH_HEIGHT - 20
-        val maxVisible = listH / ROW_HEIGHT
 
         if (mouseX >= x && mouseX <= x + w && mouseY >= listY && mouseY <= listY + listH) {
             val row = ((mouseY - listY) / ROW_HEIGHT).toInt()
-            val idx = row + scrollOffset
+
+            // Handle "Add new species" click
+            if (showAddOption && row == 0) {
+                val newSpecies = addQuery.lowercase().trim().replace(" ", "_")
+                if (newSpecies.isNotEmpty()) {
+                    // Add to cache so it appears in the list
+                    if (newSpecies !in AdminDataCache.allSpecies) {
+                        AdminDataCache.allSpecies = (AdminDataCache.allSpecies + newSpecies).sorted()
+                    }
+                    updateFilter()
+                    select(newSpecies)
+                }
+                return true
+            }
+
+            val addOffset = if (showAddOption) 1 else 0
+            val idx = (row - addOffset) + scrollOffset
             if (idx in filteredSpecies.indices) {
                 select(filteredSpecies[idx])
                 return true

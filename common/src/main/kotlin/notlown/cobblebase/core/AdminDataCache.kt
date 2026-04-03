@@ -8,7 +8,6 @@ object AdminDataCache {
 
     /** All species names from Cobblemon (lowercase) */
     var allSpecies: List<String> = emptyList()
-        private set
 
     /** Species -> list of SkillEntry for those that have assignments */
     var speciesSkills: Map<String, List<SkillEntry>> = emptyMap()

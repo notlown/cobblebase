@@ -39,7 +39,7 @@ Every job in Cobblebase is now fully functional.
 
 | Executor | Effect | Key Pokemon |
 |----------|--------|-------------|
-| 🌟 **Lucky Charm** | Boosts shiny rate for wild Pokemon near the pasture (Prof 1: 1.4x, Prof 5: 3.0x) | Arceus (5), Mew (5), Jirachi (4), Victini (4) |
+| 🌟 **Lucky Charm** | Boosts shiny rate for wild Pokemon near the **owner** (10-20 block radius, Prof 1: 1.4x, Prof 5: 3.0x) | Arceus (5), Mew (5), Jirachi (4), Victini (4) |
 | 🍀 **Aura Boost** | Applies Luck effect to nearby players (Prof 1-2: Luck I, Prof 3-4: Luck II, Prof 5: Luck III global) | Victini (5), Rayquaza (5), Arceus (5) |
 | 🌱 **Growth Aura** | Passively accelerates crop growth near the pasture | Arceus (5), Celebi (5), Shaymin (4) |
 | 🧯 **Extinguisher** | Scans for and removes fire/soul fire/lit campfires near the base | Wartortle (3), Muk (3), Squirtle (2), Blastoise (?) |

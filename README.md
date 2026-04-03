@@ -25,8 +25,8 @@
 
 **Cobblebase** transforms the Pasture Block into a living, breathing Pokemon base. Every Pokemon species has hand-crafted job skills and proficiency levels — not based on type, but on identity. A Charizard fills lava cauldrons and guards your base. An Alakazam mentors your entire team. A Mew recruits legendaries.
 
-- 💎 **150+ Pokemon** with unique, hand-crafted skill assignments
-- ⚡ **30 skills** across 8 categories — gathering, finding, combat, support, logistics, exploration, environmental, and recruiting
+- 💎 **1000+ Pokemon** with unique, hand-crafted skill assignments
+- ⚡ **44 jobs** across 10 categories — gathering, finding, combat, support, logistics, exploration, environmental, recruiting, passive buffs, and legendary
 - ⭐ **Proficiency 1–5** per skill per species — novice to master
 - 🎯 **Tabbed GUI** with Skills, Buffs, Logs, and Discovery panels
 - 🛡️ **Fully configurable** via Cloth Config and JSON datapacks
@@ -41,10 +41,12 @@ Pokemon harvest, fish, mine, and collect resources from the world around your ba
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 🌾 **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Venusaur (5), Scizor (5), Celebi (5) |
-| 🎣 **Fishing** | Navigates to water and catches fish/loot | Gyarados (5), Blastoise (5), Kyogre (5) |
-| ⛏️ **Mining** | Digs for ores, fossils, gems, and tumblestones | Steelix (5), Golem (5), Excadrill (5) |
-| 🍯 **Honey Collect** | Gathers honey from bee nests | Vespiquen (5), Beedrill (4), Combee (4) |
+| 🌾 **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Venusaur, Scizor, Celebi |
+| 🎣 **Fishing** | Navigates to water and catches fish/loot | Gyarados, Blastoise, Kyogre |
+| ⛏️ **Mining** | Digs for ores, fossils, gems, and tumblestones | Steelix, Excadrill, Ting-Lu |
+| 🍯 **Honey Collect** | Produces honey and honeycomb (no beehive needed) | Vespiquen, Beedrill, Combee |
+| 🏺 **Archeologist** | Excavates ancient relics and artifacts | Nidoking, Steelix, Nidoqueen |
+| 🤿 **Diving** | Dives for underwater treasure (requires nearby water) | Manaphy, Tentacruel, Lapras |
 
 ---
 
@@ -67,36 +69,54 @@ Twelve specialized Finder subtypes with dedicated loot tables for targeted item 
 | 💰 **Prospector** | Relics & treasure | Relic Coins, Gold, Netherite Ingot |
 | 🔨 **Smith** | Smithing templates & pottery | Armor Trims, Pottery Sherds, Netherite Upgrade |
 
-Pharmacist is auto-assigned to Healer Pokemon, Botanist to Harvesters, Scholar to Mentors, and Collector to collectors like Aipom and Zigzagoon.
-
 ---
 
 ## ⚔️ Combat
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 🛡️ **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Gallade (4), Scizor (4), Incineroar (4) |
+| 🛡️ **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Gallade, Scizor, Incineroar |
 
 ---
 
 ## 💚 Support
 
-Healing, mentoring, and 8 buff skills that apply status effects to all players within 16 blocks.
+Healing, mentoring, and passive buff skills.
 
 | Job | Effect | Example Pokemon |
 |-----|--------|-----------------|
-| 💚 **Healer** | Direct % HP healing + revive fainted Pokemon | Blissey (5), Togekiss (4), Chansey (4) |
-| 🎓 **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam (5), Metagross (4), Gardevoir (4) |
-| ⚡ **Speed Boost** | Speed II | Ninjask (5), Jolteon (4), Rapidash (4) |
-| 💪 **Strength Boost** | Strength I | Machamp (4), Hariyama (4), Conkeldurr (4) |
-| 🛡️ **Resistance Boost** | Resistance I | Steelix (5), Aggron (4), Bastiodon (4) |
-| 👁️ **Night Vision** | Night Vision | Umbreon (5), Noctowl (4), Espeon (3) |
-| 🫧 **Water Breathing** | Water Breathing | Lapras (5), Vaporeon (4), Milotic (4) |
-| 🦘 **Jump Boost** | Jump Boost I | Lopunny (4), Hitmonlee (4), Blaziken (3) |
-| ⚒️ **Haste Boost** | Haste I | Alakazam (4), Metagross (3), Kadabra (3) |
-| 🍖 **Saturation** | Saturation | Slurpuff (5), Snorlax (4), Munchlax (4) |
+| 💚 **Healer** | Direct % HP healing + revive fainted Pokemon | Blissey, Xerneas, Zacian |
+| 🎓 **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam, Latios, Mesprit |
 
-Buff duration and cooldown scale with proficiency — at Prof 5, buffs are effectively permanent (70s duration, 0s cooldown).
+---
+
+## ✨ Passive Buffs
+
+Status effects applied to all players near the pasture. At Prof 5, buffs are global (owner only) and effectively permanent.
+
+| Buff | Effect | Example Pokemon |
+|------|--------|-----------------|
+| ⚡ **Speed Boost** | Speed II | Ninjask, Regieleki, Rapidash |
+| 💪 **Strength Boost** | Strength I | Kartana, Rayquaza, Machamp |
+| 🛡️ **Resistance Boost** | Resistance I | Regirock, Steelix, Melmetal |
+| 👁️ **Night Vision** | Night Vision | Ting-Lu, Spectrier, Giratina |
+| 🫧 **Water Breathing** | Water Breathing | Kyogre, Milotic, Lapras |
+| 🦘 **Jump Boost** | Jump Boost I | Lopunny, Hitmonlee, Blaziken |
+| ⚒️ **Haste Boost** | Haste I | Palkia, Dialga, Rayquaza |
+| 🍖 **Saturation** | Saturation | Slurpuff, Snorlax, Munchlax |
+| 🍀 **Aura Boost** | Luck I–III (better loot from all sources) | Victini, Rayquaza, Arceus |
+
+---
+
+## 🌟 Legendary Abilities
+
+Special passive abilities only found on legendary and mythical Pokemon.
+
+| Ability | Effect | Pokemon |
+|---------|--------|---------|
+| 🌟 **Lucky Charm** | Boosts shiny rate for wild Pokemon near the owner (1.4x–3.0x) | Arceus, Mew, Jirachi, Victini |
+| 🌱 **Growth Aura** | Passively accelerates crop growth near the pasture | Arceus, Celebi, Shaymin |
+| 🧯 **Extinguisher** | Auto-removes fire and extinguishes campfires near the base | Wartortle, Muk, Squirtle, Blastoise |
 
 ---
 
@@ -104,7 +124,7 @@ Buff duration and cooldown scale with proficiency — at Prof 5, buffs are effec
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 📥 **Gatherer** | Picks up dropped items and sorts them into nearby chests | Ambipom (5), Furret (4), Munchlax (4) |
+| 📥 **Gatherer** | Picks up dropped items and sorts them into nearby chests | Ambipom, Furret, Munchlax |
 
 Smart sorting prioritizes chests already containing the same item type. Search radius scales from 5 blocks (Prof 1) to 12 blocks (Prof 5).
 
@@ -114,7 +134,7 @@ Smart sorting prioritizes chests already containing the same item type. Search r
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 🔭 **Scout** | Discovers wild Pokemon, structures, and biomes | Ninjask (5), Pidgeot (4), Talonflame (4) |
+| 🔭 **Scout** | Discovers wild Pokemon, structures, and biomes | Ninjask, Spectrier, Rayquaza |
 
 | Proficiency | Range | Discovers |
 |-------------|-------|-----------|
@@ -132,12 +152,12 @@ Pokemon that interact with blocks and containers around your base.
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 💧 **Irrigator** | Hydrates nearby farmland | Venusaur (4), Sceptile (3), Meganium (3) |
-| 🌋 **Lava Fill** | Fills cauldrons with lava | Magmortar (5), Charizard (4), Magmar (4) |
-| 💦 **Water Fill** | Fills cauldrons with water | Vaporeon (5), Blastoise (4), Swanna (3) |
-| ❄️ **Snow Fill** | Fills cauldrons with powder snow | Articuno (5), Glaceon (4), Abomasnow (3) |
-| 🔥 **Furnace Fuel** | Adds burn time to furnaces | Moltres (5), Entei (5), Charizard (4) |
-| 🧪 **Brew Fuel** | Fuels brewing stands | Weezing (4), Dragonite (3), Koffing (2) |
+| 💧 **Irrigator** | Hydrates nearby farmland | Venusaur, Virizion, Shaymin |
+| 🌋 **Lava Fill** | Fills cauldrons with lava | Magmortar, Flareon, Magmar |
+| 💦 **Water Fill** | Fills cauldrons with water | Vaporeon, Blastoise, Palkia |
+| ❄️ **Snow Fill** | Fills cauldrons with powder snow | Regice, Glastrier, Articuno |
+| 🔥 **Furnace Fuel** | Adds burn time to furnaces | Moltres, Volcanion, Ho-Oh |
+| 🧪 **Brew Fuel** | Fuels brewing stands | Weezing, Dragonite, Koffing |
 
 ---
 
@@ -147,8 +167,8 @@ Pokemon that attract and spawn new wild Pokemon near your base.
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 🤝 **Friend Recruiter** | Spawns wild Pokemon of same type | Togekiss (5), Sylveon (4), Gardevoir (4) |
-| ⭐ **Legendary Recruiter** | Spawns rare/legendary Pokemon (longer cooldown) | Arceus (5), Mew (5), Jirachi (5) |
+| 🤝 **Friend Recruiter** | Spawns wild Pokemon of same type | Togekiss, Sylveon, Gardevoir |
+| ⭐ **Legendary Recruiter** | Spawns rare/legendary Pokemon (longer cooldown) | Arceus, Mew, Jirachi |
 
 Friend Recruiter uses official Cobblemon 1.7.3 spawn bucket data for accurate rarity distribution:
 
@@ -182,10 +202,10 @@ Open any Pasture Block and click the **"Cobblebase"** button to access the manag
 
 | Tab | What It Shows |
 |-----|---------------|
-| **Skills** | Per-Pokemon skill list. Click to assign (green = active). Auto or manual mode. |
+| **Skills** | Per-Pokemon skill list with Auto/manual assignment. Aura icons shown inline. Compact dynamic rows. |
 | **Buffs** | All active jobs/effects for this pasture. Color-coded by category with proficiency stars. |
 | **Logs** | Recent activity log. Filterable by rarity (Uncommon+, Rare+, Ultra Rare). Last 100 events. |
-| **Discovery** | Permanent scout discoveries — structures and biomes with coordinates. Filterable and persistent. |
+| **Discovery** | Permanent scout discoveries — structures and biomes with clickable coordinates. |
 
 ---
 

@@ -31,6 +31,8 @@
 - 🎯 **Tabbed GUI** with Skills, Buffs, Logs, and Discovery panels
 - 🛡️ **Fully configurable** via Cloth Config and JSON datapacks
 
+> 💡 **Recommended:** Play Cobblebase with the [Cobbleverse](https://modrinth.com/modpack/cobbleverse) modpack for the best experience — it includes hundreds of additional Pokemon species, and Cobblebase has skill assignments for all of them!
+
 ---
 
 ## 🌾 Gathering

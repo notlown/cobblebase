@@ -4,6 +4,15 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [1.2.0] - 2026-04-03
+
+### Bug Fixes
+- **Fixed GUI blur on Minecraft 1.21+** — Vanilla `Screen.render()` applies a Gaussian blur shader by default in 1.21+. Replaced `super.render()` with manual widget rendering to prevent blur without breaking button functionality
+- **Fixed NeoForge crash** — Removed `@JvmStatic` from event subscribers causing `IllegalArgumentException` with Kotlin for Forge
+- **NeoForge SkillsPanel** — Added 0.75x text scaling matching Fabric version for consistent compact text
+
+---
+
 ## [1.1.0] - 2026-04-03
 
 ### Skills Tab Redesign

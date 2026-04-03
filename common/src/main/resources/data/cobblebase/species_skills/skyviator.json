@@ -1,0 +1,13 @@
+{
+  "species": "skyviator",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    }
+  ]
+}

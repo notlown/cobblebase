@@ -1,0 +1,9 @@
+{
+  "species": "gnetic",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    }
+  ]
+}

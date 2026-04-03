@@ -1,0 +1,9 @@
+{
+  "species": "bubbaluffa",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

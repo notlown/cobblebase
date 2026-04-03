@@ -1,0 +1,17 @@
+{
+  "species": "minkin",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    }
+  ]
+}

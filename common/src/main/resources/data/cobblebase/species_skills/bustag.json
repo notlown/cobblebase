@@ -1,0 +1,17 @@
+{
+  "species": "bustag",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    }
+  ]
+}

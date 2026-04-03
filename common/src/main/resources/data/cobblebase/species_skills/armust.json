@@ -1,0 +1,25 @@
+{
+  "species": "armust",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 2
+    }
+  ]
+}

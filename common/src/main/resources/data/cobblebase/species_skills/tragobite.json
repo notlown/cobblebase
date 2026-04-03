@@ -1,0 +1,17 @@
+{
+  "species": "tragobite",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "species": "sardiner",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 2
+    }
+  ]
+}

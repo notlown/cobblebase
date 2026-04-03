@@ -1,0 +1,9 @@
+{
+  "species": "cygnicuffs",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "species": "spectorment",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    }
+  ]
+}

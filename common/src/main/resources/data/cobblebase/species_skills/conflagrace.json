@@ -1,0 +1,33 @@
+{
+  "species": "conflagrace",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 5
+    }
+  ]
+}

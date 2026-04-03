@@ -1,0 +1,9 @@
+{
+  "species": "plastree",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "species": "durapbor",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 5
+    }
+  ]
+}

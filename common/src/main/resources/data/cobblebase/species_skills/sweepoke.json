@@ -1,0 +1,9 @@
+{
+  "species": "sweepoke",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

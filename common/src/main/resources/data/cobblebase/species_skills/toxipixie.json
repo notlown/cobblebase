@@ -1,0 +1,17 @@
+{
+  "species": "toxipixie",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "species": "paraudio",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 3
+    }
+  ]
+}

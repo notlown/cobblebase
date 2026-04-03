@@ -1,0 +1,21 @@
+{
+  "species": "valkryce",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "gecroak",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    }
+  ]
+}

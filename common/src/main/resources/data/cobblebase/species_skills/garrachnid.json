@@ -1,0 +1,21 @@
+{
+  "species": "garrachnid",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "species": "vyrat",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "species": "lochitent",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

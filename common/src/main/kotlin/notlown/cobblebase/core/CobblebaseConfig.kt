@@ -11,7 +11,7 @@ object CobblebaseConfig {
     private val holder get() = AutoConfig.getConfigHolder(CobblebaseClothConfig::class.java).config
 
     // General
-    val devMode get() = holder.general.devMode
+    val devMode = false // Dev mode removed from settings
     val defaultSearchRadius get() = holder.general.defaultSearchRadius
 
     // Cry

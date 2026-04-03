@@ -90,7 +90,9 @@ class CobblebaseScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context, mouseX, mouseY, delta)
+        // Skip vanilla renderBackground() which applies blur shader in 1.21+
+        // Just draw a semi-transparent dark overlay instead
+        context.fill(0, 0, this.width, this.height, 0xC0101010.toInt())
 
         // Main panel border + background
         context.fill(panelX - 1, panelY - 1, panelX + panelW + 1, panelY + panelH + 1, PANEL_BORDER)

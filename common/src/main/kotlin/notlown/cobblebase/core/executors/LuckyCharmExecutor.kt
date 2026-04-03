@@ -18,8 +18,8 @@ import notlown.cobblebase.core.SkillExecutor
 import java.util.UUID
 
 /**
- * Lucky Charm: passively scans wild Pokemon near the pasture and gives them
- * a boosted chance to become shiny based on proficiency.
+ * Lucky Charm: follows the pasture OWNER wherever they are on the map
+ * and boosts the shiny chance of wild Pokemon near them.
  *
  * Each wild Pokemon is only processed once (tracked by UUID).
  * Prof 1: 1.4x shiny rate, Prof 5: 3.0x shiny rate.
@@ -53,10 +53,7 @@ object LuckyCharmExecutor : SkillExecutor {
         // Cleanup processed set every 5 minutes to prevent memory leak
         val lastClean = lastCleanup[pokemonId] ?: 0L
         if (now - lastClean > 6000L) {
-            processedPokemon.removeAll { uuid ->
-                world.getEntitiesByClass(PokemonEntity::class.java,
-                    Box.of(origin.toCenterPos(), 400.0, 400.0, 400.0)) { it.pokemon.uuid == uuid }.isEmpty()
-            }
+            processedPokemon.clear()
             lastCleanup[pokemonId] = now
         }
 
@@ -64,11 +61,23 @@ object LuckyCharmExecutor : SkillExecutor {
         val shinyMultiplier = getShinyMultiplier(prof)
         val range = getRange(prof)
 
-        // Find wild, non-shiny Pokemon in range that we haven't processed yet
-        val searchBox = Box.of(origin.toCenterPos(), range * 2, range * 2, range * 2)
-        val wildMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { entity ->
-            entity.pokemon.isWild() && entity.isAlive && !entity.pokemon.shiny
-                && entity.pokemon.uuid !in processedPokemon
+        // Prof 5: scan around OWNER globally, Prof 1-4: scan around pasture
+        val wildMons: List<PokemonEntity>
+        if (prof >= 5) {
+            val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
+            val owner = if (ownerUuid != null) world.players.find { it.uuid == ownerUuid } else null
+            if (owner == null) return
+            val searchBox = Box.of(owner.pos, range * 2, range * 2, range * 2)
+            wildMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { entity ->
+                entity.pokemon.isWild() && entity.isAlive && !entity.pokemon.shiny
+                    && entity.pokemon.uuid !in processedPokemon
+            }
+        } else {
+            val searchBox = Box.of(origin.toCenterPos(), range * 2, range * 2, range * 2)
+            wildMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { entity ->
+                entity.pokemon.isWild() && entity.isAlive && !entity.pokemon.shiny
+                    && entity.pokemon.uuid !in processedPokemon
+            }
         }
 
         for (wildMon in wildMons) {
@@ -122,13 +131,14 @@ object LuckyCharmExecutor : SkillExecutor {
     }
 
     /**
-     * Scan range based on proficiency.
+     * Scan range based on proficiency (matches buff executor ranges).
+     * Prof 5: scans around the owner instead of pasture.
      */
     private fun getRange(prof: Int): Double {
         if (prof == 1) return 30.0
         if (prof == 2) return 50.0
-        if (prof == 3) return 80.0
-        if (prof == 4) return 120.0
-        return 200.0 // prof 5
+        if (prof == 3) return 100.0
+        if (prof == 4) return 200.0
+        return 200.0 // prof 5 — centered on owner, not pasture
     }
 }

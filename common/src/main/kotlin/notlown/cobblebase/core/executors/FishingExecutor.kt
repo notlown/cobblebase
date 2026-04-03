@@ -142,7 +142,18 @@ object FishingExecutor : SkillExecutor {
 
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
-        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        // Try to deposit into a nearby chest (smart sorting)
+        val containerPos = InventoryHelper.findBestContainer(world, origin, 10, items)
+        if (containerPos != null) {
+            val remaining = InventoryHelper.insertItems(world, containerPos, items)
+            if (remaining.isEmpty() || remaining.all { it.isEmpty }) {
+                heldItems.remove(pokemonId)
+                return
+            }
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, remaining)
+        } else {
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        }
         heldItems.remove(pokemonId)
     }
 

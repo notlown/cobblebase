@@ -3,7 +3,7 @@
   "name": "Recruiter",
   "description": "Attracts rare wild Pokemon to spawn near your base",
   "category": "legendary",
-  "cooldownSeconds": 300,
+  "cooldownSeconds": 540,
   "searchRadius": 20,
   "executor": "recruiter",
   "effectType": "special"

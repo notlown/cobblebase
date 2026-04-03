@@ -15,10 +15,79 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import net.minecraft.util.math.Vec3d;
 
 @Mixin(PokemonPastureBlockEntity.class)
 public class PokemonPastureBlockEntityMixin {
+
+    /**
+     * Prevent Cobblemon from teleporting water-capable Pokemon out of water.
+     * Saves positions before checkPokemon() and restores them for swimming mons.
+     */
+    @Inject(at = @At("HEAD"), method = "checkPokemon", remap = false)
+    private void cobblebase$beforeCheckPokemon(CallbackInfo ci) {
+        PokemonPastureBlockEntity self = (PokemonPastureBlockEntity)(Object)this;
+        World world = self.getWorld();
+        if (world == null || world.isClient) return;
+
+        Map<UUID, Vec3d> waterPositions = new HashMap<>();
+        for (PokemonPastureBlockEntity.Tethering tethering : self.getTetheredPokemon()) {
+            if (tethering == null) continue;
+            try {
+                Pokemon pokemon = tethering.getPokemon();
+                if (pokemon == null) continue;
+                PokemonEntity entity = pokemon.getEntity();
+                if (entity == null) continue;
+
+                // Save position of mons that can swim and are in/near water
+                if (entity.isTouchingWater()) {
+                    waterPositions.put(entity.getUuid(), entity.getPos());
+                }
+            } catch (Exception ignored) { }
+        }
+
+        // Store for use in TAIL injection
+        cobblebase$savedWaterPositions = waterPositions;
+    }
+
+    @org.spongepowered.asm.mixin.Unique
+    private static final ThreadLocal<Map<UUID, Vec3d>> cobblebase$threadLocalPositions = new ThreadLocal<>();
+
+    @org.spongepowered.asm.mixin.Unique
+    private Map<UUID, Vec3d> cobblebase$savedWaterPositions = new HashMap<>();
+
+    @Inject(at = @At("TAIL"), method = "checkPokemon", remap = false)
+    private void cobblebase$afterCheckPokemon(CallbackInfo ci) {
+        PokemonPastureBlockEntity self = (PokemonPastureBlockEntity)(Object)this;
+        World world = self.getWorld();
+        if (world == null || world.isClient) return;
+
+        Map<UUID, Vec3d> saved = cobblebase$savedWaterPositions;
+        if (saved == null || saved.isEmpty()) return;
+
+        for (PokemonPastureBlockEntity.Tethering tethering : self.getTetheredPokemon()) {
+            if (tethering == null) continue;
+            try {
+                Pokemon pokemon = tethering.getPokemon();
+                if (pokemon == null) continue;
+                PokemonEntity entity = pokemon.getEntity();
+                if (entity == null) continue;
+
+                Vec3d savedPos = saved.get(entity.getUuid());
+                if (savedPos != null) {
+                    // Restore position — undo the teleport
+                    entity.refreshPositionAndAngles(savedPos.x, savedPos.y, savedPos.z, entity.getYaw(), entity.getPitch());
+                }
+            } catch (Exception ignored) { }
+        }
+
+        cobblebase$savedWaterPositions = new HashMap<>();
+    }
+
     @Inject(at = @At("TAIL"), method = "TICKER$lambda$0")
     private static void cobblebase$tick(World world, BlockPos blockPos, BlockState blockState, PokemonPastureBlockEntity pastureBlock, CallbackInfo ci) {
         if (world.isClient) return;

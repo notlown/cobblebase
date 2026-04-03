@@ -82,7 +82,10 @@ object FishingExecutor : SkillExecutor {
             val target = waterTarget[pokemonId] ?: findWater(world, origin, skill.searchRadius)
             if (target != null) {
                 waterTarget[pokemonId] = target
-                NavigationHelper.navigateTo(pokemonEntity, target.up())
+                // Diving mons go INTO the water, fishing mons go to shore (up)
+                val isDiving = skill.executor == "diving"
+                val navTarget = if (isDiving) target else target.up()
+                NavigationHelper.navigateTo(pokemonEntity, navTarget)
             }
         }
     }

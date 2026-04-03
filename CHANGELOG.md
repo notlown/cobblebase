@@ -4,13 +4,21 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
-## [0.8.0] - 2026-04-03
+## [1.1.0] - 2026-04-03
 
 ### Skills Tab Redesign
 - **Dynamic row height** — Mons with few skills use compact rows (24px), mons with many skills get tall rows (42px) for a tighter layout
-- **Aura icon inline** — Removed the separate Aura column; buff icon now appears between Pokemon name and Skills buttons (only if the mon has an aura buff)
+- **Auto button separated** — Auto has its own narrow column (36px), skills start in a dedicated column to the right so buttons never mix
+- **Aura icon inline** — Removed the separate Aura column; buff icon now appears between Pokemon name and Skills buttons (reserved space for all rows, icon only shows for buff mons)
 - **Sprite alignment fix** — Pokemon sprite icon is now top-aligned to match name/level text
 - **Column headers fix** — Headers no longer overlap with the first row entries
+- **Narrower Pokemon column** — Reduced empty space between name and buttons
+
+### GUI Polish
+- **Consistent 0.75x font scaling** across all tabs (Skills, Buffs, Logs, Scout)
+- **Compact footer** — Footer area reduced from 28px to 18px, smaller Done button
+- **Tab titles removed** — "Active Buffs & Jobs", "Activity Log", "Discovery Map" removed from all tabs for more content space
+- **Hint text removed** — "Click to assign | Scroll" removed
 
 ### Aura Buff Rarity Overhaul
 All aura buffs are now significantly rarer — only the most thematic Pokemon retain them.
@@ -26,9 +34,23 @@ All aura buffs are now significantly rarer — only the most thematic Pokemon re
 | Saturation Boost | 27 | 10 | Slurpuff, Snorlax, Munchlax, Ting-Lu, Blissey |
 | Jump Boost | 5 | 5 | *(unchanged)* |
 
-### UI Cleanup
-- Removed tab title lines ("Active Buffs & Jobs", "Activity Log", "Discovery Map") from all tabs for more content space
-- Removed "Click to assign | Scroll" hint text
+### 4 New Executors — All Placeholders Replaced
+Every job in Cobblebase is now fully functional.
+
+| Executor | Effect | Key Pokemon |
+|----------|--------|-------------|
+| 🌟 **Lucky Charm** | Boosts shiny rate for wild Pokemon near the pasture (Prof 1: 1.4x, Prof 5: 3.0x) | Arceus (5), Mew (5), Jirachi (4), Victini (4) |
+| 🍀 **Aura Boost** | Applies Luck effect to nearby players (Prof 1-2: Luck I, Prof 3-4: Luck II, Prof 5: Luck III global) | Victini (5), Rayquaza (5), Arceus (5) |
+| 🌱 **Growth Aura** | Passively accelerates crop growth near the pasture | Arceus (5), Celebi (5), Shaymin (4) |
+| 🧯 **Extinguisher** | Scans for and removes fire/soul fire/lit campfires near the base | Wartortle (3), Muk (3), Squirtle (2), Blastoise (?) |
+
+### Honey Collect
+- Now fully functional — drops Honeycomb, Honey Bottles, Honey Blocks without needing beehives
+- Pokemon produce honey on cooldown-based drops
+
+### Quality of Life
+- **Buff logging removed** — Passive aura buffs no longer clutter the Activity Log
+- **Lucky Charm**, **Aura Boost**, and **Growth Aura** show as passive icons (🌟 ✨ 🌱) in the Skills tab
 
 ---
 

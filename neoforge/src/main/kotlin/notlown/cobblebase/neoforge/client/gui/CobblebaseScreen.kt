@@ -108,7 +108,13 @@ class CobblebaseScreen(
             Tab.DISCOVERY -> discoveryPanel.render(context, mouseX, mouseY, delta)
         }
 
-        super.render(context, mouseX, mouseY, delta)
+        // Render widgets (buttons etc.) without calling super.render()
+        // which would apply vanilla blur shader in 1.21+
+        for (child in this.children()) {
+            if (child is net.minecraft.client.gui.Drawable) {
+                child.render(context, mouseX, mouseY, delta)
+            }
+        }
     }
 
     private fun renderTabs(context: DrawContext, mouseX: Int, mouseY: Int) {

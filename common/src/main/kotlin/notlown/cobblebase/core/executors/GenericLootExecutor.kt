@@ -89,7 +89,20 @@ object GenericLootExecutor : SkillExecutor {
 
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
-        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        // Try to deposit into a nearby chest first (smart sorting)
+        val containerPos = InventoryHelper.findBestContainer(world, origin, 10, items)
+        if (containerPos != null) {
+            val remaining = InventoryHelper.insertItems(world, containerPos, items)
+            if (remaining.isEmpty() || remaining.all { it.isEmpty }) {
+                heldItems.remove(pokemonId)
+                return
+            }
+            // Drop any items that didn't fit
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, remaining)
+        } else {
+            // No chest found — drop on ground
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        }
         heldItems.remove(pokemonId)
     }
 

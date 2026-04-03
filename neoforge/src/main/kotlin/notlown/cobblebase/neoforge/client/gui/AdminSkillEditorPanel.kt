@@ -130,15 +130,19 @@ class AdminSkillEditorPanel(
             return
         }
 
-        // Header
+        // Header (0.75x scaled)
         val displayName = species.replaceFirstChar { it.uppercase() }
         val isOverridden = AdminDataCache.overriddenSpecies.contains(species)
         val headerText = if (isOverridden) "$displayName \u00A76[Override]" else displayName
-        context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l$headerText", x + PADDING, y + PADDING, 0xFFFFFF)
-
+        val hdrScale = 0.75f
+        context.matrices.push()
+        context.matrices.translate((x + PADDING).toFloat(), (y + PADDING).toFloat(), 0f)
+        context.matrices.scale(hdrScale, hdrScale, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l$headerText", 0, 0, 0xFFFFFF)
         if (dirty) {
-            context.drawTextWithShadow(textRenderer, "\u00A7e*unsaved", x + PADDING + textRenderer.getWidth(headerText) + 10, y + PADDING, 0xFFFF00)
+            context.drawTextWithShadow(textRenderer, "\u00A7e*unsaved", textRenderer.getWidth(headerText) + 10, 0, 0xFFFF00)
         }
+        context.matrices.pop()
 
         // Skill list
         val listY = y + PADDING + 14
@@ -170,37 +174,51 @@ class AdminSkillEditorPanel(
             val rowY = listY + i * ROW_HEIGHT
 
             if (row.isHeader) {
-                // Category header
                 val catColor = CATEGORY_COLORS[row.category] ?: 0xFFAAAAAA.toInt()
                 context.fill(x + 2, rowY, x + w - 2, rowY + ROW_HEIGHT, 0x22FFFFFF)
                 context.fill(x + 2, rowY + ROW_HEIGHT - 1, x + w - 2, rowY + ROW_HEIGHT, catColor)
                 val catName = row.category.replaceFirstChar { it.uppercase() }
-                context.drawTextWithShadow(textRenderer, "\u00A7l$catName", x + PADDING, rowY + 4, catColor)
+                val scale = 0.75f
+                context.matrices.push()
+                context.matrices.translate((x + PADDING).toFloat(), (rowY + 4).toFloat(), 0f)
+                context.matrices.scale(scale, scale, 1f)
+                context.drawTextWithShadow(textRenderer, "\u00A7l$catName", 0, 0, catColor)
+                context.matrices.pop()
             } else {
                 val skill = skillEdits[row.skillIndex]
+                val scale = 0.75f
 
-                // Checkbox
                 val cbX = x + PADDING
                 val cbY = rowY + 3
-                val cbSize = 10
+                val cbSize = 8
                 val cbColor = if (skill.assigned) CHECKBOX_ON else CHECKBOX_OFF
                 context.fill(cbX, cbY, cbX + cbSize, cbY + cbSize, cbColor)
                 if (skill.assigned) {
-                    context.drawTextWithShadow(textRenderer, "\u2713", cbX + 1, cbY + 1, 0xFFFFFF)
+                    context.matrices.push()
+                    context.matrices.translate((cbX + 1).toFloat(), (cbY).toFloat(), 0f)
+                    context.matrices.scale(scale, scale, 1f)
+                    context.drawTextWithShadow(textRenderer, "\u2713", 0, 0, 0xFFFFFF)
+                    context.matrices.pop()
                 }
 
-                // Skill name
                 val nameColor = if (skill.assigned) 0xFFFFFF else 0x888888
-                context.drawTextWithShadow(textRenderer, skill.displayName, cbX + cbSize + 4, rowY + 4, nameColor)
+                context.matrices.push()
+                context.matrices.translate((cbX + cbSize + 3).toFloat(), (rowY + 4).toFloat(), 0f)
+                context.matrices.scale(scale, scale, 1f)
+                context.drawTextWithShadow(textRenderer, skill.displayName, 0, 0, nameColor)
+                context.matrices.pop()
 
-                // Proficiency stars (only if assigned)
                 if (skill.assigned) {
-                    val starsX = x + w - 60
+                    val starsX = x + w - 55
+                    context.matrices.push()
+                    context.matrices.translate(starsX.toFloat(), (rowY + 4).toFloat(), 0f)
+                    context.matrices.scale(scale, scale, 1f)
                     for (star in 1..5) {
-                        val starX = starsX + (star - 1) * (STAR_SIZE + 2)
+                        val starOff = (star - 1) * (STAR_SIZE + 1)
                         val color = if (star <= skill.proficiency) STAR_FILLED else STAR_EMPTY
-                        context.drawTextWithShadow(textRenderer, "\u2605", starX, rowY + 4, color)
+                        context.drawTextWithShadow(textRenderer, "\u2605", starOff, 0, color)
                     }
+                    context.matrices.pop()
                 }
             }
         }

@@ -1,0 +1,21 @@
+{
+  "species": "pumett",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 2
+    }
+  ]
+}

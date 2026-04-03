@@ -60,10 +60,9 @@ object DivingExecutor : SkillExecutor {
             return
         }
 
-        val inWater = pokemonEntity.isTouchingWater
-
-        if (inWater) {
-            // In water — check cooldown
+        if (isInWater(world, pokemonEntity)) {
+            // Near or in water — check cooldown
+            waterTarget.remove(pokemonId)
             val lastTime = lastDiveTime[pokemonId] ?: 0L
             if (now - lastTime < cooldownTicks) {
                 if (now % 20 == 0L) {
@@ -97,16 +96,16 @@ object DivingExecutor : SkillExecutor {
                 }
             }
         } else {
-            // Not in water — actively navigate to nearest water within pasture range
-            // Use a short radius around the PASTURE ORIGIN (not the mon) to stay within tether range
+            // Not near water — navigate to block ABOVE nearest water (stay at shore)
+            // This matches CobbleWorkersPlus approach: navigate to water.up()
             val target = waterTarget[pokemonId]
-            if (target != null && target.getSquaredDistance(origin) < 20.0 * 20.0) {
+            if (target != null) {
                 NavigationHelper.navigateTo(pokemonEntity, target)
             } else {
-                val newTarget = findWater(world, origin, 16) // Stay within ~16 blocks of pasture
-                if (newTarget != null) {
-                    waterTarget[pokemonId] = newTarget
-                    NavigationHelper.navigateTo(pokemonEntity, newTarget)
+                val water = findWater(world, origin, skill.searchRadius)
+                if (water != null) {
+                    waterTarget[pokemonId] = water.up() // Navigate to block ABOVE water (shore)
+                    NavigationHelper.navigateTo(pokemonEntity, water.up())
                 }
             }
         }

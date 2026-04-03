@@ -132,21 +132,31 @@ object DivingExecutor : SkillExecutor {
 
     private fun generateDiveLoot(world: ServerWorld, pokemonEntity: PokemonEntity, pokemonId: UUID, now: Long, skill: SkillDef) {
         val lootTableId = skill.lootTable ?: "cobblebase:dive_treasure"
+        notlown.cobblebase.core.Cobblebase.LOGGER.info("[DivingExecutor] ${pokemonEntity.pokemon.species.name} generating loot from $lootTableId")
 
-        val lootParams = LootContextParameterSet.Builder(world)
-            .add(LootContextParameters.ORIGIN, pokemonEntity.blockPos.toCenterPos())
-            .addOptional(LootContextParameters.THIS_ENTITY, pokemonEntity)
-            .build(LootContextTypes.CHEST)
+        try {
+            val lootParams = LootContextParameterSet.Builder(world)
+                .add(LootContextParameters.ORIGIN, pokemonEntity.blockPos.toCenterPos())
+                .addOptional(LootContextParameters.THIS_ENTITY, pokemonEntity)
+                .build(LootContextTypes.CHEST)
 
-        val identifier = Identifier.of(lootTableId.substringBefore(":"), lootTableId.substringAfter(":"))
-        val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, identifier)
-        val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
-        val drops = lootTable.generateLoot(lootParams)
+            val identifier = Identifier.of(lootTableId.substringBefore(":"), lootTableId.substringAfter(":"))
+            val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, identifier)
+            val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
+            val drops = lootTable.generateLoot(lootParams)
 
-        if (drops.isNotEmpty()) {
+            notlown.cobblebase.core.Cobblebase.LOGGER.info("[DivingExecutor] Generated ${drops.size} items")
+
+            // Always set cooldown timer even if no drops
             lastDiveTime[pokemonId] = now
-            heldItems[pokemonId] = drops
-            successTime[pokemonId] = now
+
+            if (drops.isNotEmpty()) {
+                heldItems[pokemonId] = drops
+                successTime[pokemonId] = now
+            }
+        } catch (e: Exception) {
+            notlown.cobblebase.core.Cobblebase.LOGGER.error("[DivingExecutor] Loot generation failed: ${e.message}")
+            lastDiveTime[pokemonId] = now
         }
     }
 

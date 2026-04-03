@@ -5,6 +5,6 @@
   "category": "legendary",
   "cooldownSeconds": 0,
   "searchRadius": 15,
-  "executor": "passive_buff",
+  "executor": "lucky_charm",
   "effectType": "special"
 }

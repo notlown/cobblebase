@@ -189,6 +189,9 @@ class BuffsPanel(
             "jump_boost" -> "Jump Boost for nearby players"
             "haste_boost" -> "Haste boost for nearby players"
             "saturation_boost" -> "Saturation for nearby players"
+            "lucky_charm" -> "Boosts shiny rate for wild Pokemon"
+            "aura" -> "Passive aura buff"
+            "growth" -> "Boosts crop growth nearby"
             else -> "Active"
         }
     }

@@ -16,6 +16,7 @@ import notlown.cobblebase.core.executors.MentorExecutor
 import notlown.cobblebase.core.executors.RecruiterExecutor
 import notlown.cobblebase.core.executors.BuffExecutor
 import notlown.cobblebase.core.executors.ScoutExecutor
+import notlown.cobblebase.core.executors.LuckyCharmExecutor
 
 /**
  * Maps executor names (from Skill JSON) to executor implementations.
@@ -80,7 +81,7 @@ object ExecutorRegistry {
         // -- Legendary / Fairy --
         register("recruiter", RecruiterExecutor)           // Spawns rare wild Pokemon nearby
         register("aura", GenericLootExecutor)              // Placeholder: passive aura buff
-        register("passive_buff", GenericLootExecutor)      // Placeholder: lucky charm
+        register("lucky_charm", LuckyCharmExecutor)          // Boosts shiny rate for nearby wild Pokemon
         register("growth", GenericLootExecutor)            // Placeholder: growth aura
 
         Cobblebase.LOGGER.info("ExecutorRegistry: ${executors.size} executors registered")

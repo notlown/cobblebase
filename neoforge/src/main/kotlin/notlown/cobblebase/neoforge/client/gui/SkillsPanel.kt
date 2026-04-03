@@ -307,6 +307,9 @@ class SkillsPanel(
         if (executor == "jump_boost") return "\uD83E\uDD98"
         if (executor == "haste_boost") return "\u2692"
         if (executor == "saturation_boost") return "\uD83C\uDF56"
+        if (executor == "lucky_charm") return "\uD83C\uDF1F"
+        if (executor == "aura") return "\u2728"
+        if (executor == "growth") return "\uD83C\uDF31"
         return null
     }
 }

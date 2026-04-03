@@ -120,7 +120,8 @@ object BaseManager {
     private val BUFF_EXECUTORS = listOf(
         "speed_boost", "strength_boost", "resistance_boost",
         "night_vision", "water_breathing", "jump_boost",
-        "haste_boost", "saturation_boost"
+        "haste_boost", "saturation_boost",
+        "lucky_charm", "aura", "growth"
     )
 
     private fun executeSkill(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, entry: SkillEntry) {

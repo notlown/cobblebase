@@ -3,6 +3,7 @@ package notlown.cobblebase.mixin;
 import notlown.cobblebase.core.BaseManager;
 import notlown.cobblebase.core.Cobblebase;
 import notlown.cobblebase.core.LogManager;
+import notlown.cobblebase.core.NavigationHelper;
 import notlown.cobblebase.core.PassiveXp;
 import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
@@ -142,6 +143,13 @@ public class PokemonPastureBlockEntityMixin {
                 BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
             } catch (Exception e) {
                 Cobblebase.INSTANCE.getLOGGER().error("[Cobblebase] Error ticking {}: {}", pokemon.getSpecies().getName(), e.getMessage());
+            }
+
+            // Keep mons moving naturally — if idle, wander near the pasture
+            if (pokemonEntity.getNavigation().isIdle()) {
+                try {
+                    NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 5);
+                } catch (Exception ignored) { }
             }
         }
     }

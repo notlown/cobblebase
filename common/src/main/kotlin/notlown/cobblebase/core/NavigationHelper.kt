@@ -4,6 +4,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.world.World
 import java.util.UUID
 
 /**
@@ -61,5 +62,38 @@ object NavigationHelper {
     fun clearTargets(pokemonEntity: PokemonEntity) {
         pokemonEntity.navigation.stop()
         lastPathfindTick.remove(pokemonEntity.pokemon.uuid)
+    }
+
+    private val lastWanderTick = mutableMapOf<UUID, Long>()
+    private const val WANDER_INTERVAL_TICKS = 80L // Wander every 4 seconds
+
+    /**
+     * Makes a Pokemon wander randomly near the pasture origin.
+     * Called when the Pokemon is idle (between jobs) to keep it moving naturally.
+     * Radius is small (3-6 blocks) to stay near the base.
+     */
+    fun wanderNearOrigin(pokemonEntity: PokemonEntity, origin: BlockPos, radius: Int = 5) {
+        val world = pokemonEntity.world
+        val now = world.time
+        val id = pokemonEntity.pokemon.uuid
+        val last = lastWanderTick[id] ?: 0L
+
+        if (now - last < WANDER_INTERVAL_TICKS) return
+        lastWanderTick[id] = now
+
+        // Pick a random position near the origin
+        val random = world.random
+        val dx = random.nextInt(radius * 2 + 1) - radius
+        val dz = random.nextInt(radius * 2 + 1) - radius
+        val targetX = origin.x + dx
+        val targetZ = origin.z + dz
+        val targetY = origin.y
+
+        pokemonEntity.navigation.startMovingTo(
+            targetX + 0.5,
+            targetY.toDouble(),
+            targetZ + 0.5,
+            0.35 // Slow, calm walking
+        )
     }
 }

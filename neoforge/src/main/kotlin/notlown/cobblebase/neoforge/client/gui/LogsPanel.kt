@@ -118,37 +118,17 @@ class LogsPanel(
             val rarityColor = entry.rarity.color
             context.fill(panelX + 1, ry, panelX + 3, ry + ROW_HEIGHT - 1, rarityColor)
 
-            val scale = 0.75f
-
             val timeStr = timeFormat.format(Date(entry.timestamp))
-            context.matrices.push()
-            context.matrices.translate(colTime.toFloat(), (ry + 2).toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, timeStr, 0, 0, 0x999999)
-            context.matrices.pop()
+            context.drawTextWithShadow(textRenderer, timeStr, colTime, ry + 2, 0x999999)
 
             PokemonSpriteHelper.renderSmallIconByName(
                 context, textRenderer, entry.pokemonName,
                 colPokemon, ry + 2, delta
             )
 
-            context.matrices.push()
-            context.matrices.translate(colAction.toFloat(), (ry + 2).toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, entry.action, 0, 0, 0xCCCCCC)
-            context.matrices.pop()
-
-            context.matrices.push()
-            context.matrices.translate(colItem.toFloat(), (ry + 2).toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, entry.itemName, 0, 0, 0xCCCCCC)
-            context.matrices.pop()
-
-            context.matrices.push()
-            context.matrices.translate(colRarity.toFloat(), (ry + 2).toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, entry.rarity.displayName, 0, 0, rarityColor)
-            context.matrices.pop()
+            context.drawTextWithShadow(textRenderer, entry.action, colAction, ry + 2, 0xCCCCCC)
+            context.drawTextWithShadow(textRenderer, entry.itemName, colItem, ry + 2, 0xCCCCCC)
+            context.drawTextWithShadow(textRenderer, entry.rarity.displayName, colRarity, ry + 2, rarityColor)
         }
 
         context.disableScissor()

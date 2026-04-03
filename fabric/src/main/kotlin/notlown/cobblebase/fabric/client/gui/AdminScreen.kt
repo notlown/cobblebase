@@ -37,7 +37,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         panelX = (width - panelW) / 2
         panelY = (height - panelH) / 2
 
-        val leftW = (panelW * 0.35).toInt()
+        val leftW = (panelW * 0.25).toInt()
         val rightW = panelW - leftW - 2 // 2px separator
 
         val contentY = panelY + 22 // header height
@@ -78,7 +78,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7lCobblebase Admin \u00A77\u2014 Species Skill Manager", panelX + 8, panelY + 7, 0xFFFFFF)
 
         // Separator between panes
-        val leftW = (panelW * 0.35).toInt()
+        val leftW = (panelW * 0.25).toInt()
         context.fill(panelX + leftW, panelY + 22, panelX + leftW + 1, panelY + panelH, PANEL_BORDER)
 
         // Render panels

@@ -127,6 +127,8 @@ object GathererExecutor : SkillExecutor {
         val radius = getRadiusForProficiency(skillEntry.proficiency)
         val found = findNearestDroppedItem(world, pokemonEntity, radius)
         if (found != null) {
+            // Claim the item immediately — prevent player pickup to avoid dupe glitch
+            found.setPickupDelay(Short.MAX_VALUE.toInt())
             targetItem[pokemonId] = found.id
             targetSetTime[pokemonId] = now
             Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} targeting ${found.stack.name.string} at ${found.blockPos}")
@@ -170,6 +172,7 @@ object GathererExecutor : SkillExecutor {
 
         val allStacks = mutableListOf(stack)
         for (nearby in nearbyItems.take(15)) { // max 15 items per batch
+            nearby.setPickupDelay(Short.MAX_VALUE.toInt()) // Prevent player pickup
             allStacks.add(nearby.stack.copy())
             nearby.discard()
         }

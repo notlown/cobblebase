@@ -92,8 +92,15 @@ object NavigationHelper {
                 result = pokemonEntity.navigation.startMovingTo(offX, pokemonEntity.y, offZ, actualSpeed)
             }
 
-            if (!result && now % 200 == 0L) {
-                Cobblebase.LOGGER.info("[Nav] ${pokemonEntity.pokemon.species.name} stuck at ${pokemonEntity.blockPos}, can't reach $targetPos")
+            if (!result) {
+                // All navigation attempts failed — teleport near the target
+                val tx = targetPos.x + 0.5
+                val ty = targetPos.y + 1.0
+                val tz = targetPos.z + 0.5
+                pokemonEntity.refreshPositionAndAngles(tx, ty, tz, pokemonEntity.yaw, pokemonEntity.pitch)
+                if (now % 200 == 0L) {
+                    Cobblebase.LOGGER.info("[Nav] ${pokemonEntity.pokemon.species.name} teleported to $targetPos (pathfinding failed)")
+                }
             }
         }
     }

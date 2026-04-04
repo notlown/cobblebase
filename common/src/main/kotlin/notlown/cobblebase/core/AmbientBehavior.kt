@@ -55,8 +55,10 @@ object AmbientBehavior {
         WANDERING,      // normal wandering (existing behavior)
         STANDING,       // standing still, looking around
         SLEEPING,       // lying down at night
-        SOCIALIZING,    // interacting with nearby mon
-        SITTING         // sitting/resting in place
+        SOCIALIZING,    // interacting with nearby mon (facing each other, cries)
+        SITTING,        // sitting/resting in place
+        FOLLOWING,      // following another mon around together
+        CHILLING        // sitting together with another mon
     }
 
     // Track last special animation time per Pokemon
@@ -97,7 +99,7 @@ object AmbientBehavior {
      */
     fun shouldPreventMovement(pokemonId: UUID): Boolean {
         val state = currentState[pokemonId] ?: return false
-        return state == BehaviorState.SLEEPING || state == BehaviorState.SITTING || state == BehaviorState.SOCIALIZING || state == BehaviorState.STANDING
+        return state == BehaviorState.SLEEPING || state == BehaviorState.SITTING || state == BehaviorState.SOCIALIZING || state == BehaviorState.STANDING || state == BehaviorState.CHILLING
     }
 
     /**
@@ -129,6 +131,8 @@ object AmbientBehavior {
             BehaviorState.STANDING -> tickStanding(world, pokemonEntity, id, now, stateStart, origin)
             BehaviorState.SITTING -> tickSitting(world, pokemonEntity, id, now, stateStart, origin)
             BehaviorState.SOCIALIZING -> tickSocializing(world, pokemonEntity, id, now, stateStart)
+            BehaviorState.FOLLOWING -> tickFollowing(world, pokemonEntity, id, now, stateStart)
+            BehaviorState.CHILLING -> tickChilling(world, pokemonEntity, id, now, stateStart)
             BehaviorState.WANDERING -> pickNextBehavior(world, pokemonEntity, id, now, origin)
         }
     }
@@ -239,6 +243,87 @@ object AmbientBehavior {
     }
 
     /**
+     * Following — one mon walks towards another and follows it around.
+     */
+    private fun tickFollowing(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long): Boolean {
+        val elapsed = now - stateStart
+
+        // Follow for 10-20 seconds then stop
+        if (elapsed >= 200L + world.random.nextInt(200).toLong()) {
+            setState(id, BehaviorState.WANDERING, now)
+            return false
+        }
+
+        val partnerId = lastInteractionPartner[id] ?: run {
+            setState(id, BehaviorState.WANDERING, now)
+            return false
+        }
+
+        val searchBox = Box.of(entity.pos, 20.0, 6.0, 20.0)
+        val partner = (world as ServerWorld).getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == partnerId }
+            .firstOrNull()
+
+        if (partner == null) {
+            setState(id, BehaviorState.WANDERING, now)
+            return false
+        }
+
+        // Walk slowly towards partner (stay ~2 blocks behind)
+        val dist = entity.squaredDistanceTo(partner)
+        if (dist > 4.0) { // more than 2 blocks away
+            NavigationHelper.navigateTo(entity, partner.blockPos, 0.3) // slow follow speed
+        } else {
+            // Close enough — look at partner
+            entity.lookAtEntity(partner, 30f, 30f)
+            NavigationHelper.clearTargets(entity)
+        }
+
+        // Occasional cry while following
+        if (now % 120 == 0L && world.random.nextInt(100) < 20) {
+            SkillEffects.sendAnimationPublic(world, entity, "cry")
+        }
+
+        return true // don't wander
+    }
+
+    /**
+     * Chilling together — two mons sit next to each other and relax.
+     */
+    private fun tickChilling(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long): Boolean {
+        val elapsed = now - stateStart
+
+        // Chill together for 15-30 seconds
+        if (elapsed >= 300L + world.random.nextInt(300).toLong()) {
+            setState(id, BehaviorState.WANDERING, now)
+            return false
+        }
+
+        // Play rest animation
+        if (now % 120 == 0L) {
+            SkillEffects.sendAnimationPublic(world, entity, "sleep", "pose", "ground_idle")
+        }
+
+        // Face partner
+        val partnerId = lastInteractionPartner[id]
+        if (partnerId != null && now % 60 == 0L) {
+            val searchBox = Box.of(entity.pos, 12.0, 6.0, 12.0)
+            val partner = (world as ServerWorld).getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == partnerId }
+                .firstOrNull()
+            if (partner != null) {
+                entity.lookAtEntity(partner, 30f, 30f)
+            }
+        }
+
+        // Occasional happy cry
+        if (now % 200 == 0L && world.random.nextInt(100) < 30) {
+            SkillEffects.sendAnimationPublic(world, entity, "cry", "happy")
+        }
+
+        NavigationHelper.clearTargets(entity)
+        return true
+    }
+
+    /**
      * Decides what to do next when in WANDERING state.
      * Returns false to allow normal wandering most of the time.
      */
@@ -261,7 +346,7 @@ object AmbientBehavior {
             }
         }
 
-        // Check for nearby mons to socialize with
+        // Check for nearby mons to interact with
         if (world.random.nextInt(100) < SOCIAL_CHANCE) {
             val searchBox = Box.of(entity.pos, SOCIAL_RANGE * 2, 4.0, SOCIAL_RANGE * 2)
             val nearbyMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { other ->
@@ -271,8 +356,25 @@ object AmbientBehavior {
                 val partner = nearbyMons[world.random.nextInt(nearbyMons.size)]
                 lastInteractionPartner[id] = partner.pokemon.uuid
                 lastInteractionPartner[partner.pokemon.uuid] = id
-                setState(id, BehaviorState.SOCIALIZING, now)
-                setState(partner.pokemon.uuid, BehaviorState.SOCIALIZING, now)
+
+                // Pick a random social behavior
+                val roll = world.random.nextInt(100)
+                when {
+                    roll < 40 -> {
+                        // Face each other and cry (classic socialize)
+                        setState(id, BehaviorState.SOCIALIZING, now)
+                        setState(partner.pokemon.uuid, BehaviorState.SOCIALIZING, now)
+                    }
+                    roll < 65 -> {
+                        // Follow the partner around
+                        setState(id, BehaviorState.FOLLOWING, now)
+                    }
+                    else -> {
+                        // Sit down and chill together
+                        setState(id, BehaviorState.CHILLING, now)
+                        setState(partner.pokemon.uuid, BehaviorState.CHILLING, now)
+                    }
+                }
                 return true
             }
         }

@@ -38,33 +38,41 @@ Skills auto-assigned by typing, base stats, and BST tiers:
 - **BST 530+**: +2 proficiency bonus
 - **BST 480+**: +1 proficiency bonus
 
-### Also New
-- **Diving loot table** — Prismarine, Nautilus Shells, Heart of the Sea, Trident
-- **Chest deposit for all loot jobs** — Diving, Archeologist, Honey Collect now deposit into nearby chests instead of dropping on ground
-- **Farfetch'd crash fix** — Species names with special characters no longer crash the GUI
-- **Skill selection GUI fix** — Selected skills no longer reset to "Auto" on tab switch or scroll
-- **Water tethering mixin** — Prevents Cobblemon from teleporting swimming Pokemon out of water
-- **Diving mons stay in water** — `canWalkOnWater` set via reflection for diving Pokemon
-
 ### Balance & Immersion
-- **Standardized cooldowns** — All loot-producing jobs now use 300s base cooldown (Prof 1: ~8 min, Prof 3: 5 min, Prof 5: ~1.7 min)
-- **Swim speed capped** — Water mons (Sharpedo, Basculegion etc.) limited to 0.15 swimSpeed to prevent zooming
-- **Movement speed halved** — NavigationHelper default speed reduced from 1.0 to 0.5 for calmer base gameplay
-- **Gatherer speed reduced** — Prof 1: 0.4, Prof 5: 0.6 (was 0.8 - 2.0)
-- **Idle wandering** — All mons now wander randomly (15 block radius) when idle instead of standing still on the pasture box
-- **Natural species speed** — Mons use their Cobblemon walkSpeed (capped at 0.4) instead of hardcoded values
-- **Item dupe glitch fixed** — Gatherer now claims items immediately on targeting (sets pickupDelay to prevent simultaneous player pickup)
-- **Cry sound cooldown** — Max 1 cry per 60 seconds per Pokemon (prevents constant noise)
-- **Default cry volume lowered** — 80 → 30
-- **In-GUI mute button** — 🔊/🔇 toggle in top-right corner of Cobblebase screen
-- **"Auto" renamed to "Idle"** — clearer labeling for the do-nothing option
-- **Diving job removed** — removed from all 1,240 species (will return improved in future update)
-- **Growth Aura nerfed** — pulse interval 3s → 30s, crops per pulse 2-16 → 1-3
-- **Honey loot reduced** — 40% 1 comb, 15% 2 combs (was 1-6)
-- **Legendary Recruiter cooldown** — 300s → 540s (Prof 1: 15 min, Prof 5: 3 min)
-- **Fishing water block cache** — cached per pasture, refreshed every 5 min (no more O(n³) scan)
-- **Failed deposit tracking** — Fishing skips full chests, walks to chest before depositing
-- **Dev mode removed** — no longer accessible in settings
+- **Standardized cooldowns** — All jobs use 300s base cooldown (Prof 1: ~8 min, Prof 3: 5 min, Prof 5: ~1.7 min)
+- **Harvester cooldown** — 60s base (Prof 3: 60s, Prof 5: 20s)
+- **Legendary Recruiter cooldown** — 540s base (Prof 1: 15 min, Prof 5: 3 min)
+- **All loot table item counts halved** — reduced item spam across 27 loot tables
+- **Mining: 1 drop per cooldown** — no more burst looting after cooldown
+- **Swim speed capped** — Water mons limited to 0.15 swimSpeed
+- **Idle wandering** — All mons wander randomly (15 block radius) when idle
+- **Cry sound cooldown** — Max 1 cry per 60 seconds per Pokemon
+- **Default cry volume** — 80 → 30
+- **In-GUI mute button** — 🔊/🔇 toggle in top-right corner
+- **"Auto" renamed to "Idle"** — does nothing, only passive buffs remain active
+- **Growth Aura nerfed** — pulse 3s → 30s, crops per pulse 2-16 → 1-3
+- **Honey loot reduced** — 40% 1 comb, 15% 2 combs
+- **Diving job removed** — will return improved in future update
+
+### Bug Fixes
+- **Item dupe glitch** — Gatherer claims items immediately on targeting
+- **Skill selection reset** — no longer resets to "Idle" on tab switch or scroll
+- **Idle actually idles** — null assignment no longer runs all skills
+- **Farfetch'd crash** — special characters in species names no longer crash GUI
+- **Mining burst loot** — was re-rolling every 8s after cooldown, now 1 roll per cycle
+- **All cooldown formulas standardized** — Mining, Finder, Scout, Harvester had custom broken formulas
+- **Gatherer deposit timeout** — 10s max to reach chest, then force deposit
+- **Leaves escape** — mons auto-drop to ground when stuck in tree canopies
+- **Stuck detection** — auto-teleport after 15s of not moving
+- **Navigation fallback** — tries midpoint + random offset when pathfinding fails
+- **Console log spam reduced** — removed 25 per-tick debug log lines
+- **Dev mode removed** from settings
+
+### Multiplayer
+- **Pasture lock** — only the owner can open the Cobblebase GUI
+- **Owner-only messages** — Recruiter and Scout notifications sent only to the owner
+- **Chest deposit for loot jobs** — smart sorting with failed chest tracking
+- **Fishing water block cache** — scanned once, refreshed every 5 min
 
 **Total species: 8,426**
 

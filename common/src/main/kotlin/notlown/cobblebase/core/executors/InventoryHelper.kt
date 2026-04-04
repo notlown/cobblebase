@@ -121,8 +121,11 @@ object InventoryHelper {
             for (y in -radius..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
-                    val block = world.getBlockState(pos).block
-                    if (block is ChestBlock || block is BarrelBlock) {
+                    // Check for any block entity that implements Inventory
+                    // This supports vanilla chests/barrels AND modded containers
+                    // (Iron Chests, Sophisticated Storage, etc.)
+                    val blockEntity = world.getBlockEntity(pos)
+                    if (blockEntity is Inventory) {
                         result.add(pos.toImmutable())
                     }
                 }

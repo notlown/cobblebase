@@ -76,7 +76,7 @@ object HealerExecutor : SkillExecutor {
         }
 
         // Cooldown - first heal triggers immediately (lastTime defaults to 0, not now)
-        val cooldownTicks = if (CobblebaseConfig.devMode) 100L else 180L * 20L
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val lastTime = lastHealTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) return
 

@@ -61,9 +61,15 @@ object AmbientBehavior {
         val stateStart = stateStartTime[id] ?: now
 
         // Debug logging every 5 seconds
-        if (now % 100 == 0L && state != BehaviorState.WANDERING) {
+        if (now % 100 == 0L) {
             val speciesName = pokemonEntity.pokemon.species.name
-            Cobblebase.LOGGER.info("[Ambient] $speciesName: state=$state, elapsed=${now - stateStart}t")
+            val dayTime = (world as? ServerWorld)?.timeOfDay?.rem(24000) ?: -1
+            if (state != BehaviorState.WANDERING) {
+                Cobblebase.LOGGER.info("[Ambient] $speciesName: state=$state, elapsed=${now - stateStart}t, dayTime=$dayTime")
+            } else if (now % 500 == 0L) {
+                // Log wandering state less frequently
+                Cobblebase.LOGGER.info("[Ambient] $speciesName: WANDERING, dayTime=$dayTime")
+            }
         }
 
         return when (state) {
@@ -79,9 +85,10 @@ object AmbientBehavior {
      * Night time = sleep. Pokemon play sleep animation and stay still.
      */
     private fun tickSleeping(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, origin: BlockPos): Boolean {
-        // Wake up at dawn (time 0-1000 = morning)
+        // Wake up at dawn (Minecraft: 23000-24000 + 0-1000 = sunrise)
         val dayTime = world.timeOfDay % 24000
-        if (dayTime in 0..12500) {
+        val isDaytime = dayTime in 0..12999 || dayTime in 23000..24000
+        if (isDaytime) {
             // Morning — wake up
             setState(id, BehaviorState.WANDERING, now)
             // Play wake-up cry
@@ -190,11 +197,13 @@ object AmbientBehavior {
 
         stateStartTime[id] = now
 
-        // Night time — go to sleep
+        // Night time — go to sleep (Minecraft: 13000 = sunset, 23000 = sunrise)
         val dayTime = world.timeOfDay % 24000
-        if (dayTime in 12500..23999) {
-            // Check periodically, not every tick
-            if (now % SLEEP_CHECK_INTERVAL == 0L && world.random.nextInt(100) < 40) {
+        val isNight = dayTime in 13000..22999
+        if (isNight) {
+            // High chance to sleep at night
+            if (world.random.nextInt(100) < 70) {
+                Cobblebase.LOGGER.info("[Ambient] ${entity.pokemon.species.name} going to sleep (dayTime=$dayTime)")
                 setState(id, BehaviorState.SLEEPING, now)
                 return true
             }

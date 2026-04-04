@@ -204,7 +204,7 @@ object NavigationHelper {
             targetX + 0.5,
             targetY.toDouble(),
             targetZ + 0.5,
-            0.7
+            0.3  // slow stroll speed for idle wandering
         )
     }
 }

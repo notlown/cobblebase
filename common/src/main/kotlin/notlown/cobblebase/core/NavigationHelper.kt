@@ -6,6 +6,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.CobblebaseConfig
 import java.util.UUID
 
 /**
@@ -140,6 +141,7 @@ object NavigationHelper {
     fun checkAndUnstick(pokemonEntity: PokemonEntity, origin: BlockPos) {
         val world = pokemonEntity.world
         if (world.isClient) return
+        if (!CobblebaseConfig.enableUnstickTeleport) return
         val id = pokemonEntity.pokemon.uuid
         val now = world.time
         val currentPos = pokemonEntity.blockPos

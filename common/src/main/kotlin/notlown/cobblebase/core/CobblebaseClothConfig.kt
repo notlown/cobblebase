@@ -29,6 +29,9 @@ class CobblebaseClothConfig : ConfigData {
         var safetyTeleportDistance = 30
 
         @ConfigEntry.Gui.Tooltip
+        var enableUnstickTeleport = true
+
+        @ConfigEntry.Gui.Tooltip
         var enableConsoleLogging = false
     }
 

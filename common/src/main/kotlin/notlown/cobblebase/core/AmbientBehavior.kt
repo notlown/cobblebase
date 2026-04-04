@@ -26,10 +26,10 @@ object AmbientBehavior {
     // Timing constants
     private const val IDLE_STAND_MIN = 100L   // 5 seconds minimum standing still
     private const val IDLE_STAND_MAX = 400L   // 20 seconds max before next behavior
-    private const val SOCIAL_RANGE = 6.0      // blocks — how close mons need to be to interact
-    private const val SOCIAL_CHANCE = 35       // percent chance per check to start social interaction
-    private const val SIT_CHANCE = 20          // percent chance to sit instead of wander
-    private const val LOOK_AROUND_CHANCE = 30  // percent chance to play look-around animation
+    private const val SOCIAL_RANGE = 15.0     // blocks — how close mons need to be to interact
+    private const val SOCIAL_CHANCE = 50       // percent chance per check to start social interaction
+    private const val SIT_CHANCE = 15          // percent chance to sit instead of wander
+    private const val LOOK_AROUND_CHANCE = 20  // percent chance to play look-around animation
     private const val SPECIAL_ANIM_CHANCE = 25 // percent chance to play a special animation (attack, emote)
 
     // Signature moves for CobbleMotion species (preferred over generic animations)

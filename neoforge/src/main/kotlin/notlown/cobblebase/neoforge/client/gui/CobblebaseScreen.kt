@@ -5,6 +5,9 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
+import notlown.cobblebase.core.CobblebaseConfig
+import me.shedaniel.autoconfig.AutoConfig
+import notlown.cobblebase.core.CobblebaseClothConfig
 
 /**
  * Main Cobblebase screen with 3 tabs: Skills, Buffs, Logs.
@@ -100,6 +103,21 @@ class CobblebaseScreen(
         // Separator line below tabs
         context.fill(panelX, panelY + TAB_HEIGHT, panelX + panelW, panelY + TAB_HEIGHT + 1, PANEL_BORDER)
 
+        // Mute button (top-right of panel)
+        val muteX = panelX + panelW - 18
+        val muteY = panelY + 5
+        val muted = !CobblebaseConfig.cryEnabled || CobblebaseConfig.cryVolume <= 0
+        val muteIcon = if (muted) "\uD83D\uDD07" else "\uD83D\uDD0A"
+        val muteHovered = mouseX in muteX..(muteX + 14) && mouseY in muteY..(muteY + 12)
+        val muteBg = if (muteHovered) 0xFF444466.toInt() else 0x00000000
+        if (muteHovered) context.fill(muteX - 1, muteY - 1, muteX + 15, muteY + 13, muteBg)
+        val muteScale = 0.75f
+        context.matrices.push()
+        context.matrices.translate(muteX.toFloat(), muteY.toFloat(), 0f)
+        context.matrices.scale(muteScale, muteScale, 1f)
+        context.drawTextWithShadow(textRenderer, muteIcon, 0, 0, if (muted) 0xFF5555 else 0xAAAAAA)
+        context.matrices.pop()
+
         // Tab content
         when (activeTab) {
             Tab.SKILLS -> skillsPanel.render(context, mouseX, mouseY, delta)
@@ -160,6 +178,20 @@ class CobblebaseScreen(
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Mute button click
+        val muteX = panelX + panelW - 18
+        val muteY = panelY + 5
+        if (mouseX >= muteX && mouseX <= muteX + 14 && mouseY >= muteY && mouseY <= muteY + 12) {
+            val config = AutoConfig.getConfigHolder(CobblebaseClothConfig::class.java).config
+            if (config.cry.cryVolume > 0) {
+                config.cry.cryVolume = 0
+            } else {
+                config.cry.cryVolume = 30
+            }
+            AutoConfig.getConfigHolder(CobblebaseClothConfig::class.java).save()
+            return true
+        }
+
         // Check tab clicks
         val tabs = Tab.entries
         val tabCount = tabs.size

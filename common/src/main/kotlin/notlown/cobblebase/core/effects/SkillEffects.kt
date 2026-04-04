@@ -13,6 +13,7 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
+import java.util.UUID
 import net.minecraft.util.math.Box
 import net.minecraft.world.World
 
@@ -21,6 +22,9 @@ import net.minecraft.world.World
  * Sends animation packets server-side using CobblemonNetwork (same as battle system).
  */
 object SkillEffects {
+
+    private val lastCryTime = mutableMapOf<UUID, Long>()
+    private const val CRY_COOLDOWN_TICKS = 1200L // 60 seconds between cries per Pokemon
 
     fun sendAnimationPublic(world: World, pokemonEntity: PokemonEntity, vararg names: String) =
         sendAnimation(world, pokemonEntity, *names)
@@ -53,14 +57,20 @@ object SkillEffects {
         val h = pokemonEntity.height.toDouble()
         val z = pokemonEntity.z
 
-        // Play cry sound from Cobblebase's own sound pack (registered during init)
+        // Play cry sound — max once per 60 seconds per Pokemon to avoid spam
         if (CobblebaseConfig.cryEnabled && CobblebaseConfig.cryVolume > 0) {
-            val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
-            val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
-            val soundEvent = Registries.SOUND_EVENT.get(cryId)
-            if (soundEvent != null) {
-                val volume = CobblebaseConfig.cryVolume / 100f
-                world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, volume, 1.0f)
+            val pokemonId = pokemonEntity.pokemon.uuid
+            val now = world.time
+            val lastCry = lastCryTime[pokemonId] ?: 0L
+            if (now - lastCry >= CRY_COOLDOWN_TICKS) {
+                lastCryTime[pokemonId] = now
+                val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
+                val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
+                val soundEvent = Registries.SOUND_EVENT.get(cryId)
+                if (soundEvent != null) {
+                    val volume = CobblebaseConfig.cryVolume / 100f
+                    world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, volume, 1.0f)
+                }
             }
         }
 

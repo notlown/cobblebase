@@ -36,7 +36,7 @@ object ExecutorRegistry {
         // -- Loot-table based (pickup, archeology, honey) --
         register("pickup", GenericLootExecutor)
         register("archeology", GenericLootExecutor)
-        register("diving", FishingExecutor)                    // Uses same water navigation as fishing
+        // Diving removed for now
         register("honey", GenericLootExecutor)
 
         // -- Generation --

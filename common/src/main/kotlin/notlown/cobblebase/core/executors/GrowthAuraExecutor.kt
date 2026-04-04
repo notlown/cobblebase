@@ -24,8 +24,8 @@ object GrowthAuraExecutor : SkillExecutor {
 
     private val lastTickTime = mutableMapOf<UUID, Long>()
 
-    // How often the aura pulses (in ticks). Every 3 seconds.
-    private const val PULSE_INTERVAL = 60L
+    // How often the aura pulses (in ticks). Every 30 seconds.
+    private const val PULSE_INTERVAL = 600L
 
     override fun tick(
         world: World,
@@ -115,12 +115,12 @@ object GrowthAuraExecutor : SkillExecutor {
      */
     private fun getCropsPerPulse(prof: Int): Int {
         return when (prof) {
-            1 -> 2
-            2 -> 4
-            3 -> 6
-            4 -> 10
-            5 -> 16
-            else -> 2
+            1 -> 1
+            2 -> 1
+            3 -> 2
+            4 -> 2
+            5 -> 3
+            else -> 1
         }
     }
 }

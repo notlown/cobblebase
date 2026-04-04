@@ -1,7 +1,6 @@
 archeologist.json
 aura_boost.json
 brew_fuel.json
-diving.json
 extinguisher.json
 finder_bal.json
 finder_bui.json

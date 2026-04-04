@@ -102,7 +102,7 @@ class SkillsPanel(
             val rowY = contentY + cumulativeY
 
             // Auto button in its own column
-            allButtons.add(SkillButtonData(pokemonId, null, "Auto", 0, "", autoX, rowY, currentAssignment == null))
+            allButtons.add(SkillButtonData(pokemonId, null, "Idle", 0, "", autoX, rowY, currentAssignment == null))
 
             // Skill buttons start after Auto column
             var btnX = skillStartX

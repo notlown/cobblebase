@@ -2,10 +2,6 @@
   "species": "hydrocean",
   "skills": [
     {
-      "skillId": "cobblebase:diving",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:fishing",
       "proficiency": 4
     },

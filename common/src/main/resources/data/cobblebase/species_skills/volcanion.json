@@ -2,10 +2,6 @@
   "species": "volcanion",
   "skills": [
     {
-      "skillId": "cobblebase:diving",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:finder_food",
       "proficiency": 4
     },

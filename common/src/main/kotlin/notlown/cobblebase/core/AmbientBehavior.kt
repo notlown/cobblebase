@@ -463,8 +463,10 @@ object AmbientBehavior {
             val nearbyMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { other ->
                 other != entity && other.isAlive && !other.pokemon.isWild()
             }
-            if (nearbyMons.isNotEmpty()) {
-                val partner = nearbyMons[world.random.nextInt(nearbyMons.size)]
+            // Filter out mons already in an active behavior
+            val availableMons = nearbyMons.filter { !isInActiveBehavior(it.pokemon.uuid) }
+            if (availableMons.isNotEmpty()) {
+                val partner = availableMons[world.random.nextInt(availableMons.size)]
                 lastInteractionPartner[id] = partner.pokemon.uuid
                 lastInteractionPartner[partner.pokemon.uuid] = id
 

@@ -461,8 +461,8 @@ object AmbientBehavior {
     private fun tickWalkingTogether(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long, origin: BlockPos): Boolean {
         val elapsed = now - stateStart
 
-        // Walk together for 20-30 seconds
-        if (elapsed >= 400L + world.random.nextInt(200).toLong()) {
+        // Walk together for 25-35 seconds
+        if (elapsed >= 500L + world.random.nextInt(200).toLong()) {
             setState(id, BehaviorState.WANDERING, now)
             walkDestination.remove(id)
             return false
@@ -483,28 +483,36 @@ object AmbientBehavior {
             return false
         }
 
-        // Pick a shared destination (or reuse existing one)
-        val dest = walkDestination.getOrPut(id) {
-            val PASTURE_RADIUS = 15
-            val dx = world.random.nextInt(PASTURE_RADIUS * 2) - PASTURE_RADIUS
-            val dz = world.random.nextInt(PASTURE_RADIUS * 2) - PASTURE_RADIUS
-            BlockPos(origin.x + dx, origin.y, origin.z + dz)
-        }
-        // Partner shares the same destination (offset by 1 block to walk side by side)
-        val partnerDest = walkDestination.getOrPut(partnerId) {
-            BlockPos(dest.x + 1, dest.y, dest.z + 1)
-        }
+        // Leader picks a destination, follower walks to leader's side
+        val isLeader = id.hashCode() < partnerId.hashCode() // deterministic: one leads, one follows
 
-        // Check if arrived at destination — pick a new one
-        if (NavigationHelper.isPokemonAtPosition(entity, dest, 2.0)) {
-            walkDestination.remove(id)
-            walkDestination.remove(partnerId)
-            // Will pick new destination next tick
-            return true
-        }
+        if (isLeader) {
+            // Leader walks to shared destination
+            val dest = walkDestination.getOrPut(id) {
+                val PASTURE_RADIUS = 12
+                val dx = world.random.nextInt(PASTURE_RADIUS * 2) - PASTURE_RADIUS
+                val dz = world.random.nextInt(PASTURE_RADIUS * 2) - PASTURE_RADIUS
+                BlockPos(origin.x + dx, origin.y, origin.z + dz)
+            }
 
-        // Walk slowly to shared destination
-        NavigationHelper.navigateTo(entity, dest, 0.3)
+            if (NavigationHelper.isPokemonAtPosition(entity, dest, 2.0)) {
+                // Arrived — pick new destination
+                walkDestination.remove(id)
+                return true
+            }
+
+            NavigationHelper.navigateTo(entity, dest, 0.35)
+        } else {
+            // Follower: walk to 2 blocks beside the leader (perpendicular to leader's facing)
+            val leaderX = partner.blockPos.x
+            val leaderZ = partner.blockPos.z
+            // Offset perpendicular to leader's movement direction
+            val yawRad = Math.toRadians(partner.yaw.toDouble() + 90) // perpendicular
+            val offsetX = (Math.cos(yawRad) * 2).toInt()
+            val offsetZ = (Math.sin(yawRad) * 2).toInt()
+            val sidePos = BlockPos(leaderX + offsetX, origin.y, leaderZ + offsetZ)
+            NavigationHelper.navigateTo(entity, sidePos, 0.35)
+        }
 
         return false // allow navigation
     }
@@ -629,6 +637,7 @@ object AmbientBehavior {
             BehaviorState.CHILLING -> "\u00A7a$speciesName is chilling with a friend"
             BehaviorState.CHASING -> "\u00A7c$speciesName is chasing!"
             BehaviorState.FLEEING -> "\u00A7c$speciesName is running away!"
+            BehaviorState.WALKING_TOGETHER -> "\u00A7b$speciesName is going for a walk with a friend"
             else -> return
         }
         try {

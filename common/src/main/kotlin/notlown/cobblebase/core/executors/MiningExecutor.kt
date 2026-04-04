@@ -62,26 +62,6 @@ object MiningExecutor : SkillExecutor {
             return
         }
 
-        // Phase 1.5: Celebration break after finding loot (5 seconds)
-        val celebEnd = celebrationUntil[pokemonId]
-        if (celebEnd != null && now < celebEnd) {
-            // Short break — show success particles occasionally
-            if (now % 40 == 0L) {
-                SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
-            }
-            return
-        } else if (celebEnd != null) {
-            // Celebration over — clear and immediately start digging again
-            celebrationUntil.remove(pokemonId)
-            // Pick a new dig spot right away
-            val radius = skill.searchRadius.coerceAtLeast(5)
-            val offsetX = world.random.nextInt(radius * 2 + 1) - radius
-            val offsetZ = world.random.nextInt(radius * 2 + 1) - radius
-            digTarget[pokemonId] = origin.add(offsetX, 0, offsetZ)
-            digStartTime[pokemonId] = now
-            return
-        }
-
         // Phase 2: Currently digging at a target position
         val target = digTarget[pokemonId]
         if (target != null) {
@@ -104,23 +84,11 @@ object MiningExecutor : SkillExecutor {
                     return
                 }
 
-                // Digging complete — generate loot
-                val foundLoot = generateMiningLoot(world, origin, pokemonEntity, pokemonId, skillEntry, skill)
+                // Digging complete — generate 1 loot drop, then wait full cooldown
+                generateMiningLoot(world, origin, pokemonEntity, pokemonId, skillEntry, skill)
                 digTarget.remove(pokemonId)
                 digStartTime.remove(pokemonId)
-                lastMineTime[pokemonId] = now
-
-                if (foundLoot) {
-                    // Found something — short 5-second celebration break
-                    celebrationUntil[pokemonId] = now + CELEBRATION_TICKS
-                } else {
-                    // Nothing found — immediately pick a new spot and keep digging
-                    val radius = skill.searchRadius.coerceAtLeast(5)
-                    val offsetX = world.random.nextInt(radius * 2 + 1) - radius
-                    val offsetZ = world.random.nextInt(radius * 2 + 1) - radius
-                    digTarget[pokemonId] = origin.add(offsetX, 0, offsetZ)
-                    digStartTime[pokemonId] = now
-                }
+                lastMineTime[pokemonId] = now // Always reset cooldown — no rapid re-rolls
             }
             return
         }

@@ -83,7 +83,7 @@ object HarvesterExecutor : SkillExecutor {
 
         // Cooldown between harvests (so Gatherer can keep up with drops)
         val lastHarvest = lastHarvestTime[pokemonId] ?: 0L
-        val cooldownTicks = if (CobblebaseConfig.devMode) 40L else HARVEST_COOLDOWN_TICKS
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         if (now - lastHarvest < cooldownTicks) {
             if (now % 60 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
             return

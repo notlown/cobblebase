@@ -59,10 +59,7 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
 
         // Cooldown
         // Finder cooldown only slightly reduced by proficiency (not halved like other skills)
-        // Prof 1: 100%, Prof 2: 90%, Prof 3: 80%, Prof 4: 70%, Prof 5: 60%
-        val baseCooldown = CobblebaseConfig.finderCooldownSeconds
-        val cooldownTicks = if (CobblebaseConfig.devMode) 100L
-            else (baseCooldown * 20L * (11 - skillEntry.proficiency) / 10)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val lastTime = lastFindTime[pokemonId] ?: now.also { lastFindTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
             if (now % 60 == 0L) {

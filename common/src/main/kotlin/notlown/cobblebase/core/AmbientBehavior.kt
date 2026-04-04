@@ -21,6 +21,7 @@ object AmbientBehavior {
     private val currentState = mutableMapOf<UUID, BehaviorState>()
     private val stateStartTime = mutableMapOf<UUID, Long>()
     private val lastInteractionPartner = mutableMapOf<UUID, UUID>()
+    private val speciesNames = mutableMapOf<UUID, String>()
 
     // Timing constants
     private const val IDLE_STAND_MIN = 100L   // 5 seconds minimum standing still
@@ -119,7 +120,9 @@ object AmbientBehavior {
      */
     fun tickIdle(world: World, pokemonEntity: PokemonEntity, origin: BlockPos): Boolean {
         if (world !is ServerWorld) return false
+        lastWorld = world
         val id = pokemonEntity.pokemon.uuid
+        speciesNames[id] = pokemonEntity.pokemon.species.name
         val now = world.time
 
         val state = currentState[id] ?: BehaviorState.WANDERING
@@ -518,10 +521,37 @@ object AmbientBehavior {
     private fun setState(id: UUID, state: BehaviorState, now: Long) {
         val prev = currentState[id]
         if (prev != state) {
-            Cobblebase.LOGGER.info("[Ambient] State change: $prev -> $state")
+            val name = speciesNames[id] ?: "Unknown"
+            Cobblebase.LOGGER.info("[Ambient] $name: $prev -> $state")
+            if (state != BehaviorState.WANDERING) {
+                broadcastAmbientState(name, state)
+            }
         }
         currentState[id] = state
         stateStartTime[id] = now
+    }
+
+    // Store last broadcast world for chat messages
+    private var lastWorld: ServerWorld? = null
+
+    private fun broadcastAmbientState(speciesName: String, state: BehaviorState) {
+        val stateText = when (state) {
+            BehaviorState.SITTING -> "\u00A77$speciesName is sitting down"
+            BehaviorState.STANDING -> "\u00A77$speciesName is looking around"
+            BehaviorState.SLEEPING -> "\u00A77$speciesName fell asleep"
+            BehaviorState.SOCIALIZING -> "\u00A7e$speciesName is showing off moves"
+            BehaviorState.FOLLOWING -> "\u00A7b$speciesName is following a friend"
+            BehaviorState.CHILLING -> "\u00A7a$speciesName is chilling with a friend"
+            BehaviorState.CHASING -> "\u00A7c$speciesName is chasing!"
+            BehaviorState.FLEEING -> "\u00A7c$speciesName is running away!"
+            else -> return
+        }
+        try {
+            val world = lastWorld ?: return
+            world.server.playerManager.playerList.forEach { player ->
+                player.sendMessage(net.minecraft.text.Text.literal(stateText), true)
+            }
+        } catch (_: Exception) {}
     }
 
     /**

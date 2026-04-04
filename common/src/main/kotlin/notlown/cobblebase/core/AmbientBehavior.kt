@@ -542,6 +542,8 @@ object AmbientBehavior {
             val availableMons = nearbyMons.filter { !isInActiveBehavior(it.pokemon.uuid) }
             if (availableMons.isNotEmpty()) {
                 val partner = availableMons[world.random.nextInt(availableMons.size)]
+                // Register partner's species name so chat messages work
+                speciesNames[partner.pokemon.uuid] = partner.pokemon.species.name
                 lastInteractionPartner[id] = partner.pokemon.uuid
                 lastInteractionPartner[partner.pokemon.uuid] = id
 

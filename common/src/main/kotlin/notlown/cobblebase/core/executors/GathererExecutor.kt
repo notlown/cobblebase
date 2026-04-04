@@ -208,19 +208,28 @@ object GathererExecutor : SkillExecutor {
      * Navigates to the best container and deposits held items.
      * Plays happy villager particles on successful deposit.
      */
+    private val depositStartTime = mutableMapOf<UUID, Long>()
+    private const val DEPOSIT_TIMEOUT_TICKS = 200L // 10 seconds max to reach chest
+
     private fun depositItems(world: ServerWorld, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID, speed: Double) {
         val items = heldItems[pokemonId] ?: return
-        val chestPos = InventoryHelper.findBestContainer(world, pokemonEntity.blockPos, 10, items)
+        val chestPos = InventoryHelper.findBestContainer(world, origin, 10, items)
 
         if (chestPos == null) {
             // No chest found - drop items so Pokemon doesn't get stuck
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
             heldItems.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
+            depositStartTime.remove(pokemonId)
             return
         }
 
+        // Track how long we've been trying to reach the chest
+        val startTime = depositStartTime.getOrPut(pokemonId) { world.time }
+        val elapsed = world.time - startTime
+
         NavigationHelper.navigateTo(pokemonEntity, chestPos, speed)
-        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)) {
+        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos) || elapsed >= DEPOSIT_TIMEOUT_TICKS) {
             InventoryHelper.insertItems(world, chestPos, items)
             heldItems.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
@@ -244,6 +253,7 @@ object GathererExecutor : SkillExecutor {
             }
 
             Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} deposited items at $chestPos")
+            depositStartTime.remove(pokemonId)
         }
     }
 

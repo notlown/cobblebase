@@ -108,10 +108,7 @@ object ScoutExecutor : SkillExecutor {
         }
 
         // Cooldown: proficiency reduces cooldown
-        // Prof 1: 300s, Prof 2: 240s, Prof 3: 180s, Prof 4: 180s, Prof 5: 150s
-        val baseCooldown = skill.cooldownSeconds
-        val cooldownTicks = if (CobblebaseConfig.devMode) 100L
-            else (baseCooldown * 20L * (7 - skillEntry.proficiency) / 4)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
 
         val lastTime = lastScoutTime[pokemonId] ?: now.also { lastScoutTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {

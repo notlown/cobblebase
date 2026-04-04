@@ -125,10 +125,8 @@ object MiningExecutor : SkillExecutor {
             return
         }
 
-        // Phase 3: Cooldown check — but keep digging animation playing!
-        val baseCooldown = if (skill.cooldownSeconds > 0) skill.cooldownSeconds.toLong() else 30L
-        val cooldownTicks = if (CobblebaseConfig.devMode) 100L
-            else (baseCooldown * 20L * (11 - skillEntry.proficiency) / 10)
+        // Phase 3: Cooldown check — use standard formula
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val lastTime = lastMineTime[pokemonId] ?: now.also { lastMineTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
             // Play continuous digging animation + particles while waiting for cooldown
@@ -153,7 +151,7 @@ object MiningExecutor : SkillExecutor {
      * Prof 1 = 0.4 (slow), Prof 5 = 1.2 (fast)
      */
     private fun getSpeedForProficiency(proficiency: Int): Double {
-        return 0.2 + (proficiency * 0.2)
+        return 1.0 // Use standard navigation speed
     }
 
     /**

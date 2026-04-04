@@ -4,6 +4,25 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [1.3.7] - 2026-04-05
+
+### Config
+- **Added `enableSafetyTeleport` toggle** — allows disabling the safety teleport entirely
+- **Added `safetyTeleportDistance` setting** (10-100 blocks, default 30) — configure how far Pokemon can wander before being teleported back
+- **Renamed `defaultSearchRadius` → `jobSearchRadius`** — clearer name with tooltip explaining it controls how far Pokemon search for resources (ores, crops, water, etc.)
+
+### Gatherer Pasture Ownership
+- **Gatherer now respects Pasture Block ownership** — items dropped by Cobblebase jobs are tagged with their Pasture Block origin, Gatherer only picks up items from its own Pasture Block (fixes item stealing in multiplayer bases)
+- Untagged items (player drops, mob drops) can still be picked up by any Gatherer
+
+### Multiplayer GUI Sync
+- **Skill assignments now synchronize across all connected players in real-time** — when one player assigns or unassigns a job, every other player's GUI updates automatically
+- **Client-side assignment cache** — GUI reads from a dedicated `AssignmentCache` instead of the server-only `BaseManager`, preventing stale state on clients
+- **Assignment request on GUI open** — clients fetch the latest assignments from the server when opening the Cobblebase screen
+- **Broadcast on change** — every skill assignment change is broadcast to all online players immediately
+
+---
+
 ## [1.3.6] - 2026-04-05
 
 ### Version Handshake System

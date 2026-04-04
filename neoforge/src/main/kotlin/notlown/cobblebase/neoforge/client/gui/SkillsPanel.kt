@@ -1,5 +1,6 @@
 package notlown.cobblebase.neoforge.client.gui
 
+import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillRegistry
@@ -74,7 +75,7 @@ class SkillsPanel(
         pokemonList.forEachIndexed { index, pokemonData ->
             val pokemonId = pokemonData.pokemonId
             val speciesName = pokemonData.species.path
-            val currentAssignment = BaseManager.getAssignment(pokemonId)
+            val currentAssignment = AssignmentCache.getAssignment(pokemonId)
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
 
@@ -325,8 +326,8 @@ class SkillsPanel(
                 btn.selected = btn.skillId == skillId
             }
         }
-        // Update local client-side assignment so GUI shows correct state on re-init
-        BaseManager.assignSkill(pokemonId, skillId)
+        // Update local client-side cache so GUI shows correct state on re-init
+        AssignmentCache.setAssignment(pokemonId, skillId)
         PacketDistributor.sendToServer(SkillAssignmentC2SPacket(pokemonId, skillId ?: ""))
     }
 

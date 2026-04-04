@@ -12,7 +12,9 @@ object CobblebaseConfig {
 
     // General
     val devMode = false // Dev mode removed from settings
-    val defaultSearchRadius get() = holder.general.defaultSearchRadius
+    val jobSearchRadius get() = holder.general.jobSearchRadius
+    val enableSafetyTeleport get() = holder.general.enableSafetyTeleport
+    val safetyTeleportDistance get() = holder.general.safetyTeleportDistance
 
     // Cry
     val cryEnabled get() = holder.cry.cryEnabled

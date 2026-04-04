@@ -90,7 +90,7 @@ object GenericLootExecutor : SkillExecutor {
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
         // Drop on ground — let Gatherer mons pick up and sort into chests
-        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items, origin)
         heldItems.remove(pokemonId)
     }
 

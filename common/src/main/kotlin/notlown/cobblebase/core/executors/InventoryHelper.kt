@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+import notlown.cobblebase.core.ItemOriginHelper
 
 /**
  * Shared helper for finding and inserting items into nearby containers.
@@ -100,16 +101,23 @@ object InventoryHelper {
     /**
      * Drops items on the ground at the Pokemon's position.
      * Used by all executors except Gatherer (which sorts into chests).
+     *
+     * When [pastureOrigin] is provided, items are tagged with the Pasture Block
+     * position so the Gatherer only picks up items from its own base.
      */
-    fun dropItems(world: World, pos: BlockPos, items: List<ItemStack>) {
+    fun dropItems(world: World, pos: BlockPos, items: List<ItemStack>, pastureOrigin: BlockPos? = null) {
         for (stack in items) {
             if (stack.isEmpty) continue
+            val taggedStack = stack.copy()
+            if (pastureOrigin != null) {
+                ItemOriginHelper.tagItem(taggedStack, pastureOrigin)
+            }
             val entity = ItemEntity(
                 world,
                 pos.x + 0.5,
                 pos.y + 1.0,
                 pos.z + 0.5,
-                stack.copy()
+                taggedStack
             )
             entity.setPickupDelay(20) // 1 second before pickup
             world.spawnEntity(entity)

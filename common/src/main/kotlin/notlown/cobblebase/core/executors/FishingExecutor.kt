@@ -202,7 +202,7 @@ object FishingExecutor : SkillExecutor {
         }
 
         // No valid chest found — drop items on ground
-        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items, origin)
         heldItems.remove(pokemonId)
     }
 }

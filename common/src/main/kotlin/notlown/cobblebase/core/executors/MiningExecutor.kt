@@ -57,7 +57,7 @@ object MiningExecutor : SkillExecutor {
 
         // Phase 1: Drop held items on ground (Gatherer will sort into chests)
         if (!items.isNullOrEmpty()) {
-            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items, origin)
             heldItems.remove(pokemonId)
             return
         }

@@ -11,6 +11,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.world.World
 import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.ItemOriginHelper
 import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.SkillEntry
@@ -101,7 +102,7 @@ object GathererExecutor : SkillExecutor {
             val timedOut = now - navStarted >= NAV_TIMEOUT_TICKS
 
             if (NavigationHelper.isPokemonAtPosition(pokemonEntity, itemEntity.blockPos, 1.5) || timedOut) {
-                pickupItem(world, itemEntity, pokemonEntity, pokemonId)
+                pickupItem(world, itemEntity, pokemonEntity, pokemonId, origin)
                 targetItem.remove(pokemonId)
                 targetSetTime.remove(pokemonId)
                 lastPickupTime[pokemonId] = now
@@ -125,7 +126,7 @@ object GathererExecutor : SkillExecutor {
         lastSearchTime[pokemonId] = now
 
         val radius = getRadiusForProficiency(skillEntry.proficiency)
-        val found = findNearestDroppedItem(world, pokemonEntity, radius)
+        val found = findNearestDroppedItem(world, pokemonEntity, radius, origin)
         if (found != null) {
             // Claim the item immediately — prevent player pickup to avoid dupe glitch
             found.setPickupDelay(Short.MAX_VALUE.toInt())
@@ -142,11 +143,13 @@ object GathererExecutor : SkillExecutor {
      * Finds the OLDEST dropped ItemEntity within the search radius.
      * Prioritizes by age (oldest first) so far-away items don't get starved
      * by constantly spawning nearby items.
+     *
+     * Only picks up items that belong to this Gatherer's Pasture Block (or untagged items).
      */
-    private fun findNearestDroppedItem(world: ServerWorld, pokemonEntity: PokemonEntity, radius: Double): ItemEntity? {
+    private fun findNearestDroppedItem(world: ServerWorld, pokemonEntity: PokemonEntity, radius: Double, pastureOrigin: BlockPos): ItemEntity? {
         val searchBox = Box.of(pokemonEntity.pos, radius * 2, radius * 2, radius * 2)
         val items = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { entity ->
-            entity.isAlive && !entity.stack.isEmpty
+            entity.isAlive && !entity.stack.isEmpty && ItemOriginHelper.belongsTo(entity.stack, pastureOrigin)
         }
         // Pick oldest item (highest age = been on ground longest)
         return items.maxByOrNull { it.age }
@@ -155,18 +158,19 @@ object GathererExecutor : SkillExecutor {
     /**
      * Picks up a dropped item: removes the entity, stores the stack in state.
      * Spawns pickup particles.
+     * Only picks up nearby items that belong to this Pasture Block (or are untagged).
      */
-    private fun pickupItem(world: ServerWorld, itemEntity: ItemEntity, pokemonEntity: PokemonEntity, pokemonId: UUID) {
+    private fun pickupItem(world: ServerWorld, itemEntity: ItemEntity, pokemonEntity: PokemonEntity, pokemonId: UUID, pastureOrigin: BlockPos) {
         val stack = itemEntity.stack.copy()
         if (stack.isEmpty) return
 
         // Remove the target item
         itemEntity.discard()
 
-        // Also grab ALL other items within 3 blocks (batch pickup)
+        // Also grab ALL other items within 3 blocks (batch pickup) — only from own pasture
         val nearbyItems = world.getEntitiesByClass(ItemEntity::class.java,
             net.minecraft.util.math.Box.of(pokemonEntity.pos, 6.0, 4.0, 6.0)
-        ) { it.isAlive && !it.stack.isEmpty && it.id != itemEntity.id }
+        ) { it.isAlive && !it.stack.isEmpty && it.id != itemEntity.id && ItemOriginHelper.belongsTo(it.stack, pastureOrigin) }
 
         val allStacks = mutableListOf(stack)
         for (nearby in nearbyItems.take(15)) { // max 15 items per batch

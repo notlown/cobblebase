@@ -336,7 +336,7 @@ object HarvesterExecutor : SkillExecutor {
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID, speed: Double = 1.0) {
         val items = heldItems[pokemonId] ?: return
         // Drop items on the ground — Gatherer will pick them up and sort into chests
-        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items, origin)
         heldItems.remove(pokemonId)
     }
 

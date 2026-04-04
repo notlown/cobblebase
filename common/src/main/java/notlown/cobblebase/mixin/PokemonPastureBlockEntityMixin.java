@@ -145,6 +145,11 @@ public class PokemonPastureBlockEntityMixin {
                 Cobblebase.INSTANCE.getLOGGER().error("[Cobblebase] Error ticking {}: {}", pokemon.getSpecies().getName(), e.getMessage());
             }
 
+            // Escape leaves — prevent mons getting stuck in tree canopies
+            try {
+                NavigationHelper.INSTANCE.escapeLeaves(pokemonEntity);
+            } catch (Exception ignored) { }
+
             // Stuck detection: teleport mons that haven't moved for 15+ seconds
             try {
                 NavigationHelper.INSTANCE.checkAndUnstick(pokemonEntity, blockPos);

@@ -69,14 +69,32 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
-        val result = pokemonEntity.navigation.startMovingTo(
+        var result = pokemonEntity.navigation.startMovingTo(
             targetPos.x + 0.5,
             targetPos.y.toDouble(),
             targetPos.z + 0.5,
             actualSpeed
         )
-        if (!result && now % 100 == 0L) {
-            Cobblebase.LOGGER.info("[Nav] ${pokemonEntity.pokemon.species.name} FAILED to navigate to $targetPos (speed=$actualSpeed)")
+
+        // If direct path fails, try intermediate positions to unstick
+        if (!result) {
+            // Try navigating to a position between current pos and target
+            val midX = (pokemonEntity.x + targetPos.x) / 2.0
+            val midZ = (pokemonEntity.z + targetPos.z) / 2.0
+            // Try at same Y level as mon first
+            result = pokemonEntity.navigation.startMovingTo(midX, pokemonEntity.y, midZ, actualSpeed)
+
+            if (!result) {
+                // Try a small random offset from current position to unstick
+                val rand = pokemonEntity.world.random
+                val offX = pokemonEntity.x + (rand.nextDouble() * 4 - 2)
+                val offZ = pokemonEntity.z + (rand.nextDouble() * 4 - 2)
+                result = pokemonEntity.navigation.startMovingTo(offX, pokemonEntity.y, offZ, actualSpeed)
+            }
+
+            if (!result && now % 200 == 0L) {
+                Cobblebase.LOGGER.info("[Nav] ${pokemonEntity.pokemon.species.name} stuck at ${pokemonEntity.blockPos}, can't reach $targetPos")
+            }
         }
     }
 

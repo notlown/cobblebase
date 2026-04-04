@@ -67,7 +67,7 @@ object AmbientBehavior {
 
     // Track last special animation time per Pokemon
     private val lastSpecialAnim = mutableMapOf<UUID, Long>()
-    private const val SPECIAL_ANIM_INTERVAL = 300L // 15 seconds between special animations
+    private const val SPECIAL_ANIM_INTERVAL = 600L // 30 seconds between special animations
 
     /**
      * Plays species-specific animations periodically (every ~15 seconds) for idle Pokemon.
@@ -616,9 +616,7 @@ object AmbientBehavior {
         if (prev != state) {
             val name = speciesNames[id] ?: "Unknown"
             Cobblebase.LOGGER.info("[Ambient] $name: $prev -> $state")
-            if (state != BehaviorState.WANDERING) {
-                broadcastAmbientState(name, state)
-            }
+            // No chat messages — was too spammy
         }
         currentState[id] = state
         stateStartTime[id] = now

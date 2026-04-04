@@ -78,7 +78,7 @@ object AmbientBehavior {
 
         // Stay sleeping — play sleep animation periodically to maintain pose
         if (now % 100 == 0L) {
-            SkillEffects.sendAnimationPublic(world, entity, "sleep", "faint")
+            SkillEffects.sendAnimationPublic(world, entity, "sleep", "water_sleep", "battle_sleep")
         }
 
         // Don't move while sleeping
@@ -92,9 +92,11 @@ object AmbientBehavior {
     private fun tickStanding(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long, origin: BlockPos): Boolean {
         val elapsed = now - stateStart
 
-        // Play look-around animation occasionally
+        // Play look-around animation occasionally (compatible with CobbleMotion)
         if (now % 80 == 0L && world.random.nextInt(100) < LOOK_AROUND_CHANCE) {
-            SkillEffects.sendAnimationPublic(world, entity, "cry", "recoil")
+            val lookAnims = arrayOf("happy", "pose", "blink", "look_quirk", "sniff_quirk", "cry")
+            val pick = lookAnims[world.random.nextInt(lookAnims.size)]
+            SkillEffects.sendAnimationPublic(world, entity, pick)
         }
 
         // After standing for a while, transition to next behavior
@@ -116,7 +118,7 @@ object AmbientBehavior {
 
         // Play sit/rest animation
         if (now % 120 == 0L) {
-            SkillEffects.sendAnimationPublic(world, entity, "sleep", "faint")
+            SkillEffects.sendAnimationPublic(world, entity, "sleep", "pose", "ground_idle")
         }
 
         // Sit for 10-30 seconds then get up

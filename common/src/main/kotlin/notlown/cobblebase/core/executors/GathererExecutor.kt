@@ -37,7 +37,7 @@ object GathererExecutor : SkillExecutor {
     private val lastPickupTime = mutableMapOf<UUID, Long>()
     private val lastSearchTime = mutableMapOf<UUID, Long>()
 
-    private const val NAV_TIMEOUT_TICKS = 60L         // 3 seconds - auto-pickup if can't reach
+    private const val NAV_TIMEOUT_TICKS = 200L        // 10 seconds - auto-pickup if can't reach
     private const val SEARCH_INTERVAL_TICKS = 20L    // 1 second between scans
     private const val BASE_COOLDOWN_SECONDS = 2L     // 2 seconds between pickups
 
@@ -100,7 +100,7 @@ object GathererExecutor : SkillExecutor {
             val navStarted = targetSetTime[pokemonId] ?: now
             val timedOut = now - navStarted >= NAV_TIMEOUT_TICKS
 
-            if (NavigationHelper.isPokemonAtPosition(pokemonEntity, itemEntity.blockPos) || timedOut) {
+            if (NavigationHelper.isPokemonAtPosition(pokemonEntity, itemEntity.blockPos, 1.5) || timedOut) {
                 pickupItem(world, itemEntity, pokemonEntity, pokemonId)
                 targetItem.remove(pokemonId)
                 targetSetTime.remove(pokemonId)

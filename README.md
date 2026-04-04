@@ -25,121 +25,121 @@
 
 **Cobblebase** transforms the Pasture Block into a living, breathing Pokemon base. Every Pokemon species has hand-crafted job skills and proficiency levels — not based on type, but on identity. A Charizard fills lava cauldrons and guards your base. An Alakazam mentors your entire team. A Mew recruits legendaries.
 
-- **8,426 Pokemon** with unique skill assignments (996 hand-crafted + 7,430 Fakemon)
-- **43 jobs** across 10 categories — gathering, finding, combat, support, logistics, exploration, environmental, recruiting, passive buffs, and legendary
-- **Proficiency 1-5** per skill per species — novice to master
-- **Tabbed GUI** with Skills, Buffs, Logs, and Discovery panels
-- **Admin GUI** for in-game species skill editing (`/cobblebase admin`)
-- **Multiplayer ready** — pasture lock, owner-only messages
-- **Fully configurable** via Cloth Config and JSON datapacks
+- 💎 **8,426 Pokemon** with unique skill assignments (996 hand-crafted + 7,430 Fakemon)
+- ⚡ **43 jobs** across 10 categories — gathering, finding, combat, support, logistics, exploration, environmental, recruiting, passive buffs, and legendary
+- ⭐ **Proficiency 1-5** per skill per species — novice to master
+- 🎯 **Tabbed GUI** with Skills, Buffs, Logs, and Discovery panels
+- 🔧 **Admin GUI** for in-game species skill editing (`/cobblebase admin`)
+- 🔒 **Multiplayer ready** — pasture lock, owner-only messages
+- 🛡️ **Fully configurable** via Cloth Config and JSON datapacks
 
-### Online Tools
+### 🌐 Online Tools
 
 | Tool | Description |
 |------|-------------|
-| [Documentation](https://notlown.github.io/cobblebase-web/docs/) | Full guides for jobs, proficiency, GUI, admin, datapacks, and more |
-| [Species Database](https://notlown.github.io/cobblebase-web/database/) | Browse all 8,426 Pokemon with skills, proficiency, and an inline editor |
-| [Datapack Generator](https://notlown.github.io/cobblebase-web/generator/) | Create custom species skill datapacks without editing JSON |
+| 📚 [Documentation](https://notlown.github.io/cobblebase-web/docs/) | Full guides for jobs, proficiency, GUI, admin, datapacks, and more |
+| 📊 [Species Database](https://notlown.github.io/cobblebase-web/database/) | Browse all 8,426 Pokemon with skills, proficiency, and an inline editor |
+| 🔧 [Datapack Generator](https://notlown.github.io/cobblebase-web/generator/) | Create custom species skill datapacks without editing JSON |
 
 ---
 
-## Gathering
+## 🌾 Gathering
 
 Pokemon harvest, fish, mine, and collect resources from the world around your base.
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Venusaur, Scizor, Celebi |
-| **Fishing** | Navigates to water and catches fish/loot | Gyarados, Blastoise, Kyogre |
-| **Mining** | Digs for ores, fossils, gems, and tumblestones (1 drop per cycle) | Steelix, Excadrill, Ting-Lu |
-| **Honey Collect** | Produces honey and honeycomb (no beehive needed) | Vespiquen, Beedrill, Combee |
-| **Archeologist** | Excavates ancient relics and artifacts | Nidoking, Steelix, Nidoqueen |
+| 🌾 **Harvester** | Picks apricorns, crops, berries, mints, tumblestones | Venusaur, Scizor, Celebi |
+| 🎣 **Fishing** | Navigates to water and catches fish/loot | Gyarados, Blastoise, Kyogre |
+| ⛏️ **Mining** | Digs for ores, fossils, gems, and tumblestones (1 drop per cycle) | Steelix, Excadrill, Ting-Lu |
+| 🍯 **Honey Collect** | Produces honey and honeycomb (no beehive needed) | Vespiquen, Beedrill, Combee |
+| 🏺 **Archeologist** | Excavates ancient relics and artifacts | Nidoking, Steelix, Nidoqueen |
 
 ---
 
-## Finding
+## 🔍 Finding
 
 Twelve specialized Finder subtypes with dedicated loot tables for targeted item discovery.
 
 | Job | Focus | Example Loot |
 |-----|-------|--------------|
-| **Alchemist** | Evolution items | Fire/Thunder Stone, Linking Cord, Ability Patch |
-| **Pharmacist** | Healing items | Potions, Revives, Sacred Ash |
-| **Architect** | Building materials | Prismarine, Sea Lantern, Crying Obsidian |
-| **Excavator** | Ores and minerals | Raw Iron/Gold, Diamond, Ancient Debris |
-| **Botanist** | Seeds, plants, mulch | Apricorn Seeds, Mint Seeds, Mulch |
-| **Collector** | Pokeballs | Great Ball, Apricorn Balls, Master Ball |
-| **Scholar** | XP Candies | Exp Candy XS-XL, Rare Candy |
-| **Chef** | Food and cooking | Ponigiri, Lava Cookie, Enchanted Golden Apple |
-| **Trainer** | Vitamins and training | HP Up, Protein, Ability Patch |
-| **Armorer** | Battle held items | Choice Band, Life Orb, Focus Sash |
-| **Prospector** | Relics and treasure | Relic Coins, Gold, Netherite Ingot |
-| **Smith** | Smithing templates | Armor Trims, Pottery Sherds, Netherite Upgrade |
+| 🧪 **Alchemist** | Evolution items | Fire/Thunder Stone, Linking Cord, Ability Patch |
+| 💊 **Pharmacist** | Healing items | Potions, Revives, Sacred Ash |
+| 🏗️ **Architect** | Building materials | Prismarine, Sea Lantern, Crying Obsidian |
+| ⛏️ **Excavator** | Ores and minerals | Raw Iron/Gold, Diamond, Ancient Debris |
+| 🌱 **Botanist** | Seeds, plants, mulch | Apricorn Seeds, Mint Seeds, Mulch |
+| 📦 **Collector** | Pokeballs | Great Ball, Apricorn Balls, Master Ball |
+| 📚 **Scholar** | XP Candies | Exp Candy XS-XL, Rare Candy |
+| 🍳 **Chef** | Food and cooking | Ponigiri, Lava Cookie, Enchanted Golden Apple |
+| 💪 **Trainer** | Vitamins and training | HP Up, Protein, Ability Patch |
+| ⚔️ **Armorer** | Battle held items | Choice Band, Life Orb, Focus Sash |
+| 💰 **Prospector** | Relics and treasure | Relic Coins, Gold, Netherite Ingot |
+| 🔨 **Smith** | Smithing templates | Armor Trims, Pottery Sherds, Netherite Upgrade |
 
 ---
 
-## Combat
+## ⚔️ Combat
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Gallade, Scizor, Incineroar |
+| 🛡️ **Guard** | Patrols the area, repels wild Pokemon for XP and loot | Gallade, Scizor, Incineroar |
 
 ---
 
-## Support
+## 💚 Support
 
 | Job | Effect | Example Pokemon |
 |-----|--------|-----------------|
-| **Healer** | Heals injured Pokemon in your team, revives fainted Pokemon | Blissey, Xerneas, Zacian |
-| **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam, Latios, Mesprit |
+| 💚 **Healer** | Heals injured Pokemon in your team, revives fainted Pokemon | Blissey, Xerneas, Zacian |
+| 🎓 **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam, Latios, Mesprit |
 
 ---
 
-## Passive Buffs
+## ✨ Passive Buffs
 
 Status effects applied to all players within 40 blocks of the pasture. Beyond 40 blocks, buffs apply to the pasture owner only. At Prof 5, buffs are global (owner only) and effectively permanent.
 
 | Buff | Effect | Example Pokemon |
 |------|--------|-----------------|
-| **Speed Boost** | Speed II | Ninjask, Regieleki, Jolteon |
-| **Strength Boost** | Strength I | Kartana, Rayquaza, Machamp |
-| **Resistance Boost** | Resistance I | Regirock, Steelix, Melmetal |
-| **Night Vision** | Night Vision | Giratina, Umbreon, Darkrai |
-| **Water Breathing** | Water Breathing | Kyogre, Milotic, Lapras |
-| **Jump Boost** | Jump Boost I | Lopunny, Hitmonlee, Blaziken |
-| **Haste Boost** | Haste I | Palkia, Dialga, Alakazam |
-| **Saturation** | Saturation | Slurpuff, Snorlax, Munchlax |
-| **Aura Boost** | Luck I-III | Victini, Rayquaza, Arceus |
+| ⚡ **Speed Boost** | Speed II | Ninjask, Regieleki, Jolteon |
+| 💪 **Strength Boost** | Strength I | Kartana, Rayquaza, Machamp |
+| 🛡️ **Resistance Boost** | Resistance I | Regirock, Steelix, Melmetal |
+| 👁️ **Night Vision** | Night Vision | Giratina, Umbreon, Darkrai |
+| 🫧 **Water Breathing** | Water Breathing | Kyogre, Milotic, Lapras |
+| 🦘 **Jump Boost** | Jump Boost I | Lopunny, Hitmonlee, Blaziken |
+| ⚒️ **Haste Boost** | Haste I | Palkia, Dialga, Alakazam |
+| 🍖 **Saturation** | Saturation | Slurpuff, Snorlax, Munchlax |
+| 🍀 **Aura Boost** | Luck I-III | Victini, Rayquaza, Arceus |
 
 ---
 
-## Legendary Abilities
+## 🌟 Legendary Abilities
 
 Special passive abilities only found on legendary and mythical Pokemon.
 
 | Ability | Effect | Pokemon |
 |---------|--------|---------|
-| **Lucky Charm** | Boosts shiny rate for wild Pokemon near the owner (1.4x-3.0x) | Arceus, Mew, Jirachi, Victini |
-| **Growth Aura** | Accelerates crop growth near the pasture (pulse every 30s, 1-3 crops) | Arceus, Celebi, Shaymin |
-| **Extinguisher** | Auto-removes fire and extinguishes campfires near the base | Wartortle, Muk, Squirtle, Blastoise |
+| 🌟 **Lucky Charm** | Boosts shiny rate for wild Pokemon near the owner (1.4x-3.0x) | Arceus, Mew, Jirachi, Victini |
+| 🌱 **Growth Aura** | Accelerates crop growth near the pasture (pulse every 30s, 1-3 crops) | Arceus, Celebi, Shaymin |
+| 🧯 **Extinguisher** | Auto-removes fire and extinguishes campfires near the base | Wartortle, Muk, Squirtle, Blastoise |
 
 ---
 
-## Logistics
+## 📦 Logistics
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Gatherer** | Picks up dropped items and sorts them into nearby chests | Ambipom, Furret, Munchlax |
+| 📥 **Gatherer** | Picks up dropped items and sorts them into nearby chests | Ambipom, Furret, Munchlax |
 
 Smart sorting prioritizes chests already containing the same item type. Deposit timeout of 10 seconds.
 
 ---
 
-## Exploration
+## 🔭 Exploration
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Scout** | Discovers wild Pokemon, structures, and biomes | Ninjask, Spectrier, Rayquaza |
+| 🔭 **Scout** | Discovers wild Pokemon, structures, and biomes | Ninjask, Spectrier, Rayquaza |
 
 | Proficiency | Range | Discovers |
 |-------------|-------|-----------|
@@ -149,29 +149,29 @@ Smart sorting prioritizes chests already containing the same item type. Deposit 
 
 ---
 
-## Environmental
+## 🌿 Environmental
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Irrigator** | Hydrates nearby farmland | Venusaur, Virizion, Shaymin |
-| **Lava Fill** | Fills cauldrons with lava | Magmortar, Flareon, Magmar |
-| **Water Fill** | Fills cauldrons with water | Vaporeon, Blastoise, Palkia |
-| **Snow Fill** | Fills cauldrons with powder snow | Regice, Glastrier, Articuno |
-| **Furnace Fuel** | Adds burn time to furnaces | Moltres, Volcanion, Ho-Oh |
-| **Brew Fuel** | Fuels brewing stands | Weezing, Dragonite, Koffing |
+| 💧 **Irrigator** | Hydrates nearby farmland | Venusaur, Virizion, Shaymin |
+| 🌋 **Lava Fill** | Fills cauldrons with lava | Magmortar, Flareon, Magmar |
+| 💦 **Water Fill** | Fills cauldrons with water | Vaporeon, Blastoise, Palkia |
+| ❄️ **Snow Fill** | Fills cauldrons with powder snow | Regice, Glastrier, Articuno |
+| 🔥 **Furnace Fuel** | Adds burn time to furnaces | Moltres, Volcanion, Ho-Oh |
+| 🧪 **Brew Fuel** | Fuels brewing stands | Weezing, Dragonite, Koffing |
 
 ---
 
-## Recruiting
+## 🤝 Recruiting
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| **Friend Recruiter** | Attracts wild Pokemon of the same type | Togekiss, Sylveon, Gardevoir |
-| **Legendary Recruiter** | Spawns rare/legendary Pokemon (540s cooldown) | Arceus, Mew, Jirachi |
+| 🤝 **Friend Recruiter** | Attracts wild Pokemon of the same type | Togekiss, Sylveon, Gardevoir |
+| ⭐ **Legendary Recruiter** | Spawns rare/legendary Pokemon (540s cooldown) | Arceus, Mew, Jirachi |
 
 ---
 
-## Proficiency System
+## ⭐ Proficiency System
 
 Every Pokemon has a proficiency level (1-5) for each of its skills. Higher proficiency means faster cooldowns, larger range, and better loot quality. Standard base cooldown is **300 seconds** (Harvester: 60s, Legendary Recruiter: 540s).
 
@@ -185,7 +185,7 @@ Every Pokemon has a proficiency level (1-5) for each of its skills. Higher profi
 
 ---
 
-## GUI
+## 🎮 GUI
 
 Open any Pasture Block and click **"Cobblebase"** to access the management interface.
 
@@ -200,7 +200,7 @@ Open any Pasture Block and click **"Cobblebase"** to access the management inter
 
 ---
 
-## Admin GUI
+## 🔧 Admin GUI
 
 Server admins can manage skill assignments for any Pokemon species in-game — no JSON editing or restarts needed.
 
@@ -216,7 +216,7 @@ Server admins can manage skill assignments for any Pokemon species in-game — n
 
 ---
 
-## Supported Fakemon Packs
+## 🎨 Supported Fakemon Packs
 
 | Pack | Species | Method |
 |------|---------|--------|
@@ -231,7 +231,7 @@ Server admins can manage skill assignments for any Pokemon species in-game — n
 
 ---
 
-## Immersion
+## 🎵 Immersion
 
 - **Idle wandering** — Pokemon wander randomly (15 block radius) when not on a job
 - **Cry sound cooldown** — Max 1 cry per 60 seconds per Pokemon (default volume: 30)
@@ -242,7 +242,7 @@ Server admins can manage skill assignments for any Pokemon species in-game — n
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
 Press **K** to open the Cloth Config settings screen. Key options:
 
@@ -256,7 +256,7 @@ Everything is also JSON-configurable and customizable via **[datapacks](https://
 
 ---
 
-## Installation
+## 📥 Installation
 
 ### Requirements
 - Minecraft **1.21.1**
@@ -282,7 +282,7 @@ Output JARs in `fabric/build/libs/` and `neoforge/build/libs/`. Requires **Java 
 
 ---
 
-## Community and Support
+## 💬 Community and Support
 
 - [Discord](https://discord.gg/6As3sVZgVT) — Get help, report bugs, suggest features
 - [Ko-fi](https://ko-fi.com/notlown) — Support the project

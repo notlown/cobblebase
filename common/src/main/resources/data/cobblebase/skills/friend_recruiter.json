@@ -1,8 +1,8 @@
 {
   "id": "cobblebase:friend_recruiter",
   "name": "Friend Recruiter",
-  "description": "Attracts rare wild Pokemon to appear nearby with charm",
-  "category": "fairy",
+  "description": "Attracts wild Pokemon of the same type to appear nearby",
+  "category": "utility",
   "cooldownSeconds": 300,
   "searchRadius": 15,
   "executor": "recruiter",

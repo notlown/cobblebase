@@ -137,6 +137,14 @@ public class PokemonPastureBlockEntityMixin {
                 Cobblebase.INSTANCE.getLOGGER().error("[Cobblebase] Error ticking {}: {}", pokemon.getSpecies().getName(), e.getMessage());
             }
 
+            // Species-specific animations for idle Pokemon (every 15 seconds)
+            String assignment = BaseManager.INSTANCE.getAssignment(pokemonEntity.getPokemon().getUuid());
+            if (assignment == null) {
+                try {
+                    AmbientBehavior.INSTANCE.tickSpecialAnimations(world, pokemonEntity);
+                } catch (Exception ignored) { }
+            }
+
             // Escape leaves — prevent mons getting stuck in tree canopies
             try {
                 NavigationHelper.INSTANCE.escapeLeaves(pokemonEntity);

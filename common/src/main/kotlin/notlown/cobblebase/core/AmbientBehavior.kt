@@ -96,6 +96,40 @@ object AmbientBehavior {
         SITTING         // sitting/resting in place
     }
 
+    // Track last special animation time per Pokemon
+    private val lastSpecialAnim = mutableMapOf<UUID, Long>()
+    private const val SPECIAL_ANIM_INTERVAL = 300L // 15 seconds between special animations
+
+    /**
+     * Plays species-specific animations periodically (every ~15 seconds) for idle Pokemon.
+     * Called every tick from the mixin, independent of behavior state.
+     * Only runs for Pokemon with no active job (Idle mode).
+     */
+    fun tickSpecialAnimations(world: World, pokemonEntity: PokemonEntity) {
+        if (world !is ServerWorld) return
+        val id = pokemonEntity.pokemon.uuid
+        val now = world.time
+
+        // Don't play attack animations while sleeping
+        val state = currentState[id]
+        if (state == BehaviorState.SLEEPING) return
+
+        val lastAnim = lastSpecialAnim[id] ?: 0L
+        if (now - lastAnim < SPECIAL_ANIM_INTERVAL) return
+
+        val speciesName = pokemonEntity.pokemon.species.name.lowercase()
+        val anims = SPECIES_ANIMATIONS[speciesName] ?: return
+
+        // Play a random species animation
+        val pick = anims[world.random.nextInt(anims.size)]
+        SkillEffects.sendAnimationPublic(world, pokemonEntity, pick)
+        lastSpecialAnim[id] = now
+
+        if (now % 500 == 0L) {
+            Cobblebase.LOGGER.info("[Ambient] $speciesName playing special animation: $pick")
+        }
+    }
+
     /**
      * Check if a Pokemon should be held still (sleeping/sitting/socializing).
      * Called every tick from the mixin — prevents navigation even when not idle.

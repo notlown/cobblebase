@@ -2,10 +2,6 @@
   "species": "wooper",
   "skills": [
     {
-      "skillId": "cobblebase:diving",
-      "proficiency": 1
-    },
-    {
       "skillId": "cobblebase:finder_ore",
       "proficiency": 1
     },

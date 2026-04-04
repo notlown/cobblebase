@@ -2,10 +2,6 @@
   "species": "calypstar",
   "skills": [
     {
-      "skillId": "cobblebase:diving",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:finder_ore",
       "proficiency": 3
     },

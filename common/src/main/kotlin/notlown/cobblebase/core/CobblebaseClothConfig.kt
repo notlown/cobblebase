@@ -24,7 +24,7 @@ class CobblebaseClothConfig : ConfigData {
     class CryGroup {
         var cryEnabled = true
         @ConfigEntry.BoundedDiscrete(min = 0, max = 100)
-        var cryVolume = 80
+        var cryVolume = 30
     }
 
     // Passive XP is now controlled by the Mentor skill internally.

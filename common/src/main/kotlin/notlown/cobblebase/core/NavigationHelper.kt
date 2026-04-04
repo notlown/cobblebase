@@ -92,32 +92,63 @@ object NavigationHelper {
                 result = pokemonEntity.navigation.startMovingTo(offX, pokemonEntity.y, offZ, actualSpeed)
             }
 
-            if (!result) {
-                // All navigation attempts failed — teleport to ground level near target
-                val tx = targetPos.x + 0.5
-                val tz = targetPos.z + 0.5
-                // Find safe ground Y — use world heightmap to avoid teleporting into trees
-                val safeY = if (world is net.minecraft.server.world.ServerWorld) {
-                    world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, targetPos.x, targetPos.z).toDouble()
-                } else {
-                    targetPos.y + 1.0
-                }
-                pokemonEntity.refreshPositionAndAngles(tx, safeY, tz, pokemonEntity.yaw, pokemonEntity.pitch)
-            }
+            // Don't teleport on nav failure — let stuck detection handle it
         }
     }
 
     /**
      * Clears navigation targets and stops the Pokemon's current pathfinding.
-     * Used by the unstuck detector when a Pokemon hasn't moved for too long.
      */
     fun clearTargets(pokemonEntity: PokemonEntity) {
         pokemonEntity.navigation.stop()
         lastPathfindTick.remove(pokemonEntity.pokemon.uuid)
     }
 
+    /**
+     * Checks if a Pokemon has been stuck (same position for 15+ seconds).
+     * If stuck, teleports it a few blocks toward its target or toward the pasture origin.
+     * Call this every tick from the pasture mixin.
+     */
+    fun checkAndUnstick(pokemonEntity: PokemonEntity, origin: BlockPos) {
+        val world = pokemonEntity.world
+        if (world.isClient) return
+        val id = pokemonEntity.pokemon.uuid
+        val now = world.time
+        val currentPos = pokemonEntity.blockPos
+
+        val lastPos = lastPositions[id]
+        if (lastPos != null && lastPos == currentPos) {
+            // Same position — check if stuck long enough
+            val since = stuckSince.getOrPut(id) { now }
+            if (now - since >= STUCK_THRESHOLD_TICKS) {
+                // Stuck for 15+ seconds — teleport a few blocks toward origin
+                val dx = (origin.x - currentPos.x).coerceIn(-3, 3)
+                val dz = (origin.z - currentPos.z).coerceIn(-3, 3)
+                val newX = currentPos.x + dx + 0.5
+                val newZ = currentPos.z + dz + 0.5
+                val newY = if (world is net.minecraft.server.world.ServerWorld) {
+                    world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, currentPos.x + dx, currentPos.z + dz).toDouble()
+                } else {
+                    currentPos.y.toDouble()
+                }
+                pokemonEntity.refreshPositionAndAngles(newX, newY, newZ, pokemonEntity.yaw, pokemonEntity.pitch)
+                stuckSince.remove(id)
+                pokemonEntity.navigation.stop()
+            }
+        } else {
+            // Moved — reset stuck tracking
+            lastPositions[id] = currentPos.toImmutable()
+            stuckSince.remove(id)
+        }
+    }
+
     private val lastWanderTick = mutableMapOf<UUID, Long>()
     private const val WANDER_INTERVAL_TICKS = 80L // Wander every 4 seconds
+
+    // Stuck detection: track positions to detect mons that haven't moved
+    private val lastPositions = mutableMapOf<UUID, BlockPos>()
+    private val stuckSince = mutableMapOf<UUID, Long>()
+    private const val STUCK_THRESHOLD_TICKS = 300L // 15 seconds
 
     /**
      * Makes a Pokemon wander randomly near the pasture origin.

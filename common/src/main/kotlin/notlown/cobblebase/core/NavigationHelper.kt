@@ -105,6 +105,34 @@ object NavigationHelper {
     }
 
     /**
+     * If the mon is inside leaves, push it down to ground level.
+     * Call this every tick to prevent mons getting trapped in tree canopies.
+     */
+    fun escapeLeaves(pokemonEntity: PokemonEntity) {
+        val world = pokemonEntity.world
+        val pos = pokemonEntity.blockPos
+        val block = world.getBlockState(pos).block
+        // Check if standing in or on leaves
+        if (block is net.minecraft.block.LeavesBlock || world.getBlockState(pos.down()).block is net.minecraft.block.LeavesBlock) {
+            // Find ground below
+            var groundY = pos.y
+            for (y in pos.y downTo pos.y - 20) {
+                val checkBlock = world.getBlockState(BlockPos(pos.x, y, pos.z)).block
+                if (checkBlock !is net.minecraft.block.LeavesBlock && checkBlock !is net.minecraft.block.AirBlock) {
+                    groundY = y + 1
+                    break
+                }
+            }
+            if (groundY < pos.y) {
+                pokemonEntity.refreshPositionAndAngles(
+                    pokemonEntity.x, groundY.toDouble(), pokemonEntity.z,
+                    pokemonEntity.yaw, pokemonEntity.pitch
+                )
+            }
+        }
+    }
+
+    /**
      * Checks if a Pokemon has been stuck (same position for 15+ seconds).
      * If stuck, teleports it a few blocks toward its target or toward the pasture origin.
      * Call this every tick from the pasture mixin.

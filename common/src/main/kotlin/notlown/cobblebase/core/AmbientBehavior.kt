@@ -369,8 +369,8 @@ object AmbientBehavior {
     private fun tickChasing(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long): Boolean {
         val elapsed = now - stateStart
 
-        // Chase lasts 20 seconds
-        if (elapsed >= 400L) {
+        // Chase lasts 30 seconds
+        if (elapsed >= 600L) {
             setState(id, BehaviorState.WANDERING, now)
             return false
         }
@@ -401,8 +401,8 @@ object AmbientBehavior {
     private fun tickFleeing(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long, origin: BlockPos): Boolean {
         val elapsed = now - stateStart
 
-        // Flee lasts 20 seconds (same as chaser)
-        if (elapsed >= 400L) {
+        // Flee lasts 30 seconds (same as chaser)
+        if (elapsed >= 600L) {
             setState(id, BehaviorState.WANDERING, now)
             return false
         }

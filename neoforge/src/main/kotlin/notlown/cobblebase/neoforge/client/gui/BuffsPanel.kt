@@ -1,5 +1,6 @@
 package notlown.cobblebase.neoforge.client.gui
 
+import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillRegistry
@@ -76,7 +77,7 @@ class BuffsPanel(
             val species = pokemonData.species
             val aspects = pokemonData.aspects
             val level = pokemonData.level
-            val assignment = BaseManager.getAssignment(pokemonId)
+            val assignment = AssignmentCache.getAssignment(pokemonId)
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
 

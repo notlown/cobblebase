@@ -9,8 +9,11 @@ import net.neoforged.fml.common.EventBusSubscriber
 import net.neoforged.neoforge.client.event.ClientTickEvent
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent
 import net.neoforged.neoforge.network.PacketDistributor
 import notlown.cobblebase.core.AdminDataCache
+import notlown.cobblebase.core.VersionChecker
+import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
 import notlown.cobblebase.core.CobblebaseClothConfig
 import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
 import notlown.cobblebase.neoforge.client.gui.AdminScreen
@@ -43,6 +46,11 @@ object CobblebaseNeoForgeClient {
             pendingAdminScreen = false
             client.setScreen(AdminScreen())
         }
+    }
+
+    @SubscribeEvent
+    fun onPlayerLoggedIn(event: ClientPlayerNetworkEvent.LoggingIn) {
+        PacketDistributor.sendToServer(VersionHandshakeC2SPacket(VersionChecker.MOD_VERSION))
     }
 
     @SubscribeEvent

@@ -25,6 +25,11 @@ import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
 import notlown.cobblebase.core.net.LogRequestC2SPacket
 import notlown.cobblebase.core.net.LogSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
+import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket
+import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
+import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
+import notlown.cobblebase.core.VersionChecker
+import net.neoforged.neoforge.event.entity.player.PlayerEvent
 
 @Mod("cobblebase")
 class CobblebaseNeoForge(modBus: IEventBus) {
@@ -38,10 +43,22 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         // Register game events on the NeoForge event bus
         NeoForge.EVENT_BUS.addListener(::onServerStarted)
         NeoForge.EVENT_BUS.addListener(::onServerStopping)
+        NeoForge.EVENT_BUS.addListener(::onPlayerLoggedIn)
+        NeoForge.EVENT_BUS.addListener(::onPlayerLoggedOut)
     }
 
     private fun onRegisterPayloads(event: RegisterPayloadHandlersEvent) {
         val registrar: PayloadRegistrar = event.registrar("cobblebase")
+
+        // C2S: Version handshake
+        registrar.playToServer(
+            VersionHandshakeC2SPacket.ID,
+            VersionHandshakeC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                VersionChecker.onHandshake(context.player() as net.minecraft.server.network.ServerPlayerEntity, packet.version)
+            }
+        }
 
         // C2S: Skill assignment
         registrar.playToServer(
@@ -49,7 +66,34 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             SkillAssignmentC2SPacket.CODEC
         ) { packet, context ->
             context.enqueueWork {
-                packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                packet.handle(player)
+                // Broadcast updated assignments to all online players
+                broadcastAssignmentSync(player.server)
+            }
+        }
+
+        // S2C: Skill assignment sync
+        registrar.playToClient(
+            SkillAssignmentSyncS2CPacket.ID,
+            SkillAssignmentSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.AssignmentCache.update(
+                    packet.assignments.mapValues { (_, v) -> if (v.isEmpty()) null else v }
+                )
+            }
+        }
+
+        // C2S: Skill assignment request (client opens GUI)
+        registrar.playToServer(
+            SkillAssignmentRequestC2SPacket.ID,
+            SkillAssignmentRequestC2SPacket.CODEC
+        ) { _, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                val syncPacket = SkillAssignmentSyncS2CPacket(BaseManager.getAllAssignments())
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, syncPacket)
             }
         }
 
@@ -132,6 +176,16 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         }
     }
 
+    private fun onPlayerLoggedIn(event: PlayerEvent.PlayerLoggedInEvent) {
+        val player = event.entity as? net.minecraft.server.network.ServerPlayerEntity ?: return
+        VersionChecker.onPlayerJoin(player)
+    }
+
+    private fun onPlayerLoggedOut(event: PlayerEvent.PlayerLoggedOutEvent) {
+        val player = event.entity as? net.minecraft.server.network.ServerPlayerEntity ?: return
+        VersionChecker.onPlayerLeave(player.uuid)
+    }
+
     private fun onServerStarted(event: ServerStartedEvent) {
         val world = event.server.overworld
         BaseManager.load(world)
@@ -146,6 +200,16 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         LogManager.save(world)
         DiscoveryRegistry.save(world)
         SpeciesSkillOverrides.save(world)
+    }
+
+    /**
+     * Broadcasts current skill assignments to all online players.
+     */
+    private fun broadcastAssignmentSync(server: net.minecraft.server.MinecraftServer) {
+        val syncPacket = SkillAssignmentSyncS2CPacket(BaseManager.getAllAssignments())
+        for (player in server.playerManager.playerList) {
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, syncPacket)
+        }
     }
 
     /**

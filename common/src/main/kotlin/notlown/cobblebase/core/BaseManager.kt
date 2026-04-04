@@ -47,15 +47,17 @@ object BaseManager {
         }
 
         // Safety: prevent Pokemon from wandering too far from pasture (causes despawning)
-        val distFromPasture = kotlin.math.sqrt(
-            pokemonEntity.squaredDistanceTo(
-                pastureOrigin.x + 0.5, pastureOrigin.y.toDouble(), pastureOrigin.z + 0.5
+        if (CobblebaseConfig.enableSafetyTeleport) {
+            val distFromPasture = kotlin.math.sqrt(
+                pokemonEntity.squaredDistanceTo(
+                    pastureOrigin.x + 0.5, pastureOrigin.y.toDouble(), pastureOrigin.z + 0.5
+                )
             )
-        )
-        if (distFromPasture > 30.0) {
-            pokemonEntity.setPosition(pastureOrigin.x + 0.5, pastureOrigin.y + 1.0, pastureOrigin.z + 0.5)
-            NavigationHelper.clearTargets(pokemonEntity)
-            if (now % 100 == 0L) {
+            if (distFromPasture > CobblebaseConfig.safetyTeleportDistance) {
+                pokemonEntity.setPosition(pastureOrigin.x + 0.5, pastureOrigin.y + 1.0, pastureOrigin.z + 0.5)
+                NavigationHelper.clearTargets(pokemonEntity)
+                if (now % 100 == 0L) {
+                }
             }
         }
 
@@ -134,6 +136,14 @@ object BaseManager {
     }
 
     fun getAssignment(pokemonId: UUID): String? = assignments[pokemonId]
+
+    /**
+     * Returns a snapshot of all current assignments for sync packets.
+     * Values are skill IDs; null assignments are excluded.
+     */
+    fun getAllAssignments(): Map<UUID, String> {
+        return assignments.filterValues { it != null }.mapValues { it.value!! }
+    }
 
     fun getAvailableSkills(pokemonEntity: PokemonEntity): List<SkillEntry> {
         val speciesName: String = pokemonEntity.pokemon.species.name.lowercase()

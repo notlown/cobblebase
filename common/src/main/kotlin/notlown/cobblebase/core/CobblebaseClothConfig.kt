@@ -17,8 +17,16 @@ class CobblebaseClothConfig : ConfigData {
     var skills = SkillsGroup()
 
     class GeneralGroup {
+        @ConfigEntry.Gui.Tooltip
         @ConfigEntry.BoundedDiscrete(min = 5, max = 20)
-        var defaultSearchRadius = 10
+        var jobSearchRadius = 10
+
+        @ConfigEntry.Gui.Tooltip
+        var enableSafetyTeleport = true
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.BoundedDiscrete(min = 10, max = 100)
+        var safetyTeleportDistance = 30
     }
 
     class CryGroup {

@@ -132,7 +132,7 @@ object GuardExecutor : SkillExecutor {
 
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
-        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items, origin)
         heldItems.remove(pokemonId)
     }
 

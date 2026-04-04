@@ -5,7 +5,12 @@
 
   "text.autoconfig.cobblebase.option.general": "General",
   "text.autoconfig.cobblebase.option.general.devMode": "Dev Mode (5s cooldowns for testing)",
-  "text.autoconfig.cobblebase.option.general.defaultSearchRadius": "Default search radius",
+  "text.autoconfig.cobblebase.option.general.jobSearchRadius": "Job Search Radius (blocks)",
+  "text.autoconfig.cobblebase.option.general.jobSearchRadius.@Tooltip": "How far Pokemon search for resources when working (ores, crops, water, etc.)",
+  "text.autoconfig.cobblebase.option.general.enableSafetyTeleport": "Enable Safety Teleport",
+  "text.autoconfig.cobblebase.option.general.enableSafetyTeleport.@Tooltip": "Teleport Pokemon back when they wander too far from the Pasture Block",
+  "text.autoconfig.cobblebase.option.general.safetyTeleportDistance": "Safety Teleport Distance (blocks)",
+  "text.autoconfig.cobblebase.option.general.safetyTeleportDistance.@Tooltip": "How far Pokemon can wander before being teleported back (default: 30)",
 
   "text.autoconfig.cobblebase.option.cry": "Pokemon Cries",
   "text.autoconfig.cobblebase.option.cry.cryEnabled": "Enable Pokemon cries",

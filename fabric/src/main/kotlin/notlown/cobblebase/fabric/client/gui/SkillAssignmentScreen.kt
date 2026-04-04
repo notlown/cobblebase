@@ -1,5 +1,6 @@
 package notlown.cobblebase.fabric.client.gui
 
+import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillRegistry
@@ -70,7 +71,7 @@ class SkillAssignmentScreen(
         pokemonList.forEachIndexed { index, pokemonData ->
             val pokemonId = pokemonData.pokemonId
             val speciesName = pokemonData.species.path
-            val currentAssignment = BaseManager.getAssignment(pokemonId)
+            val currentAssignment = AssignmentCache.getAssignment(pokemonId)
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
             println("[CobblebaseGUI] species='$speciesName' found=${speciesSkills != null} skills=${availableSkills.size}")

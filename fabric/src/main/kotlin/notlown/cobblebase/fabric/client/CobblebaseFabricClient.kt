@@ -10,11 +10,16 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import notlown.cobblebase.core.AdminDataCache
+import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.CobblebaseClothConfig
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.VersionChecker
 import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
+import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
+import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
 import notlown.cobblebase.core.net.LogSyncS2CPacket
 import notlown.cobblebase.fabric.client.gui.AdminScreen
@@ -48,6 +53,11 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Send version handshake when joining a server
+        ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
+            ClientPlayNetworking.send(VersionHandshakeC2SPacket(VersionChecker.MOD_VERSION))
+        }
+
         // Register S2C log sync packet receiver
         ClientPlayNetworking.registerGlobalReceiver(LogSyncS2CPacket.ID) { packet, context ->
             context.client().execute {
@@ -59,6 +69,13 @@ object CobblebaseFabricClient : ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(DiscoverySyncS2CPacket.ID) { packet, context ->
             context.client().execute {
                 DiscoveryRegistry.setClientDiscoveries(packet.discoveries)
+            }
+        }
+
+        // Register S2C skill assignment sync packet receiver
+        ClientPlayNetworking.registerGlobalReceiver(SkillAssignmentSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                AssignmentCache.update(packet.assignments.mapValues { (_, v) -> if (v.isEmpty()) null else v })
             }
         }
 

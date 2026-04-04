@@ -20,16 +20,51 @@ import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
 import notlown.cobblebase.core.net.LogRequestC2SPacket
 import notlown.cobblebase.core.net.LogSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
+import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket
+import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
+import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
+import notlown.cobblebase.core.VersionChecker
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 
 object CobblebaseFabric : ModInitializer {
     override fun onInitialize() {
         Cobblebase.init()
+
+        // Register C2S packet for version handshake
+        PayloadTypeRegistry.playC2S().register(VersionHandshakeC2SPacket.ID, VersionHandshakeC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(VersionHandshakeC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                VersionChecker.onHandshake(context.player(), packet.version)
+            }
+        }
+
+        // Register player join/leave events for version handshake
+        ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
+            VersionChecker.onPlayerJoin(handler.player)
+        }
+        ServerPlayConnectionEvents.DISCONNECT.register { handler, _ ->
+            VersionChecker.onPlayerLeave(handler.player.uuid)
+        }
 
         // Register C2S packet for skill assignments
         PayloadTypeRegistry.playC2S().register(SkillAssignmentC2SPacket.ID, SkillAssignmentC2SPacket.CODEC)
         ServerPlayNetworking.registerGlobalReceiver(SkillAssignmentC2SPacket.ID) { packet, context ->
             context.server().execute {
                 packet.handle(context.player())
+                // Broadcast updated assignments to all online players
+                broadcastAssignmentSync(context.server())
+            }
+        }
+
+        // Register S2C packet for skill assignment sync
+        PayloadTypeRegistry.playS2C().register(SkillAssignmentSyncS2CPacket.ID, SkillAssignmentSyncS2CPacket.CODEC)
+
+        // Register C2S packet for skill assignment requests (client opens GUI)
+        PayloadTypeRegistry.playC2S().register(SkillAssignmentRequestC2SPacket.ID, SkillAssignmentRequestC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(SkillAssignmentRequestC2SPacket.ID) { _, context ->
+            context.server().execute {
+                val syncPacket = SkillAssignmentSyncS2CPacket(BaseManager.getAllAssignments())
+                ServerPlayNetworking.send(context.player(), syncPacket)
             }
         }
 
@@ -93,6 +128,16 @@ object CobblebaseFabric : ModInitializer {
             LogManager.save(world)
             DiscoveryRegistry.save(world)
             SpeciesSkillOverrides.save(world)
+        }
+    }
+
+    /**
+     * Broadcasts current skill assignments to all online players.
+     */
+    private fun broadcastAssignmentSync(server: net.minecraft.server.MinecraftServer) {
+        val syncPacket = SkillAssignmentSyncS2CPacket(BaseManager.getAllAssignments())
+        for (player in server.playerManager.playerList) {
+            ServerPlayNetworking.send(player, syncPacket)
         }
     }
 

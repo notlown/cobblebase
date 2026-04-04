@@ -2,6 +2,7 @@ package notlown.cobblebase.fabric.mixin;
 
 import notlown.cobblebase.fabric.client.gui.CobblebaseScreen;
 import notlown.cobblebase.core.net.LogRequestC2SPacket;
+import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket;
 import com.cobblemon.mod.common.client.gui.pasture.PasturePCGUIConfiguration;
 import com.cobblemon.mod.common.client.gui.pasture.PastureWidget;
 import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket;
@@ -73,9 +74,10 @@ public abstract class PastureWidgetMixin {
 
         UUID pastureId = pasturePCGUIConfiguration.getPastureId();
 
-        // Request logs from server
+        // Request logs and current assignments from server
         try {
             ClientPlayNetworking.send(new LogRequestC2SPacket(pastureId));
+            ClientPlayNetworking.send(new SkillAssignmentRequestC2SPacket());
         } catch (Exception ignored) {
             // Packet might not be registered yet on first join
         }

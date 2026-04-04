@@ -1,7 +1,7 @@
 {
   "id": "cobblebase:healer",
   "name": "Healer",
-  "description": "Heals injured Pokemon in the pasture",
+  "description": "Heals injured Pokemon in your team",
   "category": "support",
   "cooldownSeconds": 0,
   "searchRadius": 10,

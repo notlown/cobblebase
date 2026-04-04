@@ -138,13 +138,9 @@ object RecruiterExecutor : SkillExecutor {
                 .append(Text.literal(" $speciesName").formatted(Formatting.WHITE, Formatting.BOLD))
                 .append(Text.literal(" (Lv.$level)!").formatted(Formatting.GRAY))
 
-            // Send message only to the owner
-            val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
-            val targetPlayers = if (ownerUuid != null) {
-                world.players.filter { it.uuid == ownerUuid }
-            } else {
-                world.getEntitiesByClass(ServerPlayerEntity::class.java, Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)) { true }
-            }
+            // Send message only to the owner — no fallback
+            val ownerUuid = pokemonEntity.pokemon.getOwnerUUID() ?: return
+            val targetPlayers = world.players.filter { it.uuid == ownerUuid }
             for (player in targetPlayers) {
                 player.sendMessage(message, false)
                 if (bucket.ordinal >= SpawnData.Bucket.RARE.ordinal) {

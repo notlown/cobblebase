@@ -60,7 +60,7 @@ object NavigationHelper {
     }
 
     fun navigateTo(pokemonEntity: PokemonEntity, targetPos: BlockPos, speed: Double = -1.0) {
-        val actualSpeed = if (speed < 0) 1.0 else speed.coerceAtLeast(0.5)
+        val actualSpeed = if (speed < 0) 0.7 else speed.coerceAtLeast(0.5)
         val world = pokemonEntity.world
         val now = world.time
         val id = pokemonEntity.pokemon.uuid
@@ -93,14 +93,16 @@ object NavigationHelper {
             }
 
             if (!result) {
-                // All navigation attempts failed — teleport near the target
+                // All navigation attempts failed — teleport to ground level near target
                 val tx = targetPos.x + 0.5
-                val ty = targetPos.y + 1.0
                 val tz = targetPos.z + 0.5
-                pokemonEntity.refreshPositionAndAngles(tx, ty, tz, pokemonEntity.yaw, pokemonEntity.pitch)
-                if (now % 200 == 0L) {
-                    Cobblebase.LOGGER.info("[Nav] ${pokemonEntity.pokemon.species.name} teleported to $targetPos (pathfinding failed)")
+                // Find safe ground Y — use world heightmap to avoid teleporting into trees
+                val safeY = if (world is net.minecraft.server.world.ServerWorld) {
+                    world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, targetPos.x, targetPos.z).toDouble()
+                } else {
+                    targetPos.y + 1.0
                 }
+                pokemonEntity.refreshPositionAndAngles(tx, safeY, tz, pokemonEntity.yaw, pokemonEntity.pitch)
             }
         }
     }
@@ -143,7 +145,7 @@ object NavigationHelper {
             targetX + 0.5,
             targetY.toDouble(),
             targetZ + 0.5,
-            1.0
+            0.7
         )
     }
 }

@@ -60,10 +60,16 @@ public abstract class PastureWidgetMixin {
     @Unique
     private void cobblebase$openCobblebaseScreen() {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client == null) return;
+        if (client == null || client.player == null) return;
 
         List<OpenPasturePacket.PasturePokemonDataDTO> pokemonList =
             pasturePCGUIConfiguration.getPasturedPokemon().get();
+
+        // Pasture lock: only allow access if the player owns at least one Pokemon in this pasture
+        boolean isOwner = pokemonList.stream().anyMatch(dto ->
+            client.player.getUuid().equals(dto.getPlayerId())
+        );
+        if (!isOwner && !pokemonList.isEmpty()) return; // Not the owner — block access
 
         UUID pastureId = pasturePCGUIConfiguration.getPastureId();
 

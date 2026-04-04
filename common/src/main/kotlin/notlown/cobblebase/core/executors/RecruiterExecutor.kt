@@ -110,7 +110,7 @@ object RecruiterExecutor : SkillExecutor {
             entity.tickSpawned = world.server?.ticks ?: 0
             world.spawnEntity(entity)
 
-            Cobblebase.LOGGER.info("[Recruiter] ${pokemonEntity.pokemon.species.name} found a ${bucket.name} $speciesName (Lv.$level) [${chosenType.name}]")
+            Cobblebase.log("[Recruiter] ${pokemonEntity.pokemon.species.name} found a ${bucket.name} $speciesName (Lv.$level) [${chosenType.name}]")
 
             // Effects on the RECRUITED mon (not the recruiter)
             val sx = spawnPos.x + 0.5; val sy = spawnPos.y + 1.0; val sz = spawnPos.z + 0.5

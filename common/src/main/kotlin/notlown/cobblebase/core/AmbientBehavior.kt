@@ -134,10 +134,10 @@ object AmbientBehavior {
             val speciesName = pokemonEntity.pokemon.species.name
             val dayTime = (world as? ServerWorld)?.timeOfDay?.rem(24000) ?: -1
             if (state != BehaviorState.WANDERING) {
-                Cobblebase.LOGGER.info("[Ambient] $speciesName: state=$state, elapsed=${now - stateStart}t, dayTime=$dayTime")
+                Cobblebase.log("[Ambient] $speciesName: state=$state, elapsed=${now - stateStart}t, dayTime=$dayTime")
             } else if (now % 500 == 0L) {
                 // Log wandering state less frequently
-                Cobblebase.LOGGER.info("[Ambient] $speciesName: WANDERING, dayTime=$dayTime")
+                Cobblebase.log("[Ambient] $speciesName: WANDERING, dayTime=$dayTime")
             }
         }
 
@@ -534,7 +534,7 @@ object AmbientBehavior {
         if (isNight) {
             // High chance to sleep at night
             if (world.random.nextInt(100) < 70) {
-                Cobblebase.LOGGER.info("[Ambient] ${entity.pokemon.species.name} going to sleep (dayTime=$dayTime)")
+                Cobblebase.log("[Ambient] ${entity.pokemon.species.name} going to sleep (dayTime=$dayTime)")
                 setState(id, BehaviorState.SLEEPING, now)
                 return true
             }
@@ -577,7 +577,7 @@ object AmbientBehavior {
                     }
                     roll < 75 -> {
                         // Walk together side by side
-                        Cobblebase.LOGGER.info("[Ambient] WALK TOGETHER triggered for ${speciesNames[id]} + ${partner.pokemon.species.name}")
+                        Cobblebase.log("[Ambient] WALK TOGETHER triggered for ${speciesNames[id]} + ${partner.pokemon.species.name}")
                         setState(id, BehaviorState.WALKING_TOGETHER, now)
                         setState(partner.pokemon.uuid, BehaviorState.WALKING_TOGETHER, now)
                         lastInteractionPartner[id] = partner.pokemon.uuid
@@ -615,7 +615,7 @@ object AmbientBehavior {
         val prev = currentState[id]
         if (prev != state) {
             val name = speciesNames[id] ?: "Unknown"
-            Cobblebase.LOGGER.info("[Ambient] $name: $prev -> $state")
+            Cobblebase.log("[Ambient] $name: $prev -> $state")
             // No chat messages — was too spammy
         }
         currentState[id] = state

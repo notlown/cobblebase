@@ -10,6 +10,10 @@
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:producer",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:recruiter",
       "proficiency": 1
     }

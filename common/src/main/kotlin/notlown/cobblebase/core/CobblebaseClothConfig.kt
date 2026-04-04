@@ -27,6 +27,9 @@ class CobblebaseClothConfig : ConfigData {
         @ConfigEntry.Gui.Tooltip
         @ConfigEntry.BoundedDiscrete(min = 10, max = 100)
         var safetyTeleportDistance = 30
+
+        @ConfigEntry.Gui.Tooltip
+        var enableConsoleLogging = false
     }
 
     class CryGroup {

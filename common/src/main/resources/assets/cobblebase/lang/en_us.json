@@ -11,6 +11,8 @@
   "text.autoconfig.cobblebase.option.general.enableSafetyTeleport.@Tooltip": "Teleport Pokemon back when they wander too far from the Pasture Block",
   "text.autoconfig.cobblebase.option.general.safetyTeleportDistance": "Safety Teleport Distance (blocks)",
   "text.autoconfig.cobblebase.option.general.safetyTeleportDistance.@Tooltip": "How far Pokemon can wander before being teleported back (default: 30)",
+  "text.autoconfig.cobblebase.option.general.enableConsoleLogging": "Enable Console Logging",
+  "text.autoconfig.cobblebase.option.general.enableConsoleLogging.@Tooltip": "Show job activity logs in the server console (can be noisy on busy servers)",
 
   "text.autoconfig.cobblebase.option.cry": "Pokemon Cries",
   "text.autoconfig.cobblebase.option.cry.cryEnabled": "Enable Pokemon cries",

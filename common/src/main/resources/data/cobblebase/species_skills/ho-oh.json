@@ -18,6 +18,10 @@
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:producer",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:scout",
       "proficiency": 4
     },

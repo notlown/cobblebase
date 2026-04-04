@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 1
     }
   ]
 }

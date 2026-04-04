@@ -20,6 +20,7 @@ import notlown.cobblebase.core.executors.LuckyCharmExecutor
 import notlown.cobblebase.core.executors.ExtinguisherExecutor
 import notlown.cobblebase.core.executors.AuraBoostExecutor
 import notlown.cobblebase.core.executors.GrowthAuraExecutor
+import notlown.cobblebase.core.executors.ProducerExecutor
 
 /**
  * Maps executor names (from Skill JSON) to executor implementations.
@@ -33,11 +34,12 @@ object ExecutorRegistry {
         register("fishing", FishingExecutor)
         register("mining", MiningExecutor)                 // Mining: cooldown-based loot (ores, fossils, gems)
 
-        // -- Loot-table based (pickup, archeology, honey) --
+        // -- Loot-table based (pickup, archeology) --
         register("pickup", GenericLootExecutor)
         register("archeology", GenericLootExecutor)
-        // Diving removed for now
-        register("honey", GenericLootExecutor)
+
+        // -- Production --
+        register("producer", ProducerExecutor)   // Species-specific passive item production
 
         // -- Generation --
         register("cauldron_fill", CauldronFillExecutor)

@@ -96,7 +96,7 @@ object ExtinguisherExecutor : SkillExecutor {
                 "Extinguished $extinguishedCount fire(s)",
                 LogManager.Rarity.COMMON
             )
-            Cobblebase.LOGGER.info("[Extinguisher] ${pokemonEntity.pokemon.species.name} extinguished $extinguishedCount fire(s)")
+            Cobblebase.log("[Extinguisher] ${pokemonEntity.pokemon.species.name} extinguished $extinguishedCount fire(s)")
         }
     }
 

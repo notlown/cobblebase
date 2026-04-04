@@ -15,6 +15,11 @@ object Cobblebase {
     val LOGGER: Logger = LogManager.getLogger(MODID)
     val registeredSounds = mutableSetOf<Identifier>()
 
+    /** Logs info only when console logging is enabled in config. Use for runtime job/tick logs. */
+    fun log(message: String) {
+        if (CobblebaseConfig.enableConsoleLogging) LOGGER.info(message)
+    }
+
     fun init() {
         LOGGER.info("Launching Cobblebase...")
         AutoConfig.register(CobblebaseClothConfig::class.java, ::GsonConfigSerializer)

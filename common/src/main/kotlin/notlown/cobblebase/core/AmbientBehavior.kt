@@ -367,8 +367,8 @@ object AmbientBehavior {
     private fun tickChasing(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long): Boolean {
         val elapsed = now - stateStart
 
-        // Chase lasts 15 seconds
-        if (elapsed >= 300L) {
+        // Chase lasts 20 seconds
+        if (elapsed >= 400L) {
             setState(id, BehaviorState.WANDERING, now)
             return false
         }
@@ -387,8 +387,8 @@ object AmbientBehavior {
             return false
         }
 
-        // Run fast towards the fleeing mon
-        NavigationHelper.navigateTo(entity, target.blockPos, 1.0)
+        // Sprint towards the fleeing mon
+        NavigationHelper.navigateTo(entity, target.blockPos, 1.5)
 
         return false // don't prevent wandering-level movement
     }
@@ -399,8 +399,8 @@ object AmbientBehavior {
     private fun tickFleeing(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long, origin: BlockPos): Boolean {
         val elapsed = now - stateStart
 
-        // Flee lasts 15 seconds (same as chaser)
-        if (elapsed >= 300L) {
+        // Flee lasts 20 seconds (same as chaser)
+        if (elapsed >= 400L) {
             setState(id, BehaviorState.WANDERING, now)
             return false
         }
@@ -431,7 +431,7 @@ object AmbientBehavior {
             // Stay within pasture range but allow wider area for chasing
             val clampedX = fleeX.coerceIn(origin.x - 25, origin.x + 25)
             val clampedZ = fleeZ.coerceIn(origin.z - 25, origin.z + 25)
-            entity.navigation.startMovingTo(clampedX + 0.5, origin.y.toDouble(), clampedZ + 0.5, 1.0)
+            entity.navigation.startMovingTo(clampedX + 0.5, origin.y.toDouble(), clampedZ + 0.5, 1.5)
         }
 
         return false // don't prevent movement

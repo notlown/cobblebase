@@ -131,43 +131,53 @@ public class PokemonPastureBlockEntityMixin {
                 PassiveXp.INSTANCE.tick(world, pokemonEntity, blockPos);
             } catch (Exception ignored) { }
 
-            try {
-                BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
-            } catch (Exception e) {
-                Cobblebase.INSTANCE.getLOGGER().error("[Cobblebase] Error ticking {}: {}", pokemon.getSpecies().getName(), e.getMessage());
+            // Check if mon is in a resting state (sleeping/sitting/socializing)
+            boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
+
+            if (isResting) {
+                // Resting: stop all movement, skip job execution, just tick ambient + animations
+                NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
+                pokemonEntity.getNavigation().stop();
+                try {
+                    AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                } catch (Exception ignored) { }
+                // Still tick passive buffs via BaseManager
+                try {
+                    BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
+                } catch (Exception ignored) { }
+            } else {
+                // Normal: run jobs, navigation, stuck detection
+                try {
+                    BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
+                } catch (Exception e) {
+                    Cobblebase.INSTANCE.getLOGGER().error("[Cobblebase] Error ticking {}: {}", pokemon.getSpecies().getName(), e.getMessage());
+                }
+
+                // Escape leaves
+                try {
+                    NavigationHelper.INSTANCE.escapeLeaves(pokemonEntity);
+                } catch (Exception ignored) { }
+
+                // Stuck detection
+                try {
+                    NavigationHelper.INSTANCE.checkAndUnstick(pokemonEntity, blockPos);
+                } catch (Exception ignored) { }
+
+                // Ambient behavior: pick idle behavior or wander
+                if (pokemonEntity.getNavigation().isIdle()) {
+                    try {
+                        boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                        if (!handled) {
+                            NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
+                        }
+                    } catch (Exception ignored) { }
+                }
             }
 
             // Species-specific animations for ALL pastured Pokemon (every 15 seconds)
-            // Animations are quick one-shots that don't interrupt navigation or jobs
             try {
                 AmbientBehavior.INSTANCE.tickSpecialAnimations(world, pokemonEntity);
             } catch (Exception ignored) { }
-
-            // Escape leaves — prevent mons getting stuck in tree canopies
-            try {
-                NavigationHelper.INSTANCE.escapeLeaves(pokemonEntity);
-            } catch (Exception ignored) { }
-
-            // Stuck detection: teleport mons that haven't moved for 15+ seconds
-            try {
-                NavigationHelper.INSTANCE.checkAndUnstick(pokemonEntity, blockPos);
-            } catch (Exception ignored) { }
-
-            // Ambient behavior: sleep, sit, socialize, or wander when idle
-            // First check if mon should be held still (sleeping/sitting/etc.)
-            if (AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid())) {
-                try {
-                    NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
-                    AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
-                } catch (Exception ignored) { }
-            } else if (pokemonEntity.getNavigation().isIdle()) {
-                try {
-                    boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
-                    if (!handled) {
-                        NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
-                    }
-                } catch (Exception ignored) { }
-            }
         }
     }
 }

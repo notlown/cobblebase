@@ -149,9 +149,9 @@ object NavigationHelper {
             // Same position — check if stuck long enough
             val since = stuckSince.getOrPut(id) { now }
             if (now - since >= STUCK_THRESHOLD_TICKS) {
-                // Stuck for 15+ seconds — teleport a few blocks toward origin
-                val dx = (origin.x - currentPos.x).coerceIn(-3, 3)
-                val dz = (origin.z - currentPos.z).coerceIn(-3, 3)
+                // Stuck for 15+ seconds — nudge 1 block toward origin
+                val dx = (origin.x - currentPos.x).coerceIn(-1, 1)
+                val dz = (origin.z - currentPos.z).coerceIn(-1, 1)
                 val newX = currentPos.x + dx + 0.5
                 val newZ = currentPos.z + dz + 0.5
                 val newY = if (world is net.minecraft.server.world.ServerWorld) {
@@ -176,7 +176,7 @@ object NavigationHelper {
     // Stuck detection: track positions to detect mons that haven't moved
     private val lastPositions = mutableMapOf<UUID, BlockPos>()
     private val stuckSince = mutableMapOf<UUID, Long>()
-    private const val STUCK_THRESHOLD_TICKS = 300L // 15 seconds
+    private const val STUCK_THRESHOLD_TICKS = 600L // 30 seconds before unstick
 
     /**
      * Makes a Pokemon wander randomly near the pasture origin.

@@ -95,7 +95,7 @@ class SkillsPanel(
 
             val rowY = contentY + cumulativeY
 
-            allButtons.add(SkillButtonData(pokemonId, null, "Idle", 0, "", autoX, rowY, currentAssignment == null))
+            allButtons.add(SkillButtonData(pokemonId, null, "Relax", 0, "", autoX, rowY, currentAssignment == null))
 
             var btnX = skillStartX
             var btnY = rowY

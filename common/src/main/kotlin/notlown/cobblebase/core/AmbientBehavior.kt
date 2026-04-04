@@ -124,10 +124,7 @@ object AmbientBehavior {
         val pick = anims[world.random.nextInt(anims.size)]
         SkillEffects.sendAnimationPublic(world, pokemonEntity, pick)
         lastSpecialAnim[id] = now
-
-        if (now % 500 == 0L) {
-            Cobblebase.LOGGER.info("[Ambient] $speciesName playing special animation: $pick")
-        }
+        Cobblebase.LOGGER.info("[Ambient] $speciesName playing special animation: $pick")
     }
 
     /**

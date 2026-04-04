@@ -131,12 +131,10 @@ object GathererExecutor : SkillExecutor {
             found.setPickupDelay(Short.MAX_VALUE.toInt())
             targetItem[pokemonId] = found.id
             targetSetTime[pokemonId] = now
-            Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} targeting ${found.stack.name.string} at ${found.blockPos}")
         } else if (now % 100 == 0L) {
             // Debug: log when no items found
             val searchBox = Box.of(pokemonEntity.pos, radius * 2, radius * 2, radius * 2)
             val allItems = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { true }
-            Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} searching radius=$radius — found ${allItems.size} items on ground")
         }
     }
 
@@ -189,7 +187,6 @@ object GathererExecutor : SkillExecutor {
         visualItem.isInvulnerable = true
         world.spawnEntity(visualItem)
         visualItems[pokemonId] = visualItem
-        Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} showing visual item above head")
 
         // Pickup particles (item sparkle effect)
         val x = pokemonEntity.x
@@ -199,7 +196,6 @@ object GathererExecutor : SkillExecutor {
         world.spawnParticles(ParticleTypes.ENCHANT, x, y + h, z, 15, 0.3, 0.3, 0.3, 0.5)
         world.spawnParticles(ParticleTypes.END_ROD, x, y + h * 0.5, z, 5, 0.2, 0.2, 0.2, 0.02)
 
-        Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} picked up ${stack.name.string}x${stack.count}")
         // Play cry + success effect on pickup
         SkillEffects.playSuccess(world, pokemonEntity, "default")
     }
@@ -252,7 +248,6 @@ object GathererExecutor : SkillExecutor {
                 )
             }
 
-            Cobblebase.LOGGER.info("[Gatherer] ${pokemonEntity.pokemon.species.name} deposited items at $chestPos")
             depositStartTime.remove(pokemonId)
         }
     }

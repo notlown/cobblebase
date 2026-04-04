@@ -164,7 +164,6 @@ object MiningExecutor : SkillExecutor {
             if (drops.isNotEmpty()) {
                 heldItems[pokemonId] = drops
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
-                Cobblebase.LOGGER.info("[Mining] ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) mined: ${drops.map { "${it.name.string}x${it.count}" }}")
 
                 // Log to activity log
                 val rarity = when {

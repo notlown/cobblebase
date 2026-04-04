@@ -41,6 +41,14 @@
 | 📊 [Species Database](https://notlown.github.io/cobblebase-web/database/) | Browse all 8,426 Pokemon with skills, proficiency, and an inline editor |
 | 🔧 [Datapack Generator](https://notlown.github.io/cobblebase-web/generator/) | Create custom species skill datapacks without editing JSON |
 
+### 💬 Community & Support
+
+<p align="center">
+<a href="https://discord.gg/6As3sVZgVT"><img src="discord_banner_small.png" alt="Join us on Discord"></a>
+&nbsp;&nbsp;
+<a href="https://ko-fi.com/notlown"><img src="kofi_banner_small.png" alt="Support me on Ko-fi"></a>
+</p>
+
 ---
 
 ## 🌾 Gathering

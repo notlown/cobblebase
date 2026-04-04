@@ -31,9 +31,8 @@ object AmbientBehavior {
     private const val LOOK_AROUND_CHANCE = 30  // percent chance to play look-around animation
     private const val SPECIAL_ANIM_CHANCE = 25 // percent chance to play a special animation (attack, emote)
 
-    // CobbleMotion animations — prefer unique/signature moves over generic physical/special/status
-    private val SPECIES_ANIMATIONS = mapOf(
-        // Signature moves (unique animations)
+    // Signature moves for CobbleMotion species (preferred over generic animations)
+    private val SIGNATURE_ANIMATIONS = mapOf(
         "grimmsnarl" to listOf("taunt"),
         "incineroar" to listOf("darkestlariat"),
         "emboar" to listOf("heatcrash"),
@@ -46,30 +45,11 @@ object AmbientBehavior {
         "samurott" to listOf("aquajet"),
         "samurott_hisuian" to listOf("aquajet"),
         "typhlosion_hisuian" to listOf("infernalparade"),
-        "decidueye_hisuian" to listOf("triplearrows"),
-        // Species with only generic attack animations
-        "gengar" to listOf("physical", "special"),
-        "lucario" to listOf("physical", "special"),
-        "greninja" to listOf("physical", "special"),
-        "kleavor" to listOf("physical", "special"),
-        "tsareena" to listOf("physical", "special"),
-        "totodile" to listOf("physical"),
-        "cyndaquil" to listOf("physical", "special"),
-        "meganium" to listOf("physical", "special"),
-        "chikorita" to listOf("physical", "special"),
-        "luxray" to listOf("physical", "special"),
-        "perrserker" to listOf("physical", "special"),
-        "magmortar" to listOf("physical", "special"),
-        "escavalier" to listOf("physical"),
-        "politoed" to listOf("physical", "special"),
-        "dewott" to listOf("physical", "special"),
-        "tyranitar" to listOf("physical", "special"),
-        "sceptile" to listOf("physical", "special"),
-        "combusken" to listOf("physical", "special"),
-        "zoroark_hisuian" to listOf("physical", "special"),
-        "lilligant_hisuian" to listOf("physical", "special"),
-        "clodsire" to listOf("physical")
+        "decidueye_hisuian" to listOf("triplearrows")
     )
+
+    // Generic attack animations available for ALL Cobblemon species
+    private val GENERIC_ANIMATIONS = listOf("physical", "special")
 
     enum class BehaviorState {
         WANDERING,      // normal wandering (existing behavior)
@@ -101,9 +81,9 @@ object AmbientBehavior {
         if (now - lastAnim < SPECIAL_ANIM_INTERVAL) return
 
         val speciesName = pokemonEntity.pokemon.species.name.lowercase()
-        val anims = SPECIES_ANIMATIONS[speciesName] ?: return
 
-        // Play a random species animation
+        // Use signature move if available, otherwise generic attack animation
+        val anims = SIGNATURE_ANIMATIONS[speciesName] ?: GENERIC_ANIMATIONS
         val pick = anims[world.random.nextInt(anims.size)]
         SkillEffects.sendAnimationPublic(world, pokemonEntity, pick)
         lastSpecialAnim[id] = now

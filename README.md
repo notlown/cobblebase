@@ -300,6 +300,36 @@ Output JARs in `fabric/build/libs/` and `neoforge/build/libs/`. Requires **Java 
 
 ---
 
+## 🔌 Mod Compatibility
+
+Cobblebase works with a wide range of popular mods. Here's what's been tested:
+
+### ✅ Containers (Gatherer deposits items into these)
+| Mod | Status |
+|-----|--------|
+| Vanilla Chests & Barrels | ✅ Fully supported |
+| [Iron Chests](https://www.curseforge.com/minecraft/mc-mods/iron-chests) | ✅ Supported |
+| [Sophisticated Storage](https://www.curseforge.com/minecraft/mc-mods/sophisticated-storage) | ✅ Supported |
+| Any mod with `Inventory` BlockEntity | ✅ Auto-detected |
+
+### ✅ Crops (Harvester auto-harvests these)
+| Mod | Status |
+|-----|--------|
+| Vanilla Crops (Wheat, Carrots, etc.) | ✅ Fully supported |
+| [Pam's HarvestCraft](https://www.curseforge.com/minecraft/mc-mods/pams-harvestcraft) | ✅ Supported |
+| [Pam's HarvestCraft 2 - Crops](https://www.curseforge.com/minecraft/mc-mods/pams-harvestcraft-2-crops) | ✅ Supported |
+| [Farmers Delight](https://www.curseforge.com/minecraft/mc-mods/farmers-delight) | ✅ Supported |
+| Cobblemon Crops (Apricorns, Berries, Mints) | ✅ Fully supported |
+| [Pam's HarvestCraft 2 - Trees](https://www.curseforge.com/minecraft/mc-mods/pams-harvestcraft-2-trees) | ❌ Fruit on trees not detected |
+| Any mod with `CropBlock` | ✅ Auto-detected |
+
+### ✅ Animation Packs
+| Mod | Status |
+|-----|--------|
+| [CobbleMotion](https://modrinth.com/resourcepack/cobblemotion) | ✅ Signature animations play during Relax mode socializing |
+
+---
+
 ## Credits
 
 Built by [notlown](https://github.com/notlown)

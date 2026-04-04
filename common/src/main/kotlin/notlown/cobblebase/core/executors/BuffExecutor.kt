@@ -52,23 +52,40 @@ class BuffExecutor(
         if (now - lastTime < cooldownTicks) return
 
         // Find players based on proficiency range
+        // Within 40 blocks: ALL players get the buff
+        // Beyond 40 blocks: OWNER only
+        val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
         val players: List<ServerPlayerEntity>
+
         if (prof >= 5) {
-            // Prof 5: GLOBAL — but only for the pasture owner
-            val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
+            // Prof 5: GLOBAL — owner only (anywhere in world)
             players = if (ownerUuid != null) {
                 world.players.filter { it.uuid == ownerUuid }
             } else {
-                // Fallback: all nearby players if no owner
-                val range = getBuffRange(prof)
+                // Fallback: nearby players if no owner
+                val range = 40.0
                 world.getEntitiesByClass(ServerPlayerEntity::class.java,
                     Box.of(origin.toCenterPos(), range * 2, range * 2, range * 2)) { true }
             }
         } else {
-            // Prof 1-4: radius-based (30/50/100/200 blocks)
-            val range = getBuffRange(prof)
-            val searchBox = Box.of(origin.toCenterPos(), range * 2, range * 2, range * 2)
-            players = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
+            // Prof 1-4: all players within 40 blocks + owner within full range
+            val baseRange = 40.0
+            val fullRange = getBuffRange(prof)
+            val baseBox = Box.of(origin.toCenterPos(), baseRange * 2, baseRange * 2, baseRange * 2)
+            val nearbyPlayers = world.getEntitiesByClass(ServerPlayerEntity::class.java, baseBox) { true }
+
+            if (fullRange > baseRange && ownerUuid != null) {
+                // Owner gets buff within full range even beyond 40 blocks
+                val fullBox = Box.of(origin.toCenterPos(), fullRange * 2, fullRange * 2, fullRange * 2)
+                val ownerInRange = world.getEntitiesByClass(ServerPlayerEntity::class.java, fullBox) { it.uuid == ownerUuid }
+                val combined = nearbyPlayers.toMutableList()
+                for (owner in ownerInRange) {
+                    if (combined.none { it.uuid == owner.uuid }) combined.add(owner)
+                }
+                players = combined
+            } else {
+                players = nearbyPlayers
+            }
         }
         if (players.isEmpty()) return
 

@@ -6,12 +6,12 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 1
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:water_fill",
-      "proficiency": 2
+      "proficiency": 3
     }
   ]
 }

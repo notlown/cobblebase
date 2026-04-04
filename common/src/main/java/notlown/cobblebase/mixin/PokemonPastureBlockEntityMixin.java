@@ -1,5 +1,6 @@
 package notlown.cobblebase.mixin;
 
+import notlown.cobblebase.core.AmbientBehavior;
 import notlown.cobblebase.core.BaseManager;
 import notlown.cobblebase.core.Cobblebase;
 import notlown.cobblebase.core.LogManager;
@@ -146,10 +147,13 @@ public class PokemonPastureBlockEntityMixin {
                 NavigationHelper.INSTANCE.checkAndUnstick(pokemonEntity, blockPos);
             } catch (Exception ignored) { }
 
-            // Keep mons moving naturally — if idle, wander near the pasture
+            // Ambient behavior: sleep, sit, socialize, or wander when idle
             if (pokemonEntity.getNavigation().isIdle()) {
                 try {
-                    NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
+                    boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                    if (!handled) {
+                        NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
+                    }
                 } catch (Exception ignored) { }
             }
         }

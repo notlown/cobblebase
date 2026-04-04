@@ -84,13 +84,11 @@ object AmbientBehavior {
 
         val speciesName = pokemonEntity.pokemon.species.name.lowercase()
 
-        // Combine signature moves + generic attack animations for more variety
-        val signature = SIGNATURE_ANIMATIONS[speciesName]
-        val anims = if (signature != null) signature + GENERIC_ANIMATIONS else GENERIC_ANIMATIONS
-        val pick = anims[world.random.nextInt(anims.size)]
+        // Play a subtle idle animation (no attack moves — those are for socializing)
+        val idleAnims = listOf("pose", "blink", "happy", "look_quirk")
+        val pick = idleAnims[world.random.nextInt(idleAnims.size)]
         SkillEffects.sendAnimationPublic(world, pokemonEntity, pick)
         lastSpecialAnim[id] = now
-        Cobblebase.LOGGER.info("[Ambient] $speciesName playing special animation: $pick")
     }
 
     /**
@@ -147,10 +145,8 @@ object AmbientBehavior {
         if (isDaytime) {
             // Morning — wake up
             setState(id, BehaviorState.WANDERING, now)
-            // Play wake-up cry
-            if (now % 200 == 0L) {
-                SkillEffects.sendAnimationPublic(world, entity, "cry")
-            }
+            // Wake-up stretch animation
+            SkillEffects.sendAnimationPublic(world, entity, "pose", "happy")
             return false
         }
 
@@ -172,7 +168,7 @@ object AmbientBehavior {
 
         // Play look-around animation for all mons
         if (now % 80 == 0L && world.random.nextInt(100) < LOOK_AROUND_CHANCE) {
-            val lookAnims = arrayOf("happy", "pose", "blink", "look_quirk", "sniff_quirk", "cry")
+            val lookAnims = arrayOf("happy", "pose", "blink", "look_quirk", "sniff_quirk")
             val pick = lookAnims[world.random.nextInt(lookAnims.size)]
             SkillEffects.sendAnimationPublic(world, entity, pick)
         }
@@ -239,13 +235,17 @@ object AmbientBehavior {
             // First phase: walk towards partner
             NavigationHelper.navigateTo(entity, partner.blockPos, 0.4)
         } else {
-            // Second phase: face each other and interact
+            // Second phase: face each other and show off moves
             NavigationHelper.clearTargets(entity)
             entity.lookAtEntity(partner, 60f, 30f)
 
-            // Play cry/call animations
-            if (elapsed % 60 == 0L) {
-                SkillEffects.sendAnimationPublic(world, entity, "cry", "happy")
+            // Play signature or attack animation while facing partner
+            if (elapsed % 80 == 0L) {
+                val speciesName = entity.pokemon.species.name.lowercase()
+                val signature = SIGNATURE_ANIMATIONS[speciesName]
+                val anims = if (signature != null) signature + GENERIC_ANIMATIONS else GENERIC_ANIMATIONS
+                val pick = anims[world.random.nextInt(anims.size)]
+                SkillEffects.sendAnimationPublic(world, entity, pick)
             }
         }
 
@@ -288,9 +288,9 @@ object AmbientBehavior {
             NavigationHelper.clearTargets(entity)
         }
 
-        // Occasional cry while following
+        // Occasional happy animation while following
         if (now % 120 == 0L && world.random.nextInt(100) < 20) {
-            SkillEffects.sendAnimationPublic(world, entity, "cry")
+            SkillEffects.sendAnimationPublic(world, entity, "happy", "pose")
         }
 
         return true // don't wander
@@ -334,9 +334,9 @@ object AmbientBehavior {
                 SkillEffects.sendAnimationPublic(world, entity, "sleep", "pose", "ground_idle")
             }
 
-            // Occasional happy cry
+            // Occasional happy animation
             if (now % 200 == 0L && world.random.nextInt(100) < 30) {
-                SkillEffects.sendAnimationPublic(world, entity, "cry", "happy")
+                SkillEffects.sendAnimationPublic(world, entity, "happy", "pose")
             }
         }
 

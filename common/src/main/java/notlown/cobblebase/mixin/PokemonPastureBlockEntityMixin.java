@@ -148,7 +148,13 @@ public class PokemonPastureBlockEntityMixin {
             } catch (Exception ignored) { }
 
             // Ambient behavior: sleep, sit, socialize, or wander when idle
-            if (pokemonEntity.getNavigation().isIdle()) {
+            // First check if mon should be held still (sleeping/sitting/etc.)
+            if (AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid())) {
+                try {
+                    NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
+                    AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                } catch (Exception ignored) { }
+            } else if (pokemonEntity.getNavigation().isIdle()) {
                 try {
                     boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     if (!handled) {

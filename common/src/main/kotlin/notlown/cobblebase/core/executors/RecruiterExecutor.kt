@@ -138,10 +138,15 @@ object RecruiterExecutor : SkillExecutor {
                 .append(Text.literal(" $speciesName").formatted(Formatting.WHITE, Formatting.BOLD))
                 .append(Text.literal(" (Lv.$level)!").formatted(Formatting.GRAY))
 
-            val nearbyPlayers = world.getEntitiesByClass(ServerPlayerEntity::class.java, Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)) { true }
-            for (player in nearbyPlayers) {
+            // Send message only to the owner
+            val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
+            val targetPlayers = if (ownerUuid != null) {
+                world.players.filter { it.uuid == ownerUuid }
+            } else {
+                world.getEntitiesByClass(ServerPlayerEntity::class.java, Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)) { true }
+            }
+            for (player in targetPlayers) {
                 player.sendMessage(message, false)
-                // Extra ding sound for rare+
                 if (bucket.ordinal >= SpawnData.Bucket.RARE.ordinal) {
                     player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f)
                 }

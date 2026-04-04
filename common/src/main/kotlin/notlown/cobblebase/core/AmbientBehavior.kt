@@ -165,15 +165,8 @@ object AmbientBehavior {
     private fun tickStanding(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long, origin: BlockPos): Boolean {
         val elapsed = now - stateStart
 
-        // Play species-specific special animation (attack, emote, taunt)
-        val speciesName = entity.pokemon.species.name.lowercase()
-        val specAnims = SPECIES_ANIMATIONS[speciesName]
-        if (now % 80 == 0L && specAnims != null && world.random.nextInt(100) < SPECIAL_ANIM_CHANCE) {
-            val pick = specAnims[world.random.nextInt(specAnims.size)]
-            SkillEffects.sendAnimationPublic(world, entity, pick)
-        }
-        // Generic look-around animation for all mons
-        else if (now % 80 == 0L && world.random.nextInt(100) < LOOK_AROUND_CHANCE) {
+        // Play look-around animation for all mons
+        if (now % 80 == 0L && world.random.nextInt(100) < LOOK_AROUND_CHANCE) {
             val lookAnims = arrayOf("happy", "pose", "blink", "look_quirk", "sniff_quirk", "cry")
             val pick = lookAnims[world.random.nextInt(lookAnims.size)]
             SkillEffects.sendAnimationPublic(world, entity, pick)

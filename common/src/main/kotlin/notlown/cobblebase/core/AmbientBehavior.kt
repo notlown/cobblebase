@@ -40,6 +40,15 @@ object AmbientBehavior {
     }
 
     /**
+     * Check if a Pokemon should be held still (sleeping/sitting/socializing).
+     * Called every tick from the mixin — prevents navigation even when not idle.
+     */
+    fun shouldPreventMovement(pokemonId: UUID): Boolean {
+        val state = currentState[pokemonId] ?: return false
+        return state == BehaviorState.SLEEPING || state == BehaviorState.SITTING || state == BehaviorState.SOCIALIZING || state == BehaviorState.STANDING
+    }
+
+    /**
      * Called from the mixin tick loop when a Pokemon's navigation is idle.
      * Returns true if ambient behavior took over (don't wander), false to allow normal wandering.
      */
@@ -50,6 +59,12 @@ object AmbientBehavior {
 
         val state = currentState[id] ?: BehaviorState.WANDERING
         val stateStart = stateStartTime[id] ?: now
+
+        // Debug logging every 5 seconds
+        if (now % 100 == 0L && state != BehaviorState.WANDERING) {
+            val speciesName = pokemonEntity.pokemon.species.name
+            Cobblebase.LOGGER.info("[Ambient] $speciesName: state=$state, elapsed=${now - stateStart}t")
+        }
 
         return when (state) {
             BehaviorState.SLEEPING -> tickSleeping(world, pokemonEntity, id, now, origin)
@@ -218,6 +233,10 @@ object AmbientBehavior {
     }
 
     private fun setState(id: UUID, state: BehaviorState, now: Long) {
+        val prev = currentState[id]
+        if (prev != state) {
+            Cobblebase.LOGGER.info("[Ambient] State change: $prev -> $state")
+        }
         currentState[id] = state
         stateStartTime[id] = now
     }

@@ -145,6 +145,11 @@ public class PokemonPastureBlockEntityMixin {
                 Cobblebase.INSTANCE.getLOGGER().error("[Cobblebase] Error ticking {}: {}", pokemon.getSpecies().getName(), e.getMessage());
             }
 
+            // Stuck detection: teleport mons that haven't moved for 15+ seconds
+            try {
+                NavigationHelper.INSTANCE.checkAndUnstick(pokemonEntity, blockPos);
+            } catch (Exception ignored) { }
+
             // Keep mons moving naturally — if idle, wander near the pasture
             if (pokemonEntity.getNavigation().isIdle()) {
                 try {

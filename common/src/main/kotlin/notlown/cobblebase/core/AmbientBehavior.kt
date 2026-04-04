@@ -387,8 +387,8 @@ object AmbientBehavior {
             return false
         }
 
-        // Sprint towards the fleeing mon
-        NavigationHelper.navigateTo(entity, target.blockPos, 1.5)
+        // Run towards the fleeing mon
+        NavigationHelper.navigateTo(entity, target.blockPos, 0.9)
 
         return false // don't prevent wandering-level movement
     }
@@ -411,27 +411,34 @@ object AmbientBehavior {
             world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == chaserId }.firstOrNull()
         } else null
 
-        // Run away — pick a point opposite to the chaser, or random if chaser is gone
+        // Run away — stay within pasture radius, change direction at edges
+        val PASTURE_RADIUS = 20
         if (now % 40 == 0L) { // recalculate flee direction every 2 seconds
+            val distFromOriginX = entity.blockPos.x - origin.x
+            val distFromOriginZ = entity.blockPos.z - origin.z
+            val nearEdge = Math.abs(distFromOriginX) > PASTURE_RADIUS - 5 || Math.abs(distFromOriginZ) > PASTURE_RADIUS - 5
+
             val fleeX: Int
             val fleeZ: Int
-            if (chaser != null) {
-                // Run far in opposite direction from chaser
+            if (nearEdge) {
+                // Near edge — run back towards center with some randomness
+                fleeX = origin.x + world.random.nextInt(10) - 5
+                fleeZ = origin.z + world.random.nextInt(10) - 5
+            } else if (chaser != null) {
+                // Run opposite direction from chaser
                 val dx = entity.blockPos.x - chaser.blockPos.x
                 val dz = entity.blockPos.z - chaser.blockPos.z
-                // Amplify the direction for long runs
-                val scale = if (dx == 0 && dz == 0) 1 else 1
-                fleeX = entity.blockPos.x + (if (dx >= 0) 12 else -12) + world.random.nextInt(5)
-                fleeZ = entity.blockPos.z + (if (dz >= 0) 12 else -12) + world.random.nextInt(5)
+                fleeX = entity.blockPos.x + (if (dx >= 0) 8 else -8) + world.random.nextInt(5) - 2
+                fleeZ = entity.blockPos.z + (if (dz >= 0) 8 else -8) + world.random.nextInt(5) - 2
             } else {
-                // Random long-distance direction
-                fleeX = origin.x + world.random.nextInt(30) - 15
-                fleeZ = origin.z + world.random.nextInt(30) - 15
+                // Random direction within radius
+                fleeX = origin.x + world.random.nextInt(PASTURE_RADIUS * 2) - PASTURE_RADIUS
+                fleeZ = origin.z + world.random.nextInt(PASTURE_RADIUS * 2) - PASTURE_RADIUS
             }
-            // Stay within pasture range but allow wider area for chasing
-            val clampedX = fleeX.coerceIn(origin.x - 25, origin.x + 25)
-            val clampedZ = fleeZ.coerceIn(origin.z - 25, origin.z + 25)
-            entity.navigation.startMovingTo(clampedX + 0.5, origin.y.toDouble(), clampedZ + 0.5, 1.5)
+            // Hard clamp to pasture radius
+            val clampedX = fleeX.coerceIn(origin.x - PASTURE_RADIUS, origin.x + PASTURE_RADIUS)
+            val clampedZ = fleeZ.coerceIn(origin.z - PASTURE_RADIUS, origin.z + PASTURE_RADIUS)
+            entity.navigation.startMovingTo(clampedX + 0.5, origin.y.toDouble(), clampedZ + 0.5, 0.9)
         }
 
         return false // don't prevent movement

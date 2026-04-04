@@ -71,7 +71,7 @@ Skills auto-assigned by typing, base stats, and BST tiers:
 ### Multiplayer
 - **Pasture lock** — only the owner can open the Cobblebase GUI
 - **Owner-only messages** — Recruiter and Scout notifications sent only to the owner
-- **Chest deposit for loot jobs** — smart sorting with failed chest tracking
+- **Fishing deposits to chest** — smart sorting with failed chest tracking (other jobs drop on floor for Gatherer)
 - **Fishing water block cache** — scanned once, refreshed every 5 min
 
 **Total species: 8,426**

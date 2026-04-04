@@ -134,14 +134,25 @@ public class PokemonPastureBlockEntityMixin {
             // Check if mon is in a resting state (sleeping/sitting/socializing)
             boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
 
+            boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
+
             if (isResting) {
-                // Resting: stop all movement, skip job execution, just tick ambient + animations
+                // Stationary behavior: stop all movement, skip jobs
                 NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                 pokemonEntity.getNavigation().stop();
                 try {
                     AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                 } catch (Exception ignored) { }
-                // Still tick passive buffs via BaseManager
+                // Still tick passive buffs
+                try {
+                    BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
+                } catch (Exception ignored) { }
+            } else if (inActiveBehavior) {
+                // Moving behavior (chasing/fleeing/following): tick ambient but don't override with jobs or wandering
+                try {
+                    AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                } catch (Exception ignored) { }
+                // Still tick passive buffs
                 try {
                     BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
                 } catch (Exception ignored) { }

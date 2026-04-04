@@ -90,14 +90,8 @@ object BaseManager {
                     executeSkill(world, pastureOrigin, pokemonEntity, entry)
                 }
             }
-        } else {
-            if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName has no assignment, running all ${speciesData.skills.size} non-buff skills")
-            for (entry: SkillEntry in speciesData.skills) {
-                val skillDef: SkillDef? = SkillRegistry.get(entry.skillId)
-                if (skillDef != null && isBuffSkill(skillDef.executor)) continue
-                executeSkill(world, pastureOrigin, pokemonEntity, entry)
-            }
         }
+        // null assignment = Idle (do nothing). Only passive buffs run below.
 
         // Passive buffs: always tick buff skills regardless of job assignment
         for (entry: SkillEntry in speciesData.skills) {

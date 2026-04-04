@@ -23,7 +23,7 @@ import java.util.UUID
 
 /**
  * Fishing executor: Pokemon navigates to water, generates fishing loot, deposits in chest.
- * Also used for Diving (same water navigation logic).
+ * Uses water block cache and failed deposit tracking for performance.
  */
 object FishingExecutor : SkillExecutor {
 
@@ -33,6 +33,14 @@ object FishingExecutor : SkillExecutor {
     private val waterTarget = mutableMapOf<UUID, BlockPos>()
     private const val SUCCESS_PAUSE_TICKS = 40L
     private val waterModeApplied = mutableSetOf<UUID>()
+
+    // Water block cache per pasture origin — scanned once, refreshed every 5 minutes
+    private val waterCache = mutableMapOf<BlockPos, MutableSet<BlockPos>>()
+    private val waterCacheTime = mutableMapOf<BlockPos, Long>()
+    private const val CACHE_TTL_TICKS = 6000L // 5 minutes
+
+    // Failed deposit locations per Pokemon — skip full chests
+    private val failedDepositLocations = mutableMapOf<UUID, MutableSet<BlockPos>>()
 
     override fun tick(
         world: World,
@@ -47,13 +55,10 @@ object FishingExecutor : SkillExecutor {
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val items = heldItems[pokemonId]
 
-        // Adjust swim behaviour for water mons: cap swimSpeed + enable canWalkOnWater for diving
+        // Adjust swim behaviour for water mons: cap swimSpeed
         if (pokemonId !in waterModeApplied) {
             try {
                 val swimBehaviour = pokemonEntity.behaviour.moving.swim
-
-                // Cap swimSpeed to 0.15 for a more immersive, calm swimming animation
-                // swimSpeed is a MoLang Expression — use reflection to create one
                 val speedField = swimBehaviour.javaClass.getDeclaredField("swimSpeed")
                 speedField.isAccessible = true
                 val exprClass = Class.forName("com.bedrockk.molang.Expression")
@@ -63,19 +68,9 @@ object FishingExecutor : SkillExecutor {
                 val ofMethod = companion.javaClass.getMethod("of", Double::class.java)
                 val newSpeed = ofMethod.invoke(companion, 0.15)
                 speedField.set(swimBehaviour, newSpeed)
-
-                // For diving mons: also force canWalkOnWater=true
-                val isDiving = skill.executor == "diving"
-                if (isDiving) {
-                    val walkField = swimBehaviour.javaClass.getDeclaredField("canWalkOnWater")
-                    walkField.isAccessible = true
-                    walkField.set(swimBehaviour, true)
-                }
-
                 waterModeApplied.add(pokemonId)
             } catch (e: Exception) {
-                Cobblebase.LOGGER.warn("[FishingExecutor] Could not adjust swim behaviour: ${e.message}")
-                waterModeApplied.add(pokemonId) // Don't retry
+                waterModeApplied.add(pokemonId)
             }
         }
 
@@ -90,6 +85,7 @@ object FishingExecutor : SkillExecutor {
 
         if (isNearWater(world, pokemonEntity)) {
             waterTarget.remove(pokemonId)
+            failedDepositLocations.remove(pokemonId) // Reset failed deposits when back at water
             // At water - check cooldown
             val lastTime = lastGenerationTime[pokemonId] ?: 0L
             if (now - lastTime < cooldownTicks) {
@@ -113,14 +109,11 @@ object FishingExecutor : SkillExecutor {
                 }
             }
         } else {
-            // Navigate to water
-            val target = waterTarget[pokemonId] ?: findWater(world, origin, skill.searchRadius)
+            // Navigate to water using cached water blocks
+            val target = waterTarget[pokemonId] ?: findWaterCached(world, origin, skill.searchRadius, now)
             if (target != null) {
                 waterTarget[pokemonId] = target
-                // Diving mons go INTO the water, fishing mons go to shore (up)
-                val isDiving = skill.executor == "diving"
-                val navTarget = if (isDiving) target else target.up()
-                NavigationHelper.navigateTo(pokemonEntity, navTarget)
+                NavigationHelper.navigateTo(pokemonEntity, target.up())
             }
         }
     }
@@ -133,25 +126,32 @@ object FishingExecutor : SkillExecutor {
         }
     }
 
-    private fun findWater(world: World, origin: BlockPos, radius: Int): BlockPos? {
-        var best: BlockPos? = null
-        var bestDist = Double.MAX_VALUE
-
-        for (x in -radius..radius) {
-            for (y in -radius..radius) {
-                for (z in -radius..radius) {
-                    val pos = origin.add(x, y, z)
-                    if (world.getBlockState(pos).block == Blocks.WATER) {
-                        val dist = pos.getSquaredDistance(origin)
-                        if (dist < bestDist) {
-                            bestDist = dist
-                            best = pos.toImmutable()
+    /**
+     * Find nearest water using cached water block positions.
+     * Cache is rebuilt every 5 minutes per pasture origin.
+     */
+    private fun findWaterCached(world: World, origin: BlockPos, radius: Int, now: Long): BlockPos? {
+        val lastScan = waterCacheTime[origin] ?: 0L
+        if (now - lastScan > CACHE_TTL_TICKS || waterCache[origin] == null) {
+            // Rebuild cache
+            val blocks = mutableSetOf<BlockPos>()
+            for (x in -radius..radius) {
+                for (y in -radius..radius) {
+                    for (z in -radius..radius) {
+                        val pos = origin.add(x, y, z)
+                        if (world.getBlockState(pos).block == Blocks.WATER) {
+                            blocks.add(pos.toImmutable())
                         }
                     }
                 }
             }
+            waterCache[origin] = blocks
+            waterCacheTime[origin] = now
         }
-        return best
+
+        val cached = waterCache[origin] ?: return null
+        if (cached.isEmpty()) return null
+        return cached.minByOrNull { it.getSquaredDistance(origin) }
     }
 
     private fun generateLoot(world: ServerWorld, pokemonEntity: PokemonEntity, pokemonId: UUID, now: Long) {
@@ -180,21 +180,29 @@ object FishingExecutor : SkillExecutor {
 
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
-        // Try to deposit into a nearby chest (smart sorting)
+        val failed = failedDepositLocations.getOrPut(pokemonId) { mutableSetOf() }
+
+        // Try to deposit into a nearby chest, skipping known-full ones
         val containerPos = InventoryHelper.findBestContainer(world, origin, 10, items)
-        if (containerPos != null) {
-            val remaining = InventoryHelper.insertItems(world, containerPos, items)
-            if (remaining.isEmpty() || remaining.all { it.isEmpty }) {
-                heldItems.remove(pokemonId)
-                return
+        if (containerPos != null && containerPos !in failed) {
+            // Navigate to chest
+            NavigationHelper.navigateTo(pokemonEntity, containerPos)
+            if (NavigationHelper.isPokemonAtPosition(pokemonEntity, containerPos, 2.5)) {
+                val remaining = InventoryHelper.insertItems(world, containerPos, items)
+                if (remaining.isEmpty() || remaining.all { it.isEmpty }) {
+                    heldItems.remove(pokemonId)
+                    return
+                }
+                // Chest was full or partially full — mark as failed
+                failed.add(containerPos)
+                heldItems[pokemonId] = remaining
+                return // Try another chest next tick
             }
-            InventoryHelper.dropItems(world, pokemonEntity.blockPos, remaining)
-        } else {
-            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+            return // Still walking to chest
         }
+
+        // No valid chest found — drop items on ground
+        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
         heldItems.remove(pokemonId)
     }
-
-
-
 }

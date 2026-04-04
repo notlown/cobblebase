@@ -131,25 +131,44 @@ public class PokemonPastureBlockEntityMixin {
                 PassiveXp.INSTANCE.tick(world, pokemonEntity, blockPos);
             } catch (Exception ignored) { }
 
-            // Check if mon is in a resting state (sleeping/sitting/socializing)
-            boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
+            // Check if this mon is explicitly set to Idle (no job assigned in GUI)
+            String assignment = BaseManager.INSTANCE.getAssignment(pokemonEntity.getPokemon().getUuid());
+            boolean isExplicitlyIdle = (assignment == null);
 
-            boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
+            if (isExplicitlyIdle) {
+                // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
+                boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
+                boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
 
-            if (isResting) {
-                // Stationary behavior: stop all movement, NO BaseManager (it clears state)
-                NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
-                pokemonEntity.getNavigation().stop();
+                if (isResting) {
+                    // Stationary: stop movement, tick ambient
+                    NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
+                    pokemonEntity.getNavigation().stop();
+                    try {
+                        AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                    } catch (Exception ignored) { }
+                } else if (inActiveBehavior) {
+                    // Moving behavior (chase/flee/follow): tick ambient only
+                    try {
+                        AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                    } catch (Exception ignored) { }
+                } else if (pokemonEntity.getNavigation().isIdle()) {
+                    // Pick next behavior or wander slowly
+                    try {
+                        boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                        if (!handled) {
+                            NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
+                        }
+                    } catch (Exception ignored) { }
+                }
+
+                // Passive buffs still run for idle mons
                 try {
-                    AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
-                } catch (Exception ignored) { }
-            } else if (inActiveBehavior) {
-                // Moving behavior (chasing/fleeing/following): tick ambient only, NO BaseManager (it clears state)
-                try {
-                    AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                    BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
                 } catch (Exception ignored) { }
             } else {
-                // Normal: run jobs, navigation, stuck detection
+                // WORKING MON: normal job execution, no ambient behaviors
+                AmbientBehavior.INSTANCE.clearState(pokemonEntity.getPokemon().getUuid());
                 try {
                     BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
                 } catch (Exception e) {
@@ -166,21 +185,18 @@ public class PokemonPastureBlockEntityMixin {
                     NavigationHelper.INSTANCE.checkAndUnstick(pokemonEntity, blockPos);
                 } catch (Exception ignored) { }
 
-                // Ambient behavior: pick idle behavior or wander
+                // Working mons wander when nav is idle (between job cycles)
                 if (pokemonEntity.getNavigation().isIdle()) {
-                    try {
-                        boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
-                        if (!handled) {
-                            NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
-                        }
-                    } catch (Exception ignored) { }
+                    NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
                 }
             }
 
-            // Species-specific animations for ALL pastured Pokemon (every 15 seconds)
-            try {
-                AmbientBehavior.INSTANCE.tickSpecialAnimations(world, pokemonEntity);
-            } catch (Exception ignored) { }
+            // Species-specific idle animations (only for explicitly idle mons)
+            if (isExplicitlyIdle) {
+                try {
+                    AmbientBehavior.INSTANCE.tickSpecialAnimations(world, pokemonEntity);
+                } catch (Exception ignored) { }
+            }
         }
     }
 }

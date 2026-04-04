@@ -99,7 +99,18 @@ object AmbientBehavior {
      */
     fun shouldPreventMovement(pokemonId: UUID): Boolean {
         val state = currentState[pokemonId] ?: return false
-        return state == BehaviorState.SLEEPING || state == BehaviorState.SITTING || state == BehaviorState.SOCIALIZING || state == BehaviorState.STANDING || state == BehaviorState.CHILLING
+        // Only stop movement for stationary states (not chasing/fleeing/following)
+        return state == BehaviorState.SLEEPING || state == BehaviorState.SITTING ||
+               state == BehaviorState.SOCIALIZING || state == BehaviorState.STANDING ||
+               state == BehaviorState.CHILLING
+    }
+
+    /**
+     * Check if a Pokemon is in any active behavior (prevents state override).
+     */
+    fun isInActiveBehavior(pokemonId: UUID): Boolean {
+        val state = currentState[pokemonId] ?: return false
+        return state != BehaviorState.WANDERING
     }
 
     /**

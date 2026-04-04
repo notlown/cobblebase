@@ -4,6 +4,20 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [1.4.0] - 2026-04-05
+
+### Version Handshake System
+- **Server-enforced version check** — when a player joins, the client sends its Cobblebase version to the server
+- **Minimum version enforcement** — server kicks players running versions older than 1.3.0 with a clear error message
+- **Missing mod detection** — players without Cobblebase installed are kicked after a 5-second grace period
+- **Kick messages** — color-formatted disconnect messages with version info and Modrinth download link
+- Prevents exploits and desync from outdated clients
+
+### Bug Fixes
+- **Gatherer no longer deposits items into Pasture Blocks** — mods like CobBreeding add an Inventory to PokemonPastureBlockEntity (for egg slots), which caused the Gatherer to treat it as a storage container. Pasture Blocks are now explicitly excluded.
+
+---
+
 ## [1.3.0] - 2026-04-04
 
 ### Admin GUI — In-Game Species Skill Editor

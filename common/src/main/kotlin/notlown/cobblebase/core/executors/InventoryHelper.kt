@@ -7,6 +7,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
 
 /**
  * Shared helper for finding and inserting items into nearby containers.
@@ -124,8 +125,10 @@ object InventoryHelper {
                     // Check for any block entity that implements Inventory
                     // This supports vanilla chests/barrels AND modded containers
                     // (Iron Chests, Sophisticated Storage, etc.)
+                    // Exclude PokemonPastureBlockEntity — mods like CobBreeding add
+                    // Inventory to it (for eggs), but it's not a storage container.
                     val blockEntity = world.getBlockEntity(pos)
-                    if (blockEntity is Inventory) {
+                    if (blockEntity is Inventory && blockEntity !is PokemonPastureBlockEntity) {
                         result.add(pos.toImmutable())
                     }
                 }

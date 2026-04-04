@@ -5,6 +5,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.World
+import notlown.cobblebase.core.Cobblebase
 import java.util.UUID
 
 /**
@@ -59,7 +60,7 @@ object NavigationHelper {
     }
 
     fun navigateTo(pokemonEntity: PokemonEntity, targetPos: BlockPos, speed: Double = -1.0) {
-        val actualSpeed = if (speed < 0) getSpeciesSpeed(pokemonEntity) else speed.coerceAtMost(MAX_SPEED)
+        val actualSpeed = if (speed < 0) 1.0 else speed.coerceAtLeast(0.5)
         val world = pokemonEntity.world
         val now = world.time
         val id = pokemonEntity.pokemon.uuid
@@ -68,12 +69,15 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
-        pokemonEntity.navigation.startMovingTo(
+        val result = pokemonEntity.navigation.startMovingTo(
             targetPos.x + 0.5,
             targetPos.y.toDouble(),
             targetPos.z + 0.5,
             actualSpeed
         )
+        if (!result && now % 100 == 0L) {
+            Cobblebase.LOGGER.info("[Nav] ${pokemonEntity.pokemon.species.name} FAILED to navigate to $targetPos (speed=$actualSpeed)")
+        }
     }
 
     /**
@@ -110,12 +114,11 @@ object NavigationHelper {
         val targetZ = origin.z + dz
         val targetY = origin.y
 
-        val wanderSpeed = getSpeciesSpeed(pokemonEntity)
         pokemonEntity.navigation.startMovingTo(
             targetX + 0.5,
             targetY.toDouble(),
             targetZ + 0.5,
-            wanderSpeed
+            1.0
         )
     }
 }

@@ -34,7 +34,7 @@ object AmbientBehavior {
     // CobbleMotion top-level animations (triggerable via PlayPosableAnimationPacket)
     // Only includes animations registered in the poser's "animations" section, NOT namedAnimations
     private val SPECIES_ANIMATIONS = mapOf(
-        "grimmsnarl" to listOf("physical", "special", "status"),
+        "grimmsnarl" to listOf("physical", "special", "status", "taunt"),
         "serperior" to listOf("physical", "special", "leafstorm"),
         "gengar" to listOf("physical", "special", "status"),
         "lucario" to listOf("physical", "special", "status"),
@@ -45,11 +45,11 @@ object AmbientBehavior {
         "greninja" to listOf("physical", "special", "status"),
         "typhlosion" to listOf("eruption", "physical", "special", "status"),
         "kleavor" to listOf("physical", "special", "status"),
-        "primarina" to listOf("status"),
+        "primarina" to listOf("status", "sparklingaria"),
         "decidueye" to listOf("physical", "special", "spiritshackle", "status"),
-        "samurott" to listOf("physical", "special", "status"),
+        "samurott" to listOf("physical", "special", "status", "aquajet"),
         "tsareena" to listOf("physical", "special", "status"),
-        "quaquaval" to listOf("status"),
+        "quaquaval" to listOf("status", "aquastep"),
         "totodile" to listOf("physical", "status"),
         "cyndaquil" to listOf("physical", "special", "status"),
         "meganium" to listOf("physical", "special", "status"),
@@ -61,7 +61,7 @@ object AmbientBehavior {
         "accelgor" to listOf("status"),
         "escavalier" to listOf("physical", "status"),
         "politoed" to listOf("physical", "special", "status"),
-        "dewott" to listOf("status"),
+        "dewott" to listOf("status", "physical", "special"),
         "tyranitar" to listOf("physical", "special"),
         "sceptile" to listOf("physical", "special", "status"),
         "arboliva" to listOf("status"),
@@ -72,7 +72,7 @@ object AmbientBehavior {
         "zoroark_hisuian" to listOf("physical", "special", "status"),
         "typhlosion_hisuian" to listOf("physical", "special", "infernalparade", "status"),
         "decidueye_hisuian" to listOf("physical", "special", "triplearrows", "status"),
-        "samurott_hisuian" to listOf("physical", "special", "status"),
+        "samurott_hisuian" to listOf("physical", "special", "status", "aquajet"),
         "lilligant_hisuian" to listOf("physical", "special", "status")
     )
 

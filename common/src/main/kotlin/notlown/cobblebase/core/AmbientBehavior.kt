@@ -538,8 +538,11 @@ object AmbientBehavior {
             val nearbyMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { other ->
                 other != entity && other.isAlive && !other.pokemon.isWild()
             }
-            // Filter out mons already in an active behavior
-            val availableMons = nearbyMons.filter { !isInActiveBehavior(it.pokemon.uuid) }
+            // Filter: only interact with mons that are also explicitly Idle (no job) AND not in active behavior
+            val availableMons = nearbyMons.filter { other ->
+                !isInActiveBehavior(other.pokemon.uuid) &&
+                BaseManager.getAssignment(other.pokemon.uuid) == null
+            }
             if (availableMons.isNotEmpty()) {
                 val partner = availableMons[world.random.nextInt(availableMons.size)]
                 // Register partner's species name so chat messages work
@@ -566,6 +569,7 @@ object AmbientBehavior {
                     }
                     roll < 75 -> {
                         // Walk together side by side
+                        Cobblebase.LOGGER.info("[Ambient] WALK TOGETHER triggered for ${speciesNames[id]} + ${partner.pokemon.species.name}")
                         setState(id, BehaviorState.WALKING_TOGETHER, now)
                         setState(partner.pokemon.uuid, BehaviorState.WALKING_TOGETHER, now)
                         lastInteractionPartner[id] = partner.pokemon.uuid

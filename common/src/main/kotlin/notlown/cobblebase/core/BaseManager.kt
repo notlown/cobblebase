@@ -73,7 +73,7 @@ object BaseManager {
 
         val speciesData: SpeciesSkills? = SpeciesSkillRegistry.getSkills(speciesName)
         if (speciesData == null) {
-            if (now % 100 == 0L) Cobblebase.LOGGER.info("[BaseManager] $speciesName has NO species skills registered")
+            if (now % 100 == 0L) Cobblebase.log("[BaseManager] $speciesName has NO species skills registered")
             return
         }
 

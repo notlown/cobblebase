@@ -102,7 +102,7 @@ object HarvesterExecutor : SkillExecutor {
                 targetBlock.remove(pokemonId)
                 targetSetTime.remove(pokemonId)
                 lastHarvestTime[pokemonId] = now
-                Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} HARVESTED at $target")
+                Cobblebase.log("[Harvester] ${pokemonEntity.pokemon.species.name} HARVESTED at $target")
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
 
                 // Log harvested items

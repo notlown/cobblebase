@@ -15,6 +15,7 @@ object CobblebaseConfig {
     val jobSearchRadius get() = holder.general.jobSearchRadius
     val enableSafetyTeleport get() = holder.general.enableSafetyTeleport
     val safetyTeleportDistance get() = holder.general.safetyTeleportDistance
+    val enableConsoleLogging get() = holder.general.enableConsoleLogging
 
     // Cry
     val cryEnabled get() = holder.cry.cryEnabled

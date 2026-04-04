@@ -18,6 +18,10 @@
       "proficiency": 5
     },
     {
+      "skillId": "cobblebase:producer",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:resistance_boost",
       "proficiency": 4
     }

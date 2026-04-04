@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 1
     }
   ]
 }

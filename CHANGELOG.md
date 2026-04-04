@@ -4,6 +4,21 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [1.3.8] - 2026-04-05
+
+### Producer Job
+- New **"Producer"** job — Pokemon produce species-specific items passively based on their species
+- **~155 species** with unique products across 35+ item types
+- Products include: wool, string, milk, eggs, honeycomb, gold nuggets, diamonds, slime balls, charcoal, gunpowder, iron nuggets, blaze powder, ghast tears, rabbit's foot, redstone, cobblestone, feathers, bones, ink sacs, leather, clay, sand, mushrooms, pumpkins, and more
+- Works alongside proficiency system — higher prof = faster production
+- Removed Honey Collector (replaced by Producer for Combee/Vespiquen)
+
+### Bug Fixes
+- **Gatherer now respects `jobSearchRadius` config** — was hardcoded to 24 blocks, now uses the config value (capped at 24)
+- **Console logging toggle** — added `enableConsoleLogging` setting (default: off) to reduce server console spam. Startup/error logs always show.
+
+---
+
 ## [1.3.7] - 2026-04-05
 
 ### Config

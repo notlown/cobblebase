@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:irrigator",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 3
     }
   ]
 }

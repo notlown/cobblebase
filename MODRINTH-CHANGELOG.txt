@@ -1,0 +1,30 @@
+# v1.3.7 — Multiplayer & Quality of Life Update
+
+## 🔄 Multiplayer
+- Skill assignments now sync across all players in real-time
+- GUI shows correct job state for all players, not just the one who assigned
+- Assignment state fetched from server when opening GUI
+
+## 📦 Gatherer
+- Gatherer respects Pasture Block ownership — no more item stealing between bases
+- Fixed Gatherer depositing items into Pasture Blocks (CobBreeding compatibility)
+- Support for ALL modded containers (Iron Chests, Sophisticated Storage, etc.)
+
+## 🔒 Security
+- Version handshake — server enforces minimum client version
+- Kicks outdated or missing clients with download link
+
+## ⚙️ Config
+- `enableSafetyTeleport` — toggle to disable safety teleport
+- `safetyTeleportDistance` — configurable 10-100 blocks (default 30)
+- `jobSearchRadius` — renamed from "Default Search Radius" with tooltip
+- All new settings include descriptive tooltips
+
+## 🎨 UI
+- "Idle" renamed to "Relax"
+- Removed chat spam from ambient behaviors
+
+## 🐛 Bug Fixes
+- Fixed ambient walk-together leader/follower system
+- Fixed ambient chase/flee duration and speed
+- Fixed ambient social range and partner recognition

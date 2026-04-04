@@ -1,0 +1,318 @@
+package notlown.cobblebase.core.executors
+
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
+import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
+import notlown.cobblebase.core.CobblebaseConfig
+import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.SkillEntry
+import notlown.cobblebase.core.SkillExecutor
+import notlown.cobblebase.core.effects.SkillEffects
+import java.util.UUID
+
+/**
+ * Producer executor — species-specific passive item production.
+ * Each Pokemon species produces a unique item based on its lore.
+ * If the species is not in the produce map, the executor silently skips.
+ */
+object ProducerExecutor : SkillExecutor {
+
+    private val lastProduceTime = mutableMapOf<UUID, Long>()
+
+    data class ProduceEntry(
+        val itemId: String,
+        val count: Int,
+        val displayName: String
+    )
+
+    private val produceMap: Map<String, ProduceEntry> = mapOf(
+        // Textiles & Fibers
+        "wooloo" to ProduceEntry("white_wool", 1, "White Wool"),
+        "dubwool" to ProduceEntry("white_wool", 2, "White Wool"),
+        "mareep" to ProduceEntry("white_wool", 1, "White Wool"),
+        "flaaffy" to ProduceEntry("white_wool", 1, "White Wool"),
+        "cottonee" to ProduceEntry("string", 2, "String"),
+        "whimsicott" to ProduceEntry("string", 3, "String"),
+        "spinarak" to ProduceEntry("string", 2, "String"),
+        "ariados" to ProduceEntry("string", 3, "String"),
+        "joltik" to ProduceEntry("string", 1, "String"),
+        "galvantula" to ProduceEntry("string", 2, "String"),
+        "sewaddle" to ProduceEntry("string", 1, "String"),
+        "leavanny" to ProduceEntry("string", 2, "String"),
+        "snom" to ProduceEntry("string", 1, "String"),
+        "frosmoth" to ProduceEntry("string", 2, "String"),
+
+        // Animal Products
+        "miltank" to ProduceEntry("milk_bucket", 1, "Milk Bucket"),
+        "gogoat" to ProduceEntry("milk_bucket", 1, "Milk Bucket"),
+        "skiddo" to ProduceEntry("milk_bucket", 1, "Milk Bucket"),
+        "chansey" to ProduceEntry("egg", 1, "Egg"),
+        "blissey" to ProduceEntry("egg", 2, "Egg"),
+        "happiny" to ProduceEntry("egg", 1, "Egg"),
+        "exeggcute" to ProduceEntry("egg", 1, "Egg"),
+        "torchic" to ProduceEntry("egg", 1, "Egg"),
+        "blaziken" to ProduceEntry("egg", 1, "Egg"),
+        "combee" to ProduceEntry("honeycomb", 1, "Honeycomb"),
+        "vespiquen" to ProduceEntry("honeycomb", 2, "Honeycomb"),
+        "ribombee" to ProduceEntry("honey_bottle", 1, "Honey Bottle"),
+        "cutiefly" to ProduceEntry("honey_bottle", 1, "Honey Bottle"),
+
+        // Valuables
+        "meowth" to ProduceEntry("gold_nugget", 1, "Gold Nugget"),
+        "persian" to ProduceEntry("gold_nugget", 2, "Gold Nugget"),
+        "perrserker" to ProduceEntry("gold_nugget", 2, "Gold Nugget"),
+        "gholdengo" to ProduceEntry("gold_nugget", 3, "Gold Nugget"),
+        "gimmighoul" to ProduceEntry("gold_nugget", 1, "Gold Nugget"),
+        "sableye" to ProduceEntry("amethyst_shard", 1, "Amethyst Shard"),
+        "carbink" to ProduceEntry("diamond", 1, "Diamond"),
+        "diancie" to ProduceEntry("diamond", 1, "Diamond"),
+        "clamperl" to ProduceEntry("prismarine_shard", 2, "Prismarine Shard"),
+
+        // Food
+        "tropius" to ProduceEntry("apple", 2, "Apple"),
+        "applin" to ProduceEntry("apple", 1, "Apple"),
+        "flapple" to ProduceEntry("apple", 2, "Apple"),
+        "appletun" to ProduceEntry("apple", 2, "Apple"),
+        "bounsweet" to ProduceEntry("sweet_berries", 2, "Sweet Berries"),
+        "steenee" to ProduceEntry("sweet_berries", 2, "Sweet Berries"),
+        "tsareena" to ProduceEntry("sweet_berries", 3, "Sweet Berries"),
+        "cherubi" to ProduceEntry("sweet_berries", 1, "Sweet Berries"),
+        "cherrim" to ProduceEntry("sweet_berries", 2, "Sweet Berries"),
+        "delibird" to ProduceEntry("cookie", 2, "Cookie"),
+
+        // Materials
+        "goomy" to ProduceEntry("slime_ball", 1, "Slime Ball"),
+        "sliggoo" to ProduceEntry("slime_ball", 2, "Slime Ball"),
+        "goodra" to ProduceEntry("slime_ball", 3, "Slime Ball"),
+        "slugma" to ProduceEntry("magma_cream", 1, "Magma Cream"),
+        "magcargo" to ProduceEntry("magma_cream", 2, "Magma Cream"),
+        "torkoal" to ProduceEntry("charcoal", 2, "Charcoal"),
+        "coalossal" to ProduceEntry("charcoal", 3, "Charcoal"),
+        "rolycoly" to ProduceEntry("charcoal", 1, "Charcoal"),
+        "carkol" to ProduceEntry("charcoal", 2, "Charcoal"),
+        "koffing" to ProduceEntry("gunpowder", 1, "Gunpowder"),
+        "weezing" to ProduceEntry("gunpowder", 2, "Gunpowder"),
+        "voltorb" to ProduceEntry("gunpowder", 1, "Gunpowder"),
+        "electrode" to ProduceEntry("gunpowder", 2, "Gunpowder"),
+        "magnemite" to ProduceEntry("iron_nugget", 1, "Iron Nugget"),
+        "magneton" to ProduceEntry("iron_nugget", 2, "Iron Nugget"),
+        "magnezone" to ProduceEntry("iron_nugget", 3, "Iron Nugget"),
+
+        // Ink
+        "octillery" to ProduceEntry("ink_sac", 2, "Ink Sac"),
+        "inkay" to ProduceEntry("ink_sac", 1, "Ink Sac"),
+        "malamar" to ProduceEntry("ink_sac", 2, "Ink Sac"),
+        "tentacool" to ProduceEntry("ink_sac", 1, "Ink Sac"),
+        "tentacruel" to ProduceEntry("ink_sac", 2, "Ink Sac"),
+
+        // Bones & Feathers
+        "cubone" to ProduceEntry("bone", 1, "Bone"),
+        "marowak" to ProduceEntry("bone", 2, "Bone"),
+        "mandibuzz" to ProduceEntry("bone", 1, "Bone"),
+        "vullaby" to ProduceEntry("bone", 1, "Bone"),
+        "pidgeot" to ProduceEntry("feather", 2, "Feather"),
+        "staraptor" to ProduceEntry("feather", 2, "Feather"),
+        "ho-oh" to ProduceEntry("feather", 1, "Feather"),
+
+        // Energy
+        "pikachu" to ProduceEntry("glowstone_dust", 1, "Glowstone Dust"),
+        "raichu" to ProduceEntry("glowstone_dust", 2, "Glowstone Dust"),
+        "jolteon" to ProduceEntry("glowstone_dust", 2, "Glowstone Dust"),
+        "luxray" to ProduceEntry("glowstone_dust", 2, "Glowstone Dust"),
+
+        // Slime (additional)
+        "ditto" to ProduceEntry("slime_ball", 2, "Slime Ball"),
+        "grimer" to ProduceEntry("slime_ball", 1, "Slime Ball"),
+        "muk" to ProduceEntry("slime_ball", 2, "Slime Ball"),
+
+        // Shells & Sea
+        "shellder" to ProduceEntry("prismarine_shard", 1, "Prismarine Shard"),
+        "cloyster" to ProduceEntry("prismarine_shard", 2, "Prismarine Shard"),
+        "corsola" to ProduceEntry("prismarine_shard", 1, "Prismarine Shard"),
+        "krabby" to ProduceEntry("nautilus_shell", 1, "Nautilus Shell"),
+        "kingler" to ProduceEntry("nautilus_shell", 1, "Nautilus Shell"),
+        "crabrawler" to ProduceEntry("nautilus_shell", 1, "Nautilus Shell"),
+        "crabominable" to ProduceEntry("nautilus_shell", 1, "Nautilus Shell"),
+
+        // Stink & Gas
+        "stunky" to ProduceEntry("gunpowder", 1, "Gunpowder"),
+        "skuntank" to ProduceEntry("gunpowder", 2, "Gunpowder"),
+
+        // Leather
+        "tauros" to ProduceEntry("leather", 2, "Leather"),
+        "bouffalant" to ProduceEntry("leather", 2, "Leather"),
+
+        // Clay & Earth
+        "mudbray" to ProduceEntry("clay_ball", 2, "Clay Ball"),
+        "mudsdale" to ProduceEntry("clay_ball", 3, "Clay Ball"),
+        "sandygast" to ProduceEntry("sand", 2, "Sand"),
+        "palossand" to ProduceEntry("sand", 3, "Sand"),
+
+        // Wood & Sticks
+        "phantump" to ProduceEntry("stick", 2, "Stick"),
+        "trevenant" to ProduceEntry("stick", 3, "Stick"),
+        "sudowoodo" to ProduceEntry("stick", 2, "Stick"),
+
+        // Snow & Ice
+        "snover" to ProduceEntry("snowball", 2, "Snowball"),
+        "abomasnow" to ProduceEntry("snowball", 3, "Snowball"),
+        "vanillite" to ProduceEntry("snowball", 1, "Snowball"),
+        "vanillish" to ProduceEntry("snowball", 2, "Snowball"),
+        "vanilluxe" to ProduceEntry("snowball", 3, "Snowball"),
+
+        // Pumpkin & Mushroom
+        "pumpkaboo" to ProduceEntry("pumpkin", 1, "Pumpkin"),
+        "gourgeist" to ProduceEntry("pumpkin", 1, "Pumpkin"),
+        "foongus" to ProduceEntry("brown_mushroom", 1, "Brown Mushroom"),
+        "amoonguss" to ProduceEntry("brown_mushroom", 2, "Brown Mushroom"),
+        "oddish" to ProduceEntry("red_mushroom", 1, "Red Mushroom"),
+        "gloom" to ProduceEntry("red_mushroom", 1, "Red Mushroom"),
+        "vileplume" to ProduceEntry("red_mushroom", 2, "Red Mushroom"),
+
+        // Fire
+        "arcanine" to ProduceEntry("blaze_powder", 1, "Blaze Powder"),
+
+        // Candle
+        "litwick" to ProduceEntry("candle", 1, "Candle"),
+        "lampent" to ProduceEntry("candle", 2, "Candle"),
+        "chandelure" to ProduceEntry("candle", 2, "Candle"),
+
+        // Brewing Ingredients
+        "salandit" to ProduceEntry("spider_eye", 1, "Spider Eye"),
+        "salazzle" to ProduceEntry("spider_eye", 2, "Spider Eye"),
+        "skorupi" to ProduceEntry("spider_eye", 1, "Spider Eye"),
+        "drapion" to ProduceEntry("spider_eye", 2, "Spider Eye"),
+        "litleo" to ProduceEntry("blaze_powder", 1, "Blaze Powder"),
+        "pyroar" to ProduceEntry("blaze_powder", 2, "Blaze Powder"),
+        "ponyta" to ProduceEntry("blaze_powder", 1, "Blaze Powder"),
+        "rapidash" to ProduceEntry("blaze_powder", 1, "Blaze Powder"),
+        "buneary" to ProduceEntry("rabbit_foot", 1, "Rabbit's Foot"),
+        "lopunny" to ProduceEntry("rabbit_foot", 1, "Rabbit's Foot"),
+        "bunnelby" to ProduceEntry("rabbit_foot", 1, "Rabbit's Foot"),
+        "diggersby" to ProduceEntry("rabbit_foot", 1, "Rabbit's Foot"),
+        "scorbunny" to ProduceEntry("rabbit_foot", 1, "Rabbit's Foot"),
+        "raboot" to ProduceEntry("rabbit_foot", 1, "Rabbit's Foot"),
+        "drifloon" to ProduceEntry("phantom_membrane", 1, "Phantom Membrane"),
+        "drifblim" to ProduceEntry("phantom_membrane", 1, "Phantom Membrane"),
+        "gastly" to ProduceEntry("ghast_tear", 1, "Ghast Tear"),
+        "haunter" to ProduceEntry("ghast_tear", 1, "Ghast Tear"),
+        "gengar" to ProduceEntry("ghast_tear", 1, "Ghast Tear"),
+
+        // Plants & Nature
+        "bulbasaur" to ProduceEntry("lead", 1, "Lead"),
+        "ivysaur" to ProduceEntry("lead", 1, "Lead"),
+        "venusaur" to ProduceEntry("lead", 2, "Lead"),
+        "tangela" to ProduceEntry("lead", 1, "Lead"),
+        "tangrowth" to ProduceEntry("lead", 2, "Lead"),
+        "bellsprout" to ProduceEntry("kelp", 2, "Kelp"),
+        "weepinbell" to ProduceEntry("kelp", 2, "Kelp"),
+        "roselia" to ProduceEntry("poppy", 1, "Poppy"),
+        "roserade" to ProduceEntry("poppy", 2, "Poppy"),
+        "sunkern" to ProduceEntry("sunflower", 1, "Sunflower"),
+        "sunflora" to ProduceEntry("sunflower", 2, "Sunflower"),
+        "cacnea" to ProduceEntry("cactus", 1, "Cactus"),
+        "cacturne" to ProduceEntry("cactus", 2, "Cactus"),
+        "petilil" to ProduceEntry("lily_of_the_valley", 1, "Lily of the Valley"),
+        "lilligant" to ProduceEntry("lily_of_the_valley", 2, "Lily of the Valley"),
+
+        // Redstone & Tech
+        "rotom" to ProduceEntry("redstone", 2, "Redstone"),
+        "elekid" to ProduceEntry("redstone", 1, "Redstone"),
+        "electabuzz" to ProduceEntry("redstone", 2, "Redstone"),
+        "electivire" to ProduceEntry("redstone", 3, "Redstone"),
+        "beldum" to ProduceEntry("iron_nugget", 1, "Iron Nugget"),
+        "metang" to ProduceEntry("iron_nugget", 2, "Iron Nugget"),
+        "metagross" to ProduceEntry("iron_nugget", 3, "Iron Nugget"),
+        "aron" to ProduceEntry("iron_nugget", 1, "Iron Nugget"),
+        "lairon" to ProduceEntry("iron_nugget", 2, "Iron Nugget"),
+        "aggron" to ProduceEntry("iron_nugget", 3, "Iron Nugget"),
+        "bronzor" to ProduceEntry("raw_copper", 1, "Raw Copper"),
+        "bronzong" to ProduceEntry("raw_copper", 2, "Raw Copper"),
+
+        // Gems & Crystals
+        "staryu" to ProduceEntry("prismarine_crystals", 1, "Prismarine Crystals"),
+        "starmie" to ProduceEntry("prismarine_crystals", 2, "Prismarine Crystals"),
+        "espeon" to ProduceEntry("amethyst_shard", 1, "Amethyst Shard"),
+        "minior" to ProduceEntry("amethyst_shard", 2, "Amethyst Shard"),
+
+        // Souls & Dark
+        "absol" to ProduceEntry("echo_shard", 1, "Echo Shard"),
+        "duskull" to ProduceEntry("soul_sand", 1, "Soul Sand"),
+        "dusclops" to ProduceEntry("soul_sand", 1, "Soul Sand"),
+        "dusknoir" to ProduceEntry("soul_sand", 2, "Soul Sand"),
+        "yamask" to ProduceEntry("gold_nugget", 1, "Gold Nugget"),
+        "cofagrigus" to ProduceEntry("gold_nugget", 2, "Gold Nugget"),
+
+        // Sea & Water
+        "dhelmise" to ProduceEntry("kelp", 2, "Kelp"),
+        "binacle" to ProduceEntry("clay_ball", 1, "Clay Ball"),
+        "barbaracle" to ProduceEntry("clay_ball", 2, "Clay Ball"),
+
+        // Stone & Metal
+        "geodude" to ProduceEntry("cobblestone", 1, "Cobblestone"),
+        "graveler" to ProduceEntry("cobblestone", 2, "Cobblestone"),
+        "golem" to ProduceEntry("cobblestone", 3, "Cobblestone"),
+        "onix" to ProduceEntry("iron_nugget", 1, "Iron Nugget"),
+        "steelix" to ProduceEntry("iron_nugget", 3, "Iron Nugget"),
+        "skarmory" to ProduceEntry("iron_nugget", 2, "Iron Nugget"),
+
+        // Special
+        "shuckle" to ProduceEntry("fermented_spider_eye", 1, "Fermented Spider Eye"),
+        "lapras" to ProduceEntry("blue_ice", 1, "Blue Ice"),
+        "swinub" to ProduceEntry("snowball", 2, "Snowball"),
+        "piloswine" to ProduceEntry("snowball", 3, "Snowball")
+    )
+
+    override fun tick(
+        world: World,
+        origin: BlockPos,
+        pokemonEntity: PokemonEntity,
+        skill: SkillDef,
+        skillEntry: SkillEntry
+    ) {
+        if (world !is ServerWorld) return
+
+        val speciesName = pokemonEntity.pokemon.species.name.lowercase()
+        val entry = produceMap[speciesName] ?: return
+
+        val pokemonId = pokemonEntity.pokemon.uuid
+        val now = world.time
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+
+        // Cooldown check
+        val lastTime = lastProduceTime[pokemonId] ?: 0L
+        if (now - lastTime < cooldownTicks) {
+            if (world.time % 20 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            return
+        }
+
+        // Create the item stack
+        val item = Registries.ITEM.get(Identifier.of("minecraft", entry.itemId))
+        val stack = ItemStack(item, entry.count)
+
+        if (stack.isEmpty) return
+
+        // Update cooldown
+        lastProduceTime[pokemonId] = now
+
+        // Drop items with pasture origin tagging
+        InventoryHelper.dropItems(world, pokemonEntity.blockPos, listOf(stack), origin)
+
+        // Play success effect
+        SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+
+        // Log production
+        LogManager.log(
+            origin, world.time,
+            pokemonEntity.pokemon.species.name,
+            skill.name,
+            "${entry.displayName} x${entry.count}",
+            LogManager.Rarity.COMMON
+        )
+    }
+}

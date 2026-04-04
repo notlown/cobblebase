@@ -2,11 +2,15 @@
   "species": "luxray",
   "skills": [
     {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:furnace_fuel",
+      "skillId": "cobblebase:producer",
       "proficiency": 3
     }
   ]

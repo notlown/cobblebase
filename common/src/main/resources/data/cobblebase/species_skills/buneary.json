@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:jump_boost",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 1
     }
   ]
 }

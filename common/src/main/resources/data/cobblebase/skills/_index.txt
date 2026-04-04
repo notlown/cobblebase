@@ -23,7 +23,7 @@ guard.json
 harvester.json
 haste_boost.json
 healer.json
-honey_collect.json
+producer.json
 irrigator.json
 jump_boost.json
 lava_fill.json

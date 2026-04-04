@@ -2,6 +2,10 @@
   "species": "spinarak",
   "skills": [
     {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 1
     },
@@ -10,8 +14,8 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:finder_hea",
-      "proficiency": 1
+      "skillId": "cobblebase:producer",
+      "proficiency": 2
     }
   ]
 }

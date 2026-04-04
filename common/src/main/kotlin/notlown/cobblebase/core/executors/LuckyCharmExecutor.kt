@@ -101,7 +101,7 @@ object LuckyCharmExecutor : SkillExecutor {
                     player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 0.8f, 1.8f)
                 }
 
-                Cobblebase.LOGGER.info("[LuckyCharm] ${pokemonEntity.pokemon.species.name} turned wild $speciesName shiny! (prof=$prof, mult=${shinyMultiplier}x)")
+                Cobblebase.log("[LuckyCharm] ${pokemonEntity.pokemon.species.name} turned wild $speciesName shiny! (prof=$prof, mult=${shinyMultiplier}x)")
             }
         }
 

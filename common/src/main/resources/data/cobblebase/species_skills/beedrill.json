@@ -20,10 +20,6 @@
     {
       "skillId": "cobblebase:harvester",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:honey_collect",
-      "proficiency": 4
     }
   ]
 }

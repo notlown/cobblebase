@@ -10,7 +10,7 @@ object VersionChecker {
     const val MINIMUM_VERSION = "1.3.0"
 
     // TODO: Read from build config instead of hardcoding
-    const val MOD_VERSION = "1.3.7"
+    const val MOD_VERSION = "1.3.8"
 
     private val handshakes = ConcurrentHashMap<UUID, String>()
 

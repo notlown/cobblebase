@@ -71,7 +71,7 @@ object MentorExecutor : SkillExecutor {
         }
 
         if (now % 200 == 0L) {
-            Cobblebase.LOGGER.info(
+            Cobblebase.log(
                 "[Mentor] ${pokemonEntity.pokemon.species.name} active at $origin (prof=$proficiency, boost=${getXpMultiplier(origin)}x)"
             )
         }

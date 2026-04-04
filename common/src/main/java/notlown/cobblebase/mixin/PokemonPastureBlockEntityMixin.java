@@ -36,7 +36,6 @@ public class PokemonPastureBlockEntityMixin {
         if (world == null || world.isClient) return;
 
         Map<UUID, Vec3d> waterPositions = new HashMap<>();
-        Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] checkPokemon HEAD firing");
         for (PokemonPastureBlockEntity.Tethering tethering : self.getTetheredPokemon()) {
             if (tethering == null) continue;
             try {
@@ -69,7 +68,6 @@ public class PokemonPastureBlockEntityMixin {
         if (world == null || world.isClient) return;
 
         Map<UUID, Vec3d> saved = cobblebase$savedWaterPositions;
-        Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] checkPokemon TAIL firing, saved {} water positions", saved != null ? saved.size() : 0);
         if (saved == null || saved.isEmpty()) return;
 
         for (PokemonPastureBlockEntity.Tethering tethering : self.getTetheredPokemon()) {
@@ -87,7 +85,6 @@ public class PokemonPastureBlockEntityMixin {
                     if (moved > 1.0) {
                         // Was teleported — restore position
                         entity.refreshPositionAndAngles(savedPos.x, savedPos.y, savedPos.z, entity.getYaw(), entity.getPitch());
-                        Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] RESTORED {} from teleport (moved {})", pokemon.getSpecies().getName(), String.format("%.1f", moved));
                     }
                 }
             } catch (Exception ignored) { }
@@ -102,7 +99,6 @@ public class PokemonPastureBlockEntityMixin {
 
         // Debug log every 5 seconds
         if (world.getTime() % 100 == 0) {
-            Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] Mixin tick at {} | tethered: {}", blockPos, pastureBlock.getTetheredPokemon().size());
         }
 
         List<PokemonPastureBlockEntity.Tethering> tetheredPokemon = pastureBlock.getTetheredPokemon();
@@ -113,26 +109,21 @@ public class PokemonPastureBlockEntityMixin {
             try {
                 pokemon = tethering.getPokemon();
             } catch (Exception e) {
-                if (world.getTime() % 100 == 0) Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] getPokemon() failed: {}", e.getMessage());
                 continue;
             }
 
             if (pokemon == null) {
-                if (world.getTime() % 100 == 0) Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] pokemon is null");
                 continue;
             }
             if (pokemon.isFainted()) {
-                if (world.getTime() % 100 == 0) Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] {} is fainted", pokemon.getSpecies().getName());
                 continue;
             }
 
             PokemonEntity pokemonEntity = pokemon.getEntity();
             if (pokemonEntity == null) {
-                if (world.getTime() % 100 == 0) Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] {} entity is NULL (not spawned in world)", pokemon.getSpecies().getName());
                 continue;
             }
 
-            if (world.getTime() % 100 == 0) Cobblebase.INSTANCE.getLOGGER().info("[Cobblebase] Ticking {} at {}", pokemon.getSpecies().getName(), pokemonEntity.getBlockPos());
 
             // Passive XP for all pastured Pokemon (even sleeping)
             try {

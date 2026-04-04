@@ -86,9 +86,7 @@ object HealerExecutor : SkillExecutor {
 
         val allPlayers = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
         if (now % 100 == 0L) {
-            Cobblebase.LOGGER.info("[Healer] ${pokemonEntity.pokemon.species.name} searching... players=${allPlayers.size}")
             for (p in allPlayers) {
-                Cobblebase.LOGGER.info("[Healer]   ${p.name.string}: hp=${p.health}/${p.maxHealth} needsHeal=${playerNeedsHealing(p)}")
             }
         }
 
@@ -122,7 +120,6 @@ object HealerExecutor : SkillExecutor {
                     ticksRemaining = 3,
                     nextPulseTick = now
                 )
-                Cobblebase.LOGGER.info("[Healer] ${pokemonEntity.pokemon.species.name} starting heal on ${target.name.string} (${monsToHeal.size} mons)")
             }
         }
     }

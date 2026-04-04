@@ -175,7 +175,6 @@ object RecruiterExecutor : SkillExecutor {
         val common = (100.0 - total).coerceAtLeast(0.0)
 
         val roll = world.random.nextDouble() * 100.0
-        Cobblebase.LOGGER.info("[Recruiter] Roll: ${"%.2f".format(roll)} (UR<${"%.2f".format(ultraRare)} R<${"%.2f".format(ultraRare+rare)} UC<${"%.2f".format(ultraRare+rare+uncommon)} C=rest) prof=$proficiency")
 
         return when {
             roll < ultraRare -> SpawnData.Bucket.ULTRA_RARE

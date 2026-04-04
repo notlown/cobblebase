@@ -4,12 +4,72 @@
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "minecraft:stone_bricks", "weight": 10, "functions": [{ "function": "set_count", "count": 16 }] },
-        { "type": "minecraft:item", "name": "minecraft:bricks", "weight": 10, "functions": [{ "function": "set_count", "count": 16 }] },
-        { "type": "minecraft:item", "name": "minecraft:terracotta", "weight": 8, "functions": [{ "function": "set_count", "count": 8 }] },
-        { "type": "minecraft:item", "name": "minecraft:quartz_block", "weight": 7, "functions": [{ "function": "set_count", "count": 8 }] },
-        { "type": "minecraft:item", "name": "minecraft:dark_oak_planks", "weight": 8, "functions": [{ "function": "set_count", "count": 16 }] },
-        { "type": "minecraft:item", "name": "minecraft:spruce_planks", "weight": 8, "functions": [{ "function": "set_count", "count": 16 }] }
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:stone_bricks",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 8
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:bricks",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 8
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:terracotta",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:quartz_block",
+          "weight": 7,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:dark_oak_planks",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 8
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:spruce_planks",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 8
+            }
+          ]
+        }
       ]
     }
   ]

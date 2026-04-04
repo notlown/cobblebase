@@ -4,15 +4,78 @@
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "cobblemon:oran_berry", "weight": 6, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 3 } }] },
-        { "type": "minecraft:item", "name": "cobblemon:sitrus_berry", "weight": 6 },
-        { "type": "minecraft:item", "name": "cobblemon:pecha_berry", "weight": 5 },
-        { "type": "minecraft:item", "name": "cobblemon:cheri_berry", "weight": 5 },
-        { "type": "minecraft:item", "name": "cobblemon:rawst_berry", "weight": 5 },
-        { "type": "minecraft:item", "name": "cobblemon:leppa_berry", "weight": 5 },
-        { "type": "minecraft:item", "name": "minecraft:sweet_berries", "weight": 8, "functions": [{ "function": "set_count", "count": 4 }] },
-        { "type": "minecraft:item", "name": "minecraft:glow_berries", "weight": 6, "functions": [{ "function": "set_count", "count": 4 }] },
-        { "type": "minecraft:item", "name": "minecraft:nether_wart", "weight": 5, "functions": [{ "function": "set_count", "count": 3 }] }
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:oran_berry",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:sitrus_berry",
+          "weight": 6
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:pecha_berry",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:cheri_berry",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:rawst_berry",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:leppa_berry",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:sweet_berries",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:glow_berries",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:nether_wart",
+          "weight": 5,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 2
+            }
+          ]
+        }
       ]
     }
   ]

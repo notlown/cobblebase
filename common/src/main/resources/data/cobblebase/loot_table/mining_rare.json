@@ -4,23 +4,91 @@
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "minecraft:diamond", "weight": 5 },
-        { "type": "minecraft:item", "name": "minecraft:emerald", "weight": 5, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 2 } }] },
-        { "type": "minecraft:item", "name": "minecraft:amethyst_shard", "weight": 8, "functions": [{ "function": "set_count", "count": { "min": 2, "max": 4 } }] },
-        { "type": "minecraft:item", "name": "cobblemon:helix_fossil", "weight": 3 },
-        { "type": "minecraft:item", "name": "cobblemon:dome_fossil", "weight": 3 },
-        { "type": "minecraft:item", "name": "cobblemon:old_amber", "weight": 3 },
-        { "type": "minecraft:item", "name": "cobblemon:root_fossil", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:claw_fossil", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:skull_fossil", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:armor_fossil", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:cover_fossil", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:plume_fossil", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:jaw_fossil", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:sail_fossil", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:dragon_gem", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:dark_gem", "weight": 2 },
-        { "type": "minecraft:item", "name": "cobblemon:psychic_gem", "weight": 2 }
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:emerald",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:amethyst_shard",
+          "weight": 8
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:helix_fossil",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:dome_fossil",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:old_amber",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:root_fossil",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:claw_fossil",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:skull_fossil",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:armor_fossil",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:cover_fossil",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:plume_fossil",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:jaw_fossil",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:sail_fossil",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:dragon_gem",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:dark_gem",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:psychic_gem",
+          "weight": 2
+        }
       ]
     }
   ]

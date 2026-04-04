@@ -406,11 +406,13 @@ object ScoutExecutor : SkillExecutor {
 
                     notifyNearbyPlayers(world, pokemonEntity, message)
 
-                    // Extra ding for ultra rare
-                    val nearbyPlayers = world.getEntitiesByClass(
-                        ServerPlayerEntity::class.java,
-                        Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)
-                    ) { true }
+                    // Extra ding for owner only
+                    val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
+                    val nearbyPlayers = if (ownerUuid != null) {
+                        world.players.filter { it.uuid == ownerUuid }
+                    } else {
+                        world.getEntitiesByClass(ServerPlayerEntity::class.java, Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)) { true }
+                    }
                     for (player in nearbyPlayers) {
                         player.playSound(
                             net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP,
@@ -462,11 +464,13 @@ object ScoutExecutor : SkillExecutor {
     }
 
     private fun notifyNearbyPlayers(world: ServerWorld, pokemonEntity: PokemonEntity, message: Text) {
-        val nearbyPlayers = world.getEntitiesByClass(
-            ServerPlayerEntity::class.java,
-            Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)
-        ) { true }
-        for (player in nearbyPlayers) {
+        val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
+        val players = if (ownerUuid != null) {
+            world.players.filter { it.uuid == ownerUuid }
+        } else {
+            world.getEntitiesByClass(ServerPlayerEntity::class.java, Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)) { true }
+        }
+        for (player in players) {
             player.sendMessage(message, false)
         }
     }

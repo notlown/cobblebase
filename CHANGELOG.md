@@ -54,6 +54,17 @@ Skills auto-assigned by typing, base stats, and BST tiers:
 - **Idle wandering** — All mons now wander randomly (15 block radius) when idle instead of standing still on the pasture box
 - **Natural species speed** — Mons use their Cobblemon walkSpeed (capped at 0.4) instead of hardcoded values
 - **Item dupe glitch fixed** — Gatherer now claims items immediately on targeting (sets pickupDelay to prevent simultaneous player pickup)
+- **Cry sound cooldown** — Max 1 cry per 60 seconds per Pokemon (prevents constant noise)
+- **Default cry volume lowered** — 80 → 30
+- **In-GUI mute button** — 🔊/🔇 toggle in top-right corner of Cobblebase screen
+- **"Auto" renamed to "Idle"** — clearer labeling for the do-nothing option
+- **Diving job removed** — removed from all 1,240 species (will return improved in future update)
+- **Growth Aura nerfed** — pulse interval 3s → 30s, crops per pulse 2-16 → 1-3
+- **Honey loot reduced** — 40% 1 comb, 15% 2 combs (was 1-6)
+- **Legendary Recruiter cooldown** — 300s → 540s (Prof 1: 15 min, Prof 5: 3 min)
+- **Fishing water block cache** — cached per pasture, refreshed every 5 min (no more O(n³) scan)
+- **Failed deposit tracking** — Fishing skips full chests, walks to chest before depositing
+- **Dev mode removed** — no longer accessible in settings
 
 **Total species: 8,426**
 

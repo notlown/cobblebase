@@ -4,7 +4,7 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
-## [1.4.0] - 2026-04-05
+## [1.3.6] - 2026-04-05
 
 ### Version Handshake System
 - **Server-enforced version check** — when a player joins, the client sends its Cobblebase version to the server

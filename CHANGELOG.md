@@ -4,7 +4,7 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
-## [1.3.0] - Unreleased
+## [1.3.0] - 2026-04-04
 
 ### Admin GUI — In-Game Species Skill Editor
 - **`/cobblebase admin`** command opens a two-pane admin screen (OP level 2 required)

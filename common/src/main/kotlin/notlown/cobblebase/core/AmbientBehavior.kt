@@ -25,11 +25,68 @@ object AmbientBehavior {
     // Timing constants
     private const val IDLE_STAND_MIN = 100L   // 5 seconds minimum standing still
     private const val IDLE_STAND_MAX = 400L   // 20 seconds max before next behavior
-    private const val SLEEP_CHECK_INTERVAL = 200L
     private const val SOCIAL_RANGE = 6.0      // blocks — how close mons need to be to interact
     private const val SOCIAL_CHANCE = 15       // percent chance per check to start social interaction
     private const val SIT_CHANCE = 20          // percent chance to sit instead of wander
     private const val LOOK_AROUND_CHANCE = 30  // percent chance to play look-around animation
+    private const val SPECIAL_ANIM_CHANCE = 25 // percent chance to play a special animation (attack, emote)
+
+    // CobbleMotion-compatible special animations per species (attacks, emotes, taunts)
+    private val SPECIES_ANIMATIONS = mapOf(
+        "grimmsnarl" to listOf("taunt", "attack", "flare", "battle_cry"),
+        "serperior" to listOf("leafstorm", "physical", "special", "looking_back"),
+        "garchomp" to listOf("physical", "special", "battle_cry", "battle_intro"),
+        "gengar" to listOf("special", "battle_cry"),
+        "lucario" to listOf("physical", "special", "aura_eyes"),
+        "scizor" to listOf("battle_cry", "hold_item"),
+        "incineroar" to listOf("darkestlariat", "battle_cry", "look_quirk", "belt_quirk"),
+        "emboar" to listOf("heatcrash", "look_quirk", "sniff_quirk", "battle_quirk"),
+        "meowscarada" to listOf("flowertrick", "battlepose"),
+        "greninja" to listOf("physical", "status", "battlepose"),
+        "typhlosion" to listOf("eruption", "physical", "special", "battle_cry"),
+        "kleavor" to listOf("physical", "special", "status"),
+        "primarina" to listOf("special", "sparklingaria", "battle_pose"),
+        "decidueye" to listOf("physical", "special", "spiritshackle"),
+        "samurott" to listOf("physical", "special", "battlepose"),
+        "tsareena" to listOf("physical", "battle_idle"),
+        "quaquaval" to listOf("aquastep"),
+        "totodile" to listOf("physical", "bitey_quirk"),
+        "cyndaquil" to listOf("physical", "special", "battle_cry", "sneeze_quirk_ground"),
+        "meganium" to listOf("physical", "special"),
+        "chikorita" to listOf("physical", "special"),
+        "torterra" to listOf("battle_cry"),
+        "luxray" to listOf("special", "battle_cry"),
+        "perrserker" to listOf("physical", "special", "battle_cry"),
+        "magmortar" to listOf("special", "battleflame"),
+        "electivire" to listOf("status"),
+        "ursaluna" to listOf("hold_item"),
+        "aggron" to listOf("battle_idle", "pose"),
+        "eevee" to listOf("pose", "battle_idle"),
+        "jolteon" to listOf("pose", "battle_idle", "hold_item"),
+        "vaporeon" to listOf("pose", "battle_idle"),
+        "flareon" to listOf("pose", "battle_idle"),
+        "espeon" to listOf("pose", "glow", "battle_idle"),
+        "umbreon" to listOf("pose", "glow", "battle_idle"),
+        "leafeon" to listOf("pose", "battle_idle"),
+        "glaceon" to listOf("pose", "battle_idle"),
+        "sylveon" to listOf("pose", "battle_idle"),
+        "accelgor" to listOf("pose", "shock", "happy"),
+        "escavalier" to listOf("physical", "battle_cry", "battle_intro"),
+        "gliscor" to listOf("pose", "tongue_quirk"),
+        "absol" to listOf("battle_idle"),
+        "politoed" to listOf("physical", "battle_idle"),
+        "dewott" to listOf("physical", "special", "battlepose"),
+        "scrafty" to listOf("battle_idle"),
+        "nidoking" to listOf("battle_idle"),
+        "nidoqueen" to listOf("battle_idle", "spgs_happy_place"),
+        "tyranitar" to listOf("physical", "special"),
+        "sceptile" to listOf("physical", "leafblade", "special"),
+        "swampert" to listOf("pose"),
+        "riolu" to listOf("battle_idle"),
+        "arboliva" to listOf("battle_cry", "status"),
+        "dragalge" to listOf("battle_idle"),
+        "kommo-o" to listOf("physical")
+    )
 
     enum class BehaviorState {
         WANDERING,      // normal wandering (existing behavior)
@@ -114,8 +171,15 @@ object AmbientBehavior {
     private fun tickStanding(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long, origin: BlockPos): Boolean {
         val elapsed = now - stateStart
 
-        // Play look-around animation occasionally (compatible with CobbleMotion)
-        if (now % 80 == 0L && world.random.nextInt(100) < LOOK_AROUND_CHANCE) {
+        // Play species-specific special animation (attack, emote, taunt)
+        val speciesName = entity.pokemon.species.name.lowercase()
+        val specAnims = SPECIES_ANIMATIONS[speciesName]
+        if (now % 80 == 0L && specAnims != null && world.random.nextInt(100) < SPECIAL_ANIM_CHANCE) {
+            val pick = specAnims[world.random.nextInt(specAnims.size)]
+            SkillEffects.sendAnimationPublic(world, entity, pick)
+        }
+        // Generic look-around animation for all mons
+        else if (now % 80 == 0L && world.random.nextInt(100) < LOOK_AROUND_CHANCE) {
             val lookAnims = arrayOf("happy", "pose", "blink", "look_quirk", "sniff_quirk", "cry")
             val pick = lookAnims[world.random.nextInt(lookAnims.size)]
             SkillEffects.sendAnimationPublic(world, entity, pick)

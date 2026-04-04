@@ -61,7 +61,8 @@ object AmbientBehavior {
         FOLLOWING,      // following another mon around together
         CHILLING,       // sitting together with another mon
         CHASING,        // one mon runs away, another chases it
-        FLEEING         // the mon being chased (runs away fast)
+        FLEEING,        // the mon being chased (runs away fast)
+        WALKING_TOGETHER // two mons walk side by side
     }
 
     // Track last special animation time per Pokemon
@@ -149,6 +150,7 @@ object AmbientBehavior {
             BehaviorState.CHILLING -> tickChilling(world, pokemonEntity, id, now, stateStart)
             BehaviorState.CHASING -> tickChasing(world, pokemonEntity, id, now, stateStart)
             BehaviorState.FLEEING -> tickFleeing(world, pokemonEntity, id, now, stateStart, origin)
+            BehaviorState.WALKING_TOGETHER -> tickWalkingTogether(world, pokemonEntity, id, now, stateStart, origin)
             BehaviorState.WANDERING -> pickNextBehavior(world, pokemonEntity, id, now, origin)
         }
     }
@@ -276,8 +278,8 @@ object AmbientBehavior {
     private fun tickFollowing(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long): Boolean {
         val elapsed = now - stateStart
 
-        // Follow for 10-20 seconds then stop
-        if (elapsed >= 200L + world.random.nextInt(200).toLong()) {
+        // Follow for 20-30 seconds then stop
+        if (elapsed >= 400L + world.random.nextInt(200).toLong()) {
             setState(id, BehaviorState.WANDERING, now)
             return false
         }
@@ -444,6 +446,63 @@ object AmbientBehavior {
         return false // don't prevent movement
     }
 
+    // Shared walk destination for mons walking together
+    private val walkDestination = mutableMapOf<UUID, BlockPos>()
+
+    /**
+     * Walking together — two mons walk side by side to a shared destination.
+     */
+    private fun tickWalkingTogether(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long, origin: BlockPos): Boolean {
+        val elapsed = now - stateStart
+
+        // Walk together for 20-30 seconds
+        if (elapsed >= 400L + world.random.nextInt(200).toLong()) {
+            setState(id, BehaviorState.WANDERING, now)
+            walkDestination.remove(id)
+            return false
+        }
+
+        val partnerId = lastInteractionPartner[id] ?: run {
+            setState(id, BehaviorState.WANDERING, now)
+            return false
+        }
+
+        val searchBox = Box.of(entity.pos, 25.0, 6.0, 25.0)
+        val partner = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == partnerId }
+            .firstOrNull()
+
+        if (partner == null) {
+            setState(id, BehaviorState.WANDERING, now)
+            walkDestination.remove(id)
+            return false
+        }
+
+        // Pick a shared destination (or reuse existing one)
+        val dest = walkDestination.getOrPut(id) {
+            val PASTURE_RADIUS = 15
+            val dx = world.random.nextInt(PASTURE_RADIUS * 2) - PASTURE_RADIUS
+            val dz = world.random.nextInt(PASTURE_RADIUS * 2) - PASTURE_RADIUS
+            BlockPos(origin.x + dx, origin.y, origin.z + dz)
+        }
+        // Partner shares the same destination (offset by 1 block to walk side by side)
+        val partnerDest = walkDestination.getOrPut(partnerId) {
+            BlockPos(dest.x + 1, dest.y, dest.z + 1)
+        }
+
+        // Check if arrived at destination — pick a new one
+        if (NavigationHelper.isPokemonAtPosition(entity, dest, 2.0)) {
+            walkDestination.remove(id)
+            walkDestination.remove(partnerId)
+            // Will pick new destination next tick
+            return true
+        }
+
+        // Walk slowly to shared destination
+        NavigationHelper.navigateTo(entity, dest, 0.3)
+
+        return false // allow navigation
+    }
+
     /**
      * Decides what to do next when in WANDERING state.
      * Returns false to allow normal wandering most of the time.
@@ -483,19 +542,26 @@ object AmbientBehavior {
                 // Pick a random social behavior
                 val roll = world.random.nextInt(100)
                 when {
-                    roll < 30 -> {
+                    roll < 20 -> {
                         // Face each other and show moves
                         setState(id, BehaviorState.SOCIALIZING, now)
                         setState(partner.pokemon.uuid, BehaviorState.SOCIALIZING, now)
                     }
-                    roll < 50 -> {
+                    roll < 35 -> {
                         // Follow the partner around
                         setState(id, BehaviorState.FOLLOWING, now)
                     }
-                    roll < 70 -> {
+                    roll < 50 -> {
                         // Sit down and chill together
                         setState(id, BehaviorState.CHILLING, now)
                         setState(partner.pokemon.uuid, BehaviorState.CHILLING, now)
+                    }
+                    roll < 75 -> {
+                        // Walk together side by side
+                        setState(id, BehaviorState.WALKING_TOGETHER, now)
+                        setState(partner.pokemon.uuid, BehaviorState.WALKING_TOGETHER, now)
+                        lastInteractionPartner[id] = partner.pokemon.uuid
+                        lastInteractionPartner[partner.pokemon.uuid] = id
                     }
                     else -> {
                         // Chase! One runs away, the other chases

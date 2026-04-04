@@ -549,7 +549,7 @@ object AmbientBehavior {
         try {
             val world = lastWorld ?: return
             world.server.playerManager.playerList.forEach { player ->
-                player.sendMessage(net.minecraft.text.Text.literal(stateText), true)
+                player.sendMessage(net.minecraft.text.Text.literal(stateText), false)
             }
         } catch (_: Exception) {}
     }

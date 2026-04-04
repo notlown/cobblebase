@@ -80,6 +80,8 @@ object BaseManager {
         if (assignedSkillId != null) {
             // Skip if the assigned skill is a buff (buffs are handled passively below)
             if (!isBuffSkill(assignedSkillId)) {
+                // Clear ambient behavior when actively working
+                AmbientBehavior.clearState(pokemonId)
                 val entry: SkillEntry? = speciesData.skills.find { e -> e.skillId == assignedSkillId }
                 if (entry == null) {
                 } else {

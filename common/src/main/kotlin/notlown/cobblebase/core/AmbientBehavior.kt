@@ -26,7 +26,7 @@ object AmbientBehavior {
     private const val IDLE_STAND_MIN = 100L   // 5 seconds minimum standing still
     private const val IDLE_STAND_MAX = 400L   // 20 seconds max before next behavior
     private const val SOCIAL_RANGE = 6.0      // blocks — how close mons need to be to interact
-    private const val SOCIAL_CHANCE = 15       // percent chance per check to start social interaction
+    private const val SOCIAL_CHANCE = 35       // percent chance per check to start social interaction
     private const val SIT_CHANCE = 20          // percent chance to sit instead of wander
     private const val LOOK_AROUND_CHANCE = 30  // percent chance to play look-around animation
     private const val SPECIAL_ANIM_CHANCE = 25 // percent chance to play a special animation (attack, emote)
@@ -216,29 +216,39 @@ object AmbientBehavior {
     private fun tickSocializing(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long): Boolean {
         val elapsed = now - stateStart
 
-        // Social interaction lasts 3-5 seconds
-        if (elapsed >= 100L) {
+        // Social interaction lasts 8-15 seconds
+        if (elapsed >= 160L + world.random.nextInt(140).toLong()) {
             setState(id, BehaviorState.WANDERING, now)
             return false
         }
 
-        // Play cry/call animations alternating
-        if (elapsed % 40 == 0L) {
-            SkillEffects.sendAnimationPublic(world, entity, "cry")
+        // Find partner
+        val partnerId = lastInteractionPartner[id]
+        val partner = if (partnerId != null) {
+            val searchBox = Box.of(entity.pos, 20.0, 6.0, 20.0)
+            world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == partnerId }.firstOrNull()
+        } else null
+
+        if (partner == null) {
+            setState(id, BehaviorState.WANDERING, now)
+            return false
         }
 
-        // Face towards partner
-        val partnerId = lastInteractionPartner[id]
-        if (partnerId != null) {
-            val searchBox = Box.of(entity.pos, 12.0, 6.0, 12.0)
-            val partner = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == partnerId }
-                .firstOrNull()
-            if (partner != null) {
-                entity.lookAtEntity(partner, 30f, 30f)
+        val dist = entity.distanceTo(partner)
+        if (dist > 3.0 && elapsed < 80L) {
+            // First phase: walk towards partner
+            NavigationHelper.navigateTo(entity, partner.blockPos, 0.4)
+        } else {
+            // Second phase: face each other and interact
+            NavigationHelper.clearTargets(entity)
+            entity.lookAtEntity(partner, 60f, 30f)
+
+            // Play cry/call animations
+            if (elapsed % 60 == 0L) {
+                SkillEffects.sendAnimationPublic(world, entity, "cry", "happy")
             }
         }
 
-        NavigationHelper.clearTargets(entity)
         return true
     }
 
@@ -298,28 +308,38 @@ object AmbientBehavior {
             return false
         }
 
-        // Play rest animation
-        if (now % 120 == 0L) {
-            SkillEffects.sendAnimationPublic(world, entity, "sleep", "pose", "ground_idle")
+        // Find partner
+        val partnerId = lastInteractionPartner[id]
+        val partner = if (partnerId != null) {
+            val searchBox = Box.of(entity.pos, 20.0, 6.0, 20.0)
+            world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == partnerId }.firstOrNull()
+        } else null
+
+        if (partner == null) {
+            setState(id, BehaviorState.WANDERING, now)
+            return false
         }
 
-        // Face partner
-        val partnerId = lastInteractionPartner[id]
-        if (partnerId != null && now % 60 == 0L) {
-            val searchBox = Box.of(entity.pos, 12.0, 6.0, 12.0)
-            val partner = (world as ServerWorld).getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == partnerId }
-                .firstOrNull()
-            if (partner != null) {
-                entity.lookAtEntity(partner, 30f, 30f)
+        val dist = entity.distanceTo(partner)
+        if (dist > 3.0 && elapsed < 100L) {
+            // First phase: walk to partner
+            NavigationHelper.navigateTo(entity, partner.blockPos, 0.3)
+        } else {
+            // Second phase: sit together
+            NavigationHelper.clearTargets(entity)
+            entity.lookAtEntity(partner, 30f, 30f)
+
+            // Play rest animation
+            if (now % 100 == 0L) {
+                SkillEffects.sendAnimationPublic(world, entity, "sleep", "pose", "ground_idle")
+            }
+
+            // Occasional happy cry
+            if (now % 200 == 0L && world.random.nextInt(100) < 30) {
+                SkillEffects.sendAnimationPublic(world, entity, "cry", "happy")
             }
         }
 
-        // Occasional happy cry
-        if (now % 200 == 0L && world.random.nextInt(100) < 30) {
-            SkillEffects.sendAnimationPublic(world, entity, "cry", "happy")
-        }
-
-        NavigationHelper.clearTargets(entity)
         return true
     }
 

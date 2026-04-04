@@ -100,7 +100,7 @@ object AmbientBehavior {
         }
 
         // After standing for a while, transition to next behavior
-        val standDuration = IDLE_STAND_MIN + world.random.nextLong(IDLE_STAND_MAX - IDLE_STAND_MIN)
+        val standDuration = IDLE_STAND_MIN + (world.random.nextInt((IDLE_STAND_MAX - IDLE_STAND_MIN).toInt())).toLong()
         if (elapsed >= standDuration) {
             setState(id, BehaviorState.WANDERING, now)
             return false
@@ -122,7 +122,7 @@ object AmbientBehavior {
         }
 
         // Sit for 10-30 seconds then get up
-        val sitDuration = 200L + world.random.nextLong(400L)
+        val sitDuration = 200L + world.random.nextInt(400).toLong()
         if (elapsed >= sitDuration) {
             setState(id, BehaviorState.WANDERING, now)
             return false

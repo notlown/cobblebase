@@ -4,9 +4,45 @@
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "cobblemon:relic_coin", "weight": 8, "functions": [{ "function": "set_count", "count": { "min": 3, "max": 5 } }] },
-        { "type": "minecraft:item", "name": "minecraft:gold_ingot", "weight": 8, "functions": [{ "function": "set_count", "count": { "min": 2, "max": 3 } }] },
-        { "type": "minecraft:item", "name": "cobblemon:nugget", "weight": 8, "functions": [{ "function": "set_count", "count": 2 }] }
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:relic_coin",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 2,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:gold_ingot",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:nugget",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 1
+            }
+          ]
+        }
       ]
     }
   ]

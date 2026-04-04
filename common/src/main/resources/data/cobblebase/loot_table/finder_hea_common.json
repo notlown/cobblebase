@@ -4,13 +4,59 @@
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "cobblemon:potion", "weight": 10 },
-        { "type": "minecraft:item", "name": "cobblemon:oran_berry", "weight": 10, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 3 } }] },
-        { "type": "minecraft:item", "name": "cobblemon:sitrus_berry", "weight": 8 },
-        { "type": "minecraft:item", "name": "cobblemon:remedy", "weight": 8, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 2 } }] },
-        { "type": "minecraft:item", "name": "cobblemon:heal_powder", "weight": 7 },
-        { "type": "minecraft:item", "name": "cobblemon:antidote", "weight": 6 },
-        { "type": "minecraft:item", "name": "cobblemon:pecha_berry", "weight": 6 }
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:potion",
+          "weight": 10
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:oran_berry",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:sitrus_berry",
+          "weight": 8
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:remedy",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:heal_powder",
+          "weight": 7
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:antidote",
+          "weight": 6
+        },
+        {
+          "type": "minecraft:item",
+          "name": "cobblemon:pecha_berry",
+          "weight": 6
+        }
       ]
     }
   ]

@@ -4,12 +4,72 @@
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "minecraft:prismarine", "weight": 10, "functions": [{ "function": "set_count", "count": 8 }] },
-        { "type": "minecraft:item", "name": "minecraft:sea_lantern", "weight": 7, "functions": [{ "function": "set_count", "count": 4 }] },
-        { "type": "minecraft:item", "name": "minecraft:end_stone_bricks", "weight": 8, "functions": [{ "function": "set_count", "count": 8 }] },
-        { "type": "minecraft:item", "name": "minecraft:purpur_block", "weight": 8, "functions": [{ "function": "set_count", "count": 8 }] },
-        { "type": "minecraft:item", "name": "minecraft:deepslate_bricks", "weight": 8, "functions": [{ "function": "set_count", "count": 8 }] },
-        { "type": "minecraft:item", "name": "minecraft:copper_block", "weight": 6, "functions": [{ "function": "set_count", "count": 4 }] }
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:prismarine",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:sea_lantern",
+          "weight": 7,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:end_stone_bricks",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:purpur_block",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:deepslate_bricks",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 4
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:copper_block",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": 2
+            }
+          ]
+        }
       ]
     }
   ]

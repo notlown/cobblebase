@@ -82,8 +82,9 @@ object AmbientBehavior {
 
         val speciesName = pokemonEntity.pokemon.species.name.lowercase()
 
-        // Use signature move if available, otherwise generic attack animation
-        val anims = SIGNATURE_ANIMATIONS[speciesName] ?: GENERIC_ANIMATIONS
+        // Combine signature moves + generic attack animations for more variety
+        val signature = SIGNATURE_ANIMATIONS[speciesName]
+        val anims = if (signature != null) signature + GENERIC_ANIMATIONS else GENERIC_ANIMATIONS
         val pick = anims[world.random.nextInt(anims.size)]
         SkillEffects.sendAnimationPublic(world, pokemonEntity, pick)
         lastSpecialAnim[id] = now

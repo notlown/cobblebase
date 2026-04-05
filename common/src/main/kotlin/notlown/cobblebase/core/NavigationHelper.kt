@@ -87,7 +87,7 @@ object NavigationHelper {
 
             if (!result) {
                 // Try a small random offset from current position to unstick
-                val rand = pokemonEntity.world.random
+                val rand = java.util.concurrent.ThreadLocalRandom.current()
                 val offX = pokemonEntity.x + (rand.nextDouble() * 4 - 2)
                 val offZ = pokemonEntity.z + (rand.nextDouble() * 4 - 2)
                 result = pokemonEntity.navigation.startMovingTo(offX, pokemonEntity.y, offZ, actualSpeed)
@@ -153,7 +153,7 @@ object NavigationHelper {
             if (now - since >= STUCK_THRESHOLD_TICKS) {
                 // Stuck for 7+ seconds — stop nav and try a random direction
                 pokemonEntity.navigation.stop()
-                val rand = world.random
+                val rand = java.util.concurrent.ThreadLocalRandom.current()
                 val angle = rand.nextDouble() * Math.PI * 2
                 val dist = 2.0 + rand.nextDouble() * 2.0 // 2-4 blocks in random direction
                 val targetX = currentPos.x + Math.cos(angle) * dist + 0.5
@@ -190,8 +190,8 @@ object NavigationHelper {
         if (now - last < WANDER_INTERVAL_TICKS) return
         lastWanderTick[id] = now
 
-        // Pick a random position near the origin
-        val random = world.random
+        // Pick a random position near the origin (use thread-safe Random to avoid C2ME crash)
+        val random = java.util.concurrent.ThreadLocalRandom.current()
         val dx = random.nextInt(radius * 2 + 1) - radius
         val dz = random.nextInt(radius * 2 + 1) - radius
         val targetX = origin.x + dx

@@ -163,7 +163,7 @@ object BaseManager {
      * Matches Cobblemon's default behavior of placing Pokemon near (not on) the pasture.
      */
     private fun getSpawnOffset(world: World): Pair<Double, Double> {
-        val rand = world.random
+        val rand = java.util.concurrent.ThreadLocalRandom.current()
         val angle = rand.nextDouble() * Math.PI * 2
         val dist = 1.5 + rand.nextDouble() // 1.5-2.5 blocks from center
         return Pair(Math.cos(angle) * dist + 0.5, Math.sin(angle) * dist + 0.5)

@@ -117,23 +117,8 @@ class BuffsPanel(
                         ))
                     }
                 }
-            } else {
-                // Auto mode: all non-buff skills active
-                for (entry in availableSkills) {
-                    val skillDef = SkillRegistry.get(entry.skillId) ?: continue
-                    if (BaseManager.isBuffExecutor(skillDef.executor)) continue
-                    result.add(BuffEntry(
-                        pokemonName = pokemonName,
-                        species = species,
-                        aspects = aspects,
-                        level = level,
-                        skillName = skillDef.name,
-                        category = skillDef.category,
-                        proficiency = entry.proficiency,
-                        description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds)
-                    ))
-                }
             }
+            // Relax (null assignment) = only passive buffs shown (already added above)
         }
         return result
     }

@@ -15,6 +15,7 @@ import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeKeys
 import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.SpawnData
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.SkillDef
@@ -207,12 +208,14 @@ object ScoutExecutor : SkillExecutor {
         val targetX = target.blockX
         val targetZ = target.blockZ
 
-        // Determine rarity based on Pokemon level — skip commons entirely
-        val rarity = when {
-            targetLevel >= 60 -> LogManager.Rarity.ULTRA_RARE
-            targetLevel >= 45 -> LogManager.Rarity.RARE
-            targetLevel >= 25 -> LogManager.Rarity.UNCOMMON
-            else -> return false // Skip common Pokemon — nobody cares about Lv.5 Rattata
+        // Determine rarity based on spawn bucket — skip commons entirely
+        val bucket = SpawnData.getBucket(targetName)
+        if (bucket == SpawnData.Bucket.COMMON) return false // Skip common Pokemon
+        val rarity = when (bucket) {
+            SpawnData.Bucket.ULTRA_RARE -> LogManager.Rarity.ULTRA_RARE
+            SpawnData.Bucket.RARE -> LogManager.Rarity.RARE
+            SpawnData.Bucket.UNCOMMON -> LogManager.Rarity.UNCOMMON
+            else -> return false
         }
 
         val discovery = DiscoveryRegistry.Discovery(
@@ -436,11 +439,11 @@ object ScoutExecutor : SkillExecutor {
 
     private fun getSearchRadius(proficiency: Int): Int {
         return when (proficiency) {
-            1 -> 50
-            2 -> 100
-            3 -> 150
-            4 -> 200
-            else -> 200
+            1 -> 100
+            2 -> 300
+            3 -> 500
+            4 -> 750
+            else -> 1000
         }
     }
 

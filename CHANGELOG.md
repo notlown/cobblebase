@@ -8,14 +8,34 @@ All notable changes to Cobblebase are documented here.
 
 ### Producer Job
 - New **"Producer"** job — Pokemon produce species-specific items passively based on their species
-- **~155 species** with unique products across 35+ item types
-- Products include: wool, string, milk, eggs, honeycomb, gold nuggets, diamonds, slime balls, charcoal, gunpowder, iron nuggets, blaze powder, ghast tears, rabbit's foot, redstone, cobblestone, feathers, bones, ink sacs, leather, clay, sand, mushrooms, pumpkins, and more
+- **~180 species** with unique products across 35+ item types
+- Products include: wool, string, milk, eggs, honeycomb, gold nuggets, diamonds, slime balls, charcoal, gunpowder, iron nuggets, blaze powder, ghast tears, rabbit's foot, redstone, cobblestone, feathers, bones, ink sacs, leather, clay, sand, mushrooms, pumpkins, logs, ores, and more
+- Includes wood producers (Komala, Timburr-line, Trevenant), ore producers (Roggenrola-line, Ferroseed, Copperajah), object Pokemon (Honedge-line, Klink-line, Klefki), sweets (Alcremie, Milcery)
 - Works alongside proficiency system — higher prof = faster production
 - Removed Honey Collector (replaced by Producer for Combee/Vespiquen)
 
+### Admin GUI — Jobs Tab
+- **New "Jobs" tab** in `/cobblebase admin` — configure per-job settings server-wide
+- **Per-job Cooldown** — set custom cooldown (seconds) for each job individually
+- **Per-job Radius Min/Max** — set allowed search radius range for each job
+- **Per-job Enable/Disable** — toggle jobs on/off server-wide
+- **Save/Reset buttons** — changes are collected and only applied on Save
+- **Disabled jobs auto-hide** — deactivated jobs no longer appear in the Skills panel at Pasture Blocks
+- **Auto-reset assignments** — Pokemon assigned to a disabled job are automatically set to Relax
+
 ### Bug Fixes
-- **Gatherer now respects `jobSearchRadius` config** — was hardcoded to 24 blocks, now uses the config value (capped at 24)
-- **Console logging toggle** — added `enableConsoleLogging` setting (default: off) to reduce server console spam. Startup/error logs always show.
+- **SkillDef.copy() NPE fix** — Gson parsed missing JSON fields as null, crashing Kotlin's copy() for non-null fields. Root cause of Admin Job Config not working.
+- **Gatherer respects `jobSearchRadius` config** — was hardcoded to 24 blocks, now uses the config value (capped at 24)
+- **Item stacking fix** — items produced by jobs now stack normally with vanilla items (origin tags stripped on chest deposit)
+- **Pokemon spawn offset** — safety/unstick teleports now place Pokemon 1.5-2.5 blocks from the Pasture Block instead of on top of it
+- **Unstick without teleport** — stuck Pokemon now get redirected in a random direction instead of being teleported. Safe for enclosed builds (pens, aquariums, globes)
+- **Unstick threshold reduced** — 15s → 7s for faster recovery
+- **Buffs tab fix** — Relax mode now only shows passive buffs, not all available skills
+- **enableUnstickTeleport** config toggle removed (no longer needed since unstick doesn't teleport)
+
+### Config
+- **Console Logging toggle** — `enableConsoleLogging` (default: off) to reduce server console spam
+- All new Admin GUI settings include descriptive tooltips
 
 ---
 

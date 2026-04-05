@@ -135,32 +135,31 @@ object NavigationHelper {
 
     /**
      * Checks if a Pokemon has been stuck (same position for 15+ seconds).
-     * If stuck, teleports it a few blocks toward its target or toward the pasture origin.
+     * If stuck (same BlockPos for 7+ seconds), stops navigation and tries a random
+     * direction nearby. No teleporting — safe for enclosed builds like pens and aquariums.
      * Call this every tick from the pasture mixin.
      */
     fun checkAndUnstick(pokemonEntity: PokemonEntity, origin: BlockPos) {
         val world = pokemonEntity.world
         if (world.isClient) return
-        if (!CobblebaseConfig.enableUnstickTeleport) return
         val id = pokemonEntity.pokemon.uuid
         val now = world.time
         val currentPos = pokemonEntity.blockPos
 
         val lastPos = lastPositions[id]
         if (lastPos != null && lastPos == currentPos) {
-            // Same position — check if stuck long enough
+            // Same BlockPos — check if stuck long enough
             val since = stuckSince.getOrPut(id) { now }
             if (now - since >= STUCK_THRESHOLD_TICKS) {
-                // Stuck for 15+ seconds — teleport near the pasture origin (not on top)
+                // Stuck for 7+ seconds — stop nav and try a random direction
+                pokemonEntity.navigation.stop()
                 val rand = world.random
                 val angle = rand.nextDouble() * Math.PI * 2
-                val dist = 1.5 + rand.nextDouble()
-                val newX = origin.x + Math.cos(angle) * dist + 0.5
-                val newZ = origin.z + Math.sin(angle) * dist + 0.5
-                val newY = origin.y + 1.0
-                pokemonEntity.refreshPositionAndAngles(newX, newY, newZ, pokemonEntity.yaw, pokemonEntity.pitch)
-                stuckSince.remove(id)
-                pokemonEntity.navigation.stop()
+                val dist = 2.0 + rand.nextDouble() * 2.0 // 2-4 blocks in random direction
+                val targetX = currentPos.x + Math.cos(angle) * dist + 0.5
+                val targetZ = currentPos.z + Math.sin(angle) * dist + 0.5
+                pokemonEntity.navigation.startMovingTo(targetX, currentPos.y.toDouble(), targetZ, 0.5)
+                stuckSince.remove(id) // Reset timer so it tries again after 7s if still stuck
             }
         } else {
             // Moved — reset stuck tracking

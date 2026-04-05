@@ -412,7 +412,7 @@ object ScoutExecutor : SkillExecutor {
                         .append(biomeCoord)
 
                     notifyNearbyPlayers(world, pokemonEntity, message)
-                    sendXaeroWaypoint(world, pokemonEntity, "$displayName Biome", bx, biomePos.y, bz, LogManager.Rarity.ULTRA_RARE)
+                    sendXaeroWaypoint(world, pokemonEntity, "${displayName}_Biome", bx, biomePos.y, bz, LogManager.Rarity.ULTRA_RARE)
 
                     // Extra ding for owner only
                     val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
@@ -488,6 +488,11 @@ object ScoutExecutor : SkillExecutor {
      * 5=DARK_PURPLE, 6=GOLD, 7=GRAY, 8=DARK_GRAY, 9=BLUE, 10=GREEN, 11=AQUA,
      * 12=RED, 13=PURPLE, 14=YELLOW, 15=WHITE
      */
+    /**
+     * Sends a Xaero waypoint sharing message to the pasture owner.
+     * Xaero automatically parses the format and shows an [Add] alert.
+     * The message text is hidden using obfuscated formatting so it doesn't clutter chat.
+     */
     private fun sendXaeroWaypoint(
         world: ServerWorld,
         pokemonEntity: PokemonEntity,
@@ -502,26 +507,20 @@ object ScoutExecutor : SkillExecutor {
         if (players.isEmpty()) return
 
         val xaeroColor = when (rarity) {
-            LogManager.Rarity.ULTRA_RARE -> 6  // GOLD
-            LogManager.Rarity.RARE -> 9        // BLUE
-            else -> 10                          // GREEN
+            LogManager.Rarity.ULTRA_RARE -> 6
+            LogManager.Rarity.RARE -> 9
+            else -> 10
         }
 
-        // Clean name for waypoint (remove spaces, special chars)
         val cleanName = name.replace(" ", "_")
         val initials = name.take(1).uppercase()
-
-        // Determine dimension waypoint set name
-        // Xaero format: Internal-overworld-waypoints, Internal-the_nether-waypoints, Internal-the_end-waypoints
-        val dimPath = world.registryKey.value.path // "overworld", "the_nether", "the_end"
+        val dimPath = world.registryKey.value.path
         val dimWaypointSet = "Internal-${dimPath}-waypoints"
 
         val xaeroMsg = "xaero-waypoint:$cleanName:$initials:$x:$y:$z:$xaeroColor:false:0:$dimWaypointSet"
 
         for (player in players) {
-            player.sendMessage(Text.literal(xaeroMsg), false)
+            player.sendMessage(Text.literal(xaeroMsg).formatted(Formatting.OBFUSCATED), false)
         }
-
-        Cobblebase.LOGGER.info("[Scout] Xaero waypoint sent: $xaeroMsg")
     }
 }

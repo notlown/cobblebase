@@ -174,7 +174,7 @@ object NavigationHelper {
     // Stuck detection: track positions to detect mons that haven't moved
     private val lastPositions = mutableMapOf<UUID, BlockPos>()
     private val stuckSince = mutableMapOf<UUID, Long>()
-    private const val STUCK_THRESHOLD_TICKS = 300L // 15 seconds
+    private const val STUCK_THRESHOLD_TICKS = 140L // 7 seconds
 
     /**
      * Makes a Pokemon wander randomly near the pasture origin.

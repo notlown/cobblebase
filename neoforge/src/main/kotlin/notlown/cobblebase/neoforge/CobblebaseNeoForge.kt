@@ -15,8 +15,13 @@ import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.JobConfigOverrides
+import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillOverrides
 import notlown.cobblebase.core.SpeciesSkillRegistry
+import notlown.cobblebase.core.net.AdminJobsRequestC2SPacket
+import notlown.cobblebase.core.net.AdminJobsSyncS2CPacket
+import notlown.cobblebase.core.net.AdminJobsUpdateC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
 import notlown.cobblebase.core.net.AdminSpeciesUpdateC2SPacket
@@ -174,6 +179,41 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
             }
         }
+
+        // C2S: Admin jobs request
+        registrar.playToServer(
+            AdminJobsRequestC2SPacket.ID,
+            AdminJobsRequestC2SPacket.CODEC
+        ) { _, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!player.hasPermissionLevel(2)) return@enqueueWork
+                handleAdminJobsRequest(player, context)
+            }
+        }
+
+        // S2C: Admin jobs sync
+        registrar.playToClient(
+            AdminJobsSyncS2CPacket.ID,
+            AdminJobsSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.AdminJobDataCache.update(
+                    packet.jobs,
+                    packet.overrides
+                )
+            }
+        }
+
+        // C2S: Admin jobs update
+        registrar.playToServer(
+            AdminJobsUpdateC2SPacket.ID,
+            AdminJobsUpdateC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
+            }
+        }
     }
 
     private fun onPlayerLoggedIn(event: PlayerEvent.PlayerLoggedInEvent) {
@@ -192,6 +232,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         LogManager.load(world)
         DiscoveryRegistry.load(world)
         SpeciesSkillOverrides.load(world)
+        JobConfigOverrides.load(world)
     }
 
     private fun onServerStopping(event: ServerStoppingEvent) {
@@ -200,6 +241,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         LogManager.save(world)
         DiscoveryRegistry.save(world)
         SpeciesSkillOverrides.save(world)
+        JobConfigOverrides.save(world)
     }
 
     /**
@@ -250,6 +292,18 @@ class CobblebaseNeoForge(modBus: IEventBus) {
 
         val entries = LogManager.getEntries(pasturePos)
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, LogSyncS2CPacket(entries))
+    }
+
+    /**
+     * Handles an admin jobs request. Sends all job definitions and overrides to the requesting player.
+     */
+    private fun handleAdminJobsRequest(
+        player: net.minecraft.server.network.ServerPlayerEntity,
+        context: net.neoforged.neoforge.network.handling.IPayloadContext
+    ) {
+        val allJobs = SkillRegistry.getAll()
+        val overrides = JobConfigOverrides.getAllOverrides()
+        context.reply(AdminJobsSyncS2CPacket(allJobs, overrides))
     }
 
     /**

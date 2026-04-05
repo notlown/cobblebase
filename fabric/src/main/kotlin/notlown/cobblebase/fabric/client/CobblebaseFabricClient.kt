@@ -10,11 +10,14 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import notlown.cobblebase.core.AdminDataCache
+import notlown.cobblebase.core.AdminJobDataCache
 import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.CobblebaseClothConfig
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.VersionChecker
+import notlown.cobblebase.core.net.AdminJobsRequestC2SPacket
+import notlown.cobblebase.core.net.AdminJobsSyncS2CPacket
 import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
@@ -86,6 +89,13 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Register S2C admin jobs sync packet receiver
+        ClientPlayNetworking.registerGlobalReceiver(AdminJobsSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                AdminJobDataCache.update(packet.jobs, packet.overrides)
+            }
+        }
+
         // Register /cobblebase admin client command
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.register(
@@ -93,6 +103,7 @@ object CobblebaseFabricClient : ClientModInitializer {
                     .then(ClientCommandManager.literal("admin").executes { _ ->
                         pendingAdminScreen = true
                         ClientPlayNetworking.send(AdminSpeciesRequestC2SPacket())
+                        ClientPlayNetworking.send(AdminJobsRequestC2SPacket())
                         1
                     })
             )

@@ -10,8 +10,13 @@ import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.JobConfigOverrides
+import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillOverrides
 import notlown.cobblebase.core.SpeciesSkillRegistry
+import notlown.cobblebase.core.net.AdminJobsRequestC2SPacket
+import notlown.cobblebase.core.net.AdminJobsSyncS2CPacket
+import notlown.cobblebase.core.net.AdminJobsUpdateC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
 import notlown.cobblebase.core.net.AdminSpeciesUpdateC2SPacket
@@ -112,6 +117,27 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // Register C2S packet for admin jobs requests
+        PayloadTypeRegistry.playC2S().register(AdminJobsRequestC2SPacket.ID, AdminJobsRequestC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(AdminJobsRequestC2SPacket.ID) { _, context ->
+            context.server().execute {
+                val player = context.player()
+                if (!player.hasPermissionLevel(2)) return@execute
+                handleAdminJobsRequest(player)
+            }
+        }
+
+        // Register S2C packet for admin jobs sync
+        PayloadTypeRegistry.playS2C().register(AdminJobsSyncS2CPacket.ID, AdminJobsSyncS2CPacket.CODEC)
+
+        // Register C2S packet for admin jobs updates
+        PayloadTypeRegistry.playC2S().register(AdminJobsUpdateC2SPacket.ID, AdminJobsUpdateC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(AdminJobsUpdateC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                packet.handle(context.player())
+            }
+        }
+
         // Load assignments, logs, discoveries, and overrides when world starts
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             val world = server.overworld
@@ -119,6 +145,7 @@ object CobblebaseFabric : ModInitializer {
             LogManager.load(world)
             DiscoveryRegistry.load(world)
             SpeciesSkillOverrides.load(world)
+            JobConfigOverrides.load(world)
         }
 
         // Save assignments, logs, discoveries, and overrides when world stops
@@ -128,6 +155,7 @@ object CobblebaseFabric : ModInitializer {
             LogManager.save(world)
             DiscoveryRegistry.save(world)
             SpeciesSkillOverrides.save(world)
+            JobConfigOverrides.save(world)
         }
     }
 
@@ -179,6 +207,15 @@ object CobblebaseFabric : ModInitializer {
 
         val entries = LogManager.getEntries(pasturePos)
         ServerPlayNetworking.send(player, LogSyncS2CPacket(entries))
+    }
+
+    /**
+     * Handles an admin jobs request. Sends all job definitions and overrides to the requesting player.
+     */
+    private fun handleAdminJobsRequest(player: net.minecraft.server.network.ServerPlayerEntity) {
+        val allJobs = SkillRegistry.getAll()
+        val overrides = JobConfigOverrides.getAllOverrides()
+        ServerPlayNetworking.send(player, AdminJobsSyncS2CPacket(allJobs, overrides))
     }
 
     /**

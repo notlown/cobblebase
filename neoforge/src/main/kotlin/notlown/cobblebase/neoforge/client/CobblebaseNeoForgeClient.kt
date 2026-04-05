@@ -15,6 +15,7 @@ import notlown.cobblebase.core.AdminDataCache
 import notlown.cobblebase.core.VersionChecker
 import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
 import notlown.cobblebase.core.CobblebaseClothConfig
+import notlown.cobblebase.core.net.AdminJobsRequestC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
 import notlown.cobblebase.neoforge.client.gui.AdminScreen
 import org.lwjgl.glfw.GLFW
@@ -60,6 +61,7 @@ object CobblebaseNeoForgeClient {
                 .then(LiteralArgumentBuilder.literal<ServerCommandSource>("admin").executes { _ ->
                     pendingAdminScreen = true
                     PacketDistributor.sendToServer(AdminSpeciesRequestC2SPacket())
+                    PacketDistributor.sendToServer(AdminJobsRequestC2SPacket())
                     1
                 })
         )

@@ -20,6 +20,35 @@ object SkillRegistry {
     fun getAll(): Map<String, SkillDef> = skills.toMap()
     fun register(skill: SkillDef) { skills[skill.id] = skill }
 
+    /**
+     * Returns a SkillDef with overridden values applied from JobConfigOverrides.
+     * This allows executors to use the effective values without changes.
+     */
+    fun getEffective(id: String): SkillDef? {
+        val base = skills[id] ?: return null
+        val override = JobConfigOverrides.getOverride(id) ?: return base
+        return base.copy(
+            cooldownSeconds = override.cooldownSeconds ?: base.cooldownSeconds,
+            searchRadius = override.searchRadius ?: base.searchRadius
+        )
+    }
+
+    /**
+     * Returns the effective cooldown for a skill, checking overrides first.
+     */
+    fun getEffectiveCooldown(skillId: String): Long {
+        val skill = skills[skillId] ?: return 60
+        return JobConfigOverrides.getEffectiveCooldown(skill)
+    }
+
+    /**
+     * Returns the effective search radius for a skill, checking overrides first.
+     */
+    fun getEffectiveRadius(skillId: String): Int {
+        val skill = skills[skillId] ?: return 10
+        return JobConfigOverrides.getEffectiveRadius(skill)
+    }
+
     private fun loadFromResources() {
         val indexPath = "/data/cobblebase/skills/_index.txt"
         val indexStream = Cobblebase::class.java.getResourceAsStream(indexPath)

@@ -122,6 +122,11 @@ public class PokemonPastureBlockEntityMixin {
 
             PokemonEntity pokemonEntity = pokemon.getEntity();
             if (pokemonEntity == null) {
+                // Entity is null (owner offline, chunk unloaded, etc.)
+                // Still tick passive buffs using pasture block position
+                try {
+                    BaseManager.INSTANCE.tickPassiveBuffsWithoutEntity(world, blockPos, pokemon);
+                } catch (Exception ignored) { }
                 continue;
             }
 

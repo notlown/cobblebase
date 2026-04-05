@@ -103,6 +103,26 @@ object BaseManager {
         }
     }
 
+    /**
+     * Tick passive buffs for Pokemon without an active entity (owner offline, entity despawned).
+     * Uses pasture block position instead of entity position for range checks.
+     * Only runs buff executors — no jobs, no navigation, no ambient behavior.
+     */
+    fun tickPassiveBuffsWithoutEntity(world: World, pastureOrigin: BlockPos, pokemon: com.cobblemon.mod.common.pokemon.Pokemon) {
+        if (world !is net.minecraft.server.world.ServerWorld) return
+        val speciesName = pokemon.species.name.lowercase()
+        val speciesData = SpeciesSkillRegistry.getSkills(speciesName) ?: return
+
+        for (entry in speciesData.skills) {
+            val skillDef = SkillRegistry.get(entry.skillId) ?: continue
+            if (!isBuffSkill(skillDef.executor)) continue
+            val exec = ExecutorRegistry.get(skillDef.executor) ?: continue
+            if (exec !is notlown.cobblebase.core.executors.BuffExecutor) continue
+            // Use the pasture-origin-based tick that doesn't need an entity
+            exec.tickWithoutEntity(world, pastureOrigin, pokemon.uuid, pokemon.getOwnerUUID(), skillDef, entry)
+        }
+    }
+
     private fun isBuffSkill(executorOrSkillId: String): Boolean {
         // Check directly against executor names
         if (executorOrSkillId in BUFF_EXECUTORS) return true

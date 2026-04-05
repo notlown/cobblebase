@@ -198,6 +198,47 @@ class BuffExecutor(
         }
     }
 
+    /**
+     * Tick buff without a PokemonEntity (owner offline, entity despawned).
+     * Uses pasture block position for range. Applies the same buff logic.
+     */
+    fun tickWithoutEntity(
+        world: World,
+        origin: BlockPos,
+        pokemonId: UUID,
+        ownerUuid: UUID?,
+        skill: SkillDef,
+        skillEntry: SkillEntry
+    ) {
+        if (world !is ServerWorld) return
+        val now = world.time
+        val prof = skillEntry.proficiency.coerceIn(1, 5)
+
+        val cooldownTicks = getCooldownTicks(prof)
+        val lastTime = lastBuffTime[pokemonId] ?: 0L
+        if (now - lastTime < cooldownTicks) return
+
+        // Find players near pasture block
+        val players: List<ServerPlayerEntity> = if (prof >= 5 && ownerUuid != null) {
+            world.players.filter { it.uuid == ownerUuid }
+        } else {
+            val range = getBuffRange(prof)
+            world.getEntitiesByClass(ServerPlayerEntity::class.java,
+                Box.of(origin.toCenterPos(), range * 2, range * 2, range * 2)) { true }
+        }
+        if (players.isEmpty()) return
+
+        val durationTicks = getDurationTicks(prof)
+        for (player in players) {
+            player.addStatusEffect(StatusEffectInstance(
+                statusEffect, durationTicks, baseAmplifier,
+                true, false, true
+            ))
+        }
+
+        lastBuffTime[pokemonId] = now
+    }
+
     companion object {
         val SpeedBoost = BuffExecutor("speed_boost", StatusEffects.SPEED, 2)
         val StrengthBoost = BuffExecutor("strength_boost", StatusEffects.STRENGTH, 0)

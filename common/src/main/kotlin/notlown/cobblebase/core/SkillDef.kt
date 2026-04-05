@@ -34,5 +34,5 @@ data class SkillDef(
     val targetBlock: String? = null,
     val requiresNearby: Boolean = false,
     val xpReward: Int = 0,
-    val icon: String = ""
+    val icon: String? = null
 )

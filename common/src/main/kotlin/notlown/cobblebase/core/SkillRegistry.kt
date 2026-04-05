@@ -26,11 +26,16 @@ object SkillRegistry {
      */
     fun getEffective(id: String): SkillDef? {
         val base = skills[id] ?: return null
-        val override = JobConfigOverrides.getOverride(id) ?: return base
-        return base.copy(
-            cooldownSeconds = override.cooldownSeconds ?: base.cooldownSeconds,
-            searchRadius = override.searchRadius ?: base.searchRadius
-        )
+        val override = JobConfigOverrides.getOverride(id)
+        if (override != null) {
+            val effective = base.copy(
+                cooldownSeconds = override.cooldownSeconds ?: base.cooldownSeconds,
+                searchRadius = override.searchRadius ?: base.searchRadius
+            )
+            Cobblebase.LOGGER.info("[DEBUG] getEffective($id): base=${base.cooldownSeconds}s, override=${override.cooldownSeconds}s, effective=${effective.cooldownSeconds}s")
+            return effective
+        }
+        return base
     }
 
     /**

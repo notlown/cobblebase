@@ -120,6 +120,7 @@ object BaseManager {
     )
 
     private fun executeSkill(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, entry: SkillEntry) {
+        if (world.time % 100 == 0L) Cobblebase.LOGGER.info("[DEBUG] executeSkill called: species=${pokemonEntity.pokemon.species.name}, skillId=${entry.skillId}")
         val skillDef: SkillDef? = SkillRegistry.getEffective(entry.skillId)
         if (skillDef == null) {
             return

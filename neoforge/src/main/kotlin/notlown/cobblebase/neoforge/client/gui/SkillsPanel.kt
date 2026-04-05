@@ -2,6 +2,7 @@ package notlown.cobblebase.neoforge.client.gui
 
 import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.BaseManager
+import notlown.cobblebase.core.JobConfigOverrides
 import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillRegistry
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
@@ -81,7 +82,7 @@ class SkillsPanel(
 
             val skillCount = availableSkills.count { entry ->
                 val skillDef = SkillRegistry.get(entry.skillId)
-                skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor)
+                skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor) && JobConfigOverrides.isEnabled(entry.skillId)
             }
 
             val autoX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
@@ -104,6 +105,7 @@ class SkillsPanel(
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
                 if (BaseManager.isBuffExecutor(skillDef.executor)) continue
+                if (!JobConfigOverrides.isEnabled(entry.skillId)) continue
                 if (btnX > maxBtnX) {
                     btnX = skillStartX
                     btnY = rowY + BTN_HEIGHT + BTN_GAP

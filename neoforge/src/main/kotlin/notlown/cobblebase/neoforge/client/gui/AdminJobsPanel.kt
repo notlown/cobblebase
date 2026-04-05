@@ -40,6 +40,11 @@ class AdminJobsPanel(
     private val FIELD_BG = 0xFF2A2A3E.toInt()
     private val FIELD_BORDER = 0xFF4A4A6E.toInt()
     private val FIELD_ACTIVE = 0xFF5A5A8E.toInt()
+    private val SAVE_COLOR = 0xFF4CAF50.toInt()
+    private val SAVE_HOVER = 0xFF66BB6A.toInt()
+    private val RESET_COLOR = 0xFF555555.toInt()
+    private val RESET_HOVER = 0xFF777777.toInt()
+    private val BUTTON_AREA_HEIGHT = 24
 
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
@@ -142,7 +147,7 @@ class AdminJobsPanel(
         val listY = y + PADDING + 24
         context.fill(x + 2, listY - 1, x + w - 2, listY, 0xFF3A3A5C.toInt())
 
-        val listH = h - PADDING - 28
+        val listH = h - PADDING - 28 - BUTTON_AREA_HEIGHT
         val gridRows = buildGridRows()
         val maxVisible = listH / ROW_HEIGHT
         val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
@@ -288,11 +293,51 @@ class AdminJobsPanel(
             context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
+
+        // Save / Reset buttons
+        val btnY = y + h - BUTTON_AREA_HEIGHT + 4
+        val btnH = 16
+        val saveBtnW = 50
+        val resetBtnW = 50
+        val saveBtnX = x + PADDING
+        val resetBtnX = saveBtnX + saveBtnW + 6
+
+        val hasUnsaved = jobEdits.any { it.dirty }
+
+        // Save button
+        val saveHovered = mouseX in saveBtnX..(saveBtnX + saveBtnW) && mouseY in btnY..(btnY + btnH)
+        val saveBg = if (saveHovered) SAVE_HOVER else SAVE_COLOR
+        context.fill(saveBtnX, btnY, saveBtnX + saveBtnW, btnY + btnH, saveBg)
+        context.matrices.push()
+        context.matrices.translate((saveBtnX + 4).toFloat(), (btnY + 4).toFloat(), 0f)
+        context.matrices.scale(scale, scale, 1f)
+        context.drawTextWithShadow(textRenderer, "Save", 0, 0, 0xFFFFFF)
+        context.matrices.pop()
+
+        // Reset button
+        val resetHovered = mouseX in resetBtnX..(resetBtnX + resetBtnW) && mouseY in btnY..(btnY + btnH)
+        val resetBg = if (resetHovered) RESET_HOVER else RESET_COLOR
+        context.fill(resetBtnX, btnY, resetBtnX + resetBtnW, btnY + btnH, resetBg)
+        context.matrices.push()
+        context.matrices.translate((resetBtnX + 4).toFloat(), (btnY + 4).toFloat(), 0f)
+        context.matrices.scale(scale, scale, 1f)
+        context.drawTextWithShadow(textRenderer, "Reset", 0, 0, 0xFFFFFF)
+        context.matrices.pop()
+
+        // Unsaved indicator
+        if (hasUnsaved) {
+            val indicatorX = resetBtnX + resetBtnW + 8
+            context.matrices.push()
+            context.matrices.translate(indicatorX.toFloat(), (btnY + 4).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, "\u00A7e*unsaved", 0, 0, 0xFFFF00)
+            context.matrices.pop()
+        }
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         val listY = y + PADDING + 24
-        val listH = h - PADDING - 28
+        val listH = h - PADDING - 28 - BUTTON_AREA_HEIGHT
         val gridRows = buildGridRows()
         val maxVisible = listH / ROW_HEIGHT
         val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
@@ -309,6 +354,27 @@ class AdminJobsPanel(
             isDraggingScrollbar = true
             val relativeY = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
             scrollOffset = (relativeY * maxScroll).toInt()
+            return true
+        }
+
+        // Check Save / Reset button clicks
+        val btnY = y + h - BUTTON_AREA_HEIGHT + 4
+        val btnH = 16
+        val saveBtnW = 50
+        val resetBtnW = 50
+        val saveBtnX = x + PADDING
+        val resetBtnX = saveBtnX + saveBtnW + 6
+
+        if (mouseX >= saveBtnX && mouseX <= saveBtnX + saveBtnW &&
+            mouseY >= btnY && mouseY <= btnY + btnH) {
+            commitActiveField()
+            saveAllChanges()
+            return true
+        }
+
+        if (mouseX >= resetBtnX && mouseX <= resetBtnX + resetBtnW &&
+            mouseY >= btnY && mouseY <= btnY + btnH) {
+            resetChanges()
             return true
         }
 
@@ -361,7 +427,6 @@ class AdminJobsPanel(
                         mouseY >= cbY && mouseY <= cbY + cbSize) {
                         job.enabled = !job.enabled
                         job.dirty = true
-                        sendJobUpdate(job)
                         return true
                     }
 
@@ -389,7 +454,6 @@ class AdminJobsPanel(
                 if (newValue != null && newValue > 0) {
                     job.cooldownSeconds = newValue
                     job.dirty = true
-                    sendJobUpdate(job)
                 }
             }
             FieldType.RADIUS_MIN -> {
@@ -397,7 +461,6 @@ class AdminJobsPanel(
                 if (newValue != null && newValue > 0) {
                     job.radiusMin = newValue
                     job.dirty = true
-                    sendJobUpdate(job)
                 }
             }
             FieldType.RADIUS_MAX -> {
@@ -405,7 +468,6 @@ class AdminJobsPanel(
                 if (newValue != null && newValue > 0) {
                     job.radiusMax = newValue
                     job.dirty = true
-                    sendJobUpdate(job)
                 }
             }
             FieldType.NONE -> {}
@@ -415,32 +477,45 @@ class AdminJobsPanel(
         activeFieldType = FieldType.NONE
     }
 
-    private fun sendJobUpdate(job: JobEditData) {
-        val cooldownOverride = if (job.cooldownSeconds != job.defaultCooldown) job.cooldownSeconds else null
-        val radiusMinOverride = if (job.radiusMin != 3) job.radiusMin else null
-        val radiusMaxOverride = if (job.radiusMax != job.defaultRadius.coerceAtLeast(5)) job.radiusMax else null
-        PacketDistributor.sendToServer(AdminJobsUpdateC2SPacket(
-            job.skillId,
-            cooldownOverride,
-            radiusMinOverride,
-            radiusMaxOverride,
-            job.enabled
-        ))
-        job.dirty = false
-
-        // Update local cache
+    private fun saveAllChanges() {
         val newOverrides = AdminJobDataCache.jobOverrides.toMutableMap()
-        if (cooldownOverride == null && radiusMinOverride == null && radiusMaxOverride == null && job.enabled) {
-            newOverrides.remove(job.skillId)
-        } else {
-            newOverrides[job.skillId] = JobConfigOverrides.JobOverride(
-                cooldownSeconds = cooldownOverride,
-                radiusMin = radiusMinOverride,
-                radiusMax = radiusMaxOverride,
-                enabled = job.enabled
-            )
+
+        for (job in jobEdits) {
+            if (!job.dirty) continue
+
+            val cooldownOverride = if (job.cooldownSeconds != job.defaultCooldown) job.cooldownSeconds else null
+            val radiusMinOverride = if (job.radiusMin != 3) job.radiusMin else null
+            val radiusMaxOverride = if (job.radiusMax != job.defaultRadius.coerceAtLeast(5)) job.radiusMax else null
+
+            PacketDistributor.sendToServer(AdminJobsUpdateC2SPacket(
+                job.skillId,
+                cooldownOverride,
+                radiusMinOverride,
+                radiusMaxOverride,
+                job.enabled
+            ))
+
+            if (cooldownOverride == null && radiusMinOverride == null && radiusMaxOverride == null && job.enabled) {
+                newOverrides.remove(job.skillId)
+            } else {
+                newOverrides[job.skillId] = JobConfigOverrides.JobOverride(
+                    cooldownSeconds = cooldownOverride,
+                    radiusMin = radiusMinOverride,
+                    radiusMax = radiusMaxOverride,
+                    enabled = job.enabled
+                )
+            }
+
+            job.dirty = false
         }
+
         AdminJobDataCache.update(AdminJobDataCache.allJobs, newOverrides)
+    }
+
+    private fun resetChanges() {
+        activeFieldJob = -1
+        activeFieldType = FieldType.NONE
+        rebuild()
     }
 
     fun charTyped(chr: Char, modifiers: Int): Boolean {
@@ -480,7 +555,7 @@ class AdminJobsPanel(
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
         if (isDraggingScrollbar) {
             val listY = y + PADDING + 24
-            val listH = h - PADDING - 28
+            val listH = h - PADDING - 28 - BUTTON_AREA_HEIGHT
             val gridRows = buildGridRows()
             val maxVisible = listH / ROW_HEIGHT
             val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
@@ -502,7 +577,7 @@ class AdminJobsPanel(
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
             val gridRows = buildGridRows()
-            val listH = h - PADDING - 28
+            val listH = h - PADDING - 28 - BUTTON_AREA_HEIGHT
             val maxVisible = listH / ROW_HEIGHT
             val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
             scrollOffset = (scrollOffset - verticalAmount.toInt() * 3).coerceIn(0, maxScroll)

@@ -77,8 +77,12 @@ object BaseManager {
         val assignedSkillId: String? = assignments[pokemonId]
 
         if (assignedSkillId != null) {
-            // Skip if the assigned skill is a buff (buffs are handled passively below)
-            if (!isBuffSkill(assignedSkillId)) {
+            // Check if the assigned skill is still enabled by admin
+            if (!JobConfigOverrides.isEnabled(assignedSkillId)) {
+                // Skill was disabled by admin — reset to Idle
+                assignments.remove(pokemonId)
+                dirty = true
+            } else if (!isBuffSkill(assignedSkillId)) {
                 // Clear ambient behavior when actively working
                 AmbientBehavior.clearState(pokemonId)
                 val entry: SkillEntry? = speciesData.skills.find { e -> e.skillId == assignedSkillId }

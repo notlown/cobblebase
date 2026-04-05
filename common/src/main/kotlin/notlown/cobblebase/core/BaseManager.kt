@@ -54,21 +54,18 @@ object BaseManager {
                 )
             )
             if (distFromPasture > CobblebaseConfig.safetyTeleportDistance) {
-                pokemonEntity.setPosition(pastureOrigin.x + 0.5, pastureOrigin.y + 1.0, pastureOrigin.z + 0.5)
+                val (sx, sz) = getSpawnOffset(world)
+                pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
                 NavigationHelper.clearTargets(pokemonEntity)
-                if (now % 100 == 0L) {
-                }
             }
         }
 
         // Safety: prevent drowning — if Pokemon is submerged in water, teleport to pasture origin
         if (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100) {
-            val safeY = pastureOrigin.y + 1.0
-            pokemonEntity.setPosition(pastureOrigin.x + 0.5, safeY, pastureOrigin.z + 0.5)
+            val (sx, sz) = getSpawnOffset(world)
+            pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
             pokemonEntity.air = pokemonEntity.maxAir
             NavigationHelper.clearTargets(pokemonEntity)
-            if (now % 100 == 0L) {
-            }
         }
 
         val speciesData: SpeciesSkills? = SpeciesSkillRegistry.getSkills(speciesName)
@@ -155,6 +152,17 @@ object BaseManager {
      */
     fun isBuffExecutor(executor: String): Boolean {
         return executor in BUFF_EXECUTORS
+    }
+
+    /**
+     * Returns a random spawn offset (1-2 blocks from center) to avoid spawning directly on the pasture block.
+     * Matches Cobblemon's default behavior of placing Pokemon near (not on) the pasture.
+     */
+    private fun getSpawnOffset(world: World): Pair<Double, Double> {
+        val rand = world.random
+        val angle = rand.nextDouble() * Math.PI * 2
+        val dist = 1.5 + rand.nextDouble() // 1.5-2.5 blocks from center
+        return Pair(Math.cos(angle) * dist + 0.5, Math.sin(angle) * dist + 0.5)
     }
 
     // -- Persistence --

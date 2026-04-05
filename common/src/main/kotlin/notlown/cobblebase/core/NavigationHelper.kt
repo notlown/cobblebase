@@ -151,16 +151,13 @@ object NavigationHelper {
             // Same position — check if stuck long enough
             val since = stuckSince.getOrPut(id) { now }
             if (now - since >= STUCK_THRESHOLD_TICKS) {
-                // Stuck for 15+ seconds — teleport a few blocks toward origin
-                val dx = (origin.x - currentPos.x).coerceIn(-3, 3)
-                val dz = (origin.z - currentPos.z).coerceIn(-3, 3)
-                val newX = currentPos.x + dx + 0.5
-                val newZ = currentPos.z + dz + 0.5
-                val newY = if (world is net.minecraft.server.world.ServerWorld) {
-                    world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, currentPos.x + dx, currentPos.z + dz).toDouble()
-                } else {
-                    currentPos.y.toDouble()
-                }
+                // Stuck for 15+ seconds — teleport near the pasture origin (not on top)
+                val rand = world.random
+                val angle = rand.nextDouble() * Math.PI * 2
+                val dist = 1.5 + rand.nextDouble()
+                val newX = origin.x + Math.cos(angle) * dist + 0.5
+                val newZ = origin.z + Math.sin(angle) * dist + 0.5
+                val newY = origin.y + 1.0
                 pokemonEntity.refreshPositionAndAngles(newX, newY, newZ, pokemonEntity.yaw, pokemonEntity.pitch)
                 stuckSince.remove(id)
                 pokemonEntity.navigation.stop()

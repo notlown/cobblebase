@@ -99,7 +99,10 @@ object ScoutExecutor : SkillExecutor {
             )
         )
         if (distFromOrigin > TELEPORT_DISTANCE) {
-            pokemonEntity.setPosition(origin.x + 0.5, origin.y + 1.0, origin.z + 0.5)
+            val rand = world.random
+            val angle = rand.nextDouble() * Math.PI * 2
+            val dist = 1.5 + rand.nextDouble()
+            pokemonEntity.setPosition(origin.x + Math.cos(angle) * dist + 0.5, origin.y + 1.0, origin.z + Math.sin(angle) * dist + 0.5)
             NavigationHelper.clearTargets(pokemonEntity)
             Cobblebase.log("[Scout] ${pokemonEntity.pokemon.species.name} was too far (${distFromOrigin.toInt()} blocks) — teleported back to pasture")
         } else if (distFromOrigin > MAX_DISTANCE_FROM_PASTURE) {

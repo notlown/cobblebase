@@ -15,14 +15,12 @@ import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.CobblebaseClothConfig
 import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
-import notlown.cobblebase.core.PastureSettingsCache
 import notlown.cobblebase.core.VersionChecker
 import notlown.cobblebase.core.net.AdminJobsRequestC2SPacket
 import notlown.cobblebase.core.net.AdminJobsSyncS2CPacket
 import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
-import notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket
 import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
@@ -88,13 +86,6 @@ object CobblebaseFabricClient : ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(AdminSpeciesSyncS2CPacket.ID) { packet, context ->
             context.client().execute {
                 AdminDataCache.update(packet.allSpecies, packet.speciesSkills, packet.overriddenSpecies)
-            }
-        }
-
-        // Register S2C pasture settings sync packet receiver
-        ClientPlayNetworking.registerGlobalReceiver(PastureSettingsSyncS2CPacket.ID) { packet, context ->
-            context.client().execute {
-                PastureSettingsCache.update(packet.searchRadius, packet.radiusMin, packet.radiusMax)
             }
         }
 

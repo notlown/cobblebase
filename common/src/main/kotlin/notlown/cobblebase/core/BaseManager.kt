@@ -120,7 +120,7 @@ object BaseManager {
     )
 
     private fun executeSkill(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, entry: SkillEntry) {
-        val skillDef: SkillDef? = SkillRegistry.getEffective(entry.skillId, origin)
+        val skillDef: SkillDef? = SkillRegistry.get(entry.skillId)
         if (skillDef == null) {
             return
         }

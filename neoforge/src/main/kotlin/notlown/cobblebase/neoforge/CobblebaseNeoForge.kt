@@ -32,12 +32,7 @@ import notlown.cobblebase.core.net.LogSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
 import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket
 import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
-import notlown.cobblebase.core.net.PastureSettingsRequestC2SPacket
-import notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket
-import notlown.cobblebase.core.net.PastureSettingsUpdateC2SPacket
 import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
-import notlown.cobblebase.core.PastureSettings
-import notlown.cobblebase.core.PastureSettingsCache
 import notlown.cobblebase.core.VersionChecker
 import net.neoforged.neoforge.event.entity.player.PlayerEvent
 
@@ -219,37 +214,6 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
             }
         }
-
-        // C2S: Pasture settings request
-        registrar.playToServer(
-            PastureSettingsRequestC2SPacket.ID,
-            PastureSettingsRequestC2SPacket.CODEC
-        ) { _, context ->
-            context.enqueueWork {
-                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
-                handlePastureSettingsRequest(player, context)
-            }
-        }
-
-        // S2C: Pasture settings sync
-        registrar.playToClient(
-            PastureSettingsSyncS2CPacket.ID,
-            PastureSettingsSyncS2CPacket.CODEC
-        ) { packet, context ->
-            context.enqueueWork {
-                PastureSettingsCache.update(packet.searchRadius, packet.radiusMin, packet.radiusMax)
-            }
-        }
-
-        // C2S: Pasture settings update
-        registrar.playToServer(
-            PastureSettingsUpdateC2SPacket.ID,
-            PastureSettingsUpdateC2SPacket.CODEC
-        ) { packet, context ->
-            context.enqueueWork {
-                packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
-            }
-        }
     }
 
     private fun onPlayerLoggedIn(event: PlayerEvent.PlayerLoggedInEvent) {
@@ -269,7 +233,6 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         DiscoveryRegistry.load(world)
         SpeciesSkillOverrides.load(world)
         JobConfigOverrides.load(world)
-        PastureSettings.load(world)
     }
 
     private fun onServerStopping(event: ServerStoppingEvent) {
@@ -279,7 +242,6 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         DiscoveryRegistry.save(world)
         SpeciesSkillOverrides.save(world)
         JobConfigOverrides.save(world)
-        PastureSettings.save(world)
     }
 
     /**
@@ -330,47 +292,6 @@ class CobblebaseNeoForge(modBus: IEventBus) {
 
         val entries = LogManager.getEntries(pasturePos)
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, LogSyncS2CPacket(entries))
-    }
-
-    /**
-     * Handles a pasture settings request. Finds the nearest pasture and sends its settings + admin range.
-     */
-    private fun handlePastureSettingsRequest(
-        player: net.minecraft.server.network.ServerPlayerEntity,
-        context: net.neoforged.neoforge.network.handling.IPayloadContext
-    ) {
-        val world = player.serverWorld
-        val playerPos = player.blockPos
-
-        var nearestPos: BlockPos? = null
-        var nearestDist = Double.MAX_VALUE
-        val searchRadius = 16
-
-        for (x in -searchRadius..searchRadius) {
-            for (y in -searchRadius..searchRadius) {
-                for (z in -searchRadius..searchRadius) {
-                    val pos = playerPos.add(x, y, z)
-                    val blockEntity = world.getBlockEntity(pos)
-                    if (blockEntity is PokemonPastureBlockEntity) {
-                        val dist = pos.getSquaredDistance(playerPos)
-                        if (dist < nearestDist) {
-                            nearestDist = dist
-                            nearestPos = pos
-                        }
-                    }
-                }
-            }
-        }
-
-        val pasturePos = nearestPos
-        val range = PastureSettings.getGlobalRadiusRange()
-        if (pasturePos == null) {
-            context.reply(PastureSettingsSyncS2CPacket(10, range.first, range.second))
-            return
-        }
-
-        val currentRadius = PastureSettings.getSearchRadius(pasturePos)
-        context.reply(PastureSettingsSyncS2CPacket(currentRadius, range.first, range.second))
     }
 
     /**

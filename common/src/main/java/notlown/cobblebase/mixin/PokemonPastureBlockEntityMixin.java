@@ -165,9 +165,7 @@ public class PokemonPastureBlockEntityMixin {
                 // Passive buffs still run for idle mons
                 try {
                     BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
-                } catch (Exception e) {
-                    if (world.getTime() % 100 == 0) Cobblebase.INSTANCE.getLOGGER().error("[Cobblebase] Error ticking idle {}: {}", pokemon.getSpecies().getName(), e.getMessage());
-                }
+                } catch (Exception ignored) { }
             } else {
                 // WORKING MON: normal job execution, no ambient behaviors
                 AmbientBehavior.INSTANCE.clearState(pokemonEntity.getPokemon().getUuid());

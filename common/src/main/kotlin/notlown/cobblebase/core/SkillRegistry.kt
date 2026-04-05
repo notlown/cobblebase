@@ -1,6 +1,7 @@
 package notlown.cobblebase.core
 
 import com.google.gson.Gson
+import net.minecraft.util.math.BlockPos
 import java.io.InputStreamReader
 
 /**
@@ -23,13 +24,18 @@ object SkillRegistry {
     /**
      * Returns a SkillDef with overridden values applied from JobConfigOverrides.
      * This allows executors to use the effective values without changes.
+     *
+     * If a pasturePos is provided, the searchRadius is further overridden
+     * by the per-pasture setting (clamped to admin range).
      */
-    fun getEffective(id: String): SkillDef? {
+    fun getEffective(id: String, pasturePos: BlockPos? = null): SkillDef? {
         val base = skills[id] ?: return null
-        val override = JobConfigOverrides.getOverride(id) ?: return base
+        val override = JobConfigOverrides.getOverride(id)
+        val baseRadius = override?.searchRadius ?: base.searchRadius
+        val pastureRadius = if (pasturePos != null) PastureSettings.getSearchRadius(pasturePos) else baseRadius
         return base.copy(
-            cooldownSeconds = override.cooldownSeconds ?: base.cooldownSeconds,
-            searchRadius = override.searchRadius ?: base.searchRadius
+            cooldownSeconds = override?.cooldownSeconds ?: base.cooldownSeconds,
+            searchRadius = pastureRadius
         )
     }
 

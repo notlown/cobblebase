@@ -27,7 +27,11 @@ import notlown.cobblebase.core.net.LogSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
 import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket
 import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
+import notlown.cobblebase.core.net.PastureSettingsRequestC2SPacket
+import notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket
+import notlown.cobblebase.core.net.PastureSettingsUpdateC2SPacket
 import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
+import notlown.cobblebase.core.PastureSettings
 import notlown.cobblebase.core.VersionChecker
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 
@@ -138,6 +142,25 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // Register C2S packet for pasture settings requests
+        PayloadTypeRegistry.playC2S().register(PastureSettingsRequestC2SPacket.ID, PastureSettingsRequestC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(PastureSettingsRequestC2SPacket.ID) { _, context ->
+            context.server().execute {
+                handlePastureSettingsRequest(context.player())
+            }
+        }
+
+        // Register S2C packet for pasture settings sync
+        PayloadTypeRegistry.playS2C().register(PastureSettingsSyncS2CPacket.ID, PastureSettingsSyncS2CPacket.CODEC)
+
+        // Register C2S packet for pasture settings updates
+        PayloadTypeRegistry.playC2S().register(PastureSettingsUpdateC2SPacket.ID, PastureSettingsUpdateC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(PastureSettingsUpdateC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                packet.handle(context.player())
+            }
+        }
+
         // Load assignments, logs, discoveries, and overrides when world starts
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             val world = server.overworld
@@ -146,6 +169,7 @@ object CobblebaseFabric : ModInitializer {
             DiscoveryRegistry.load(world)
             SpeciesSkillOverrides.load(world)
             JobConfigOverrides.load(world)
+            PastureSettings.load(world)
         }
 
         // Save assignments, logs, discoveries, and overrides when world stops
@@ -156,6 +180,7 @@ object CobblebaseFabric : ModInitializer {
             DiscoveryRegistry.save(world)
             SpeciesSkillOverrides.save(world)
             JobConfigOverrides.save(world)
+            PastureSettings.save(world)
         }
     }
 
@@ -207,6 +232,44 @@ object CobblebaseFabric : ModInitializer {
 
         val entries = LogManager.getEntries(pasturePos)
         ServerPlayNetworking.send(player, LogSyncS2CPacket(entries))
+    }
+
+    /**
+     * Handles a pasture settings request. Finds the nearest pasture and sends its settings + admin range.
+     */
+    private fun handlePastureSettingsRequest(player: net.minecraft.server.network.ServerPlayerEntity) {
+        val world = player.serverWorld
+        val playerPos = player.blockPos
+
+        var nearestPos: BlockPos? = null
+        var nearestDist = Double.MAX_VALUE
+        val searchRadius = 16
+
+        for (x in -searchRadius..searchRadius) {
+            for (y in -searchRadius..searchRadius) {
+                for (z in -searchRadius..searchRadius) {
+                    val pos = playerPos.add(x, y, z)
+                    val blockEntity = world.getBlockEntity(pos)
+                    if (blockEntity is PokemonPastureBlockEntity) {
+                        val dist = pos.getSquaredDistance(playerPos)
+                        if (dist < nearestDist) {
+                            nearestDist = dist
+                            nearestPos = pos
+                        }
+                    }
+                }
+            }
+        }
+
+        val pasturePos = nearestPos
+        val range = PastureSettings.getGlobalRadiusRange()
+        if (pasturePos == null) {
+            ServerPlayNetworking.send(player, PastureSettingsSyncS2CPacket(10, range.first, range.second))
+            return
+        }
+
+        val currentRadius = PastureSettings.getSearchRadius(pasturePos)
+        ServerPlayNetworking.send(player, PastureSettingsSyncS2CPacket(currentRadius, range.first, range.second))
     }
 
     /**

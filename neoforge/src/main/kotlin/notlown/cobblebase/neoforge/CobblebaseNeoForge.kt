@@ -33,6 +33,7 @@ import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
 import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket
 import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
 import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
+import notlown.cobblebase.core.ContainerHelperRegistry
 import notlown.cobblebase.core.VersionChecker
 import net.neoforged.neoforge.event.entity.player.PlayerEvent
 
@@ -41,6 +42,9 @@ class CobblebaseNeoForge(modBus: IEventBus) {
 
     init {
         Cobblebase.init()
+
+        // Register platform-specific container helper (NeoForge Capabilities)
+        ContainerHelperRegistry.instance = NeoForgeContainerHelper()
 
         // Register mod bus events (networking)
         modBus.addListener(::onRegisterPayloads)

@@ -28,12 +28,16 @@ import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
 import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket
 import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
 import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
+import notlown.cobblebase.core.ContainerHelperRegistry
 import notlown.cobblebase.core.VersionChecker
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 
 object CobblebaseFabric : ModInitializer {
     override fun onInitialize() {
         Cobblebase.init()
+
+        // Register platform-specific container helper (Fabric Transfer API)
+        ContainerHelperRegistry.instance = FabricContainerHelper()
 
         // Register C2S packet for version handshake
         PayloadTypeRegistry.playC2S().register(VersionHandshakeC2SPacket.ID, VersionHandshakeC2SPacket.CODEC)

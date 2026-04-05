@@ -1,0 +1,38 @@
+# v1.3.8 — Producer Job, Admin GUI & Scout Update
+
+## 🏭 Producer Job
+- New **"Producer"** job — ~180 Pokemon produce species-specific items
+- 35+ item types: wool, string, milk, eggs, honeycomb, gold nuggets, diamonds, slime balls, charcoal, gunpowder, iron nuggets, blaze powder, ghast tears, rabbit's foot, logs, ores, and more
+- Includes wood producers (Komala, Timburr-line, Trevenant), ore producers (Roggenrola-line, Copperajah), object Pokemon (Honedge-line, Klink-line), sweets (Alcremie, Milcery)
+- Works with proficiency system — higher prof = faster production
+- Removed Honey Collector (replaced by Producer for Combee/Vespiquen)
+
+## 🔧 Admin GUI — Jobs Tab
+- New **"Jobs" tab** in `/cobblebase admin` — configure per-job settings server-wide
+- **Per-job Cooldown** — set custom cooldown (seconds) for each job
+- **Per-job Radius Min/Max** — set allowed search radius range
+- **Per-job Enable/Disable** — toggle jobs on/off server-wide
+- **Save/Reset buttons** — changes only apply on Save
+- Disabled jobs auto-hide from player Skills panel
+- Pokemon assigned to disabled jobs auto-reset to Relax
+
+## 🧭 Scout Improvements
+- **Xaero's Minimap integration** — structure/biome discoveries get automatic waypoints with [Add] button
+- **Search radius increased** — Prof 1: 100, Prof 2: 300, Prof 3: 500, Prof 4: 750, Prof 5: 1000 blocks
+- **Spawn rarity filter** — only Uncommon+ wild Pokemon reported (uses Cobblemon spawn data)
+- **Surface height** — TP commands and waypoints use correct Y position
+
+## 🐛 Bug Fixes
+- **C2ME compatibility** — fixed threading crash (`world.random` → `ThreadLocalRandom`)
+- **Admin Job Config** — cooldown/radius overrides now actually apply to executors
+- **SkillDef.copy() NPE** — Gson null field crash fixed (root cause of many issues)
+- **Item stacking** — job-produced items now stack normally with vanilla items
+- **Pokemon spawn offset** — teleports place Pokemon 1.5-2.5 blocks from Pasture Block, not on top
+- **Unstick without teleport** — stuck Pokemon redirect in random direction instead of TP (safe for pens, aquariums, globes)
+- **Unstick threshold** — reduced from 15s to 7s
+- **Buffs tab** — Relax mode only shows passive buffs, not all skills
+- **GUI first-open** — assignments pre-fetched on server join, correct state on first open
+
+## ⚙️ Config
+- **Console Logging toggle** — `enableConsoleLogging` (default: off) to reduce server console spam
+- All Admin GUI settings include descriptive tooltips

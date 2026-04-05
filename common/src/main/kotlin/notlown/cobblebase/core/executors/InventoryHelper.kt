@@ -1,13 +1,12 @@
 package notlown.cobblebase.core.executors
 
-import net.minecraft.block.BarrelBlock
-import net.minecraft.block.ChestBlock
 import net.minecraft.entity.ItemEntity
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+import notlown.cobblebase.core.ContainerHelperRegistry
 import notlown.cobblebase.core.ItemOriginHelper
 
 /**
@@ -53,8 +52,17 @@ object InventoryHelper {
 
     /**
      * Inserts items into the container. Returns leftover items that didn't fit.
+     * Delegates to platform-specific ContainerHelper when available (supports modded containers
+     * like Sophisticated Storage that don't implement vanilla Inventory).
      */
     fun insertItems(world: World, containerPos: BlockPos, items: List<ItemStack>): List<ItemStack> {
+        // Platform-specific path (Fabric Transfer API / NeoForge Capabilities)
+        val helper = ContainerHelperRegistry.instance
+        if (helper != null) {
+            return helper.insertItems(world, containerPos, items)
+        }
+
+        // Fallback: vanilla Inventory only
         val blockEntity = world.getBlockEntity(containerPos)
         val inventory: Inventory = when (blockEntity) {
             is Inventory -> blockEntity
@@ -127,19 +135,23 @@ object InventoryHelper {
     }
 
     private fun findAllContainers(world: World, origin: BlockPos, radius: Int): List<BlockPos> {
+        val helper = ContainerHelperRegistry.instance
         val result = mutableListOf<BlockPos>()
         for (x in -radius..radius) {
             for (y in -radius..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
-                    // Check for any block entity that implements Inventory
-                    // This supports vanilla chests/barrels AND modded containers
-                    // (Iron Chests, Sophisticated Storage, etc.)
-                    // Exclude PokemonPastureBlockEntity — mods like CobBreeding add
-                    // Inventory to it (for eggs), but it's not a storage container.
-                    val blockEntity = world.getBlockEntity(pos)
-                    if (blockEntity is Inventory && blockEntity !is PokemonPastureBlockEntity) {
-                        result.add(pos.toImmutable())
+                    if (helper != null) {
+                        // Platform-specific detection (vanilla Inventory + Fabric Transfer API / NeoForge Capabilities)
+                        if (helper.isContainer(world, pos)) {
+                            result.add(pos.toImmutable())
+                        }
+                    } else {
+                        // Fallback: vanilla Inventory only
+                        val blockEntity = world.getBlockEntity(pos)
+                        if (blockEntity is Inventory && blockEntity !is PokemonPastureBlockEntity) {
+                            result.add(pos.toImmutable())
+                        }
                     }
                 }
             }
@@ -149,13 +161,19 @@ object InventoryHelper {
 
     /**
      * Checks if a container already holds items of the same type.
+     * Delegates to platform-specific ContainerHelper when available.
      */
     private fun containerHasItem(world: World, pos: BlockPos, itemToMatch: ItemStack): Boolean {
+        val helper = ContainerHelperRegistry.instance
+        if (helper != null) {
+            return helper.hasItem(world, pos, itemToMatch)
+        }
+
+        // Fallback: vanilla Inventory only
         val blockEntity = world.getBlockEntity(pos) as? Inventory ?: return false
         for (i in 0 until blockEntity.size()) {
             val slot = blockEntity.getStack(i)
             if (!slot.isEmpty && ItemStack.areItemsAndComponentsEqual(slot, itemToMatch)) {
-                // Also check there's space to add more
                 if (slot.count < slot.maxCount) return true
             }
         }
@@ -163,9 +181,16 @@ object InventoryHelper {
     }
 
     /**
-     * Checks if a container has at least one empty slot.
+     * Checks if a container has at least one empty or partially-filled slot.
+     * Delegates to platform-specific ContainerHelper when available.
      */
     private fun containerHasSpace(world: World, pos: BlockPos): Boolean {
+        val helper = ContainerHelperRegistry.instance
+        if (helper != null) {
+            return helper.hasSpace(world, pos)
+        }
+
+        // Fallback: vanilla Inventory only
         val blockEntity = world.getBlockEntity(pos) as? Inventory ?: return false
         for (i in 0 until blockEntity.size()) {
             if (blockEntity.getStack(i).isEmpty) return true

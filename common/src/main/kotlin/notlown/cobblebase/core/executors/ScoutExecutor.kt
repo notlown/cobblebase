@@ -511,14 +511,17 @@ object ScoutExecutor : SkillExecutor {
         val cleanName = name.replace(" ", "_")
         val initials = name.take(1).uppercase()
 
-        // Determine dimension waypoint set name from world registry key
-        val dimId = world.registryKey.value
-        val dimWaypointSet = "Internal-${dimId.namespace}\$${dimId.path}-waypoints"
+        // Determine dimension waypoint set name
+        // Xaero format: Internal-overworld-waypoints, Internal-the_nether-waypoints, Internal-the_end-waypoints
+        val dimPath = world.registryKey.value.path // "overworld", "the_nether", "the_end"
+        val dimWaypointSet = "Internal-${dimPath}-waypoints"
 
         val xaeroMsg = "xaero-waypoint:$cleanName:$initials:$x:$y:$z:$xaeroColor:false:0:$dimWaypointSet"
 
         for (player in players) {
             player.sendMessage(Text.literal(xaeroMsg), false)
         }
+
+        Cobblebase.LOGGER.info("[Scout] Xaero waypoint sent: $xaeroMsg")
     }
 }

@@ -1,0 +1,9 @@
+{
+  "species": "revaroom",
+  "skills": [
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 2
+    }
+  ]
+}

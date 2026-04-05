@@ -266,6 +266,58 @@ object ProducerExecutor : SkillExecutor {
         "steelix" to ProduceEntry("iron_nugget", 3, "Iron Nugget"),
         "skarmory" to ProduceEntry("iron_nugget", 2, "Iron Nugget"),
 
+        // Sweets & Baking
+        "alcremie" to ProduceEntry("cake", 1, "Cake"),
+        "milcery" to ProduceEntry("sugar", 1, "Sugar"),
+        "swirlix" to ProduceEntry("sugar", 1, "Sugar"),
+        "slurpuff" to ProduceEntry("sugar", 2, "Sugar"),
+
+        // Object-Pokemon
+        "varoom" to ProduceEntry("iron_ingot", 1, "Iron Ingot"),
+        "revaroom" to ProduceEntry("iron_ingot", 2, "Iron Ingot"),
+        "trubbish" to ProduceEntry("rotten_flesh", 1, "Rotten Flesh"),
+        "garbodor" to ProduceEntry("bone_meal", 2, "Bone Meal"),
+        "klefki" to ProduceEntry("iron_nugget", 1, "Iron Nugget"),
+        "honedge" to ProduceEntry("iron_ingot", 1, "Iron Ingot"),
+        "doublade" to ProduceEntry("iron_ingot", 1, "Iron Ingot"),
+        "aegislash" to ProduceEntry("iron_ingot", 2, "Iron Ingot"),
+        "sinistea" to ProduceEntry("clay_ball", 1, "Clay Ball"),
+        "polteageist" to ProduceEntry("clay_ball", 2, "Clay Ball"),
+        "falinks" to ProduceEntry("iron_nugget", 2, "Iron Nugget"),
+        "klink" to ProduceEntry("iron_nugget", 1, "Iron Nugget"),
+        "klang" to ProduceEntry("iron_nugget", 2, "Iron Nugget"),
+        "klinklang" to ProduceEntry("iron_nugget", 3, "Iron Nugget"),
+
+        // Water Plants
+        "lotad" to ProduceEntry("lily_pad", 1, "Lily Pad"),
+        "lombre" to ProduceEntry("lily_pad", 1, "Lily Pad"),
+        "ludicolo" to ProduceEntry("lily_pad", 2, "Lily Pad"),
+
+        // Ores & Metals
+        "roggenrola" to ProduceEntry("raw_iron", 1, "Raw Iron"),
+        "boldore" to ProduceEntry("raw_iron", 2, "Raw Iron"),
+        "gigalith" to ProduceEntry("raw_iron", 3, "Raw Iron"),
+        "ferroseed" to ProduceEntry("raw_iron", 1, "Raw Iron"),
+        "ferrothorn" to ProduceEntry("raw_iron", 2, "Raw Iron"),
+        "durant" to ProduceEntry("raw_iron", 1, "Raw Iron"),
+        "nosepass" to ProduceEntry("raw_iron", 1, "Raw Iron"),
+        "probopass" to ProduceEntry("raw_iron", 2, "Raw Iron"),
+        "shieldon" to ProduceEntry("raw_iron", 1, "Raw Iron"),
+        "bastiodon" to ProduceEntry("raw_iron", 2, "Raw Iron"),
+        "copperajah" to ProduceEntry("raw_copper", 3, "Raw Copper"),
+        "cufant" to ProduceEntry("raw_copper", 1, "Raw Copper"),
+        "drilbur" to ProduceEntry("raw_copper", 1, "Raw Copper"),
+        "excadrill" to ProduceEntry("raw_gold", 2, "Raw Gold"),
+        "sandslash" to ProduceEntry("raw_gold", 1, "Raw Gold"),
+        "rhyhorn" to ProduceEntry("cobblestone", 1, "Cobblestone"),
+        "rhydon" to ProduceEntry("cobblestone", 2, "Cobblestone"),
+        "rhyperior" to ProduceEntry("cobblestone", 3, "Cobblestone"),
+        "larvitar" to ProduceEntry("cobblestone", 1, "Cobblestone"),
+        "pupitar" to ProduceEntry("cobblestone", 1, "Cobblestone"),
+        "tyranitar" to ProduceEntry("cobblestone", 2, "Cobblestone"),
+        "cranidos" to ProduceEntry("cobblestone", 1, "Cobblestone"),
+        "rampardos" to ProduceEntry("cobblestone", 2, "Cobblestone"),
+
         // Special
         "shuckle" to ProduceEntry("fermented_spider_eye", 1, "Fermented Spider Eye"),
         "lapras" to ProduceEntry("blue_ice", 1, "Blue Ice"),

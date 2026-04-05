@@ -2,6 +2,7 @@ package notlown.cobblebase.neoforge.client.gui
 
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.text.Text
 import net.neoforged.neoforge.network.PacketDistributor
 import notlown.cobblebase.core.AdminJobDataCache
@@ -9,6 +10,7 @@ import notlown.cobblebase.core.JobConfigOverrides
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.net.AdminJobsUpdateC2SPacket
+import java.util.function.Function
 
 /**
  * Full-width panel for the Admin GUI "Jobs" tab.
@@ -40,11 +42,10 @@ class AdminJobsPanel(
     private val FIELD_BG = 0xFF2A2A3E.toInt()
     private val FIELD_BORDER = 0xFF4A4A6E.toInt()
     private val FIELD_ACTIVE = 0xFF5A5A8E.toInt()
-    private val SAVE_COLOR = 0xFF4CAF50.toInt()
-    private val SAVE_HOVER = 0xFF66BB6A.toInt()
-    private val RESET_COLOR = 0xFF555555.toInt()
-    private val RESET_HOVER = 0xFF777777.toInt()
     private val BUTTON_AREA_HEIGHT = 24
+
+    private var saveButton: ButtonWidget? = null
+    private var resetButton: ButtonWidget? = null
 
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
@@ -95,6 +96,16 @@ class AdminJobsPanel(
             ))
         }
         scrollOffset = 0
+    }
+
+    fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
+        saveButton = ButtonWidget.builder(Text.literal("\u00A72Save")) { commitActiveField(); saveAllChanges() }
+            .dimensions(x + w - 90, y + h - 18, 40, 14).build()
+        addWidget.apply(saveButton!!)
+
+        resetButton = ButtonWidget.builder(Text.literal("\u00A7cReset")) { resetChanges() }
+            .dimensions(x + w - 46, y + h - 18, 42, 14).build()
+        addWidget.apply(resetButton!!)
     }
 
     // Build rows: category headers + job rows
@@ -294,44 +305,19 @@ class AdminJobsPanel(
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
 
-        // Save / Reset buttons
-        val btnY = y + h - BUTTON_AREA_HEIGHT + 4
-        val btnH = 16
-        val saveBtnW = 50
-        val resetBtnW = 50
-        val saveBtnX = x + PADDING
-        val resetBtnX = saveBtnX + saveBtnW + 6
-
+        // Unsaved indicator (rendered next to the save button)
         val hasUnsaved = jobEdits.any { it.dirty }
-
-        // Save button
-        val saveHovered = mouseX in saveBtnX..(saveBtnX + saveBtnW) && mouseY in btnY..(btnY + btnH)
-        val saveBg = if (saveHovered) SAVE_HOVER else SAVE_COLOR
-        context.fill(saveBtnX, btnY, saveBtnX + saveBtnW, btnY + btnH, saveBg)
-        context.matrices.push()
-        context.matrices.translate((saveBtnX + 4).toFloat(), (btnY + 4).toFloat(), 0f)
-        context.matrices.scale(scale, scale, 1f)
-        context.drawTextWithShadow(textRenderer, "Save", 0, 0, 0xFFFFFF)
-        context.matrices.pop()
-
-        // Reset button
-        val resetHovered = mouseX in resetBtnX..(resetBtnX + resetBtnW) && mouseY in btnY..(btnY + btnH)
-        val resetBg = if (resetHovered) RESET_HOVER else RESET_COLOR
-        context.fill(resetBtnX, btnY, resetBtnX + resetBtnW, btnY + btnH, resetBg)
-        context.matrices.push()
-        context.matrices.translate((resetBtnX + 4).toFloat(), (btnY + 4).toFloat(), 0f)
-        context.matrices.scale(scale, scale, 1f)
-        context.drawTextWithShadow(textRenderer, "Reset", 0, 0, 0xFFFFFF)
-        context.matrices.pop()
-
-        // Unsaved indicator
         if (hasUnsaved) {
-            val indicatorX = resetBtnX + resetBtnW + 8
-            context.matrices.push()
-            context.matrices.translate(indicatorX.toFloat(), (btnY + 4).toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, "\u00A7e*unsaved", 0, 0, 0xFFFF00)
-            context.matrices.pop()
+            val sb = saveButton
+            if (sb != null) {
+                val indicatorX = sb.x - 60
+                val indicatorY = sb.y + 3
+                context.matrices.push()
+                context.matrices.translate(indicatorX.toFloat(), indicatorY.toFloat(), 0f)
+                context.matrices.scale(scale, scale, 1f)
+                context.drawTextWithShadow(textRenderer, "\u00A7e*unsaved", 0, 0, 0xFFFF00)
+                context.matrices.pop()
+            }
         }
     }
 
@@ -354,27 +340,6 @@ class AdminJobsPanel(
             isDraggingScrollbar = true
             val relativeY = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
             scrollOffset = (relativeY * maxScroll).toInt()
-            return true
-        }
-
-        // Check Save / Reset button clicks
-        val btnY = y + h - BUTTON_AREA_HEIGHT + 4
-        val btnH = 16
-        val saveBtnW = 50
-        val resetBtnW = 50
-        val saveBtnX = x + PADDING
-        val resetBtnX = saveBtnX + saveBtnW + 6
-
-        if (mouseX >= saveBtnX && mouseX <= saveBtnX + saveBtnW &&
-            mouseY >= btnY && mouseY <= btnY + btnH) {
-            commitActiveField()
-            saveAllChanges()
-            return true
-        }
-
-        if (mouseX >= resetBtnX && mouseX <= resetBtnX + resetBtnW &&
-            mouseY >= btnY && mouseY <= btnY + btnH) {
-            resetChanges()
             return true
         }
 

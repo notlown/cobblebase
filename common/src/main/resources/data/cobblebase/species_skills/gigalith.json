@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 3
     }
   ]
 }

@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:saturation_boost",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 2
     }
   ]
 }

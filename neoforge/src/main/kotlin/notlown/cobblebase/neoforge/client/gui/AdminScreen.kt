@@ -37,6 +37,10 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     private lateinit var skillEditorPanel: AdminSkillEditorPanel
     private lateinit var jobsPanel: AdminJobsPanel
 
+    // Track widgets per tab for visibility toggling
+    private val speciesWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
+    private val jobsWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
+
     override fun init() {
         super.init()
 
@@ -69,16 +73,33 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         jobsPanel.rebuild()
 
         clearChildren()
+        speciesWidgets.clear()
+        jobsWidgets.clear()
 
         // Init list panel search field
         speciesListPanel.init { widget: TextFieldWidget ->
+            speciesWidgets.add(widget)
             addDrawableChild(widget)
         }
 
         // Init editor panel buttons
         skillEditorPanel.init { widget: ButtonWidget ->
+            speciesWidgets.add(widget)
             addDrawableChild(widget)
         }
+
+        // Init jobs panel buttons
+        jobsPanel.init { widget: ButtonWidget ->
+            jobsWidgets.add(widget)
+            addDrawableChild(widget)
+        }
+
+        updateWidgetVisibility()
+    }
+
+    private fun updateWidgetVisibility() {
+        for (w in speciesWidgets) w.visible = (activeTab == "species")
+        for (w in jobsWidgets) w.visible = (activeTab == "jobs")
     }
 
     private fun getTabBarY(): Int = panelY + 22
@@ -122,11 +143,9 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         }
 
         // Render widgets without calling super.render() (avoids 1.21+ blur shader)
-        if (activeTab == "species") {
-            for (child in this.children()) {
-                if (child is Drawable) {
-                    child.render(context, mouseX, mouseY, delta)
-                }
+        for (child in this.children()) {
+            if (child is Drawable) {
+                child.render(context, mouseX, mouseY, delta)
             }
         }
     }
@@ -168,10 +187,12 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         if (mouseY >= tabBarY + 2 && mouseY <= tabBarY + TAB_HEIGHT - 1) {
             if (mouseX >= speciesTabX && mouseX <= speciesTabX + tabW) {
                 activeTab = "species"
+                updateWidgetVisibility()
                 return true
             }
             if (mouseX >= jobsTabX && mouseX <= jobsTabX + tabW) {
                 activeTab = "jobs"
+                updateWidgetVisibility()
                 return true
             }
         }
@@ -181,6 +202,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             if (speciesListPanel.mouseClicked(mouseX, mouseY, button)) return true
             if (skillEditorPanel.mouseClicked(mouseX, mouseY, button)) return true
         } else {
+            if (super.mouseClicked(mouseX, mouseY, button)) return true
             if (jobsPanel.mouseClicked(mouseX, mouseY, button)) return true
         }
         return false

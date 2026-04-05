@@ -328,6 +328,7 @@ object ScoutExecutor : SkillExecutor {
                         .append(structCoord)
 
                     notifyNearbyPlayers(world, pokemonEntity, message)
+                    sendXaeroWaypoint(world, pokemonEntity, displayName, structX, 64, structZ, LogManager.Rarity.RARE)
                     return true
                 }
             } catch (e: Exception) {
@@ -408,6 +409,7 @@ object ScoutExecutor : SkillExecutor {
                         .append(biomeCoord)
 
                     notifyNearbyPlayers(world, pokemonEntity, message)
+                    sendXaeroWaypoint(world, pokemonEntity, "$displayName Biome", bx, biomePos.y, bz, LogManager.Rarity.ULTRA_RARE)
 
                     // Extra ding for owner only
                     val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
@@ -469,6 +471,51 @@ object ScoutExecutor : SkillExecutor {
         val players = world.players.filter { it.uuid == ownerUuid }
         for (player in players) {
             player.sendMessage(message, false)
+        }
+    }
+
+    /**
+     * Send a Xaero's Minimap waypoint sharing message to the pasture owner.
+     * Players with Xaero installed will see a clickable waypoint prompt in chat.
+     * Players without Xaero will just see a harmless text line.
+     *
+     * Format: xaero-waypoint:Name:Initials:x:y:z:colorIndex:false:0:Internal-dim-waypoints
+     *
+     * Color indices: 0=BLACK, 1=DARK_BLUE, 2=DARK_GREEN, 3=DARK_AQUA, 4=DARK_RED,
+     * 5=DARK_PURPLE, 6=GOLD, 7=GRAY, 8=DARK_GRAY, 9=BLUE, 10=GREEN, 11=AQUA,
+     * 12=RED, 13=PURPLE, 14=YELLOW, 15=WHITE
+     */
+    private fun sendXaeroWaypoint(
+        world: ServerWorld,
+        pokemonEntity: PokemonEntity,
+        name: String,
+        x: Int,
+        y: Int,
+        z: Int,
+        rarity: LogManager.Rarity
+    ) {
+        val ownerUuid = pokemonEntity.pokemon.getOwnerUUID() ?: return
+        val players = world.players.filter { it.uuid == ownerUuid }
+        if (players.isEmpty()) return
+
+        val xaeroColor = when (rarity) {
+            LogManager.Rarity.ULTRA_RARE -> 6  // GOLD
+            LogManager.Rarity.RARE -> 9        // BLUE
+            else -> 10                          // GREEN
+        }
+
+        // Clean name for waypoint (remove spaces, special chars)
+        val cleanName = name.replace(" ", "_")
+        val initials = name.take(1).uppercase()
+
+        // Determine dimension waypoint set name from world registry key
+        val dimId = world.registryKey.value
+        val dimWaypointSet = "Internal-${dimId.namespace}\$${dimId.path}-waypoints"
+
+        val xaeroMsg = "xaero-waypoint:$cleanName:$initials:$x:$y:$z:$xaeroColor:false:0:$dimWaypointSet"
+
+        for (player in players) {
+            player.sendMessage(Text.literal(xaeroMsg), false)
         }
     }
 }

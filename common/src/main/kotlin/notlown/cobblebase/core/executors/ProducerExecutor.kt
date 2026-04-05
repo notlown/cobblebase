@@ -48,9 +48,9 @@ object ProducerExecutor : SkillExecutor {
         "frosmoth" to ProduceEntry("string", 2, "String"),
 
         // Animal Products
-        "miltank" to ProduceEntry("milk_bucket", 1, "Milk Bucket"),
-        "gogoat" to ProduceEntry("milk_bucket", 1, "Milk Bucket"),
-        "skiddo" to ProduceEntry("milk_bucket", 1, "Milk Bucket"),
+        "miltank" to ProduceEntry("cobblemon:moomoo_milk", 2, "Moomoo Milk"),
+        "gogoat" to ProduceEntry("cobblemon:moomoo_milk", 1, "Moomoo Milk"),
+        "skiddo" to ProduceEntry("cobblemon:moomoo_milk", 1, "Moomoo Milk"),
         "chansey" to ProduceEntry("egg", 1, "Egg"),
         "blissey" to ProduceEntry("egg", 2, "Egg"),
         "happiny" to ProduceEntry("egg", 1, "Egg"),
@@ -349,7 +349,9 @@ object ProducerExecutor : SkillExecutor {
         }
 
         // Create the item stack
-        val item = Registries.ITEM.get(Identifier.of("minecraft", entry.itemId))
+        // Support both minecraft: and cobblemon: items
+        val id = if (entry.itemId.contains(":")) Identifier.of(entry.itemId) else Identifier.of("minecraft", entry.itemId)
+        val item = Registries.ITEM.get(id)
         val stack = ItemStack(item, entry.count)
 
         if (stack.isEmpty) return

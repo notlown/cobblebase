@@ -98,8 +98,11 @@ public class PokemonPastureBlockEntityMixin {
     private static void cobblebase$tick(World world, BlockPos blockPos, BlockState blockState, PokemonPastureBlockEntity pastureBlock, CallbackInfo ci) {
         if (world.isClient) return;
 
-        // Debug log every 5 seconds
-        if (world.getTime() % 100 == 0) {
+        // Keep entities alive: force Cobblemon to re-check entity spawning frequently
+        // This ensures Pokemon entities stay spawned when their owner is offline
+        // but another player is nearby loading the chunks
+        if (notlown.cobblebase.core.CobblebaseConfig.INSTANCE.getKeepEntitiesAlive()) {
+            pastureBlock.setTicksUntilCheck(0);
         }
 
         List<PokemonPastureBlockEntity.Tethering> tetheredPokemon = pastureBlock.getTetheredPokemon();

@@ -13,6 +13,8 @@
   "text.autoconfig.cobblebase.option.general.safetyTeleportDistance.@Tooltip": "How far Pokemon can wander before being teleported back (default: 30)",
   "text.autoconfig.cobblebase.option.general.enableUnstickTeleport": "Enable Unstick Teleport",
   "text.autoconfig.cobblebase.option.general.enableUnstickTeleport.@Tooltip": "Teleport Pokemon when stuck for 15+ seconds. Disable if Pokemon are in enclosed builds (globes, terrariums)",
+  "text.autoconfig.cobblebase.option.general.keepEntitiesAlive": "Keep Entities Alive",
+  "text.autoconfig.cobblebase.option.general.keepEntitiesAlive.@Tooltip": "Force Cobblemon to keep Pokemon entities spawned even when their owner is offline. Useful for multiplayer bases where friends share a Pasture Block.",
   "text.autoconfig.cobblebase.option.general.enableConsoleLogging": "Enable Console Logging",
   "text.autoconfig.cobblebase.option.general.enableConsoleLogging.@Tooltip": "Show job activity logs in the server console (can be noisy on busy servers)",
 

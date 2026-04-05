@@ -32,6 +32,9 @@ class CobblebaseClothConfig : ConfigData {
         var enableUnstickTeleport = true
 
         @ConfigEntry.Gui.Tooltip
+        var keepEntitiesAlive = false
+
+        @ConfigEntry.Gui.Tooltip
         var enableConsoleLogging = false
     }
 

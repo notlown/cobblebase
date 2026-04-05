@@ -23,14 +23,23 @@ All notable changes to Cobblebase are documented here.
 - **Disabled jobs auto-hide** — deactivated jobs no longer appear in the Skills panel at Pasture Blocks
 - **Auto-reset assignments** — Pokemon assigned to a disabled job are automatically set to Relax
 
+### Scout Improvements
+- **Xaero's Minimap waypoint integration** — structure and biome discoveries automatically create Xaero waypoints with [Add] button
+- **Increased search radius** — Prof 1: 100 blocks, Prof 2: 300, Prof 3: 500, Prof 4: 750, Prof 5: 1000 blocks
+- **Spawn rarity filter** — Scout now filters wild Pokemon by Cobblemon spawn rarity instead of level. Only Uncommon+ Pokemon are reported.
+- **Surface height for waypoints/TP** — discoveries use correct surface Y position instead of hardcoded values
+
 ### Bug Fixes
 - **SkillDef.copy() NPE fix** — Gson parsed missing JSON fields as null, crashing Kotlin's copy() for non-null fields. Root cause of Admin Job Config not working.
+- **Admin Job Config now works** — `executeSkill()` uses `getEffective()` to apply cooldown/radius overrides from the Admin GUI
+- **C2ME compatibility** — replaced `world.random` with `ThreadLocalRandom` to avoid threading crash with C2ME mod
 - **Gatherer respects `jobSearchRadius` config** — was hardcoded to 24 blocks, now uses the config value (capped at 24)
 - **Item stacking fix** — items produced by jobs now stack normally with vanilla items (origin tags stripped on chest deposit)
 - **Pokemon spawn offset** — safety/unstick teleports now place Pokemon 1.5-2.5 blocks from the Pasture Block instead of on top of it
 - **Unstick without teleport** — stuck Pokemon now get redirected in a random direction instead of being teleported. Safe for enclosed builds (pens, aquariums, globes)
 - **Unstick threshold reduced** — 15s → 7s for faster recovery
 - **Buffs tab fix** — Relax mode now only shows passive buffs, not all available skills
+- **Assignment pre-fetch** — skill assignments are fetched on server join so GUI shows correct state on first open
 - **enableUnstickTeleport** config toggle removed (no longer needed since unstick doesn't teleport)
 
 ### Config

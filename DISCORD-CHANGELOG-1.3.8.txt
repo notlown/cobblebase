@@ -1,0 +1,36 @@
+📢 **Cobblebase v1.3.8 — Major Update!**
+
+---
+
+🏭 **New: Producer Job**
+~180 Pokemon now produce species-specific items! Wooloo makes wool, Miltank makes milk, Meowth drops gold nuggets, Trevenant produces dark oak logs, and much more. 35+ unique products across all categories.
+
+🔧 **New: Admin GUI — Jobs Tab**
+Server admins can now configure every job individually via `/cobblebase admin`:
+- Custom cooldowns per job
+- Radius min/max ranges
+- Enable/disable jobs server-wide
+- Disabled jobs auto-hide from player GUI
+
+🧭 **Scout Improvements**
+- Search radius massively increased (up to 1000 blocks at Prof 5)
+- Xaero's Minimap waypoint integration — structure/biome discoveries get automatic waypoints
+- Filters by spawn rarity instead of level
+- Correct surface height for TP commands
+
+🐛 **Bug Fixes**
+- C2ME compatibility — no more threading crash
+- Items from jobs now stack normally with vanilla items
+- Pokemon no longer teleport ON TOP of the Pasture Block
+- Stuck Pokemon redirect instead of teleporting (safe for pens/aquariums)
+- Buffs tab only shows passive buffs when on Relax
+- GUI shows correct assignments on first open
+- Admin job config cooldowns now actually work
+
+⚙️ **Config**
+- Console logging toggle (default: off)
+- Unstick threshold reduced to 7 seconds
+
+📖 Full documentation: https://notlown.github.io/cobblebase-web/docs/
+📥 Download: https://modrinth.com/mod/cobblebase
+💬 Discord: https://discord.gg/6As3sVZgVT

@@ -50,6 +50,25 @@ object ItemOriginHelper {
     }
 
     /**
+     * Removes the origin tag from an ItemStack.
+     * Call this when items are deposited into containers so they stack normally
+     * with vanilla items of the same type.
+     */
+    fun removeTag(stack: ItemStack) {
+        if (stack.isEmpty) return
+        val customData = stack.get(DataComponentTypes.CUSTOM_DATA) ?: return
+        val nbt = customData.copyNbt()
+        if (nbt.contains(TAG_KEY)) {
+            nbt.remove(TAG_KEY)
+            if (nbt.isEmpty) {
+                stack.remove(DataComponentTypes.CUSTOM_DATA)
+            } else {
+                stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt))
+            }
+        }
+    }
+
+    /**
      * Checks if an item belongs to the given pasture block.
      * Untagged items (player drops, mob drops) return true — any Gatherer can pick them up.
      * Tagged items only return true if the origin matches.

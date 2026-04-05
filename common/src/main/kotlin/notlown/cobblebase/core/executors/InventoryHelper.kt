@@ -64,7 +64,9 @@ object InventoryHelper {
         val leftovers = mutableListOf<ItemStack>()
         for (stack in items) {
             if (stack.isEmpty) continue
-            val remaining = insertStack(inventory, stack.copy())
+            val cleanStack = stack.copy()
+            ItemOriginHelper.removeTag(cleanStack) // Strip origin tag so items stack normally
+            val remaining = insertStack(inventory, cleanStack)
             if (!remaining.isEmpty) {
                 leftovers.add(remaining)
             }

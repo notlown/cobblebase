@@ -153,10 +153,15 @@ object ProducerExecutor : SkillExecutor {
         "sandygast" to ProduceEntry("sand", 2, "Sand"),
         "palossand" to ProduceEntry("sand", 3, "Sand"),
 
-        // Wood & Sticks
-        "phantump" to ProduceEntry("stick", 2, "Stick"),
-        "trevenant" to ProduceEntry("stick", 3, "Stick"),
-        "sudowoodo" to ProduceEntry("stick", 2, "Stick"),
+        // Wood & Logs
+        "komala" to ProduceEntry("oak_log", 1, "Oak Log"),
+        "timburr" to ProduceEntry("oak_planks", 2, "Oak Planks"),
+        "gurdurr" to ProduceEntry("spruce_log", 1, "Spruce Log"),
+        "conkeldurr" to ProduceEntry("dark_oak_log", 1, "Dark Oak Log"),
+        "phantump" to ProduceEntry("oak_log", 1, "Oak Log"),
+        "trevenant" to ProduceEntry("dark_oak_log", 1, "Dark Oak Log"),
+        "exeggutor" to ProduceEntry("jungle_log", 1, "Jungle Log"),
+        "sudowoodo" to ProduceEntry("stick", 3, "Stick"),
 
         // Snow & Ice
         "snover" to ProduceEntry("snowball", 2, "Snowball"),

@@ -13,6 +13,7 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent
 import net.neoforged.neoforge.network.PacketDistributor
 import notlown.cobblebase.core.AdminDataCache
 import notlown.cobblebase.core.VersionChecker
+import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket
 import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
 import notlown.cobblebase.core.CobblebaseClothConfig
 import notlown.cobblebase.core.net.AdminJobsRequestC2SPacket
@@ -52,6 +53,7 @@ object CobblebaseNeoForgeClient {
     @SubscribeEvent
     fun onPlayerLoggedIn(event: ClientPlayerNetworkEvent.LoggingIn) {
         PacketDistributor.sendToServer(VersionHandshakeC2SPacket(VersionChecker.MOD_VERSION))
+        PacketDistributor.sendToServer(SkillAssignmentRequestC2SPacket())
     }
 
     @SubscribeEvent

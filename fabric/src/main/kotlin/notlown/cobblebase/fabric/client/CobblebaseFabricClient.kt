@@ -21,6 +21,7 @@ import notlown.cobblebase.core.net.AdminJobsSyncS2CPacket
 import notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket
 import notlown.cobblebase.core.net.AdminSpeciesSyncS2CPacket
 import notlown.cobblebase.core.net.SkillAssignmentSyncS2CPacket
+import notlown.cobblebase.core.net.SkillAssignmentRequestC2SPacket
 import notlown.cobblebase.core.net.VersionHandshakeC2SPacket
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import notlown.cobblebase.core.net.DiscoverySyncS2CPacket
@@ -56,9 +57,10 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
-        // Send version handshake when joining a server
+        // Send version handshake + pre-fetch assignments when joining a server
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             ClientPlayNetworking.send(VersionHandshakeC2SPacket(VersionChecker.MOD_VERSION))
+            ClientPlayNetworking.send(SkillAssignmentRequestC2SPacket())
         }
 
         // Register S2C log sync packet receiver

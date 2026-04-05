@@ -314,12 +314,15 @@ object ScoutExecutor : SkillExecutor {
                         LogManager.Rarity.RARE
                     )
 
+                    // Get surface Y for accurate teleport and waypoint
+                    val structY = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING, structX, structZ)
+
                     // Chat notification with clickable coordinates
                     val structCoord = Text.literal("[$structX, $structZ]")
                         .styled { it
                             .withColor(Formatting.AQUA)
                             .withUnderline(true)
-                            .withClickEvent(net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND, "/tp @s $structX ~ $structZ"))
+                            .withClickEvent(net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND, "/tp @s $structX $structY $structZ"))
                             .withHoverEvent(net.minecraft.text.HoverEvent(net.minecraft.text.HoverEvent.Action.SHOW_TEXT, Text.literal("Click to copy /tp command")))
                         }
                     val message = Text.literal("")
@@ -331,7 +334,7 @@ object ScoutExecutor : SkillExecutor {
                         .append(structCoord)
 
                     notifyNearbyPlayers(world, pokemonEntity, message)
-                    sendXaeroWaypoint(world, pokemonEntity, displayName, structX, 64, structZ, LogManager.Rarity.RARE)
+                    sendXaeroWaypoint(world, pokemonEntity, displayName, structX, structY, structZ, LogManager.Rarity.RARE)
                     return true
                 }
             } catch (e: Exception) {
@@ -395,12 +398,14 @@ object ScoutExecutor : SkillExecutor {
                         LogManager.Rarity.ULTRA_RARE
                     )
 
+                    val biomeTopY = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING, bx, bz)
+
                     // Chat notification with clickable coordinates
                     val biomeCoord = Text.literal("[$bx, $bz]")
                         .styled { it
                             .withColor(Formatting.AQUA)
                             .withUnderline(true)
-                            .withClickEvent(net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND, "/tp @s $bx ~ $bz"))
+                            .withClickEvent(net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND, "/tp @s $bx $biomeTopY $bz"))
                             .withHoverEvent(net.minecraft.text.HoverEvent(net.minecraft.text.HoverEvent.Action.SHOW_TEXT, Text.literal("Click to copy /tp command")))
                         }
                     val message = Text.literal("")
@@ -412,7 +417,7 @@ object ScoutExecutor : SkillExecutor {
                         .append(biomeCoord)
 
                     notifyNearbyPlayers(world, pokemonEntity, message)
-                    sendXaeroWaypoint(world, pokemonEntity, "${displayName}_Biome", bx, biomePos.y, bz, LogManager.Rarity.ULTRA_RARE)
+                    sendXaeroWaypoint(world, pokemonEntity, "${displayName}_Biome", bx, biomeTopY, bz, LogManager.Rarity.ULTRA_RARE)
 
                     // Extra ding for owner only
                     val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()

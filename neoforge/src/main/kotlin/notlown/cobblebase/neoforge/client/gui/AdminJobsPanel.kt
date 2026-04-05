@@ -53,7 +53,7 @@ class AdminJobsPanel(
     private var fieldText = ""
     private var cursorBlink = 0
 
-    enum class FieldType { NONE, COOLDOWN, RADIUS }
+    enum class FieldType { NONE, COOLDOWN, RADIUS_MIN, RADIUS_MAX }
 
     data class JobEditData(
         val skillId: String,
@@ -62,7 +62,8 @@ class AdminJobsPanel(
         val defaultCooldown: Long,
         val defaultRadius: Int,
         var cooldownSeconds: Long,
-        var searchRadius: Int,
+        var radiusMin: Int,
+        var radiusMax: Int,
         var enabled: Boolean,
         var dirty: Boolean = false
     )
@@ -83,7 +84,8 @@ class AdminJobsPanel(
                 defaultCooldown = job.cooldownSeconds,
                 defaultRadius = job.searchRadius,
                 cooldownSeconds = override?.cooldownSeconds ?: job.cooldownSeconds,
-                searchRadius = override?.searchRadius ?: job.searchRadius,
+                radiusMin = override?.radiusMin ?: 3,
+                radiusMax = override?.radiusMax ?: job.searchRadius.coerceAtLeast(5),
                 enabled = override?.enabled ?: true
             ))
         }
@@ -120,9 +122,10 @@ class AdminJobsPanel(
 
         // Column headers
         val colNameX = x + PADDING + 12
-        val colCooldownX = x + w - 240
-        val colRadiusX = x + w - 150
-        val colEnabledX = x + w - 60
+        val colCooldownX = x + w - 280
+        val colRadiusMinX = x + w - 195
+        val colRadiusMaxX = x + w - 120
+        val colEnabledX = x + w - 50
         val headerY = y + PADDING + 12
 
         context.matrices.push()
@@ -130,8 +133,9 @@ class AdminJobsPanel(
         context.matrices.scale(scale, scale, 1f)
         context.drawTextWithShadow(textRenderer, "\u00A77Job Name", ((colNameX) / scale).toInt(), 0, 0xAAAAAA)
         context.drawTextWithShadow(textRenderer, "\u00A77Cooldown (s)", ((colCooldownX) / scale).toInt(), 0, 0xAAAAAA)
-        context.drawTextWithShadow(textRenderer, "\u00A77Radius", ((colRadiusX) / scale).toInt(), 0, 0xAAAAAA)
-        context.drawTextWithShadow(textRenderer, "\u00A77Enabled", ((colEnabledX) / scale).toInt(), 0, 0xAAAAAA)
+        context.drawTextWithShadow(textRenderer, "\u00A77Min", ((colRadiusMinX) / scale).toInt(), 0, 0xAAAAAA)
+        context.drawTextWithShadow(textRenderer, "\u00A77Max", ((colRadiusMaxX) / scale).toInt(), 0, 0xAAAAAA)
+        context.drawTextWithShadow(textRenderer, "\u00A77On", ((colEnabledX) / scale).toInt(), 0, 0xAAAAAA)
         context.matrices.pop()
 
         // Separator under headers
@@ -189,7 +193,7 @@ class AdminJobsPanel(
                     context.drawTextWithShadow(textRenderer, "\u00A7e*", nameW + 2, 0, 0xFFFF00)
                 }
                 // Show "override" tag if different from default
-                val isOverridden = job.cooldownSeconds != job.defaultCooldown || job.searchRadius != job.defaultRadius || !job.enabled
+                val isOverridden = job.cooldownSeconds != job.defaultCooldown || job.radiusMin != 3 || job.radiusMax != job.defaultRadius.coerceAtLeast(5) || !job.enabled
                 if (isOverridden && !job.dirty) {
                     val nameW = textRenderer.getWidth(job.displayName)
                     context.drawTextWithShadow(textRenderer, "\u00A76[o]", nameW + 2, 0, 0xFF9800)
@@ -197,7 +201,7 @@ class AdminJobsPanel(
                 context.matrices.pop()
 
                 // Cooldown field
-                val fieldW = 60
+                val fieldW = 55
                 val fieldH = 14
                 val cooldownFieldX = colCooldownX
                 val fieldY = rowY + 3
@@ -219,27 +223,46 @@ class AdminJobsPanel(
                 }
                 context.matrices.pop()
 
-                // Radius field
-                val radiusFieldX = colRadiusX
-                val isRadiusActive = activeFieldJob == row.jobIndex && activeFieldType == FieldType.RADIUS
-                val radiusBorder = if (isRadiusActive) FIELD_ACTIVE else FIELD_BORDER
-                context.fill(radiusFieldX - 1, fieldY - 1, radiusFieldX + fieldW + 1, fieldY + fieldH + 1, radiusBorder)
-                context.fill(radiusFieldX, fieldY, radiusFieldX + fieldW, fieldY + fieldH, FIELD_BG)
+                // Radius Min field
+                val radiusMinFieldX = colRadiusMinX
+                val isRadiusMinActive = activeFieldJob == row.jobIndex && activeFieldType == FieldType.RADIUS_MIN
+                val radiusMinBorder = if (isRadiusMinActive) FIELD_ACTIVE else FIELD_BORDER
+                context.fill(radiusMinFieldX - 1, fieldY - 1, radiusMinFieldX + fieldW + 1, fieldY + fieldH + 1, radiusMinBorder)
+                context.fill(radiusMinFieldX, fieldY, radiusMinFieldX + fieldW, fieldY + fieldH, FIELD_BG)
 
-                val radiusText = if (isRadiusActive) fieldText else job.searchRadius.toString()
-                val radiusColor = if (job.searchRadius != job.defaultRadius) 0xFFFF00 else 0xCCCCCC
+                val radiusMinText = if (isRadiusMinActive) fieldText else job.radiusMin.toString()
+                val radiusMinColor = if (job.radiusMin != 3) 0xFFFF00 else 0xCCCCCC
                 context.matrices.push()
-                context.matrices.translate((radiusFieldX + 3).toFloat(), (fieldY + 3).toFloat(), 0f)
+                context.matrices.translate((radiusMinFieldX + 3).toFloat(), (fieldY + 3).toFloat(), 0f)
                 context.matrices.scale(scale, scale, 1f)
-                context.drawTextWithShadow(textRenderer, radiusText, 0, 0, radiusColor)
-                if (isRadiusActive && (cursorBlink / 20) % 2 == 0) {
-                    val cursorX = textRenderer.getWidth(radiusText)
+                context.drawTextWithShadow(textRenderer, radiusMinText, 0, 0, radiusMinColor)
+                if (isRadiusMinActive && (cursorBlink / 20) % 2 == 0) {
+                    val cursorX = textRenderer.getWidth(radiusMinText)
+                    context.drawTextWithShadow(textRenderer, "|", cursorX, 0, 0xFFFFFF)
+                }
+                context.matrices.pop()
+
+                // Radius Max field
+                val radiusMaxFieldX = colRadiusMaxX
+                val isRadiusMaxActive = activeFieldJob == row.jobIndex && activeFieldType == FieldType.RADIUS_MAX
+                val radiusMaxBorder = if (isRadiusMaxActive) FIELD_ACTIVE else FIELD_BORDER
+                context.fill(radiusMaxFieldX - 1, fieldY - 1, radiusMaxFieldX + fieldW + 1, fieldY + fieldH + 1, radiusMaxBorder)
+                context.fill(radiusMaxFieldX, fieldY, radiusMaxFieldX + fieldW, fieldY + fieldH, FIELD_BG)
+
+                val radiusMaxText = if (isRadiusMaxActive) fieldText else job.radiusMax.toString()
+                val radiusMaxColor = if (job.radiusMax != job.defaultRadius.coerceAtLeast(5)) 0xFFFF00 else 0xCCCCCC
+                context.matrices.push()
+                context.matrices.translate((radiusMaxFieldX + 3).toFloat(), (fieldY + 3).toFloat(), 0f)
+                context.matrices.scale(scale, scale, 1f)
+                context.drawTextWithShadow(textRenderer, radiusMaxText, 0, 0, radiusMaxColor)
+                if (isRadiusMaxActive && (cursorBlink / 20) % 2 == 0) {
+                    val cursorX = textRenderer.getWidth(radiusMaxText)
                     context.drawTextWithShadow(textRenderer, "|", cursorX, 0, 0xFFFFFF)
                 }
                 context.matrices.pop()
 
                 // Enable/disable checkbox
-                val cbX = colEnabledX + 10
+                val cbX = colEnabledX + 5
                 val cbY = rowY + 5
                 val cbSize = 10
                 val cbColor = if (job.enabled) CHECKBOX_ON else CHECKBOX_OFF
@@ -274,10 +297,11 @@ class AdminJobsPanel(
         val maxVisible = listH / ROW_HEIGHT
         val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
 
-        val colCooldownX = x + w - 240
-        val colRadiusX = x + w - 150
-        val colEnabledX = x + w - 60
-        val fieldW = 60
+        val colCooldownX = x + w - 280
+        val colRadiusMinX = x + w - 195
+        val colRadiusMaxX = x + w - 120
+        val colEnabledX = x + w - 50
+        val fieldW = 55
 
         // Check scrollbar click
         val trackX = x + w - 3
@@ -311,17 +335,26 @@ class AdminJobsPanel(
                         return true
                     }
 
-                    // Check radius field click
-                    if (mouseX >= colRadiusX && mouseX <= colRadiusX + fieldW &&
+                    // Check radius min field click
+                    if (mouseX >= colRadiusMinX && mouseX <= colRadiusMinX + fieldW &&
                         mouseY >= fieldY && mouseY <= fieldY + fieldH) {
                         activeFieldJob = row.jobIndex
-                        activeFieldType = FieldType.RADIUS
-                        fieldText = job.searchRadius.toString()
+                        activeFieldType = FieldType.RADIUS_MIN
+                        fieldText = job.radiusMin.toString()
+                        return true
+                    }
+
+                    // Check radius max field click
+                    if (mouseX >= colRadiusMaxX && mouseX <= colRadiusMaxX + fieldW &&
+                        mouseY >= fieldY && mouseY <= fieldY + fieldH) {
+                        activeFieldJob = row.jobIndex
+                        activeFieldType = FieldType.RADIUS_MAX
+                        fieldText = job.radiusMax.toString()
                         return true
                     }
 
                     // Check enabled checkbox click
-                    val cbX = colEnabledX + 10
+                    val cbX = colEnabledX + 5
                     val cbY = listY + rowVisIdx * ROW_HEIGHT + 5
                     val cbSize = 10
                     if (mouseX >= cbX && mouseX <= cbX + cbSize &&
@@ -359,10 +392,18 @@ class AdminJobsPanel(
                     sendJobUpdate(job)
                 }
             }
-            FieldType.RADIUS -> {
+            FieldType.RADIUS_MIN -> {
                 val newValue = fieldText.toIntOrNull()
                 if (newValue != null && newValue > 0) {
-                    job.searchRadius = newValue
+                    job.radiusMin = newValue
+                    job.dirty = true
+                    sendJobUpdate(job)
+                }
+            }
+            FieldType.RADIUS_MAX -> {
+                val newValue = fieldText.toIntOrNull()
+                if (newValue != null && newValue > 0) {
+                    job.radiusMax = newValue
                     job.dirty = true
                     sendJobUpdate(job)
                 }
@@ -376,21 +417,28 @@ class AdminJobsPanel(
 
     private fun sendJobUpdate(job: JobEditData) {
         val cooldownOverride = if (job.cooldownSeconds != job.defaultCooldown) job.cooldownSeconds else null
-        val radiusOverride = if (job.searchRadius != job.defaultRadius) job.searchRadius else null
+        val radiusMinOverride = if (job.radiusMin != 3) job.radiusMin else null
+        val radiusMaxOverride = if (job.radiusMax != job.defaultRadius.coerceAtLeast(5)) job.radiusMax else null
         PacketDistributor.sendToServer(AdminJobsUpdateC2SPacket(
             job.skillId,
             cooldownOverride,
-            radiusOverride,
+            radiusMinOverride,
+            radiusMaxOverride,
             job.enabled
         ))
         job.dirty = false
 
         // Update local cache
         val newOverrides = AdminJobDataCache.jobOverrides.toMutableMap()
-        if (cooldownOverride == null && radiusOverride == null && job.enabled) {
+        if (cooldownOverride == null && radiusMinOverride == null && radiusMaxOverride == null && job.enabled) {
             newOverrides.remove(job.skillId)
         } else {
-            newOverrides[job.skillId] = JobConfigOverrides.JobOverride(cooldownOverride, radiusOverride, job.enabled)
+            newOverrides[job.skillId] = JobConfigOverrides.JobOverride(
+                cooldownSeconds = cooldownOverride,
+                radiusMin = radiusMinOverride,
+                radiusMax = radiusMaxOverride,
+                enabled = job.enabled
+            )
         }
         AdminJobDataCache.update(AdminJobDataCache.allJobs, newOverrides)
     }

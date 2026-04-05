@@ -1,0 +1,53 @@
+Hey everyone! 👋
+
+I've been working on **Cobblebase** — a Cobblemon addon that turns your Pasture Block into a fully automated base. Think Palworld-style base management, but for Cobblemon!
+
+---
+
+## ⚡ What does it do?
+
+Your Pokémon get **real jobs** while sitting in the Pasture Block. They don't just stand around — they actually work, walk to targets, pick up items, and sort them into chests.
+
+---
+
+## 📋 43+ Unique Jobs across 10 Categories
+
+- 🌾 **Gathering** — Harvest crops, mine ores, fish, collect honey, dig fossils
+- 🔍 **Finding** — 12 specialized finders (Alchemist, Pharmacist, Collector, Chef, Armorer, Prospector...)
+- ⚔️ **Combat** — Guard your base from hostile mobs
+- 💚 **Support** — Heal your team, mentor for XP boost
+- 📦 **Logistics** — Gatherer picks up items and auto-sorts into chests
+- 🧭 **Exploration** — Scout discovers wild Pokémon, structures, and biomes
+- 🌍 **Environmental** — Irrigate crops, fuel furnaces, fill cauldrons
+- 🤝 **Recruiting** — Spawn new wild Pokémon near your base
+- ✨ **Buffs** — Speed, Strength, Night Vision, Haste, and more
+- 🌟 **Legendaries** — Lucky Charm (shiny boost), Growth Aura, Extinguisher
+- 🏭 **NEW: Producer** — ~155 species produce unique items! Wooloo → Wool, Miltank → Milk, Meowth → Gold Nuggets
+
+---
+
+## 🎮 Key Features
+
+- 🖥️ **Beautiful in-game GUI** with Skills, Buffs, Logs & Discovery tabs
+- ⭐ **Proficiency System** (1-5 stars) — higher proficiency = faster cooldowns, better loot
+- 🎲 **Tiered Loot Tables** — Common, Uncommon, Rare, Ultra Rare drops
+- 🗺️ **Discovery System** — Scout finds wild Pokémon, structures & biomes
+- 🔧 **Admin GUI** — In-game species skill editor for server operators
+- 🌐 **Multiplayer Ready** — GUI syncs across players, Gatherer respects base ownership
+- 📦 **8,400+ Species** supported (including Fakemon packs)
+- ⚙️ **Fully Configurable** — Cloth Config GUI with cooldowns, radii, toggles
+
+---
+
+## 🔗 Links
+
+- 📥 **Modrinth:** https://modrinth.com/mod/cobblebase
+- 📖 **Documentation:** https://notlown.github.io/cobblebase-web/docs/
+- 🗃️ **Species Database:** https://notlown.github.io/cobblebase-web/database/
+- 💬 **Discord:** https://discord.gg/6As3sVZgVT
+
+---
+
+**Platforms:** Fabric & NeoForge | **MC:** 1.21.1 | **Cobblemon:** 1.7.0+
+
+Would love to hear your feedback! What jobs or features would you like to see? 🙌

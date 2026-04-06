@@ -45,3 +45,6 @@ replay_*.log
 .*/
 !.github/
 *.local.md
+*CHANGELOG*.txt
+*REDDIT*.txt
+*TAGEBUCH*

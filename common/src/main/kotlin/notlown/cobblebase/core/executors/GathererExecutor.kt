@@ -147,30 +147,26 @@ object GathererExecutor : SkillExecutor {
      * Only picks up items that belong to this Gatherer's Pasture Block (or untagged items).
      */
     private fun findNearestDroppedItem(world: ServerWorld, pokemonEntity: PokemonEntity, radius: Double, pastureOrigin: BlockPos): ItemEntity? {
-        val pickupPlayerDrops = CobblebaseConfig.gathererPickupPlayerDrops
         val searchBox = Box.of(pokemonEntity.pos, radius * 2, radius * 2, radius * 2)
-        val allItems = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { it.isAlive && !it.stack.isEmpty }
-
-        // Debug: log all found items and why they're skipped/accepted
-        if (world.time % 200 == 0L && allItems.isNotEmpty()) {
-            Cobblebase.log("[Gatherer] Found ${allItems.size} items near ${pokemonEntity.pokemon.species.name}. Pasture origin: ${pastureOrigin.asLong()}")
-            for (item in allItems.take(5)) {
-                val origin = ItemOriginHelper.getOrigin(item.stack)
-                val matches = if (origin == null) "untagged(pickup=$pickupPlayerDrops)" else "origin=${origin.asLong()} match=${origin == pastureOrigin}"
-                Cobblebase.log("[Gatherer]   - ${item.stack.name.string} x${item.stack.count}: $matches")
-            }
-        }
-
-        val items = allItems.filter { entity ->
-            val origin = ItemOriginHelper.getOrigin(entity.stack)
-            if (origin == null) {
-                pickupPlayerDrops
-            } else {
-                origin == pastureOrigin
-            }
+        val items = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { entity ->
+            entity.isAlive && !entity.stack.isEmpty && belongsToOrAllowed(entity.stack, pastureOrigin)
         }
         // Pick oldest item (highest age = been on ground longest)
         return items.maxByOrNull { it.age }
+    }
+
+    /**
+     * Checks if an item should be picked up by this Gatherer.
+     * Uses the original v1.3.7 belongsTo logic + optional player drop setting.
+     */
+    private fun belongsToOrAllowed(stack: ItemStack, pastureOrigin: BlockPos): Boolean {
+        val origin = ItemOriginHelper.getOrigin(stack)
+        if (origin == null) {
+            // Untagged = player/mob drop — respect setting
+            return CobblebaseConfig.gathererPickupPlayerDrops
+        }
+        // Tagged = from a Cobblebase job — check if same pasture
+        return origin == pastureOrigin
     }
 
     /**

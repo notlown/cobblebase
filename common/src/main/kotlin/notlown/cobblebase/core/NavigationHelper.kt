@@ -155,11 +155,20 @@ object NavigationHelper {
                 pokemonEntity.navigation.stop()
                 val rand = java.util.concurrent.ThreadLocalRandom.current()
                 val angle = rand.nextDouble() * Math.PI * 2
-                val dist = 2.0 + rand.nextDouble() * 2.0 // 2-4 blocks in random direction
+                val dist = 2.0 + rand.nextDouble() * 2.0
                 val targetX = currentPos.x + Math.cos(angle) * dist + 0.5
                 val targetZ = currentPos.z + Math.sin(angle) * dist + 0.5
-                pokemonEntity.navigation.startMovingTo(targetX, currentPos.y.toDouble(), targetZ, 0.5)
-                stuckSince.remove(id) // Reset timer so it tries again after 7s if still stuck
+
+                // For flying Pokemon: also vary Y position to unstick from ceilings/walls
+                val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
+                val targetY = if (canFly) {
+                    currentPos.y + (rand.nextInt(5) - 2).toDouble() // -2 to +2 blocks Y
+                } else {
+                    currentPos.y.toDouble()
+                }
+
+                pokemonEntity.navigation.startMovingTo(targetX, targetY, targetZ, 0.5)
+                stuckSince.remove(id)
             }
         } else {
             // Moved — reset stuck tracking

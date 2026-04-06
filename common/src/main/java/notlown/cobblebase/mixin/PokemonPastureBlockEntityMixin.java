@@ -105,6 +105,13 @@ public class PokemonPastureBlockEntityMixin {
             pastureBlock.setTicksUntilCheck(0);
         }
 
+        // Update pasture-area leaf tracking (for PastureLeafCollisionMixin)
+        if (world instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+            try {
+                notlown.cobblebase.core.PastureLeavesTracker.INSTANCE.updatePasture(serverWorld, blockPos);
+            } catch (Exception ignored) { }
+        }
+
         List<PokemonPastureBlockEntity.Tethering> tetheredPokemon = pastureBlock.getTetheredPokemon();
         for (PokemonPastureBlockEntity.Tethering tethering : tetheredPokemon) {
             if (tethering == null) continue;

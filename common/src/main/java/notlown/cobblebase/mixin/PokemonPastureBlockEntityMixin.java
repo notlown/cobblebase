@@ -143,69 +143,34 @@ public class PokemonPastureBlockEntityMixin {
             String assignment = BaseManager.INSTANCE.getAssignment(pokemonEntity.getPokemon().getUuid());
             boolean isExplicitlyIdle = (assignment == null);
 
-            // At night, working mons behave as idle (sleep) but keep their assignment
-            // Minecraft day: 0-12541 = day, 12542-23459 = night, 23460+ = dawn
+            // At night, skip ALL Cobblebase logic for working mons.
+            // Cobblemon's vanilla AI handles sleeping on its own — we just get out of the way.
             long dayTime = world.getTimeOfDay() % 24000L;
             boolean isNight = dayTime >= 12542 && dayTime < 23460;
-            boolean treatAsIdle = isExplicitlyIdle || (isNight && assignment != null);
+            if (isNight && !isExplicitlyIdle) {
+                // Only run passive buffs at night, skip jobs entirely
+                try {
+                    BaseManager.INSTANCE.tickPassiveBuffsWithoutEntity(world, blockPos, pokemon);
+                } catch (Exception ignored) { }
+                continue;
+            }
 
-            if (treatAsIdle) {
+            if (isExplicitlyIdle) {
                 // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
-                java.util.UUID monId = pokemonEntity.getPokemon().getUuid();
-
-                // Force sleep state for working mons at night (don't wait for random chance)
-                if (isNight && assignment != null && !AmbientBehavior.INSTANCE.isSleeping(monId)) {
-                    AmbientBehavior.INSTANCE.forceSleep(monId, world.getTime());
-                    // Send sleep animation immediately
-                    try {
-                        notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "sleep", "water_sleep", "battle_sleep");
-                    } catch (Exception ignored) { }
-                }
-                // Keep sending sleep animation periodically for sleeping working mons
-                if (isNight && assignment != null && AmbientBehavior.INSTANCE.isSleeping(monId) && world.getTime() % 80 == 0) {
-                    try {
-                        notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "sleep", "water_sleep", "battle_sleep");
-                    } catch (Exception ignored) { }
-                }
-
-                boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(monId);
-
-                // Debug: log every 5 seconds (after forceSleep so values are current)
-                if (world.getTime() % 100 == 0) {
-                    Cobblebase.INSTANCE.getLOGGER().warn("[Sleep-Debug] {} dayTime={} isNight={} assignment={} treatAsIdle={} isResting={} sleeping={} aiDisabled={}",
-                        pokemon.getSpecies().getName(), dayTime, isNight, assignment,
-                        treatAsIdle, isResting,
-                        AmbientBehavior.INSTANCE.isSleeping(monId),
-                        pokemonEntity.isAiDisabled());
-                }
-                boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(monId);
+                boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
+                boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
 
                 if (isResting) {
-                    // Stationary: freeze position without disabling AI (AI disable blocks animations)
                     NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                     pokemonEntity.getNavigation().stop();
-                    pokemonEntity.setVelocity(0, Math.min(pokemonEntity.getVelocity().y, 0), 0);
-                    pokemonEntity.velocityDirty = true;
-                    // Clear all brain memories related to movement
-                    try {
-                        pokemonEntity.getBrain().forget(net.minecraft.entity.ai.brain.MemoryModuleType.WALK_TARGET);
-                        pokemonEntity.getBrain().forget(net.minecraft.entity.ai.brain.MemoryModuleType.LOOK_TARGET);
-                        pokemonEntity.getBrain().forget(net.minecraft.entity.ai.brain.MemoryModuleType.PATH);
-                    } catch (Exception ignored) { }
                     try {
                         AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     } catch (Exception ignored) { }
                 } else if (inActiveBehavior) {
-                    // Re-enable AI if was disabled by sleeping
-                    // (AI disable removed — was blocking animations)
-                    // Moving behavior (chase/flee/follow): tick ambient only
                     try {
                         AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     } catch (Exception ignored) { }
                 } else if (pokemonEntity.getNavigation().isIdle()) {
-                    // Re-enable AI if was disabled by sleeping
-                    // (AI disable removed — was blocking animations)
-                    // Pick next behavior or wander slowly
                     try {
                         boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                         if (!handled) {
@@ -220,27 +185,11 @@ public class PokemonPastureBlockEntityMixin {
                 } catch (Exception ignored) { }
 
                 // Passive buffs still run for idle mons
-                // But skip full job tick for working mons sleeping at night
-                if (isNight && assignment != null) {
-                    // Only tick passive buffs, not the assigned job
-                    try {
-                        BaseManager.INSTANCE.tickPassiveBuffsWithoutEntity(world, blockPos, pokemon);
-                    } catch (Exception ignored) { }
-                } else {
-                    try {
-                        BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
-                    } catch (Exception ignored) { }
-                }
+                try {
+                    BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
+                } catch (Exception ignored) { }
             } else {
                 // WORKING MON: normal job execution, no ambient behaviors
-                // Re-enable AI if was disabled by sleeping
-                if (pokemonEntity.isAiDisabled()) pokemonEntity.setAiDisabled(false);
-                // Wake up if was sleeping (clear sleep animation before working)
-                if (AmbientBehavior.INSTANCE.isSleeping(pokemonEntity.getPokemon().getUuid())) {
-                    try {
-                        notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "ground_idle", "walk");
-                    } catch (Exception ignored) { }
-                }
                 AmbientBehavior.INSTANCE.clearState(pokemonEntity.getPokemon().getUuid());
                 try {
                     BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);

@@ -45,10 +45,14 @@ object VersionChecker {
         val uuid = player.uuid
         val server = player.server
 
-        // Schedule a check after 100 ticks (5 seconds)
-        val startTick = server.ticks
+        // Skip handshake check in singleplayer — the integrated server always has the mod
+        if (!server.isDedicated) {
+            handshakes[uuid] = MOD_VERSION
+            return
+        }
+
+        // Dedicated server: schedule a check after 10 seconds
         val task = Runnable {
-            // This will be called from a tick loop, check if enough time has passed
             if (!handshakes.containsKey(uuid)) {
                 val currentPlayer = server.playerManager.getPlayer(uuid)
                 currentPlayer?.networkHandler?.disconnect(Text.literal(
@@ -61,10 +65,9 @@ object VersionChecker {
             }
         }
 
-        // Use a simple thread with delay since we need cross-platform compatibility
         Thread {
             try {
-                Thread.sleep(5000)
+                Thread.sleep(10000)
                 server.execute(task)
             } catch (_: InterruptedException) {
                 // Player left before timeout, ignore

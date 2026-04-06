@@ -197,20 +197,15 @@ object NavigationHelper {
 
                 pokemonEntity.navigation.startMovingTo(targetX, targetY, targetZ, speed)
 
-                // After 20 seconds stuck (intensity 3+), directly nudge the position
-                // This breaks out of tight spots where pathfinding fails (e.g. 2-block tall flying mons on stairs)
+                // At higher intensity, ALSO apply direct velocity impulse (physics push)
+                // This helps when pathfinding can't find a path (e.g. 2-block flying mons in tight spots)
+                // Not a teleport — just a velocity nudge that respects block collisions
                 if (intensity >= 3) {
-                    val nudgeAngle = rand.nextDouble() * Math.PI * 2
-                    val nudgeX = pokemonEntity.x + Math.cos(nudgeAngle) * 2.0
-                    val nudgeZ = pokemonEntity.z + Math.sin(nudgeAngle) * 2.0
-                    val nudgeY = if (canFly) pokemonEntity.y + 1.5 else pokemonEntity.y + 0.5
-                    // Only nudge if target position is air
-                    val nudgePos = BlockPos(nudgeX.toInt(), nudgeY.toInt(), nudgeZ.toInt())
-                    if (world.getBlockState(nudgePos).isAir) {
-                        pokemonEntity.refreshPositionAndAngles(nudgeX, nudgeY, nudgeZ, pokemonEntity.yaw, pokemonEntity.pitch)
-                        pokemonEntity.setVelocity(0.0, 0.0, 0.0)
-                        pokemonEntity.velocityDirty = true
-                    }
+                    val dx = (targetX - pokemonEntity.x) * 0.3
+                    val dz = (targetZ - pokemonEntity.z) * 0.3
+                    val dy = if (canFly) 0.4 else 0.3 // small hop
+                    pokemonEntity.setVelocity(dx, dy, dz)
+                    pokemonEntity.velocityDirty = true
                 }
 
                 // Don't reset stuckSince — let intensity escalate on next check

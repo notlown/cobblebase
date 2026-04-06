@@ -117,7 +117,7 @@ object BaseManager {
                         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(
                             skillDef.cooldownSeconds, entry.proficiency
                         )
-                        val recoveryThreshold = (cooldownTicks * 3L).coerceAtLeast(2400L) // min 2 min
+                        val recoveryThreshold = (cooldownTicks * 3L / 2L).coerceAtLeast(1200L) // 1.5x, min 1 min
                         val lastSuccess = lastJobSuccess[pokemonId] ?: now.also { lastJobSuccess[pokemonId] = now }
                         if (now - lastSuccess > recoveryThreshold) {
                             val (sx, sz) = getSpawnOffset(world)

@@ -4,6 +4,31 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [1.3.9] - 2026-04-06
+
+### Bug Fixes
+- **Singleplayer handshake fix** — version check skipped in singleplayer, no more kicks
+- **Version check default OFF** — players without the client mod can join servers normally. Enable `enforceVersionCheck` in settings if needed.
+- **Furnace fuel fix** — Pokemon only fuel furnaces that are NOT already burning, no more wasting fuel on active furnaces
+- **Gatherer filter fix** — simplified pickup logic back to v1.3.7 style to fix potential item pickup issues
+- **Buffs tab descriptions** — Harvester no longer shows "20s" timer, Producer shows "Producing species-specific items"
+- **Moomoo Milk** — Miltank/Gogoat/Skiddo now produce stackable Cobblemon Moomoo Milk instead of unstackable Milk Buckets
+- **C2ME compatibility** — fixed threading crash with `world.random`
+- **Modded container support** — Fabric Transfer API + NeoForge Capabilities for Sophisticated Storage, Iron Chests etc.
+- **Passive buffs without entity** — buffs continue working when Pokemon owner is offline
+- **Repo cleanup** — removed development files from repository
+
+### Config
+- **Gatherer pickup player drops** — new setting to control whether Gatherer picks up player-dropped items (default: on)
+- **Keep Entities Alive** — [EXPERIMENTAL] force Cobblemon to keep Pokemon spawned when owner offline
+- **Enforce Version Check** — optional setting to kick players without the mod (default: off)
+
+### Community Skill Submissions
+- Applied 11 species updates from community submission #XPYB (Zeraora)
+- Includes: Absol, Accelgor, Aegislash, Aipom, Arbok, Audino, Bellibolt, Blitzle, Boltund, Bouffalant, Bunnelby
+
+---
+
 ## [1.3.8] - 2026-04-05
 
 ### Producer Job

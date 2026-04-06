@@ -661,4 +661,11 @@ object AmbientBehavior {
     fun isSleeping(id: UUID): Boolean {
         return currentState[id] == BehaviorState.SLEEPING
     }
+
+    /**
+     * Force a Pokemon into sleeping state (used for working mons at night).
+     */
+    fun forceSleep(id: UUID, now: Long) {
+        setState(id, BehaviorState.SLEEPING, now)
+    }
 }

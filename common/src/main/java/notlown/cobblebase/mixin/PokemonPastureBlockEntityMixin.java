@@ -149,10 +149,26 @@ public class PokemonPastureBlockEntityMixin {
             boolean isNight = dayTime >= 12542 && dayTime < 23460;
             boolean treatAsIdle = isExplicitlyIdle || (isNight && assignment != null);
 
+            // Debug: log every 5 seconds
+            if (world.getTime() % 100 == 0) {
+                Cobblebase.INSTANCE.getLOGGER().warn("[Sleep-Debug] {} dayTime={} isNight={} assignment={} idle={} treatAsIdle={} isResting={} aiDisabled={}",
+                    pokemon.getSpecies().getName(), dayTime, isNight, assignment,
+                    isExplicitlyIdle, treatAsIdle,
+                    AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid()),
+                    pokemonEntity.isAiDisabled());
+            }
+
             if (treatAsIdle) {
                 // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
-                boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
-                boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
+                java.util.UUID monId = pokemonEntity.getPokemon().getUuid();
+
+                // Force sleep state for working mons at night (don't wait for random chance)
+                if (isNight && assignment != null && !AmbientBehavior.INSTANCE.isSleeping(monId)) {
+                    AmbientBehavior.INSTANCE.forceSleep(monId, world.getTime());
+                }
+
+                boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(monId);
+                boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(monId);
 
                 if (isResting) {
                     // Stationary: disable AI entirely so Brain tasks can't move the entity

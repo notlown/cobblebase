@@ -149,15 +149,6 @@ public class PokemonPastureBlockEntityMixin {
             boolean isNight = dayTime >= 12542 && dayTime < 23460;
             boolean treatAsIdle = isExplicitlyIdle || (isNight && assignment != null);
 
-            // Debug: log every 5 seconds
-            if (world.getTime() % 100 == 0) {
-                Cobblebase.INSTANCE.getLOGGER().warn("[Sleep-Debug] {} dayTime={} isNight={} assignment={} idle={} treatAsIdle={} isResting={} aiDisabled={}",
-                    pokemon.getSpecies().getName(), dayTime, isNight, assignment,
-                    isExplicitlyIdle, treatAsIdle,
-                    AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid()),
-                    pokemonEntity.isAiDisabled());
-            }
-
             if (treatAsIdle) {
                 // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
                 java.util.UUID monId = pokemonEntity.getPokemon().getUuid();
@@ -165,9 +156,28 @@ public class PokemonPastureBlockEntityMixin {
                 // Force sleep state for working mons at night (don't wait for random chance)
                 if (isNight && assignment != null && !AmbientBehavior.INSTANCE.isSleeping(monId)) {
                     AmbientBehavior.INSTANCE.forceSleep(monId, world.getTime());
+                    // Send sleep animation immediately
+                    try {
+                        notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "sleep", "water_sleep", "battle_sleep");
+                    } catch (Exception ignored) { }
+                }
+                // Keep sending sleep animation periodically for sleeping working mons
+                if (isNight && assignment != null && AmbientBehavior.INSTANCE.isSleeping(monId) && world.getTime() % 80 == 0) {
+                    try {
+                        notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "sleep", "water_sleep", "battle_sleep");
+                    } catch (Exception ignored) { }
                 }
 
                 boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(monId);
+
+                // Debug: log every 5 seconds (after forceSleep so values are current)
+                if (world.getTime() % 100 == 0) {
+                    Cobblebase.INSTANCE.getLOGGER().warn("[Sleep-Debug] {} dayTime={} isNight={} assignment={} treatAsIdle={} isResting={} sleeping={} aiDisabled={}",
+                        pokemon.getSpecies().getName(), dayTime, isNight, assignment,
+                        treatAsIdle, isResting,
+                        AmbientBehavior.INSTANCE.isSleeping(monId),
+                        pokemonEntity.isAiDisabled());
+                }
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(monId);
 
                 if (isResting) {

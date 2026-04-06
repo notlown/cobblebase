@@ -181,25 +181,30 @@ public class PokemonPastureBlockEntityMixin {
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(monId);
 
                 if (isResting) {
-                    // Stationary: disable AI entirely so Brain tasks can't move the entity
-                    pokemonEntity.setAiDisabled(true);
+                    // Stationary: freeze position without disabling AI (AI disable blocks animations)
                     NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                     pokemonEntity.getNavigation().stop();
-                    pokemonEntity.setVelocity(0, pokemonEntity.getVelocity().y, 0);
+                    pokemonEntity.setVelocity(0, Math.min(pokemonEntity.getVelocity().y, 0), 0);
                     pokemonEntity.velocityDirty = true;
+                    // Clear all brain memories related to movement
+                    try {
+                        pokemonEntity.getBrain().forget(net.minecraft.entity.ai.brain.MemoryModuleType.WALK_TARGET);
+                        pokemonEntity.getBrain().forget(net.minecraft.entity.ai.brain.MemoryModuleType.LOOK_TARGET);
+                        pokemonEntity.getBrain().forget(net.minecraft.entity.ai.brain.MemoryModuleType.PATH);
+                    } catch (Exception ignored) { }
                     try {
                         AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     } catch (Exception ignored) { }
                 } else if (inActiveBehavior) {
                     // Re-enable AI if was disabled by sleeping
-                    if (pokemonEntity.isAiDisabled()) pokemonEntity.setAiDisabled(false);
+                    // (AI disable removed — was blocking animations)
                     // Moving behavior (chase/flee/follow): tick ambient only
                     try {
                         AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     } catch (Exception ignored) { }
                 } else if (pokemonEntity.getNavigation().isIdle()) {
                     // Re-enable AI if was disabled by sleeping
-                    if (pokemonEntity.isAiDisabled()) pokemonEntity.setAiDisabled(false);
+                    // (AI disable removed — was blocking animations)
                     // Pick next behavior or wander slowly
                     try {
                         boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);

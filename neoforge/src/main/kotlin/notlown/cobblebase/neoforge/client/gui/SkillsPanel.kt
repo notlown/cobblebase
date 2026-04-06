@@ -2,6 +2,7 @@ package notlown.cobblebase.neoforge.client.gui
 
 import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.BaseManager
+import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.JobConfigOverrides
 import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillRegistry
@@ -68,13 +69,21 @@ class SkillsPanel(
         scrollY = 0
         contentY = panelY + HEADER_HEIGHT + PANEL_PADDING
 
+        // Bottom bar: Discord icon | Mute toggle | Done button
+        addWidget.apply(ButtonWidget.builder(Text.literal("\u00A79\u2689")) {
+            try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI("https://discord.gg/6As3sVZgVT")) } catch (_: Exception) {}
+        }.dimensions(panelX + 4, panelY + panelH - 16, 14, 12).build())
+
+        val muted = !CobblebaseConfig.cryEnabled || CobblebaseConfig.cryVolume <= 0
+        val muteLabel = if (muted) "\uD83D\uDD07" else "\uD83D\uDD0A"
+        addWidget.apply(ButtonWidget.builder(Text.literal(muteLabel)) {
+            val config = me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).config
+            config.cry.cryEnabled = !config.cry.cryEnabled
+            me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).save()
+        }.dimensions(panelX + 22, panelY + panelH - 16, 14, 12).build())
+
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
             .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
-
-        // Discord button (small, bottom-left)
-        addWidget.apply(ButtonWidget.builder(Text.literal("\u00A78Discord")) {
-            try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI("https://discord.gg/6As3sVZgVT")) } catch (_: Exception) {}
-        }.dimensions(panelX + 4, panelY + panelH - 16, 42, 12).build())
 
         var cumulativeY = 0
 

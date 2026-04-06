@@ -210,13 +210,21 @@ object RecruiterExecutor : SkillExecutor {
         return candidates[world.random.nextInt(candidates.size)]
     }
 
+    private val EXCLUDED_LABELS = setOf("legendary", "mythical", "ultra_beast")
+
     private fun getOrBuildTypeMap(): Map<String, List<String>> {
         speciesByType?.let { return it }
 
         val map = mutableMapOf<String, MutableList<String>>()
+        var skipped = 0
         try {
             // Use ALL loaded Cobblemon species (includes installed fakemon packs)
+            // but exclude legendaries, mythicals, and ultra beasts
             for (species in PokemonSpecies.species) {
+                if (species.labels.any { it.lowercase() in EXCLUDED_LABELS }) {
+                    skipped++
+                    continue
+                }
                 val name = species.name.lowercase()
                 for (type in species.types) {
                     map.getOrPut(type.name.lowercase()) { mutableListOf() }.add(name)
@@ -227,7 +235,7 @@ object RecruiterExecutor : SkillExecutor {
         }
 
         speciesByType = map
-        Cobblebase.LOGGER.info("[Recruiter] Type map: ${map.size} types, ${map.values.sumOf { it.size }} entries")
+        Cobblebase.LOGGER.info("[Recruiter] Type map: ${map.size} types, ${map.values.sumOf { it.size }} entries (excluded $skipped legendary/mythical/ultra beast)")
         return map
     }
 

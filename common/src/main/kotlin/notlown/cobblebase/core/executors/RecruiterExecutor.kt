@@ -50,13 +50,17 @@ object RecruiterExecutor : SkillExecutor {
         skillEntry: SkillEntry
     ) {
         if (world !is ServerWorld) return
-        val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
-        // Sparkle on recruited mons
+        // Sparkle on recruited mons (every 2 seconds)
         if (now % 40 == 0L) {
             tickRecruitedSparkles(world)
         }
+
+        // Throttle: Recruiter has minute-long cooldowns, no need to check every tick
+        if (now % 20L != 0L) return
+
+        val pokemonId = pokemonEntity.pokemon.uuid
 
         // Use skill.cooldownSeconds which already has admin overrides applied via SkillRegistry.getEffective()
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)

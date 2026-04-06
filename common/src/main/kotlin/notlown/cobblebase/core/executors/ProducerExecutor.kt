@@ -349,11 +349,14 @@ object ProducerExecutor : SkillExecutor {
     ) {
         if (world !is ServerWorld) return
 
+        val now = world.time
+        // Throttle: Producer has minute-long cooldowns, no need to check every tick
+        if (now % 20L != 0L) return
+
         val speciesName = BaseManager.resolveSpeciesName(pokemonEntity.pokemon)
         val entry = produceMap[speciesName] ?: return
 
         val pokemonId = pokemonEntity.pokemon.uuid
-        val now = world.time
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
 
         // Cooldown check

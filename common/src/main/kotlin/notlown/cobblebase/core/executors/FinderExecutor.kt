@@ -38,6 +38,12 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
 
     private val logTag = "[${finderType.replaceFirstChar { it.uppercase() }}]"
 
+    // Cached loot table keys (avoid Identifier.of/RegistryKey.of allocations every tick)
+    private val lootKeyCommon = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase:${finderType}_common"))
+    private val lootKeyUncommon = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase:${finderType}_uncommon"))
+    private val lootKeyRare = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase:${finderType}_rare"))
+    private val lootKeyUltraRare = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase:${finderType}_ultra_rare"))
+
     override fun tick(
         world: World,
         origin: BlockPos,
@@ -48,6 +54,10 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+
+        // Throttle: Finders have minute-long cooldowns, no need to check every tick
+        if (now % 20L != 0L) return
+
         val items = heldItems[pokemonId]
 
         // Drop items on ground — Gatherer will sort into chests
@@ -58,24 +68,22 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
         }
 
         // Cooldown
-        // Finder cooldown only slightly reduced by proficiency (not halved like other skills)
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val lastTime = lastFindTime[pokemonId] ?: now.also { lastFindTime[pokemonId] = now }
-        if (now - lastTime < cooldownTicks) {
-            if (now % 60 == 0L) {
-                SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
-            }
-            return
-        }
+        if (now - lastTime < cooldownTicks) return
 
         // Generate loot - proficiency affects quality, not just speed
         lastFindTime[pokemonId] = now
 
         try {
             // Pick a loot tier based on proficiency
-            // Higher prof = much better items, less trash
-            val lootTableName = pickLootTable(world, skillEntry.proficiency)
-            val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of(lootTableName))
+            val tier = pickLootTier(world, skillEntry.proficiency)
+            val lootTableKey = when (tier) {
+                3 -> lootKeyUltraRare
+                2 -> lootKeyRare
+                1 -> lootKeyUncommon
+                else -> lootKeyCommon
+            }
             val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
 
             val lootParams = LootContextParameterSet.Builder(world)
@@ -91,10 +99,10 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
                 Cobblebase.log("$logTag ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) found: ${drops.map { "${it.name.string}x${it.count}" }}")
 
                 // Log to activity log
-                val rarity = when {
-                    lootTableName.endsWith("_ultra_rare") -> LogManager.Rarity.ULTRA_RARE
-                    lootTableName.endsWith("_rare") -> LogManager.Rarity.RARE
-                    lootTableName.endsWith("_uncommon") -> LogManager.Rarity.UNCOMMON
+                val rarity = when (tier) {
+                    3 -> LogManager.Rarity.ULTRA_RARE
+                    2 -> LogManager.Rarity.RARE
+                    1 -> LogManager.Rarity.UNCOMMON
                     else -> LogManager.Rarity.COMMON
                 }
                 for (drop in drops) {
@@ -122,20 +130,21 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
      * Prof 4: Common 30%, Uncommon 35%, Rare 25%, Ultra Rare 10%
      * Prof 5: Common 15%, Uncommon 30%, Rare 35%, Ultra Rare 20%
      */
-    private fun pickLootTable(world: World, proficiency: Int): String {
+    /**
+     * Returns tier: 0=common, 1=uncommon, 2=rare, 3=ultra_rare
+     */
+    private fun pickLootTier(world: World, proficiency: Int): Int {
         val roll = world.random.nextInt(100)
 
         val ultraRare = when (proficiency) { 1->1; 2->2; 3->5; 4->10; else->20 }
         val rare = when (proficiency) { 1->4; 2->8; 3->15; 4->25; else->35 }
         val uncommon = when (proficiency) { 1->15; 2->25; 3->30; 4->35; else->30 }
 
-        val prefix = "cobblebase:${finderType}"
-
         return when {
-            roll < ultraRare -> "${prefix}_ultra_rare"
-            roll < ultraRare + rare -> "${prefix}_rare"
-            roll < ultraRare + rare + uncommon -> "${prefix}_uncommon"
-            else -> "${prefix}_common"
+            roll < ultraRare -> 3
+            roll < ultraRare + rare -> 2
+            roll < ultraRare + rare + uncommon -> 1
+            else -> 0
         }
     }
 

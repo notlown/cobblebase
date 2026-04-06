@@ -281,24 +281,18 @@ object HarvesterExecutor : SkillExecutor {
         }
 
         if (block is BerryBlock) {
-            // Cobblemon berry: use Berry API for drops, reset age to MATURE (tree stays, fruit removed)
-            // Age stages: 0-2 = growing, 3 = MATURE_AGE (tree), 4 = FLOWER, 5 = FRUIT
+            // Cobblemon berry: use BerryBlockEntity.harvest() — handles drops, age reset, and mulch
             try {
-                val berry = block.berry() ?: throw IllegalStateException("No berry")
-                val yield = berry.calculateYield(world, state, pos, pokemonEntity)
-                val berryItem = berry.item()
-                if (yield > 0) {
-                    heldItems[pokemonId] = listOf(ItemStack(berryItem, yield))
+                val blockEntity = world.getBlockEntity(pos)
+                if (blockEntity is com.cobblemon.mod.common.block.entity.BerryBlockEntity) {
+                    val drops = blockEntity.harvest(world, state, pos)
+                    if (drops.isNotEmpty()) heldItems[pokemonId] = drops.toList()
                 }
             } catch (_: Exception) {
-                // Fallback to loot table drops
-                val drops = getBlockDrops(world, pos, state, pokemonEntity)
-                if (drops.isNotEmpty()) heldItems[pokemonId] = drops
-            }
-            try {
-                world.setBlockState(pos, state.with(BerryBlock.AGE, BerryBlock.MATURE_AGE), Block.NOTIFY_ALL)
-            } catch (_: Exception) {
-                world.setBlockState(pos, state.with(BerryBlock.AGE, 3), Block.NOTIFY_ALL)
+                // Fallback: just reset age, no drops
+                try {
+                    world.setBlockState(pos, state.with(BerryBlock.AGE, BerryBlock.MATURE_AGE), Block.NOTIFY_ALL)
+                } catch (_: Exception) { }
             }
             return
         }

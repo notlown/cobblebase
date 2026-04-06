@@ -181,6 +181,12 @@ public class PokemonPastureBlockEntityMixin {
                 } catch (Exception ignored) { }
             } else {
                 // WORKING MON: normal job execution, no ambient behaviors
+                // Wake up if was sleeping (clear sleep animation before working)
+                if (AmbientBehavior.INSTANCE.isSleeping(pokemonEntity.getPokemon().getUuid())) {
+                    try {
+                        notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "ground_idle", "walk");
+                    } catch (Exception ignored) { }
+                }
                 AmbientBehavior.INSTANCE.clearState(pokemonEntity.getPokemon().getUuid());
                 try {
                     BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);

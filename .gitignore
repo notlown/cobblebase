@@ -39,3 +39,9 @@ replay_*.log
 *.hprof
 *.jfr
 .kotlin/
+
+# local / hidden dirs
+
+.*/
+!.github/
+*.local.md

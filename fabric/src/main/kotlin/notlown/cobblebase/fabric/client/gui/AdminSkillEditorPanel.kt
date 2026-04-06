@@ -168,16 +168,12 @@ class AdminSkillEditorPanel(
         }
         context.matrices.pop()
 
-        // Large zoomed-in sprite in the top-right corner, clipped to header row height
-        val spriteW = 32
-        val spriteH = 14
-        PokemonSpriteHelper.renderLargeSpriteByName(
-            context, species,
-            x + w - spriteW - PADDING,
-            y + PADDING,
-            spriteW, spriteH,
-            delta,
-            scale = 18.0f
+        // Sprite top-right corner — standard small icon (same as rest of GUI)
+        PokemonSpriteHelper.renderSmallIconByName(
+            context, textRenderer, species,
+            x + w - PokemonSpriteHelper.ICON_SIZE - PADDING,
+            y + PADDING - 2,
+            delta
         )
 
         // 3-column grid layout per category

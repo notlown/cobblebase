@@ -155,11 +155,12 @@ class AdminSkillEditorPanel(
         }
         val headerText = if (isOverridden) "$displayName \u00A76[Override]$countSuffix" else "$displayName$countSuffix"
 
-        // Render large zoomed-in sprite in the top-right corner, clipped to header row height
-        val headerRowHeight = 14
-        val spriteX = x + w - 32 - PADDING
-        PokemonSpriteHelper.renderLargeSpriteByName(
-            context, species, spriteX, y + PADDING, 32, headerRowHeight, delta, scale = 18.0f
+        // Sprite top-right corner — standard small icon
+        PokemonSpriteHelper.renderSmallIconByName(
+            context, textRenderer, species,
+            x + w - PokemonSpriteHelper.ICON_SIZE - PADDING,
+            y + PADDING - 2,
+            delta
         )
 
         val hdrScale = 0.75f

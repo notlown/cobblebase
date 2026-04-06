@@ -137,7 +137,7 @@ class BuffsPanel(
                 val percent = ((multiplier) * 100).toInt()
                 "+${percent}% Bonus XP every 60s"
             }
-            "harvester" -> "Harvesting crops every ${effectiveCooldown}s"
+            "harvester" -> "Harvesting crops, berries, and apricorns"
             "mining" -> "Mining for ores, fossils, and gems"
             "scout" -> "Scouting for wild Pokemon and structures"
             "fishing" -> "Fishing every ${effectiveCooldown}s"
@@ -182,7 +182,8 @@ class BuffsPanel(
             "extinguish" -> "Extinguishes fire near the base"
             "aura" -> "Luck boost for nearby players"
             "growth" -> "Accelerates crop growth nearby"
-            else -> "Active"
+            "producer" -> "Producing species-specific items"
+            else -> "Working"
         }
     }
 

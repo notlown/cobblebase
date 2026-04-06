@@ -193,7 +193,7 @@ object RecruiterExecutor : SkillExecutor {
         val candidates = typeMap[typeName.lowercase()] ?: return null
         if (candidates.isEmpty()) return null
 
-        // Filter by bucket
+        // Filter by bucket (species with spawn data)
         val matching = candidates.filter { SpawnData.getBucket(it) == targetBucket }
         if (matching.isNotEmpty()) {
             return matching[world.random.nextInt(matching.size)]
@@ -201,13 +201,14 @@ object RecruiterExecutor : SkillExecutor {
 
         // Fallback: try MORE COMMON buckets first (never fall UP to rarer)
         for (fallback in SpawnData.Bucket.entries) {
-            if (fallback.ordinal > targetBucket.ordinal) continue // don't go rarer
+            if (fallback.ordinal > targetBucket.ordinal) continue
             val fallbackMatching = candidates.filter { SpawnData.getBucket(it) == fallback }
             if (fallbackMatching.isNotEmpty()) {
                 return fallbackMatching[world.random.nextInt(fallbackMatching.size)]
             }
         }
 
+        // Final fallback: pick any random species of this type (includes fakemons without spawn data)
         return candidates[world.random.nextInt(candidates.size)]
     }
 
@@ -216,10 +217,9 @@ object RecruiterExecutor : SkillExecutor {
 
         val map = mutableMapOf<String, MutableList<String>>()
         try {
+            // Use ALL loaded Cobblemon species (includes installed fakemon packs)
             for (species in PokemonSpecies.species) {
                 val name = species.name.lowercase()
-                // Only include Pokemon that exist in our spawn CSV (confirmed in Cobblemon)
-                if (!SpawnData.exists(name)) continue
                 for (type in species.types) {
                     map.getOrPut(type.name.lowercase()) { mutableListOf() }.add(name)
                 }

@@ -150,25 +150,31 @@ object NavigationHelper {
         if (lastPos != null && lastPos == currentPos) {
             // Same BlockPos — check if stuck long enough
             val since = stuckSince.getOrPut(id) { now }
-            if (now - since >= STUCK_THRESHOLD_TICKS) {
-                // Stuck for 7+ seconds — stop nav and try a random direction
+            val stuckDuration = now - since
+            if (stuckDuration >= STUCK_THRESHOLD_TICKS) {
                 pokemonEntity.navigation.stop()
                 val rand = java.util.concurrent.ThreadLocalRandom.current()
+                val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
+
+                // Escalating unstick: longer stuck = more aggressive attempts
+                val intensity = (stuckDuration / STUCK_THRESHOLD_TICKS).coerceIn(1, 5).toInt()
+                val dist = (1.5 + intensity * 1.5) // 3 to 9 blocks
+                val speed = (0.4 + intensity * 0.15).coerceAtMost(1.0) // 0.55 to 1.0
+
                 val angle = rand.nextDouble() * Math.PI * 2
-                val dist = 2.0 + rand.nextDouble() * 2.0
                 val targetX = currentPos.x + Math.cos(angle) * dist + 0.5
                 val targetZ = currentPos.z + Math.sin(angle) * dist + 0.5
 
-                // For flying Pokemon: also vary Y position to unstick from ceilings/walls
-                val canFly = try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
                 val targetY = if (canFly) {
-                    currentPos.y + (rand.nextInt(5) - 2).toDouble() // -2 to +2 blocks Y
+                    // Flying: diagonal movement with increasing Y variation
+                    currentPos.y + (rand.nextInt(intensity * 2 + 1) - intensity).toDouble()
                 } else {
                     currentPos.y.toDouble()
                 }
 
-                pokemonEntity.navigation.startMovingTo(targetX, targetY, targetZ, 0.5)
-                stuckSince.remove(id)
+                pokemonEntity.navigation.startMovingTo(targetX, targetY, targetZ, speed)
+                // Don't reset stuckSince — let intensity escalate on next check
+                stuckSince[id] = since // keep original stuck time for escalation
             }
         } else {
             // Moved — reset stuck tracking

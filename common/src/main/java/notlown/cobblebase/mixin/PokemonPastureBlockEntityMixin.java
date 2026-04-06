@@ -143,19 +143,13 @@ public class PokemonPastureBlockEntityMixin {
             String assignment = BaseManager.INSTANCE.getAssignment(pokemonEntity.getPokemon().getUuid());
             boolean isExplicitlyIdle = (assignment == null);
 
-            // At night, skip ALL Cobblebase logic for working mons.
-            // Cobblemon's vanilla AI handles sleeping on its own — we just get out of the way.
+            // At night, working mons use the same idle/sleep path as Relax mons
+            // (Cobblemon pasture mons don't have vanilla sleep — our AmbientBehavior handles it)
             long dayTime = world.getTimeOfDay() % 24000L;
             boolean isNight = dayTime >= 12542 && dayTime < 23460;
-            if (isNight && !isExplicitlyIdle) {
-                // Only run passive buffs at night, skip jobs entirely
-                try {
-                    BaseManager.INSTANCE.tickPassiveBuffsWithoutEntity(world, blockPos, pokemon);
-                } catch (Exception ignored) { }
-                continue;
-            }
+            boolean shouldIdle = isExplicitlyIdle || (isNight && !isExplicitlyIdle);
 
-            if (isExplicitlyIdle) {
+            if (shouldIdle) {
                 // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
                 boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
@@ -184,10 +178,16 @@ public class PokemonPastureBlockEntityMixin {
                     NavigationHelper.INSTANCE.escapeLeaves(pokemonEntity);
                 } catch (Exception ignored) { }
 
-                // Passive buffs still run for idle mons
-                try {
-                    BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
-                } catch (Exception ignored) { }
+                // Passive buffs run for idle mons; skip job tick for working mons sleeping at night
+                if (isNight && !isExplicitlyIdle) {
+                    try {
+                        BaseManager.INSTANCE.tickPassiveBuffsWithoutEntity(world, blockPos, pokemon);
+                    } catch (Exception ignored) { }
+                } else {
+                    try {
+                        BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
+                    } catch (Exception ignored) { }
+                }
             } else {
                 // WORKING MON: normal job execution, no ambient behaviors
                 AmbientBehavior.INSTANCE.clearState(pokemonEntity.getPokemon().getUuid());

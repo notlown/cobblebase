@@ -85,12 +85,10 @@ class SkillsPanel(
         // Admin button (only if OP)
         val client = net.minecraft.client.MinecraftClient.getInstance()
         if (client.player?.hasPermissionLevel(2) == true) {
-            addWidget.apply(ButtonWidget.builder(Text.literal("\u00A76\u2699")) {
+            addWidget.apply(ButtonWidget.builder(Text.literal("\u00A76Admin")) {
                 parent.close()
-                net.neoforged.neoforge.network.PacketDistributor.sendToServer(notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket())
-                net.neoforged.neoforge.network.PacketDistributor.sendToServer(notlown.cobblebase.core.net.AdminJobsRequestC2SPacket())
-                client.send { client.setScreen(notlown.cobblebase.neoforge.client.gui.AdminScreen()) }
-            }.dimensions(panelX + panelW - 98, panelY + panelH - 16, 14, 12).build())
+                notlown.cobblebase.neoforge.client.CobblebaseNeoForgeClient.requestAdminScreen()
+            }.dimensions(panelX + panelW - 98, panelY + panelH - 16, 36, 12).build())
         }
 
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }

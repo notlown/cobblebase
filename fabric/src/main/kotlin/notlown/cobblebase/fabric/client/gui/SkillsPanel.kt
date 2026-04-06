@@ -90,12 +90,10 @@ class SkillsPanel(
         // Admin button (only if OP) — bottom-right, before Done
         val client = net.minecraft.client.MinecraftClient.getInstance()
         if (client.player?.hasPermissionLevel(2) == true) {
-            addWidget.apply(ButtonWidget.builder(Text.literal("\u00A76\u2699")) {
+            addWidget.apply(ButtonWidget.builder(Text.literal("\u00A76Admin")) {
                 parent.close()
-                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket())
-                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(notlown.cobblebase.core.net.AdminJobsRequestC2SPacket())
-                client.send { client.setScreen(notlown.cobblebase.fabric.client.gui.AdminScreen()) }
-            }.dimensions(panelX + panelW - 98, panelY + panelH - 16, 14, 12).build())
+                notlown.cobblebase.fabric.client.CobblebaseFabricClient.requestAdminScreen()
+            }.dimensions(panelX + panelW - 98, panelY + panelH - 16, 36, 12).build())
         }
 
         // Done button (bottom-right)

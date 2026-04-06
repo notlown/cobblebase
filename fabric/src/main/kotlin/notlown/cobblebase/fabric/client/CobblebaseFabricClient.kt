@@ -34,6 +34,12 @@ object CobblebaseFabricClient : ClientModInitializer {
     private lateinit var settingsKey: KeyBinding
     private var pendingAdminScreen = false
 
+    fun requestAdminScreen() {
+        pendingAdminScreen = true
+        ClientPlayNetworking.send(AdminSpeciesRequestC2SPacket())
+        ClientPlayNetworking.send(AdminJobsRequestC2SPacket())
+    }
+
     override fun onInitializeClient() {
         // Register keybinding: K = open Cobblebase settings
         settingsKey = KeyBindingHelper.registerKeyBinding(KeyBinding(

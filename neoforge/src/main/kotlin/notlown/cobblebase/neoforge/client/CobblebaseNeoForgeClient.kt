@@ -35,6 +35,12 @@ object CobblebaseNeoForgeClient {
 
     private var pendingAdminScreen = false
 
+    fun requestAdminScreen() {
+        pendingAdminScreen = true
+        PacketDistributor.sendToServer(AdminSpeciesRequestC2SPacket())
+        PacketDistributor.sendToServer(AdminJobsRequestC2SPacket())
+    }
+
     @SubscribeEvent
     fun onClientTick(event: ClientTickEvent.Post) {
         val client = net.minecraft.client.MinecraftClient.getInstance()

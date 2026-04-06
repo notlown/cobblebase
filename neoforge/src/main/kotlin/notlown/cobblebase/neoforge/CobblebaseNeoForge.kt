@@ -168,9 +168,31 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             context.enqueueWork {
                 notlown.cobblebase.core.AdminDataCache.update(
                     packet.allSpecies,
-                    packet.speciesSkills,
                     packet.overriddenSpecies
                 )
+            }
+        }
+
+        // C2S: Lazy-load skills request
+        registrar.playToServer(
+            notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!player.hasPermissionLevel(2)) return@enqueueWork
+                val skills = SpeciesSkillRegistry.getSkills(packet.species)?.skills ?: emptyList()
+                context.reply(notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket(packet.species, skills))
+            }
+        }
+
+        // S2C: Lazy-load skills response
+        registrar.playToClient(
+            notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket.ID,
+            notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.AdminDataCache.setSpeciesSkills(packet.species, packet.skills)
             }
         }
 
@@ -327,10 +349,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             emptyList()
         }
 
-        val assigned = SpeciesSkillRegistry.getAllAssigned()
-        val speciesSkills = assigned.mapValues { (_, v) -> v.skills }
         val overridden = SpeciesSkillOverrides.getAllOverriddenSpecies()
-
-        context.reply(AdminSpeciesSyncS2CPacket(allSpecies, speciesSkills, overridden))
+        context.reply(AdminSpeciesSyncS2CPacket(allSpecies, overridden))
     }
 }

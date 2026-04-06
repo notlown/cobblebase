@@ -222,9 +222,15 @@ class AdminSpeciesListPanel(
         return false
     }
 
+    private var scrollAccumulator = 0.0
+
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
-            scrollOffset = (scrollOffset - verticalAmount.toInt() * 3).coerceAtLeast(0)
+            // Accumulate fractional scroll input (touchpad / smooth scroll mice)
+            scrollAccumulator -= verticalAmount
+            val whole = scrollAccumulator.toInt()
+            scrollAccumulator -= whole.toDouble()
+            scrollOffset = (scrollOffset + whole).coerceAtLeast(0)
             val maxScroll = (filteredSpecies.size - ((h - 20) / ROW_HEIGHT)).coerceAtLeast(0)
             scrollOffset = scrollOffset.coerceAtMost(maxScroll)
             return true

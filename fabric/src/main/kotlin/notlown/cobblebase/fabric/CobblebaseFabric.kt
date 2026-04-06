@@ -121,6 +121,20 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // Register C2S packet for lazy-loading individual species skills
+        PayloadTypeRegistry.playC2S().register(notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.ID, notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.CODEC)
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                val player = context.player()
+                if (!player.hasPermissionLevel(2)) return@execute
+                val skills = SpeciesSkillRegistry.getSkills(packet.species)?.skills ?: emptyList()
+                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket(packet.species, skills))
+            }
+        }
+
+        // Register S2C packet for lazy-loading skills response
+        PayloadTypeRegistry.playS2C().register(notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket.ID, notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket.CODEC)
+
         // Register C2S packet for admin jobs requests
         PayloadTypeRegistry.playC2S().register(AdminJobsRequestC2SPacket.ID, AdminJobsRequestC2SPacket.CODEC)
         ServerPlayNetworking.registerGlobalReceiver(AdminJobsRequestC2SPacket.ID) { _, context ->
@@ -227,8 +241,8 @@ object CobblebaseFabric : ModInitializer {
      * skill assignments, and override info, then sends to the requesting player.
      */
     private fun handleAdminSpeciesRequest(player: net.minecraft.server.network.ServerPlayerEntity) {
-        // Get all species from Cobblemon + any custom overrides (fakemons etc.)
-        // Use SpeciesSkillRegistry keys as canonical names (matches our JSON files)
+        // Lazy loading: only send species names + override flags upfront
+        // Skills are loaded on demand via AdminSpeciesSkillsRequestC2SPacket
         val allSpecies = try {
             val registrySpecies = SpeciesSkillRegistry.getAllAssigned().keys.toList()
             val overrideSpecies = SpeciesSkillOverrides.getAllOverriddenSpecies()
@@ -238,13 +252,7 @@ object CobblebaseFabric : ModInitializer {
             emptyList()
         }
 
-        // Get all assigned species skills (keys already match allSpecies)
-        val assigned = SpeciesSkillRegistry.getAllAssigned()
-        val speciesSkills = assigned.mapValues { (_, v) -> v.skills }
-
-        // Get overridden species
         val overridden = SpeciesSkillOverrides.getAllOverriddenSpecies()
-
-        ServerPlayNetworking.send(player, AdminSpeciesSyncS2CPacket(allSpecies, speciesSkills, overridden))
+        ServerPlayNetworking.send(player, AdminSpeciesSyncS2CPacket(allSpecies, overridden))
     }
 }

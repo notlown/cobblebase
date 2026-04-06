@@ -70,6 +70,10 @@ class AdminSkillEditorPanel(
         selectedSpecies = species
         scrollOffset = 0
         dirty = false
+        // Lazy load: request skills from server if not cached yet
+        if (!AdminDataCache.speciesSkills.containsKey(species) && AdminDataCache.markPending(species)) {
+            PacketDistributor.sendToServer(notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket(species))
+        }
         rebuildSkillEdits()
     }
 
@@ -104,11 +108,7 @@ class AdminSkillEditorPanel(
         PacketDistributor.sendToServer(AdminSpeciesUpdateC2SPacket(species, assignedSkills, false))
 
         // Update local cache
-        val newMap = AdminDataCache.speciesSkills.toMutableMap()
-        newMap[species] = assignedSkills
-        val newOverridden = AdminDataCache.overriddenSpecies.toMutableSet()
-        newOverridden.add(species)
-        AdminDataCache.update(AdminDataCache.allSpecies, newMap, newOverridden)
+        AdminDataCache.updateLocalSkills(species, assignedSkills)
         dirty = false
         onSaved()
     }
@@ -366,9 +366,14 @@ class AdminSkillEditorPanel(
         return false
     }
 
+    private var scrollAccumulator = 0.0
+
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
-            scrollOffset = (scrollOffset - verticalAmount.toInt() * 3).coerceAtLeast(0)
+            scrollAccumulator -= verticalAmount
+            val whole = scrollAccumulator.toInt()
+            scrollAccumulator -= whole.toDouble()
+            scrollOffset = (scrollOffset + whole).coerceAtLeast(0)
             val totalSkills = SkillRegistry.getAll().size
             val maxScroll = (totalSkills - ((h - 40) / ROW_HEIGHT)).coerceAtLeast(0)
             scrollOffset = scrollOffset.coerceAtMost(maxScroll)

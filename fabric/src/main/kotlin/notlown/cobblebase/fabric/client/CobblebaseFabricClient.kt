@@ -93,7 +93,14 @@ object CobblebaseFabricClient : ClientModInitializer {
         // Register S2C admin species sync packet receiver
         ClientPlayNetworking.registerGlobalReceiver(AdminSpeciesSyncS2CPacket.ID) { packet, context ->
             context.client().execute {
-                AdminDataCache.update(packet.allSpecies, packet.speciesSkills, packet.overriddenSpecies)
+                AdminDataCache.update(packet.allSpecies, packet.overriddenSpecies)
+            }
+        }
+
+        // Lazy-loaded skills response
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                AdminDataCache.setSpeciesSkills(packet.species, packet.skills)
             }
         }
 

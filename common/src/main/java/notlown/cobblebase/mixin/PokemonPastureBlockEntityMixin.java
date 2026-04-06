@@ -151,10 +151,18 @@ public class PokemonPastureBlockEntityMixin {
 
             if (shouldIdle) {
                 // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
+                boolean isWorkerAtNight = isNight && !isExplicitlyIdle;
                 boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
 
-                if (isResting) {
+                if (isWorkerAtNight) {
+                    // Working mons at night: stop movement, always tick ambient (forces sleep)
+                    NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
+                    pokemonEntity.getNavigation().stop();
+                    try {
+                        AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
+                    } catch (Exception ignored) { }
+                } else if (isResting) {
                     NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                     pokemonEntity.getNavigation().stop();
                     try {

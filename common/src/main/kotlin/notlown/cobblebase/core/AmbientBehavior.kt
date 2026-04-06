@@ -28,7 +28,6 @@ object AmbientBehavior {
     private const val IDLE_STAND_MAX = 400L   // 20 seconds max before next behavior
     private const val SOCIAL_RANGE = 15.0     // blocks — how close mons need to be to interact
     private const val SOCIAL_CHANCE = 50       // percent chance per check to start social interaction
-    private const val SIT_CHANCE = 15          // percent chance to sit instead of wander
     private const val LOOK_AROUND_CHANCE = 20  // percent chance to play look-around animation
     private const val SPECIAL_ANIM_CHANCE = 25 // percent chance to play a special animation (attack, emote)
 
@@ -57,7 +56,6 @@ object AmbientBehavior {
         STANDING,       // standing still, looking around
         SLEEPING,       // lying down at night
         SOCIALIZING,    // interacting with nearby mon (facing each other, cries)
-        SITTING,        // sitting/resting in place
         FOLLOWING,      // following another mon around together
         CHILLING,       // sitting together with another mon
         CHASING,        // one mon runs away, another chases it
@@ -102,7 +100,7 @@ object AmbientBehavior {
     fun shouldPreventMovement(pokemonId: UUID): Boolean {
         val state = currentState[pokemonId] ?: return false
         // Only stop movement for stationary states (not chasing/fleeing/following)
-        return state == BehaviorState.SLEEPING || state == BehaviorState.SITTING ||
+        return state == BehaviorState.SLEEPING ||
                state == BehaviorState.SOCIALIZING || state == BehaviorState.STANDING ||
                state == BehaviorState.CHILLING
     }
@@ -144,7 +142,7 @@ object AmbientBehavior {
         return when (state) {
             BehaviorState.SLEEPING -> tickSleeping(world, pokemonEntity, id, now, origin)
             BehaviorState.STANDING -> tickStanding(world, pokemonEntity, id, now, stateStart, origin)
-            BehaviorState.SITTING -> tickSitting(world, pokemonEntity, id, now, stateStart, origin)
+            // SITTING removed — no animation for it
             BehaviorState.SOCIALIZING -> tickSocializing(world, pokemonEntity, id, now, stateStart)
             BehaviorState.FOLLOWING -> tickFollowing(world, pokemonEntity, id, now, stateStart)
             BehaviorState.CHILLING -> tickChilling(world, pokemonEntity, id, now, stateStart)
@@ -196,28 +194,6 @@ object AmbientBehavior {
         // After standing for a while, transition to next behavior
         val standDuration = IDLE_STAND_MIN + (world.random.nextInt((IDLE_STAND_MAX - IDLE_STAND_MIN).toInt())).toLong()
         if (elapsed >= standDuration) {
-            setState(id, BehaviorState.WANDERING, now)
-            return false
-        }
-
-        NavigationHelper.clearTargets(entity)
-        return true
-    }
-
-    /**
-     * Sitting/resting — Pokemon stays in place with a relaxed pose.
-     */
-    private fun tickSitting(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long, origin: BlockPos): Boolean {
-        val elapsed = now - stateStart
-
-        // Play sit/rest animation
-        if (now % 120 == 0L) {
-            SkillEffects.sendAnimationPublic(world, entity, "sleep", "pose", "ground_idle")
-        }
-
-        // Sit for 10-30 seconds then get up
-        val sitDuration = 200L + world.random.nextInt(400).toLong()
-        if (elapsed >= sitDuration) {
             setState(id, BehaviorState.WANDERING, now)
             return false
         }
@@ -595,12 +571,6 @@ object AmbientBehavior {
             }
         }
 
-        // Random chance to sit down
-        if (world.random.nextInt(100) < SIT_CHANCE) {
-            setState(id, BehaviorState.SITTING, now)
-            return true
-        }
-
         // Random chance to just stand and look around
         if (world.random.nextInt(100) < LOOK_AROUND_CHANCE) {
             setState(id, BehaviorState.STANDING, now)
@@ -627,7 +597,6 @@ object AmbientBehavior {
 
     private fun broadcastAmbientState(speciesName: String, state: BehaviorState) {
         val stateText = when (state) {
-            BehaviorState.SITTING -> "\u00A77$speciesName is sitting down"
             BehaviorState.STANDING -> "\u00A77$speciesName is looking around"
             BehaviorState.SLEEPING -> "\u00A77$speciesName fell asleep"
             BehaviorState.SOCIALIZING -> "\u00A7e$speciesName is showing off moves"

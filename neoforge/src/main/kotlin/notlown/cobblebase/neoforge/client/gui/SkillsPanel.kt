@@ -74,13 +74,13 @@ class SkillsPanel(
             try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI("https://discord.gg/6As3sVZgVT")) } catch (_: Exception) {}
         }.dimensions(panelX + 4, panelY + panelH - 16, 14, 12).build())
 
-        val muted = !CobblebaseConfig.cryEnabled || CobblebaseConfig.cryVolume <= 0
-        val muteLabel = if (muted) "\uD83D\uDD07" else "\uD83D\uDD0A"
-        addWidget.apply(ButtonWidget.builder(Text.literal(muteLabel)) {
+        val muteBtn = ButtonWidget.builder(Text.literal(getMuteIcon())) { btn ->
             val config = me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).config
             config.cry.cryEnabled = !config.cry.cryEnabled
             me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).save()
-        }.dimensions(panelX + 22, panelY + panelH - 16, 14, 12).build())
+            btn.message = Text.literal(getMuteIcon())
+        }.dimensions(panelX + 22, panelY + panelH - 16, 14, 12).build()
+        addWidget.apply(muteBtn)
 
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
             .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
@@ -360,5 +360,10 @@ class SkillsPanel(
         if (executor == "aura") return "\u2728"
         if (executor == "growth") return "\uD83C\uDF31"
         return null
+    }
+
+    private fun getMuteIcon(): String {
+        val muted = !CobblebaseConfig.cryEnabled || CobblebaseConfig.cryVolume <= 0
+        return if (muted) "\uD83D\uDD07" else "\uD83D\uDD0A"
     }
 }

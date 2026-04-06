@@ -163,10 +163,11 @@ public class PokemonPastureBlockEntityMixin {
                     if (!AmbientBehavior.INSTANCE.isSleeping(monId)) {
                         AmbientBehavior.INSTANCE.forceSleep(monId, world.getTime());
                     }
-                    // Send sleep animation every 4 seconds to maintain pose
-                    if (world.getTime() % 80 == 0) {
+                    // Send sleep animation every 3 seconds to maintain pose
+                    // Fallback chain: sleep → faint → ground_idle (not all mons have sleep anim)
+                    if (world.getTime() % 60 == 0) {
                         try {
-                            notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "sleep", "water_sleep", "battle_sleep");
+                            notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "sleep", "water_sleep", "battle_sleep", "faint", "ground_idle");
                         } catch (Exception ignored) { }
                     }
                 } else if (isResting) {

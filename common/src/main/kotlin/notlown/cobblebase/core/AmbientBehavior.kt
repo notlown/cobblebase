@@ -171,8 +171,9 @@ object AmbientBehavior {
         }
 
         // Stay sleeping — play sleep animation periodically to maintain pose
-        if (now % 100 == 0L) {
-            SkillEffects.sendAnimationPublic(world, entity, "sleep", "water_sleep", "battle_sleep")
+        // Fallback chain: sleep → faint → ground_idle (not all mons have sleep anim)
+        if (now % 60 == 0L) {
+            SkillEffects.sendAnimationPublic(world, entity, "sleep", "water_sleep", "battle_sleep", "faint", "ground_idle")
         }
 
         // Don't move while sleeping
@@ -532,12 +533,10 @@ object AmbientBehavior {
         val dayTime = world.timeOfDay % 24000
         val isNight = dayTime in 13000..22999
         if (isNight) {
-            // High chance to sleep at night
-            if (world.random.nextInt(100) < 70) {
-                Cobblebase.log("[Ambient] ${entity.pokemon.species.name} going to sleep (dayTime=$dayTime)")
-                setState(id, BehaviorState.SLEEPING, now)
-                return true
-            }
+            // Always sleep at night
+            Cobblebase.log("[Ambient] ${entity.pokemon.species.name} going to sleep (dayTime=$dayTime)")
+            setState(id, BehaviorState.SLEEPING, now)
+            return true
         }
 
         // Check for nearby mons to interact with

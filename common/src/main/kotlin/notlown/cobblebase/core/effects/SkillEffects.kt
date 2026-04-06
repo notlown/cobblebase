@@ -53,6 +53,33 @@ object SkillEffects {
      * Particles disabled for performance — only "heal" effect keeps particles
      * since healing is rare. Cries and animations still play for all types.
      */
+    /**
+     * Plays only the cry sound, without marking job success.
+     * Used for intermediate actions (e.g. Gatherer picking up an item).
+     */
+    fun playCryOnly(world: World, pokemonEntity: PokemonEntity) {
+        if (world !is ServerWorld) return
+        playCry(world, pokemonEntity)
+    }
+
+    private fun playCry(world: ServerWorld, pokemonEntity: PokemonEntity) {
+        if (CobblebaseConfig.cryEnabled && CobblebaseConfig.cryVolume > 0) {
+            val pokemonId = pokemonEntity.pokemon.uuid
+            val now = world.time
+            val lastCry = lastCryTime[pokemonId] ?: 0L
+            if (now - lastCry >= CRY_COOLDOWN_TICKS) {
+                lastCryTime[pokemonId] = now
+                val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
+                val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
+                val soundEvent = Registries.SOUND_EVENT.get(cryId)
+                if (soundEvent != null) {
+                    val volume = CobblebaseConfig.cryVolume / 100f
+                    world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, volume, 1.0f)
+                }
+            }
+        }
+    }
+
     fun playSuccess(world: World, pokemonEntity: PokemonEntity, effectType: String) {
         if (world !is ServerWorld) return
 

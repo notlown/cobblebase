@@ -206,8 +206,8 @@ object GathererExecutor : SkillExecutor {
         world.spawnEntity(visualItem)
         visualItems[pokemonId] = visualItem
 
-        // Play cry + success effect on pickup (no particles for performance)
-        SkillEffects.playSuccess(world, pokemonEntity, "default")
+        // Play cry on pickup (no markJobSuccess — that fires only on real deposit)
+        SkillEffects.playCryOnly(world, pokemonEntity)
     }
 
     /**
@@ -235,7 +235,11 @@ object GathererExecutor : SkillExecutor {
         val elapsed = world.time - startTime
 
         NavigationHelper.navigateTo(pokemonEntity, chestPos, speed)
-        if (NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos) || elapsed >= DEPOSIT_TIMEOUT_TICKS) {
+        val atChest = NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)
+        val timedOut = elapsed >= DEPOSIT_TIMEOUT_TICKS
+
+        if (atChest) {
+            // Actually reached the chest — insert items
             InventoryHelper.insertItems(world, chestPos, items)
             heldItems.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
@@ -250,8 +254,16 @@ object GathererExecutor : SkillExecutor {
                     LogManager.Rarity.COMMON
                 )
             }
-
+            // Mark as successful job action (only on real chest reach)
+            notlown.cobblebase.core.BaseManager.markJobSuccess(pokemonId, world.time)
             depositStartTime.remove(pokemonId)
+        } else if (timedOut) {
+            // Couldn't reach chest in 10s — drop items on ground (no fake success)
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+            heldItems.remove(pokemonId)
+            restoreOriginalHeldItem(pokemonEntity, pokemonId)
+            depositStartTime.remove(pokemonId)
+            Cobblebase.log("[Gatherer] ${pokemonEntity.pokemon.species.name} deposit timeout — dropped items (couldn't reach chest)")
         }
     }
 

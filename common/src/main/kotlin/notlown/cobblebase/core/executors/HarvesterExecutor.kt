@@ -281,13 +281,24 @@ object HarvesterExecutor : SkillExecutor {
         }
 
         if (block is BerryBlock) {
-            // Cobblemon berry: get drops, reset age to 0
-            val drops = getBlockDrops(world, pos, state, pokemonEntity)
-            if (drops.isNotEmpty()) heldItems[pokemonId] = drops
+            // Cobblemon berry: use Berry API for drops, reset age to MATURE (tree stays, fruit removed)
+            // Age stages: 0-2 = growing, 3 = MATURE_AGE (tree), 4 = FLOWER, 5 = FRUIT
             try {
-                world.setBlockState(pos, state.with(BerryBlock.AGE, 0), Block.NOTIFY_ALL)
+                val berry = block.berry() ?: throw IllegalStateException("No berry")
+                val yield = berry.calculateYield(world, state, pos, pokemonEntity)
+                val berryItem = berry.item()
+                if (yield > 0) {
+                    heldItems[pokemonId] = listOf(ItemStack(berryItem, yield))
+                }
             } catch (_: Exception) {
-                world.setBlockState(pos, block.defaultState, Block.NOTIFY_ALL)
+                // Fallback to loot table drops
+                val drops = getBlockDrops(world, pos, state, pokemonEntity)
+                if (drops.isNotEmpty()) heldItems[pokemonId] = drops
+            }
+            try {
+                world.setBlockState(pos, state.with(BerryBlock.AGE, BerryBlock.MATURE_AGE), Block.NOTIFY_ALL)
+            } catch (_: Exception) {
+                world.setBlockState(pos, state.with(BerryBlock.AGE, 3), Block.NOTIFY_ALL)
             }
             return
         }

@@ -149,18 +149,25 @@ public class PokemonPastureBlockEntityMixin {
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
 
                 if (isResting) {
-                    // Stationary: stop movement, tick ambient
+                    // Stationary: disable AI entirely so Brain tasks can't move the entity
+                    pokemonEntity.setAiDisabled(true);
                     NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                     pokemonEntity.getNavigation().stop();
+                    pokemonEntity.setVelocity(0, pokemonEntity.getVelocity().y, 0);
+                    pokemonEntity.velocityDirty = true;
                     try {
                         AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     } catch (Exception ignored) { }
                 } else if (inActiveBehavior) {
+                    // Re-enable AI if was disabled by sleeping
+                    if (pokemonEntity.isAiDisabled()) pokemonEntity.setAiDisabled(false);
                     // Moving behavior (chase/flee/follow): tick ambient only
                     try {
                         AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     } catch (Exception ignored) { }
                 } else if (pokemonEntity.getNavigation().isIdle()) {
+                    // Re-enable AI if was disabled by sleeping
+                    if (pokemonEntity.isAiDisabled()) pokemonEntity.setAiDisabled(false);
                     // Pick next behavior or wander slowly
                     try {
                         boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
@@ -181,6 +188,8 @@ public class PokemonPastureBlockEntityMixin {
                 } catch (Exception ignored) { }
             } else {
                 // WORKING MON: normal job execution, no ambient behaviors
+                // Re-enable AI if was disabled by sleeping
+                if (pokemonEntity.isAiDisabled()) pokemonEntity.setAiDisabled(false);
                 // Wake up if was sleeping (clear sleep animation before working)
                 if (AmbientBehavior.INSTANCE.isSleeping(pokemonEntity.getPokemon().getUuid())) {
                     try {

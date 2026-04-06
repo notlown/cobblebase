@@ -1,0 +1,9 @@
+{
+  "species": "braviary_hisuian",
+  "skills": [
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    }
+  ]
+}

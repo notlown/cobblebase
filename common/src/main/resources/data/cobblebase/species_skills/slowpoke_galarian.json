@@ -1,0 +1,9 @@
+{
+  "species": "slowpoke_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 1
+    }
+  ]
+}

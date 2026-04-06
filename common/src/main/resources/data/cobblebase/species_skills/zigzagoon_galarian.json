@@ -1,0 +1,9 @@
+{
+  "species": "zigzagoon_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    }
+  ]
+}

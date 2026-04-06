@@ -1,0 +1,13 @@
+{
+  "species": "exeggutor_alolan",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 2
+    }
+  ]
+}

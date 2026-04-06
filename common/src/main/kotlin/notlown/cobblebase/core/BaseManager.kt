@@ -23,9 +23,18 @@ object BaseManager {
     private val lastKnownPos = mutableMapOf<UUID, PosRecord>()
     private const val STUCK_TIMEOUT_TICKS = 160L // 8 seconds without movement = stuck
 
+    /**
+     * Resolves a form-aware species name for skill lookups.
+     * If the Pokemon has a regional form aspect (e.g. "alolan"), returns "species_form" (e.g. "vulpix_alolan").
+     * Falls back to just the species name if no form-specific skills are registered.
+     */
+    fun resolveSpeciesName(pokemon: com.cobblemon.mod.common.pokemon.Pokemon): String {
+        return SpeciesSkillRegistry.resolveFormName(pokemon.species.name, pokemon.aspects)
+    }
+
     fun tickPokemon(world: World, pastureOrigin: BlockPos, pokemonEntity: PokemonEntity) {
         val pokemonId: UUID = pokemonEntity.pokemon.uuid
-        val speciesName: String = pokemonEntity.pokemon.species.name.lowercase()
+        val speciesName: String = resolveSpeciesName(pokemonEntity.pokemon)
         val now = world.time
 
         // Auto-save periodically
@@ -110,7 +119,7 @@ object BaseManager {
      */
     fun tickPassiveBuffsWithoutEntity(world: World, pastureOrigin: BlockPos, pokemon: com.cobblemon.mod.common.pokemon.Pokemon) {
         if (world !is net.minecraft.server.world.ServerWorld) return
-        val speciesName = pokemon.species.name.lowercase()
+        val speciesName = resolveSpeciesName(pokemon)
         val speciesData = SpeciesSkillRegistry.getSkills(speciesName) ?: return
 
         for (entry in speciesData.skills) {
@@ -167,7 +176,7 @@ object BaseManager {
     }
 
     fun getAvailableSkills(pokemonEntity: PokemonEntity): List<SkillEntry> {
-        val speciesName: String = pokemonEntity.pokemon.species.name.lowercase()
+        val speciesName: String = resolveSpeciesName(pokemonEntity.pokemon)
         return SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
     }
 

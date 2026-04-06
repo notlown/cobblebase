@@ -1,0 +1,9 @@
+{
+  "species": "golem_alolan",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 3
+    }
+  ]
+}

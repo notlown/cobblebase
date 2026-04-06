@@ -1,0 +1,9 @@
+{
+  "species": "diglett_alolan",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 1
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "rapidash_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 3
+    }
+  ]
+}

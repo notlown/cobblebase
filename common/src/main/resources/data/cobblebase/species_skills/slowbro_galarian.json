@@ -1,0 +1,9 @@
+{
+  "species": "slowbro_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    }
+  ]
+}

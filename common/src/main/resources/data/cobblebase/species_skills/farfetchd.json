@@ -1,0 +1,9 @@
+{
+  "species": "farfetchd",
+  "skills": [
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    }
+  ]
+}

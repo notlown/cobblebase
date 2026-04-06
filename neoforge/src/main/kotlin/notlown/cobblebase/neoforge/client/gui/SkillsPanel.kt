@@ -75,7 +75,7 @@ class SkillsPanel(
 
         pokemonList.forEachIndexed { index, pokemonData ->
             val pokemonId = pokemonData.pokemonId
-            val speciesName = pokemonData.species.path
+            val speciesName = SpeciesSkillRegistry.resolveFormName(pokemonData.species.path, pokemonData.aspects)
             val currentAssignment = AssignmentCache.getAssignment(pokemonId)
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
@@ -158,7 +158,7 @@ class SkillsPanel(
             context.matrices.pop()
 
             // Aura icon between Pokemon and Skills (only if mon has buff)
-            val speciesName = pokemonData.species.path
+            val speciesName = SpeciesSkillRegistry.resolveFormName(pokemonData.species.path, pokemonData.aspects)
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             if (speciesSkills != null) {
                 val buffEmoji = speciesSkills.skills.firstNotNullOfOrNull { entry ->

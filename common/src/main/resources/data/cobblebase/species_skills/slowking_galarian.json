@@ -1,0 +1,9 @@
+{
+  "species": "slowking_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "zoroark_hisuian",
+  "skills": [
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    }
+  ]
+}

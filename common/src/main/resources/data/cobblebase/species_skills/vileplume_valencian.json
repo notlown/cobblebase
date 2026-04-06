@@ -1,0 +1,9 @@
+{
+  "species": "vileplume_valencian",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "weezing_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 2
+    }
+  ]
+}

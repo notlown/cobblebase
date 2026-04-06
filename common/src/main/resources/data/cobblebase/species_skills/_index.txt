@@ -576,6 +576,7 @@ belldong.json
 belleon.json
 bellibolt.json
 bellossom.json
+bellossom_valencian.json
 bellsprout.json
 belostoke.json
 belublebug.json
@@ -799,6 +800,7 @@ bratanat.json
 brattimp.json
 bravelry.json
 braviary.json
+braviary_hisuian.json
 brawlawoo.json
 brawlbeak.json
 brawnze.json
@@ -939,6 +941,7 @@ bushidurai.json
 bustag.json
 buttereef.json
 butterfree.json
+butterfree_valencian.json
 buwuve.json
 buzzkill.json
 buzzlex.json
@@ -1105,6 +1108,7 @@ castide.json
 catastropod.json
 catatomb.json
 caterpie.json
+caterpie_valencian.json
 catertuff.json
 catfeine.json
 cattail.json
@@ -1573,6 +1577,7 @@ corphish.json
 correncid.json
 corsage.json
 corsola.json
+corsola_galarian.json
 corsoreef.json
 corsuave.json
 coruda.json
@@ -1816,6 +1821,7 @@ decapasite.json
 decapichook.json
 decibelle.json
 decidueye.json
+decidueye_hisuian.json
 decomposite.json
 decompost.json
 dedenne.json
@@ -1909,6 +1915,7 @@ digasdon.json
 digdog.json
 diggersby.json
 diglett.json
+diglett_alolan.json
 digloo.json
 dilophang.json
 dilophlora.json
@@ -2127,6 +2134,7 @@ duelleon.json
 duggout.json
 dugmite.json
 dugtrio.json
+dugtrio_alolan.json
 dullahaunt.json
 dulswoop.json
 dumonke.json
@@ -2257,6 +2265,7 @@ electivire.json
 electrike.json
 electrocuke.json
 electrode.json
+electrode_hisuian.json
 electroll.json
 electroost.json
 electruxo.json
@@ -2391,6 +2400,7 @@ excalibould.json
 excanth.json
 exeggcute.json
 exeggutor.json
+exeggutor_alolan.json
 exeon.json
 exfinguish.json
 exoroknid.json
@@ -2446,6 +2456,8 @@ fantasmare.json
 fantasmaug.json
 faram.json
 farbaay.json
+farfetchd.json
+farfetchd_galarian.json
 farigiraf.json
 farocchio.json
 farstamp.json
@@ -2925,6 +2937,7 @@ genetorch.json
 gengar.json
 geobat.json
 geodude.json
+geodude_alolan.json
 geoduderegional.json
 geoglyphic.json
 geogriff.json
@@ -2972,6 +2985,8 @@ gilkun.json
 gilla.json
 gimmibread.json
 gimmighoul.json
+gimmighoul_chest.json
+gimmighoul_roaming.json
 gingaucand.json
 gingerbeard.json
 ginkorale.json
@@ -3039,6 +3054,7 @@ gloatem.json
 glocto.json
 gloefa.json
 gloom.json
+gloom_valencian.json
 gloomineon.json
 glorm.json
 gloshroom.json
@@ -3099,6 +3115,7 @@ golderis.json
 goldos.json
 golduck.json
 golem.json
+golem_alolan.json
 golett.json
 golfish.json
 golgre.json
@@ -3113,6 +3130,7 @@ gonezia.json
 gonking.json
 goobae.json
 goodra.json
+goodra_hisuian.json
 gooeyduck.json
 gooeygoose.json
 goolossal.json
@@ -3178,6 +3196,7 @@ grasquatch.json
 grassola.json
 grasstache.json
 graveler.json
+graveler_alolan.json
 gravollum.json
 greapper.json
 greavard.json
@@ -3202,6 +3221,7 @@ grily.json
 grimandrill.json
 grimapa.json
 grimer.json
+grimer_alolan.json
 grimfernal.json
 grimfowl.json
 grimgarmr.json
@@ -4213,6 +4233,7 @@ lilheim.json
 lilibell.json
 lillake.json
 lilligant.json
+lilligant_hisuian.json
 lillipup.json
 lillusion.json
 lilpaca.json
@@ -4223,6 +4244,7 @@ limana.json
 limonzal.json
 linkite.json
 linoone.json
+linoone_galarian.json
 lintle.json
 linub.json
 liotee.json
@@ -4527,6 +4549,7 @@ marlequin.json
 marmera.json
 marmink.json
 marowak.json
+marowak_alolan.json
 marrowite.json
 marshadow.json
 marsheon.json
@@ -4617,6 +4640,8 @@ meowscarada.json
 meowster.json
 meowstic.json
 meowth.json
+meowth_alolan.json
+meowth_galarian.json
 meraculisk.json
 merbebi.json
 mercenade.json
@@ -4648,6 +4673,7 @@ metang.json
 metanuki.json
 metapede.json
 metapod.json
+metapod_valencian.json
 metarock.json
 metrognome.json
 mettlemaw.json
@@ -4685,6 +4711,7 @@ milkitt.json
 milotic.json
 miltank.json
 milthunk.json
+mime_jr.json
 mimectar.json
 mimentron.json
 mimicorn.json
@@ -4855,6 +4882,8 @@ mousummit.json
 mouszerker.json
 mozz.json
 mr_mime.json
+mr_mime_galarian.json
+mr_rime.json
 mudarek.json
 mudbray.json
 mudian.json
@@ -4868,6 +4897,7 @@ muecko.json
 muertapoise.json
 mujineon.json
 muk.json
+muk_alolan.json
 muleseye.json
 multifly.json
 mumby.json
@@ -5025,6 +5055,7 @@ nimbun.json
 nimflora.json
 nincada.json
 ninetales.json
+ninetales_alolan.json
 ninfae.json
 ninfoxy.json
 ninjask.json
@@ -5148,6 +5179,7 @@ oculustrous.json
 oculyp.json
 oddcast.json
 oddish.json
+oddish_valencian.json
 odirose.json
 odonymph.json
 odorable.json
@@ -5444,6 +5476,7 @@ perrsbal.json
 perrserker.json
 persage.json
 persian.json
+persian_alolan.json
 pestalation.json
 pesteeny.json
 pestileon.json
@@ -5698,6 +5731,7 @@ ponarian.json
 ponsense.json
 ponyata.json
 ponyta.json
+ponyta_galarian.json
 poochyena.json
 poofly.json
 poogurt.json
@@ -5960,6 +5994,7 @@ quivirus.json
 quolcano.json
 quwauzrel.json
 qwilfish.json
+qwilfish_hisuian.json
 rabatuta.json
 rabball.json
 rabbeti.json
@@ -5989,6 +6024,7 @@ ragnarow.json
 ragrand.json
 ragtoc.json
 raichu.json
+raichu_alolan.json
 raigeko.json
 raikou.json
 raioni.json
@@ -6006,6 +6042,7 @@ raniron.json
 ransap.json
 ransaxe.json
 rapidash.json
+rapidash_galarian.json
 rapnagon.json
 rapteror.json
 rapterra.json
@@ -6022,11 +6059,13 @@ ratatoby.json
 ratatosk.json
 ratatox.json
 raticate.json
+raticate_alolan.json
 ratonine.json
 ratoxicate.json
 ratstar.json
 ratsy.json
 rattata.json
+rattata_alolan.json
 rattataff.json
 ratten.json
 rattletack.json
@@ -6312,6 +6351,7 @@ saltworm.json
 sambranaust.json
 sampig.json
 samurott.json
+samurott_hisuian.json
 samushrai.json
 sandaconda.json
 sandan.json
@@ -6704,6 +6744,7 @@ sirenara.json
 sirenatee.json
 sirenaut.json
 sirender.json
+sirfetchd.json
 sirmingo.json
 sisanne.json
 siscorp.json
@@ -6775,6 +6816,7 @@ slickle.json
 slidy.json
 sliezen.json
 sliggoo.json
+sliggoo_hisuian.json
 slimara.json
 slimeshroom.json
 slimug.json
@@ -6794,9 +6836,12 @@ sloowin.json
 slotherror.json
 slothohm.json
 slowbro.json
+slowbro_galarian.json
 slowgrowth.json
 slowking.json
+slowking_galarian.json
 slowpoke.json
+slowpoke_galarian.json
 slowris.json
 slowth.json
 sluchuu.json
@@ -6854,6 +6899,7 @@ snareball.json
 snarlax.json
 snaukler.json
 sneasel.json
+sneasel_hisuian.json
 sneasler.json
 sneep.json
 sneezwiz.json
@@ -7206,6 +7252,7 @@ stukin.json
 stummacake.json
 stumple.json
 stunfisk.json
+stunfisk_galarian.json
 stunge.json
 stunky.json
 stunooki.json
@@ -7781,6 +7828,7 @@ tynamo.json
 typecast.json
 typheon.json
 typhlosion.json
+typhlosion_hisuian.json
 typhogun.json
 typhoonos.json
 typhortra.json
@@ -8001,6 +8049,7 @@ vikottr.json
 viledoom.json
 vileech.json
 vileplume.json
+vileplume_valencian.json
 vilucard.json
 vimana.json
 vimanzia.json
@@ -8060,6 +8109,7 @@ volthroe.json
 voltient.json
 voltite.json
 voltorb.json
+voltorb_hisuian.json
 voltuff.json
 voltwin.json
 volverdi.json
@@ -8078,6 +8128,7 @@ vroombug.json
 vulkidna.json
 vullaby.json
 vulpix.json
+vulpix_alolan.json
 vultema.json
 vultergyst.json
 vultox.json
@@ -8140,6 +8191,7 @@ weeduza.json
 weepinbell.json
 weevoll.json
 weezing.json
+weezing_galarian.json
 welking.json
 wellmr.json
 welpyre.json
@@ -8265,6 +8317,7 @@ woolvry.json
 woomask.json
 woond.json
 wooper.json
+wooper_paldean.json
 worcane.json
 wormachine.json
 wormadam.json
@@ -8408,6 +8461,7 @@ zeta.json
 zexalax.json
 zhimm.json
 zigzagoon.json
+zigzagoon_galarian.json
 zilozwine.json
 zipstream.json
 ziptide.json
@@ -8416,9 +8470,11 @@ zomboo.json
 zonktress.json
 zooboom.json
 zoroark.json
+zoroark_hisuian.json
 zorocean.json
 zorotsune.json
 zorua.json
+zorua_hisuian.json
 zubat.json
 zuupie.json
 zweilous.json

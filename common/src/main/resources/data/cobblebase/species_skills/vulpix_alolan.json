@@ -1,0 +1,9 @@
+{
+  "species": "vulpix_alolan",
+  "skills": [
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 2
+    }
+  ]
+}

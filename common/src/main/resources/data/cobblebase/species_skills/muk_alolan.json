@@ -1,0 +1,9 @@
+{
+  "species": "muk_alolan",
+  "skills": [
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 2
+    }
+  ]
+}

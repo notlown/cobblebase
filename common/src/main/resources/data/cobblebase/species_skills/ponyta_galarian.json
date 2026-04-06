@@ -1,0 +1,9 @@
+{
+  "species": "ponyta_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 2
+    }
+  ]
+}

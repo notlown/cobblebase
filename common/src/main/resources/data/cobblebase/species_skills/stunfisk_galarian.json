@@ -1,0 +1,9 @@
+{
+  "species": "stunfisk_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 2
+    }
+  ]
+}

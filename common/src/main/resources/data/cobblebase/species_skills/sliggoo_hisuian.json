@@ -1,0 +1,9 @@
+{
+  "species": "sliggoo_hisuian",
+  "skills": [
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 2
+    }
+  ]
+}

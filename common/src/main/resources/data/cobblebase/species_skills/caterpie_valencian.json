@@ -1,0 +1,9 @@
+{
+  "species": "caterpie_valencian",
+  "skills": [
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 1
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "species": "wooper_paldean",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 1
+    }
+  ]
+}

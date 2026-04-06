@@ -314,26 +314,23 @@ object HarvesterExecutor : SkillExecutor {
             return
         }
 
-        // Cobblemon hearty grains (2 blocks tall) — harvest both top and bottom
+        // Cobblemon hearty grains (2 blocks tall) — harvest both top and bottom only if mature
         if (block is HeartyGrainsBlock) {
             val drops = mutableListOf<ItemStack>()
             drops.addAll(getBlockDrops(world, pos, state, pokemonEntity))
-            // Also check and harvest the block above (top half)
-            val abovePos = pos.up()
-            val aboveState = world.getBlockState(abovePos)
-            if (aboveState.block is HeartyGrainsBlock) {
-                drops.addAll(getBlockDrops(world, abovePos, aboveState, pokemonEntity))
-                world.setBlockState(abovePos, aboveState.block.defaultState, Block.NOTIFY_ALL)
-            }
-            // Also check below in case we targeted the top half
-            val belowPos = pos.down()
-            val belowState = world.getBlockState(belowPos)
-            if (belowState.block is HeartyGrainsBlock) {
-                drops.addAll(getBlockDrops(world, belowPos, belowState, pokemonEntity))
-                world.setBlockState(belowPos, belowState.block.defaultState, Block.NOTIFY_ALL)
+            world.setBlockState(pos, block.defaultState, Block.NOTIFY_ALL)
+            // Also harvest adjacent HeartyGrains block (above or below) only if it's also mature
+            for (adjacentPos in listOf(pos.up(), pos.down())) {
+                val adjState = world.getBlockState(adjacentPos)
+                if (adjState.block is HeartyGrainsBlock) {
+                    val adjMature = try { adjState.get(HeartyGrainsBlock.AGE) >= HeartyGrainsBlock.MATURE_AGE } catch (_: Exception) { false }
+                    if (adjMature) {
+                        drops.addAll(getBlockDrops(world, adjacentPos, adjState, pokemonEntity))
+                        world.setBlockState(adjacentPos, adjState.block.defaultState, Block.NOTIFY_ALL)
+                    }
+                }
             }
             if (drops.isNotEmpty()) heldItems[pokemonId] = drops
-            world.setBlockState(pos, block.defaultState, Block.NOTIFY_ALL)
             return
         }
 

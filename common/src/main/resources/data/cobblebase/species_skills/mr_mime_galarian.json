@@ -1,0 +1,9 @@
+{
+  "species": "mr_mime_galarian",
+  "skills": [
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 2
+    }
+  ]
+}

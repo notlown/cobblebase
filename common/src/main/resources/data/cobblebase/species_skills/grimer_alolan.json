@@ -1,0 +1,9 @@
+{
+  "species": "grimer_alolan",
+  "skills": [
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 1
+    }
+  ]
+}

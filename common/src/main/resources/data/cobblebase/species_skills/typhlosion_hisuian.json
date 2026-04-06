@@ -1,0 +1,9 @@
+{
+  "species": "typhlosion_hisuian",
+  "skills": [
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    }
+  ]
+}

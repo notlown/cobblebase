@@ -1,0 +1,9 @@
+{
+  "species": "butterfree_valencian",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.SkillDef
@@ -46,6 +47,8 @@ object ProducerExecutor : SkillExecutor {
         "leavanny" to ProduceEntry("string", 2, "String"),
         "snom" to ProduceEntry("string", 1, "String"),
         "frosmoth" to ProduceEntry("string", 2, "String"),
+        "caterpie_valencian" to ProduceEntry("string", 1, "String"),
+        "metapod_valencian" to ProduceEntry("string", 1, "String"),
 
         // Animal Products
         "miltank" to ProduceEntry("cobblemon:moomoo_milk", 2, "Moomoo Milk"),
@@ -64,7 +67,10 @@ object ProducerExecutor : SkillExecutor {
 
         // Valuables
         "meowth" to ProduceEntry("gold_nugget", 1, "Gold Nugget"),
+        "meowth_alolan" to ProduceEntry("gold_nugget", 1, "Gold Nugget"),
+        "meowth_galarian" to ProduceEntry("iron_nugget", 1, "Iron Nugget"),
         "persian" to ProduceEntry("gold_nugget", 2, "Gold Nugget"),
+        "persian_alolan" to ProduceEntry("gold_nugget", 2, "Gold Nugget"),
         "perrserker" to ProduceEntry("gold_nugget", 2, "Gold Nugget"),
         "gholdengo" to ProduceEntry("gold_nugget", 3, "Gold Nugget"),
         "gimmighoul" to ProduceEntry("gold_nugget", 1, "Gold Nugget"),
@@ -97,8 +103,11 @@ object ProducerExecutor : SkillExecutor {
         "carkol" to ProduceEntry("charcoal", 2, "Charcoal"),
         "koffing" to ProduceEntry("gunpowder", 1, "Gunpowder"),
         "weezing" to ProduceEntry("gunpowder", 2, "Gunpowder"),
+        "weezing_galarian" to ProduceEntry("gunpowder", 2, "Gunpowder"),
         "voltorb" to ProduceEntry("gunpowder", 1, "Gunpowder"),
+        "voltorb_hisuian" to ProduceEntry("gunpowder", 1, "Gunpowder"),
         "electrode" to ProduceEntry("gunpowder", 2, "Gunpowder"),
+        "electrode_hisuian" to ProduceEntry("gunpowder", 2, "Gunpowder"),
         "magnemite" to ProduceEntry("iron_nugget", 1, "Iron Nugget"),
         "magneton" to ProduceEntry("iron_nugget", 2, "Iron Nugget"),
         "magnezone" to ProduceEntry("iron_nugget", 3, "Iron Nugget"),
@@ -122,13 +131,18 @@ object ProducerExecutor : SkillExecutor {
         // Energy
         "pikachu" to ProduceEntry("glowstone_dust", 1, "Glowstone Dust"),
         "raichu" to ProduceEntry("glowstone_dust", 2, "Glowstone Dust"),
+        "raichu_alolan" to ProduceEntry("glowstone_dust", 2, "Glowstone Dust"),
         "jolteon" to ProduceEntry("glowstone_dust", 2, "Glowstone Dust"),
         "luxray" to ProduceEntry("glowstone_dust", 2, "Glowstone Dust"),
 
         // Slime (additional)
         "ditto" to ProduceEntry("slime_ball", 2, "Slime Ball"),
         "grimer" to ProduceEntry("slime_ball", 1, "Slime Ball"),
+        "grimer_alolan" to ProduceEntry("slime_ball", 1, "Slime Ball"),
         "muk" to ProduceEntry("slime_ball", 2, "Slime Ball"),
+        "muk_alolan" to ProduceEntry("slime_ball", 2, "Slime Ball"),
+        "sliggoo_hisuian" to ProduceEntry("slime_ball", 2, "Slime Ball"),
+        "goodra_hisuian" to ProduceEntry("slime_ball", 3, "Slime Ball"),
 
         // Shells & Sea
         "shellder" to ProduceEntry("prismarine_shard", 1, "Prismarine Shard"),
@@ -161,6 +175,7 @@ object ProducerExecutor : SkillExecutor {
         "phantump" to ProduceEntry("oak_log", 1, "Oak Log"),
         "trevenant" to ProduceEntry("dark_oak_log", 1, "Dark Oak Log"),
         "exeggutor" to ProduceEntry("jungle_log", 1, "Jungle Log"),
+        "exeggutor_alolan" to ProduceEntry("jungle_log", 2, "Jungle Log"),
         "sudowoodo" to ProduceEntry("stick", 3, "Stick"),
 
         // Snow & Ice
@@ -334,7 +349,7 @@ object ProducerExecutor : SkillExecutor {
     ) {
         if (world !is ServerWorld) return
 
-        val speciesName = pokemonEntity.pokemon.species.name.lowercase()
+        val speciesName = BaseManager.resolveSpeciesName(pokemonEntity.pokemon)
         val entry = produceMap[speciesName] ?: return
 
         val pokemonId = pokemonEntity.pokemon.uuid

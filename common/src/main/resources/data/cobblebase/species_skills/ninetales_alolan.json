@@ -1,0 +1,9 @@
+{
+  "species": "ninetales_alolan",
+  "skills": [
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 3
+    }
+  ]
+}

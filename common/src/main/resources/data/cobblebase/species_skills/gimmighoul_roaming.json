@@ -1,0 +1,13 @@
+{
+  "species": "gimmighoul_roaming",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 1
+    }
+  ]
+}

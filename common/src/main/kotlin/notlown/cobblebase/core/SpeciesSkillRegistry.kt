@@ -18,10 +18,28 @@ object SpeciesSkillRegistry {
         Cobblebase.LOGGER.info("SpeciesSkillRegistry: ${speciesMap.size} species registered")
     }
 
+    // Regional/alternate forms that get their own species_skills file (e.g. "vulpix_alolan")
+    private val FORM_ASPECTS = setOf("alolan", "galarian", "hisuian", "paldean", "valencian", "chest", "roaming")
+
     fun getSkills(species: String): SpeciesSkills? = speciesMap[species.lowercase()]
     fun getBuiltInSkills(species: String): SpeciesSkills? = builtInMap[species.lowercase()]
     fun getAllAssigned(): Map<String, SpeciesSkills> = speciesMap.toMap()
     fun register(speciesSkills: SpeciesSkills) { speciesMap[speciesSkills.species.lowercase()] = speciesSkills }
+
+    /**
+     * Resolves a form-aware species name from a base species name and a set of aspects.
+     * If a regional form aspect is present and a form-specific entry is registered, returns "species_form".
+     * Otherwise falls back to the base species name.
+     */
+    fun resolveFormName(baseName: String, aspects: Set<String>): String {
+        val lower = baseName.lowercase()
+        val formAspect = aspects.firstOrNull { it.lowercase() in FORM_ASPECTS }
+        if (formAspect != null) {
+            val formName = "${lower}_${formAspect.lowercase()}"
+            if (speciesMap.containsKey(formName)) return formName
+        }
+        return lower
+    }
 
     private fun loadFromResources() {
         val indexPath = "/data/cobblebase/species_skills/_index.txt"

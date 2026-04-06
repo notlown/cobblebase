@@ -72,7 +72,7 @@ class BuffsPanel(
 
         for (pokemonData in pokemonList) {
             val pokemonId = pokemonData.pokemonId
-            val speciesName = pokemonData.species.path
+            val speciesName = SpeciesSkillRegistry.resolveFormName(pokemonData.species.path, pokemonData.aspects)
             val pokemonName = pokemonData.displayName.string
             val species = pokemonData.species
             val aspects = pokemonData.aspects

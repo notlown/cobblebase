@@ -1,0 +1,9 @@
+{
+  "species": "gloom_valencian",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 1
+    }
+  ]
+}

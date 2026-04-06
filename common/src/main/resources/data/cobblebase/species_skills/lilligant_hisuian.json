@@ -1,0 +1,9 @@
+{
+  "species": "lilligant_hisuian",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 3
+    }
+  ]
+}

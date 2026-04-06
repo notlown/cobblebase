@@ -1,0 +1,13 @@
+{
+  "species": "gimmighoul_chest",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    }
+  ]
+}

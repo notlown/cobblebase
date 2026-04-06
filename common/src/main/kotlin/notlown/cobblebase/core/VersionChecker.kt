@@ -45,13 +45,18 @@ object VersionChecker {
         val uuid = player.uuid
         val server = player.server
 
-        // Skip handshake check in singleplayer — the integrated server always has the mod
+        // Skip handshake check in singleplayer
         if (!server.isDedicated) {
             handshakes[uuid] = MOD_VERSION
             return
         }
 
-        // Dedicated server: schedule a check after 10 seconds
+        // If version check is not enforced (default), just log and don't kick
+        if (!CobblebaseConfig.enforceVersionCheck) {
+            return
+        }
+
+        // Enforced mode: schedule a check after 10 seconds
         val task = Runnable {
             if (!handshakes.containsKey(uuid)) {
                 val currentPlayer = server.playerManager.getPlayer(uuid)

@@ -15,6 +15,8 @@
   "text.autoconfig.cobblebase.option.general.enableUnstickTeleport.@Tooltip": "Teleport Pokemon when stuck for 15+ seconds. Disable if Pokemon are in enclosed builds (globes, terrariums)",
   "text.autoconfig.cobblebase.option.general.keepEntitiesAlive": "Keep Entities Alive",
   "text.autoconfig.cobblebase.option.general.keepEntitiesAlive.@Tooltip": "[EXPERIMENTAL] Force Cobblemon to keep Pokemon entities spawned even when their owner is offline. Useful for multiplayer bases. May cause increased CPU usage or unexpected behavior. Use at your own risk.",
+  "text.autoconfig.cobblebase.option.general.enforceVersionCheck": "Enforce Version Check",
+  "text.autoconfig.cobblebase.option.general.enforceVersionCheck.@Tooltip": "Kick players who don't have Cobblebase installed. Disabled by default — Cobblebase works server-side only, clients don't need the mod to play.",
   "text.autoconfig.cobblebase.option.general.enableConsoleLogging": "Enable Console Logging",
   "text.autoconfig.cobblebase.option.general.enableConsoleLogging.@Tooltip": "Show job activity logs in the server console (can be noisy on busy servers)",
 

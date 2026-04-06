@@ -35,6 +35,9 @@ class CobblebaseClothConfig : ConfigData {
         var keepEntitiesAlive = false
 
         @ConfigEntry.Gui.Tooltip
+        var enforceVersionCheck = false
+
+        @ConfigEntry.Gui.Tooltip
         var enableConsoleLogging = false
     }
 

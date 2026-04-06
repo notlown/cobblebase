@@ -17,6 +17,7 @@ object CobblebaseConfig {
     val safetyTeleportDistance get() = holder.general.safetyTeleportDistance
     val enableUnstickTeleport get() = holder.general.enableUnstickTeleport
     val keepEntitiesAlive get() = holder.general.keepEntitiesAlive
+    val enforceVersionCheck get() = holder.general.enforceVersionCheck
     val enableConsoleLogging get() = holder.general.enableConsoleLogging
 
     // Cry

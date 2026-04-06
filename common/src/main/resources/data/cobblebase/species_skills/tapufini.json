@@ -1,0 +1,25 @@
+{
+  "species": "tapufini",
+  "skills": [
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:irrigate",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 3
+    }
+  ]
+}

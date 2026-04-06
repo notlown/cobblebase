@@ -1,0 +1,21 @@
+{
+  "species": "roaringmoon",
+  "skills": [
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 4
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "species": "tapulele",
+  "skills": [
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "species": "chiyu",
+  "skills": [
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 3
+    }
+  ]
+}

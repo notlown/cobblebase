@@ -1,0 +1,25 @@
+{
+  "species": "tinglu",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 3
+    }
+  ]
+}

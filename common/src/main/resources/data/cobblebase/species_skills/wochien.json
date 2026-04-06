@@ -1,0 +1,25 @@
+{
+  "species": "wochien",
+  "skills": [
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:growth",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:recruiter",
+      "proficiency": 3
+    }
+  ]
+}

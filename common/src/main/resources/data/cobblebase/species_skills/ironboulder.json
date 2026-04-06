@@ -1,0 +1,21 @@
+{
+  "species": "ironboulder",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "species": "greattusk",
+  "skills": [
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 3
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "species": "screamtail",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 2
+    }
+  ]
+}

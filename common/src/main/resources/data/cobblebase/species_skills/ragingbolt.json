@@ -1,0 +1,21 @@
+{
+  "species": "ragingbolt",
+  "skills": [
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 3
+    }
+  ]
+}

@@ -149,14 +149,23 @@ object GathererExecutor : SkillExecutor {
     private fun findNearestDroppedItem(world: ServerWorld, pokemonEntity: PokemonEntity, radius: Double, pastureOrigin: BlockPos): ItemEntity? {
         val pickupPlayerDrops = CobblebaseConfig.gathererPickupPlayerDrops
         val searchBox = Box.of(pokemonEntity.pos, radius * 2, radius * 2, radius * 2)
-        val items = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { entity ->
-            if (!entity.isAlive || entity.stack.isEmpty) return@getEntitiesByClass false
+        val allItems = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { it.isAlive && !it.stack.isEmpty }
+
+        // Debug: log all found items and why they're skipped/accepted
+        if (world.time % 200 == 0L && allItems.isNotEmpty()) {
+            Cobblebase.log("[Gatherer] Found ${allItems.size} items near ${pokemonEntity.pokemon.species.name}. Pasture origin: ${pastureOrigin.asLong()}")
+            for (item in allItems.take(5)) {
+                val origin = ItemOriginHelper.getOrigin(item.stack)
+                val matches = if (origin == null) "untagged(pickup=$pickupPlayerDrops)" else "origin=${origin.asLong()} match=${origin == pastureOrigin}"
+                Cobblebase.log("[Gatherer]   - ${item.stack.name.string} x${item.stack.count}: $matches")
+            }
+        }
+
+        val items = allItems.filter { entity ->
             val origin = ItemOriginHelper.getOrigin(entity.stack)
             if (origin == null) {
-                // Untagged item (player drop, mob drop) — check setting
                 pickupPlayerDrops
             } else {
-                // Tagged item — only pick up if from our pasture
                 origin == pastureOrigin
             }
         }

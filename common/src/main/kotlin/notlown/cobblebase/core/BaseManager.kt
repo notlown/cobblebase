@@ -43,28 +43,37 @@ object BaseManager {
             save(world)
         }
 
-        // Unstuck check: if Pokemon hasn't moved for 8s, reset its navigation state
-        // After 5 minutes of no movement, teleport back to pasture (recovery from stuck-in-block)
-        val currentPos = pokemonEntity.blockPos
-        val record = lastKnownPos[pokemonId]
-        if (record == null || record.pos != currentPos) {
-            lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now)
-        } else {
-            val stuckDuration = now - record.changedAt
-            if (stuckDuration > STUCK_RECOVERY_TICKS) {
-                // Stuck for 5+ minutes — teleport back to pasture as recovery
-                val (sx, sz) = getSpawnOffset(world)
-                pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
-                pokemonEntity.setVelocity(0.0, 0.0, 0.0)
-                pokemonEntity.velocityDirty = true
-                NavigationHelper.clearTargets(pokemonEntity)
-                lastKnownPos[pokemonId] = PosRecord(pokemonEntity.blockPos.toImmutable(), now)
-                Cobblebase.LOGGER.info("[BaseManager] Recovered stuck ${pokemonEntity.pokemon.species.name} (5min no movement) — teleported to pasture")
-            } else if (stuckDuration > STUCK_TIMEOUT_TICKS) {
-                // Pokemon is stuck briefly — clear navigation targets to unstick it
-                NavigationHelper.clearTargets(pokemonEntity)
-                lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now) // reset timer
+        // Stuck detection only for WORKING mons (idle mons can sit/sleep on purpose)
+        val hasJob = assignments[pokemonId] != null
+        if (hasJob) {
+            // Use exact position (Vec3d) so micro-movements within a block also count
+            val currentPos = pokemonEntity.blockPos
+            val record = lastKnownPos[pokemonId]
+            // "Moved" = block position changed OR entity has non-zero horizontal velocity
+            val vel = pokemonEntity.velocity
+            val isMoving = (vel.x * vel.x + vel.z * vel.z) > 0.0001
+            if (record == null || record.pos != currentPos || isMoving) {
+                lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now)
+            } else {
+                val stuckDuration = now - record.changedAt
+                if (stuckDuration > STUCK_RECOVERY_TICKS) {
+                    // Stuck for 5+ minutes — teleport back to pasture as recovery
+                    val (sx, sz) = getSpawnOffset(world)
+                    pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
+                    pokemonEntity.setVelocity(0.0, 0.0, 0.0)
+                    pokemonEntity.velocityDirty = true
+                    NavigationHelper.clearTargets(pokemonEntity)
+                    lastKnownPos[pokemonId] = PosRecord(pokemonEntity.blockPos.toImmutable(), now)
+                    Cobblebase.LOGGER.info("[BaseManager] Recovered stuck ${pokemonEntity.pokemon.species.name} (5min no movement) — teleported to pasture")
+                } else if (stuckDuration > STUCK_TIMEOUT_TICKS) {
+                    // Pokemon is stuck briefly — clear navigation targets to unstick it
+                    NavigationHelper.clearTargets(pokemonEntity)
+                    lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now)
+                }
             }
+        } else {
+            // Clear stuck record for idle mons (they can stand still)
+            lastKnownPos.remove(pokemonId)
         }
 
         // Safety: prevent Pokemon from wandering too far from pasture (causes despawning)

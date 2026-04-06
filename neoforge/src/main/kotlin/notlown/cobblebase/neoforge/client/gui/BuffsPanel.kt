@@ -128,21 +128,23 @@ class BuffsPanel(
         val effectiveCooldown = if (CobblebaseConfig.devMode) 5L
             else cooldownSeconds * (6 - prof) / 3
 
+        val cooldownLabel = if (effectiveCooldown > 0) " · every ${effectiveCooldown}s" else ""
+
         return when (executor) {
             "mentor" -> {
                 val multiplier = (prof / 3.0) * CobblebaseConfig.mentorMaxBoost
                 val percent = ((multiplier) * 100).toInt()
-                "+${percent}% Bonus XP every 60s"
+                "+${percent}% Bonus XP · every 60s"
             }
-            "harvester" -> "Harvesting crops, berries, and apricorns"
-            "mining" -> "Mining for ores, fossils, and gems"
-            "scout" -> "Scouting for wild Pokemon and structures"
-            "fishing" -> "Fishing every ${effectiveCooldown}s"
-            "guard" -> "Defending base, repelling wild Pokemon"
-            "gather_items" -> "Sorting items into nearby chests"
+            "harvester" -> "Harvesting crops, berries & apricorns$cooldownLabel"
+            "mining" -> "Mining ores, fossils & gems$cooldownLabel"
+            "scout" -> "Scouting for wild Pokemon$cooldownLabel"
+            "fishing" -> "Fishing$cooldownLabel"
+            "guard" -> "Defending base$cooldownLabel"
+            "gather_items" -> "Sorting items into chests$cooldownLabel"
             "healer" -> {
                 val monsCount = if (prof >= 5) 6 else prof
-                "Healing $monsCount team Pokemon every 180s"
+                "Healing $monsCount team Pokemon · every 180s"
             }
             "finder", "finder_evo", "finder_hea", "finder_bui", "finder_ore", "finder_see", "finder_bal", "finder_exp",
             "finder_food", "finder_stat", "finder_held", "finder_treasure", "finder_smith" -> {
@@ -161,25 +163,26 @@ class BuffsPanel(
                     "finder_smith" -> "smithing templates & pottery"
                     else -> "items"
                 }
-                "Finding $typeLabel"
+                "Finding $typeLabel$cooldownLabel"
             }
             "irrigate" -> "Hydrating farmland, boosting growth"
-            "recruiter" -> "Attracting wild Pokemon to the area"
-            "cauldron_fill" -> "Filling cauldrons"
-            "furnace_fuel", "brew_fuel" -> "Fueling furnaces/brewers"
-            "speed_boost" -> "Speed II boost for nearby players"
-            "strength_boost" -> "Strength boost for nearby players"
-            "resistance_boost" -> "Resistance boost for nearby players"
+            "recruiter" -> "Attracting wild Pokemon$cooldownLabel"
+            "cauldron_fill" -> "Filling cauldrons$cooldownLabel"
+            "furnace_fuel", "brew_fuel" -> "Fueling furnaces/brewers$cooldownLabel"
+            "producer" -> "Producing species-specific items$cooldownLabel"
+            // Passive buffs — no cooldown shown (always active)
+            "speed_boost" -> "Speed II for nearby players"
+            "strength_boost" -> "Strength for nearby players"
+            "resistance_boost" -> "Resistance for nearby players"
             "night_vision" -> "Night Vision for nearby players"
             "water_breathing" -> "Water Breathing for nearby players"
             "jump_boost" -> "Jump Boost for nearby players"
-            "haste_boost" -> "Haste boost for nearby players"
+            "haste_boost" -> "Haste for nearby players"
             "saturation_boost" -> "Saturation for nearby players"
             "lucky_charm" -> "Boosts shiny rate for wild Pokemon"
             "extinguish" -> "Extinguishes fire near the base"
-            "aura" -> "Luck boost for nearby players"
+            "aura" -> "Luck for nearby players"
             "growth" -> "Accelerates crop growth nearby"
-            "producer" -> "Producing species-specific items"
             else -> "Working"
         }
     }

@@ -37,15 +37,13 @@ object CobblebaseConfig {
     // Gatherer
     val gathererEnabled get() = holder.skills.gathererEnabled
     val gathererPickupPlayerDrops get() = holder.skills.gathererPickupPlayerDrops
-    val gathererCooldownSeconds get() = holder.skills.gathererCooldownSeconds.toLong()
+    // gathererCooldownSeconds removed — uses skill.cooldownSeconds from JSON/admin overrides
 
     // Irrigator
     val irrigatorEnabled get() = holder.irrigator.irrigatorEnabled
-    val irrigatorCooldownSeconds get() = holder.irrigator.irrigatorCooldownSeconds.toLong()
+    // irrigatorCooldownSeconds removed — uses skill.cooldownSeconds from JSON/admin overrides
     val irrigatorRadius get() = holder.irrigator.irrigatorRadius
 
-    val finderCooldownSeconds get() = holder.finder.finderCooldownSeconds.toLong()
-    val friendRecruiterCooldownSeconds get() = holder.recruiterRates.spawnCooldownSeconds.toLong()
     val legendaryRecruiterCooldownSeconds get() = holder.skills.legendaryRecruiterCooldownSeconds.toLong()
 
     // Recruiter rates

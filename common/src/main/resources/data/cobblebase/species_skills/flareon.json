@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:lava_fill",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 4
     }
   ]
 }

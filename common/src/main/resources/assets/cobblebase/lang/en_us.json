@@ -16,7 +16,7 @@
   "text.autoconfig.cobblebase.option.general.keepEntitiesAlive": "Keep Entities Alive",
   "text.autoconfig.cobblebase.option.general.keepEntitiesAlive.@Tooltip": "[EXPERIMENTAL] Force Cobblemon to keep Pokemon entities spawned even when their owner is offline. Useful for multiplayer bases. May cause increased CPU usage or unexpected behavior. Use at your own risk.",
   "text.autoconfig.cobblebase.option.general.enforceVersionCheck": "Enforce Version Check",
-  "text.autoconfig.cobblebase.option.general.enforceVersionCheck.@Tooltip": "Kick players who don't have Cobblebase installed. Disabled by default — Cobblebase works server-side only, clients don't need the mod to play.",
+  "text.autoconfig.cobblebase.option.general.enforceVersionCheck.@Tooltip": "Kick players whose Cobblebase version doesn't match the server. Cobblebase must be installed on both server AND client — the client needs it for the Skills GUI, keybinds, and settings.",
   "text.autoconfig.cobblebase.option.general.enableConsoleLogging": "Enable Console Logging",
   "text.autoconfig.cobblebase.option.general.enableConsoleLogging.@Tooltip": "Show job activity logs in the server console (can be noisy on busy servers)",
 
@@ -36,7 +36,6 @@
   "text.autoconfig.cobblebase.option.skills.gathererPickupPlayerDrops": "Gatherer picks up player drops",
   "text.autoconfig.cobblebase.option.skills.gathererPickupPlayerDrops.@Tooltip": "When enabled, the Gatherer will also pick up items dropped by players. When disabled, it only picks up items from Cobblebase jobs.",
   "text.autoconfig.cobblebase.option.skills.gathererCooldownSeconds": "Gatherer cooldown (seconds)",
-  "text.autoconfig.cobblebase.option.skills.friendRecruiterCooldownSeconds": "Friend Recruiter cooldown (seconds)",
   "text.autoconfig.cobblebase.option.skills.legendaryRecruiterCooldownSeconds": "Legendary Recruiter cooldown (seconds)",
 
   "text.autoconfig.cobblebase.option.irrigator": "Irrigator",

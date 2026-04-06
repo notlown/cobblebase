@@ -24,6 +24,10 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 5
     }
   ]
 }

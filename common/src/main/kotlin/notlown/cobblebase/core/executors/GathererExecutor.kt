@@ -40,7 +40,7 @@ object GathererExecutor : SkillExecutor {
 
     private const val NAV_TIMEOUT_TICKS = 200L        // 10 seconds - auto-pickup if can't reach
     private const val SEARCH_INTERVAL_TICKS = 20L    // 1 second between scans
-    private const val BASE_COOLDOWN_SECONDS = 2L     // 2 seconds between pickups
+    // Gatherer cooldown comes from skill.cooldownSeconds (JSON/admin overrides)
 
     /**
      * Returns search radius based on proficiency (1-5).
@@ -111,7 +111,7 @@ object GathererExecutor : SkillExecutor {
         }
 
         // Phase 3: cooldown between pickups
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(BASE_COOLDOWN_SECONDS, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
         val lastPickup = lastPickupTime[pokemonId] ?: 0L
         if (now - lastPickup < cooldownTicks) {
             if (now % 60 == 0L) {

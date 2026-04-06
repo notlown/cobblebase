@@ -36,6 +36,10 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 4
     }
   ]
 }

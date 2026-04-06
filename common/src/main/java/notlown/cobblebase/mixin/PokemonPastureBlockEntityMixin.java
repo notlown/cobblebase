@@ -170,6 +170,11 @@ public class PokemonPastureBlockEntityMixin {
                     } catch (Exception ignored) { }
                 }
 
+                // Escape leaves (idle mons can fly into trees too)
+                try {
+                    NavigationHelper.INSTANCE.escapeLeaves(pokemonEntity);
+                } catch (Exception ignored) { }
+
                 // Passive buffs still run for idle mons
                 try {
                     BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);

@@ -24,6 +24,10 @@
     {
       "skillId": "cobblebase:water_breathing",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 4
     }
   ]
 }

@@ -58,11 +58,8 @@ object RecruiterExecutor : SkillExecutor {
             tickRecruitedSparkles(world)
         }
 
-        val baseCooldown = if (skill.id == "cobblebase:recruiter")
-            CobblebaseConfig.legendaryRecruiterCooldownSeconds
-        else
-            CobblebaseConfig.friendRecruiterCooldownSeconds
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency)
+        // Use skill.cooldownSeconds which already has admin overrides applied via SkillRegistry.getEffective()
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
 
         val lastTime = lastRecruitTime[pokemonId] ?: now.also { lastRecruitTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
@@ -85,8 +82,8 @@ object RecruiterExecutor : SkillExecutor {
         // Find a species of that type in that bucket
         val speciesName = pickSpecies(world, chosenType.name, bucket) ?: return
 
-        // Spawn next to recruiter
-        val spawnPos = findSpawnPos(world, pokemonEntity.blockPos, 3) ?: return
+        // Spawn near the pasture block (works for both ground and flying mons)
+        val spawnPos = findSpawnPos(world, origin, 5) ?: return
 
         try {
             val species = PokemonSpecies.getByName(speciesName) ?: return
@@ -95,7 +92,8 @@ object RecruiterExecutor : SkillExecutor {
             val pokemon = Pokemon()
             pokemon.species = species
             val baseLevel = pokemonEntity.pokemon.level
-            val level = (baseLevel * 0.6 + world.random.nextInt(10) - 5).toInt().coerceIn(5, baseLevel)
+            val minLevel = minOf(5, baseLevel)
+            val level = (baseLevel * 0.6 + world.random.nextInt(10) - 5).toInt().coerceIn(minLevel, maxOf(baseLevel, minLevel))
             pokemon.level = level
             pokemon.initialize()
 

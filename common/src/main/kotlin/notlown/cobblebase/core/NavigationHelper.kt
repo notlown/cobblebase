@@ -106,20 +106,29 @@ object NavigationHelper {
     }
 
     /**
-     * If the mon is inside leaves, push it down to ground level.
-     * Call this every tick to prevent mons getting trapped in tree canopies.
+     * If the mon is inside or under a tree canopy, push it down to ground level.
+     * Detects: standing in leaves, standing on leaves, OR flying under leaves.
+     * Only targets natural trees (LeavesBlock) — does NOT affect enclosed rooms
+     * built from solid blocks (stone, planks, etc.), so pasture box bases are safe.
      */
     fun escapeLeaves(pokemonEntity: PokemonEntity) {
         val world = pokemonEntity.world
         val pos = pokemonEntity.blockPos
         val block = world.getBlockState(pos).block
-        // Check if standing in or on leaves
-        if (block is net.minecraft.block.LeavesBlock || world.getBlockState(pos.down()).block is net.minecraft.block.LeavesBlock) {
-            // Find ground below
+        val blockBelow = world.getBlockState(pos.down()).block
+
+        // Check if IN leaves, ON leaves, or trapped under a leaf canopy
+        val inLeaves = block is net.minecraft.block.LeavesBlock
+        val onLeaves = blockBelow is net.minecraft.block.LeavesBlock
+        val underCanopy = !inLeaves && !onLeaves && hasLeavesAbove(world, pos, 3)
+
+        if (inLeaves || onLeaves || underCanopy) {
+            // Find ground below (skip leaves and air only — fences are valid ground)
             var groundY = pos.y
             for (y in pos.y downTo pos.y - 20) {
                 val checkBlock = world.getBlockState(BlockPos(pos.x, y, pos.z)).block
-                if (checkBlock !is net.minecraft.block.LeavesBlock && checkBlock !is net.minecraft.block.AirBlock) {
+                if (checkBlock !is net.minecraft.block.LeavesBlock
+                    && checkBlock !is net.minecraft.block.AirBlock) {
                     groundY = y + 1
                     break
                 }
@@ -129,8 +138,22 @@ object NavigationHelper {
                     pokemonEntity.x, groundY.toDouble(), pokemonEntity.z,
                     pokemonEntity.yaw, pokemonEntity.pitch
                 )
+                pokemonEntity.navigation.stop()
             }
         }
+    }
+
+    /**
+     * Checks if there are leaves within [range] blocks above the position.
+     * Used to detect if a flying mon is trapped under a tree canopy.
+     */
+    private fun hasLeavesAbove(world: World, pos: BlockPos, range: Int): Boolean {
+        for (y in 1..range) {
+            if (world.getBlockState(pos.up(y)).block is net.minecraft.block.LeavesBlock) {
+                return true
+            }
+        }
+        return false
     }
 
     /**

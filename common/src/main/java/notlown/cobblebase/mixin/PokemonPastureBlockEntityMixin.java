@@ -156,12 +156,19 @@ public class PokemonPastureBlockEntityMixin {
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
 
                 if (isWorkerAtNight) {
-                    // Working mons at night: stop movement, always tick ambient (forces sleep)
+                    // Working mons at night: force sleep state + animation
                     NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                     pokemonEntity.getNavigation().stop();
-                    try {
-                        AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
-                    } catch (Exception ignored) { }
+                    java.util.UUID monId = pokemonEntity.getPokemon().getUuid();
+                    if (!AmbientBehavior.INSTANCE.isSleeping(monId)) {
+                        AmbientBehavior.INSTANCE.forceSleep(monId, world.getTime());
+                    }
+                    // Send sleep animation every 4 seconds to maintain pose
+                    if (world.getTime() % 80 == 0) {
+                        try {
+                            notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "sleep", "water_sleep", "battle_sleep");
+                        } catch (Exception ignored) { }
+                    }
                 } else if (isResting) {
                     NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                     pokemonEntity.getNavigation().stop();

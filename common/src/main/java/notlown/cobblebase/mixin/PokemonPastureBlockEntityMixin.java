@@ -215,9 +215,17 @@ public class PokemonPastureBlockEntityMixin {
                 } catch (Exception ignored) { }
 
                 // Passive buffs still run for idle mons
-                try {
-                    BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
-                } catch (Exception ignored) { }
+                // But skip full job tick for working mons sleeping at night
+                if (isNight && assignment != null) {
+                    // Only tick passive buffs, not the assigned job
+                    try {
+                        BaseManager.INSTANCE.tickPassiveBuffsWithoutEntity(world, blockPos, pokemon);
+                    } catch (Exception ignored) { }
+                } else {
+                    try {
+                        BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
+                    } catch (Exception ignored) { }
+                }
             } else {
                 // WORKING MON: normal job execution, no ambient behaviors
                 // Re-enable AI if was disabled by sleeping

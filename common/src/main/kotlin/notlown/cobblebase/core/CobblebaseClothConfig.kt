@@ -64,6 +64,8 @@ class CobblebaseClothConfig : ConfigData {
         var generationEnabled = true
         var utilityEnabled = true
         var gathererEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var gathererPickupPlayerDrops = true
         @ConfigEntry.BoundedDiscrete(min = 5, max = 300)
         var gathererCooldownSeconds = 10
         @ConfigEntry.BoundedDiscrete(min = 30, max = 1800)

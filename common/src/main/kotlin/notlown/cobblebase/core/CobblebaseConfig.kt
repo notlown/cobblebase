@@ -35,6 +35,7 @@ object CobblebaseConfig {
     // Skills
     // Gatherer
     val gathererEnabled get() = holder.skills.gathererEnabled
+    val gathererPickupPlayerDrops get() = holder.skills.gathererPickupPlayerDrops
     val gathererCooldownSeconds get() = holder.skills.gathererCooldownSeconds.toLong()
 
     // Irrigator

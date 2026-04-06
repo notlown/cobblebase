@@ -147,9 +147,18 @@ object GathererExecutor : SkillExecutor {
      * Only picks up items that belong to this Gatherer's Pasture Block (or untagged items).
      */
     private fun findNearestDroppedItem(world: ServerWorld, pokemonEntity: PokemonEntity, radius: Double, pastureOrigin: BlockPos): ItemEntity? {
+        val pickupPlayerDrops = CobblebaseConfig.gathererPickupPlayerDrops
         val searchBox = Box.of(pokemonEntity.pos, radius * 2, radius * 2, radius * 2)
         val items = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { entity ->
-            entity.isAlive && !entity.stack.isEmpty && ItemOriginHelper.belongsTo(entity.stack, pastureOrigin)
+            if (!entity.isAlive || entity.stack.isEmpty) return@getEntitiesByClass false
+            val origin = ItemOriginHelper.getOrigin(entity.stack)
+            if (origin == null) {
+                // Untagged item (player drop, mob drop) — check setting
+                pickupPlayerDrops
+            } else {
+                // Tagged item — only pick up if from our pasture
+                origin == pastureOrigin
+            }
         }
         // Pick oldest item (highest age = been on ground longest)
         return items.maxByOrNull { it.age }

@@ -31,6 +31,8 @@
   "text.autoconfig.cobblebase.option.skills.generationEnabled": "Generation skills (lava, water, fuel)",
   "text.autoconfig.cobblebase.option.skills.utilityEnabled": "Utility skills (scout, irrigator, etc.)",
   "text.autoconfig.cobblebase.option.skills.gathererEnabled": "Gatherer skill",
+  "text.autoconfig.cobblebase.option.skills.gathererPickupPlayerDrops": "Gatherer picks up player drops",
+  "text.autoconfig.cobblebase.option.skills.gathererPickupPlayerDrops.@Tooltip": "When enabled, the Gatherer will also pick up items dropped by players. When disabled, it only picks up items from Cobblebase jobs.",
   "text.autoconfig.cobblebase.option.skills.gathererCooldownSeconds": "Gatherer cooldown (seconds)",
   "text.autoconfig.cobblebase.option.skills.friendRecruiterCooldownSeconds": "Friend Recruiter cooldown (seconds)",
   "text.autoconfig.cobblebase.option.skills.legendaryRecruiterCooldownSeconds": "Legendary Recruiter cooldown (seconds)",

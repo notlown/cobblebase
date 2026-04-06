@@ -83,9 +83,6 @@ object SkillEffects {
     fun playSuccess(world: World, pokemonEntity: PokemonEntity, effectType: String) {
         if (world !is ServerWorld) return
 
-        // Mark job success for stuck recovery tracking
-        notlown.cobblebase.core.BaseManager.markJobSuccess(pokemonEntity.pokemon.uuid, world.time)
-
         // Play cry sound — max once per 60 seconds per Pokemon to avoid spam
         if (CobblebaseConfig.cryEnabled && CobblebaseConfig.cryVolume > 0) {
             val pokemonId = pokemonEntity.pokemon.uuid

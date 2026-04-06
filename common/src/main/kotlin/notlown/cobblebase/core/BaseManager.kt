@@ -110,25 +110,6 @@ object BaseManager {
                 val entry: SkillEntry? = speciesData.skills.find { e -> e.skillId == assignedSkillId }
                 if (entry != null) {
                     executeSkill(world, pastureOrigin, pokemonEntity, entry)
-                    // Job-based stuck recovery: if mon hasn't completed a job action
-                    // within 3x its expected cooldown, teleport back to pasture
-                    val skillDef = SkillRegistry.getEffective(assignedSkillId)
-                    if (skillDef != null && skillDef.cooldownSeconds > 0) {
-                        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(
-                            skillDef.cooldownSeconds, entry.proficiency
-                        )
-                        val recoveryThreshold = (cooldownTicks * 3L / 2L).coerceAtLeast(1200L) // 1.5x, min 1 min
-                        val lastSuccess = lastJobSuccess[pokemonId] ?: now.also { lastJobSuccess[pokemonId] = now }
-                        if (now - lastSuccess > recoveryThreshold) {
-                            val (sx, sz) = getSpawnOffset(world)
-                            pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
-                            pokemonEntity.setVelocity(0.0, 0.0, 0.0)
-                            pokemonEntity.velocityDirty = true
-                            NavigationHelper.clearTargets(pokemonEntity)
-                            lastJobSuccess[pokemonId] = now
-                            Cobblebase.LOGGER.info("[BaseManager] Recovered ${pokemonEntity.pokemon.species.name} (no job success in ${recoveryThreshold/20}s) — teleported to pasture")
-                        }
-                    }
                 }
             }
         }

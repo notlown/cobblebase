@@ -85,9 +85,11 @@ object FurnaceFuelExecutor : SkillExecutor {
         if (block !is AbstractFurnaceBlock) return false
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity !is AbstractFurnaceBlockEntity) return false
-        // Furnace needs fuel if it has items to smelt but no burn time
-        // We check if there's an item in the input slot (slot 0) and burn time is low
-        return !blockEntity.getStack(0).isEmpty
+        // Furnace needs fuel if it has items to smelt AND is NOT already burning
+        val hasInput = !blockEntity.getStack(0).isEmpty
+        val nbt = blockEntity.createNbt(world.registryManager)
+        val burnTime = nbt.getShort("BurnTime").toInt()
+        return hasInput && burnTime <= 0
     }
 
     private fun addFuel(world: World, pos: BlockPos) {

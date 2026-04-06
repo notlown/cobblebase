@@ -27,6 +27,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractBlock.class)
 public class PastureLeafCollisionMixin {
 
+    private static long cobblebase$lastLogTime = 0;
+
     @Inject(method = "getCollisionShape", at = @At("HEAD"), cancellable = true)
     private void cobblebase$noCollisionForPasturePokemon(
             BlockState state, BlockView world, BlockPos pos, ShapeContext context,
@@ -36,10 +38,22 @@ public class PastureLeafCollisionMixin {
         if (!(state.getBlock() instanceof LeavesBlock)) return;
         // Fast early return: only care about Pokemon entity contexts
         if (!(context instanceof EntityShapeContext entityContext)) return;
-        if (!(entityContext.getEntity() instanceof PokemonEntity)) return;
-        // Only bypass collision if this leaf is tracked as a pasture leaf
-        if (!PastureLeavesTracker.INSTANCE.isPastureLeaf(pos)) return;
+        if (!(entityContext.getEntity() instanceof PokemonEntity pokemon)) return;
 
+        boolean isPastureLeaf = PastureLeavesTracker.INSTANCE.isPastureLeaf(pos);
+
+        // Debug log (throttled to once per 2s)
+        long now = System.currentTimeMillis();
+        if (now - cobblebase$lastLogTime > 2000) {
+            cobblebase$lastLogTime = now;
+            notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().info(
+                "[LeafMixin] " + pokemon.getPokemon().getSpecies().getName() +
+                " vs leaf at " + pos.getX() + "," + pos.getY() + "," + pos.getZ() +
+                " → isPastureLeaf=" + isPastureLeaf
+            );
+        }
+
+        if (!isPastureLeaf) return;
         cir.setReturnValue(VoxelShapes.empty());
     }
 }

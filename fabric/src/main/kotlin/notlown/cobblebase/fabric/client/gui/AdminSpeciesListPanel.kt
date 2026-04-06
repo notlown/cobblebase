@@ -135,15 +135,7 @@ class AdminSpeciesListPanel(
             context.drawTextWithShadow(textRenderer, displayName, 0, 0, if (isSelected) 0xFFFFFF else 0xCCCCCC)
             context.matrices.pop()
 
-            // Skill count (0.75x scaled)
-            val skills = speciesSkills[species]
-            val countText = if (skills != null) "${skills.size}" else "0"
-            val countColor = if (skills != null && skills.isNotEmpty()) 0x88FF88 else 0x666666
-            context.matrices.push()
-            context.matrices.translate((x + w - 20).toFloat(), (rowY + 5).toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, countText, 0, 0, countColor)
-            context.matrices.pop()
+            // Skill count removed — shown in editor panel after lazy load
         }
 
         // Scrollbar

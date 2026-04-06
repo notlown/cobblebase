@@ -69,11 +69,25 @@ class AdminSkillEditorPanel(
         selectedSpecies = species
         scrollOffset = 0
         dirty = false
+        lastCachedSkillsRef = null
         // Lazy load: request skills from server if not cached yet
         if (!AdminDataCache.speciesSkills.containsKey(species) && AdminDataCache.markPending(species)) {
             ClientPlayNetworking.send(notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket(species))
         }
         rebuildSkillEdits()
+    }
+
+    // Track the last cached skills reference to detect when lazy-loaded data arrives
+    private var lastCachedSkillsRef: List<SkillEntry>? = null
+
+    /** Called from render() — rebuilds if cache was updated since last render */
+    private fun refreshIfCacheUpdated() {
+        val species = selectedSpecies ?: return
+        val current = AdminDataCache.speciesSkills[species]
+        if (current !== lastCachedSkillsRef) {
+            lastCachedSkillsRef = current
+            rebuildSkillEdits()
+        }
     }
 
     private fun rebuildSkillEdits() {
@@ -123,6 +137,7 @@ class AdminSkillEditorPanel(
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        refreshIfCacheUpdated()
         // Background
         context.fill(x, y, x + w, y + h, 0xCC1E1E2E.toInt())
 
@@ -132,10 +147,16 @@ class AdminSkillEditorPanel(
             return
         }
 
-        // Header (0.75x scaled)
+        // Header (0.75x scaled) — with skill count or "Loading..."
         val displayName = species.replaceFirstChar { it.uppercase() }
         val isOverridden = AdminDataCache.overriddenSpecies.contains(species)
-        val headerText = if (isOverridden) "$displayName \u00A76[Override]" else displayName
+        val cachedSkills = AdminDataCache.speciesSkills[species]
+        val countSuffix = when {
+            cachedSkills == null && AdminDataCache.isPending(species) -> " \u00A77(loading...)"
+            cachedSkills != null -> " \u00A7a(${cachedSkills.size} skills)"
+            else -> ""
+        }
+        val headerText = if (isOverridden) "$displayName \u00A76[Override]$countSuffix" else "$displayName$countSuffix"
         val hdrScale = 0.75f
         context.matrices.push()
         context.matrices.translate((x + PADDING).toFloat(), (y + PADDING).toFloat(), 0f)

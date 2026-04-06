@@ -75,6 +75,11 @@ class SkillsPanel(
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
             .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
 
+        // Discord button (small, bottom-left)
+        addWidget.apply(ButtonWidget.builder(Text.literal("\u00A78Discord")) {
+            try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI("https://discord.gg/6As3sVZgVT")) } catch (_: Exception) {}
+        }.dimensions(panelX + 4, panelY + panelH - 16, 42, 12).build())
+
         var cumulativeY = 0
 
         pokemonList.forEachIndexed { index, pokemonData ->

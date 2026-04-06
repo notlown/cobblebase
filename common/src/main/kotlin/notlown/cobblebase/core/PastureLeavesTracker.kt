@@ -60,6 +60,9 @@ object PastureLeavesTracker {
         }
         pastureLeafMap[pastureKey] = newLeaves
         pastureLeaves.addAll(newLeaves)
+        if (newLeaves.isNotEmpty()) {
+            Cobblebase.LOGGER.info("[PastureLeaves] Tracked ${newLeaves.size} leaves near pasture at ${pasturePos.x},${pasturePos.y},${pasturePos.z}")
+        }
     }
 
     /**

@@ -147,7 +147,7 @@ class AdminSkillEditorPanel(
             return
         }
 
-        // Header (0.75x scaled) — with skill count or "Loading..."
+        // Header row with zoomed-in sprite + skill count
         val displayName = species.replaceFirstChar { it.uppercase() }
         val isOverridden = AdminDataCache.overriddenSpecies.contains(species)
         val cachedSkills = AdminDataCache.speciesSkills[species]
@@ -157,6 +157,14 @@ class AdminSkillEditorPanel(
             else -> ""
         }
         val headerText = if (isOverridden) "$displayName \u00A76[Override]$countSuffix" else "$displayName$countSuffix"
+
+        // Render large zoomed-in sprite in the header area (clipped to header row height)
+        val headerRowHeight = 14
+        val spriteX = x + w - 32 - PADDING
+        PokemonSpriteHelper.renderLargeSpriteByName(
+            context, species, spriteX, y + PADDING, 32, headerRowHeight, delta, scale = 14.0f
+        )
+
         val hdrScale = 0.75f
         context.matrices.push()
         context.matrices.translate((x + PADDING).toFloat(), (y + PADDING).toFloat(), 0f)

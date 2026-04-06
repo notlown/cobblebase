@@ -234,6 +234,54 @@ object PokemonSpriteHelper {
     /**
      * Renders a small icon for log entries where we only have the Pokemon name (no species Identifier).
      */
+    /**
+     * Renders a large zoomed-in Pokemon sprite clipped to a given region.
+     * Used for admin GUI headers where we want a big portrait in a narrow row.
+     * Uses scissor to clip the sprite to [x, y, w, h].
+     */
+    fun renderLargeSpriteByName(
+        context: DrawContext,
+        pokemonName: String,
+        x: Int,
+        y: Int,
+        w: Int,
+        h: Int,
+        delta: Float = 0f,
+        scale: Float = 12.0f
+    ) {
+        val speciesId = resolveSpeciesFromName(pokemonName) ?: return
+        try {
+            val cacheKey = "${speciesId}_large"
+            val state = getOrCreateState(cacheKey, emptySet())
+            val matrixStack = context.matrices
+
+            // Scissor so the sprite is clipped to the requested region
+            context.enableScissor(x, y, x + w, y + h)
+
+            matrixStack.push()
+            // Center the sprite horizontally in the region, anchor at bottom of region
+            matrixStack.translate(
+                (x + w / 2.0),
+                (y + h).toDouble(),
+                0.0
+            )
+
+            drawProfilePokemon(
+                species = speciesId,
+                matrixStack = matrixStack,
+                rotation = PORTRAIT_ROTATION,
+                state = state,
+                partialTicks = delta,
+                scale = scale
+            )
+
+            matrixStack.pop()
+            context.disableScissor()
+        } catch (_: Exception) {
+            try { context.disableScissor() } catch (_: Exception) { }
+        }
+    }
+
     fun renderSmallIconByName(
         context: DrawContext,
         textRenderer: TextRenderer,

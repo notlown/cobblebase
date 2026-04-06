@@ -183,6 +183,50 @@ object PokemonSpriteHelper {
         context.drawTextWithShadow(textRenderer, fallbackInitial, textX, textY, 0xFFFFFF)
     }
 
+    /**
+     * Renders a large zoomed-in Pokemon sprite clipped to a given region.
+     */
+    fun renderLargeSpriteByName(
+        context: DrawContext,
+        pokemonName: String,
+        x: Int,
+        y: Int,
+        w: Int,
+        h: Int,
+        delta: Float = 0f,
+        scale: Float = 12.0f
+    ) {
+        val speciesId = resolveSpeciesFromName(pokemonName) ?: return
+        try {
+            val cacheKey = "${speciesId}_large"
+            val state = getOrCreateState(cacheKey, emptySet())
+            val matrixStack = context.matrices
+
+            context.enableScissor(x, y, x + w, y + h)
+
+            matrixStack.push()
+            matrixStack.translate(
+                (x + w / 2.0),
+                (y + h).toDouble(),
+                0.0
+            )
+
+            drawProfilePokemon(
+                species = speciesId,
+                matrixStack = matrixStack,
+                rotation = PORTRAIT_ROTATION,
+                state = state,
+                partialTicks = delta,
+                scale = scale
+            )
+
+            matrixStack.pop()
+            context.disableScissor()
+        } catch (_: Exception) {
+            try { context.disableScissor() } catch (_: Exception) { }
+        }
+    }
+
     fun renderSmallIconByName(
         context: DrawContext,
         textRenderer: TextRenderer,

@@ -228,17 +228,17 @@ object CobblebaseFabric : ModInitializer {
      */
     private fun handleAdminSpeciesRequest(player: net.minecraft.server.network.ServerPlayerEntity) {
         // Get all species from Cobblemon + any custom overrides (fakemons etc.)
+        // Use SpeciesSkillRegistry keys as canonical names (matches our JSON files)
         val allSpecies = try {
-            val cobblemonSpecies = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.species
-                .map { it.name.lowercase() }
+            val registrySpecies = SpeciesSkillRegistry.getAllAssigned().keys.toList()
             val overrideSpecies = SpeciesSkillOverrides.getAllOverriddenSpecies()
-            (cobblemonSpecies + overrideSpecies).distinct().sorted()
+            (registrySpecies + overrideSpecies).distinct().sorted()
         } catch (e: Exception) {
-            Cobblebase.LOGGER.error("[Cobblebase] Failed to get Cobblemon species: ${e.message}")
+            Cobblebase.LOGGER.error("[Cobblebase] Failed to get species list: ${e.message}")
             emptyList()
         }
 
-        // Get all assigned species skills
+        // Get all assigned species skills (keys already match allSpecies)
         val assigned = SpeciesSkillRegistry.getAllAssigned()
         val speciesSkills = assigned.mapValues { (_, v) -> v.skills }
 

@@ -319,12 +319,11 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         context: net.neoforged.neoforge.network.handling.IPayloadContext
     ) {
         val allSpecies = try {
-            val cobblemonSpecies = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.species
-                .map { it.name.lowercase() }
+            val registrySpecies = SpeciesSkillRegistry.getAllAssigned().keys.toList()
             val overrideSpecies = SpeciesSkillOverrides.getAllOverriddenSpecies()
-            (cobblemonSpecies + overrideSpecies).distinct().sorted()
+            (registrySpecies + overrideSpecies).distinct().sorted()
         } catch (e: Exception) {
-            Cobblebase.LOGGER.error("[Cobblebase] Failed to get Cobblemon species: ${e.message}")
+            Cobblebase.LOGGER.error("[Cobblebase] Failed to get species list: ${e.message}")
             emptyList()
         }
 

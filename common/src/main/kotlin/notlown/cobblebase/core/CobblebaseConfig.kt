@@ -19,6 +19,7 @@ object CobblebaseConfig {
     val keepEntitiesAlive get() = holder.general.keepEntitiesAlive
     val enforceVersionCheck get() = holder.general.enforceVersionCheck
     val enableConsoleLogging get() = holder.general.enableConsoleLogging
+    val leavesPassThrough get() = holder.general.leavesPassThrough
 
     // Cry
     val cryEnabled get() = holder.cry.cryEnabled

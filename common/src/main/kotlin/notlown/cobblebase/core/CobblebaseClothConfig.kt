@@ -39,6 +39,9 @@ class CobblebaseClothConfig : ConfigData {
 
         @ConfigEntry.Gui.Tooltip
         var enableConsoleLogging = false
+
+        @ConfigEntry.Gui.Tooltip
+        var leavesPassThrough = false
     }
 
     class CryGroup {

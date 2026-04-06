@@ -143,36 +143,17 @@ public class PokemonPastureBlockEntityMixin {
             String assignment = BaseManager.INSTANCE.getAssignment(pokemonEntity.getPokemon().getUuid());
             boolean isExplicitlyIdle = (assignment == null);
 
-            // At night, working mons use the same idle/sleep path as Relax mons
-            // (Cobblemon pasture mons don't have vanilla sleep — our AmbientBehavior handles it)
-            long dayTime = world.getTimeOfDay() % 24000L;
-            boolean isNight = dayTime >= 12542 && dayTime < 23460;
-            boolean shouldIdle = isExplicitlyIdle || (isNight && !isExplicitlyIdle);
-
-            if (shouldIdle) {
+            if (isExplicitlyIdle) {
                 // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
-                boolean isWorkerAtNight = isNight && !isExplicitlyIdle;
                 boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
 
-                if (isWorkerAtNight) {
-                    // Working mons at night: force sleep state + animation
+                if (isResting) {
+                    // Stationary: stop nav AND velocity (keeps sleeping mons truly still)
                     NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                     pokemonEntity.getNavigation().stop();
-                    java.util.UUID monId = pokemonEntity.getPokemon().getUuid();
-                    if (!AmbientBehavior.INSTANCE.isSleeping(monId)) {
-                        AmbientBehavior.INSTANCE.forceSleep(monId, world.getTime());
-                    }
-                    // Send sleep animation every 3 seconds to maintain pose
-                    // Fallback chain: sleep → faint → ground_idle (not all mons have sleep anim)
-                    if (world.getTime() % 60 == 0) {
-                        try {
-                            notlown.cobblebase.core.effects.SkillEffects.INSTANCE.sendAnimationPublic(world, pokemonEntity, "sleep", "water_sleep", "battle_sleep", "faint", "ground_idle");
-                        } catch (Exception ignored) { }
-                    }
-                } else if (isResting) {
-                    NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
-                    pokemonEntity.getNavigation().stop();
+                    pokemonEntity.setVelocity(0, Math.min(pokemonEntity.getVelocity().y, 0), 0);
+                    pokemonEntity.velocityDirty = true;
                     try {
                         AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     } catch (Exception ignored) { }
@@ -194,16 +175,10 @@ public class PokemonPastureBlockEntityMixin {
                     NavigationHelper.INSTANCE.escapeLeaves(pokemonEntity);
                 } catch (Exception ignored) { }
 
-                // Passive buffs run for idle mons; skip job tick for working mons sleeping at night
-                if (isNight && !isExplicitlyIdle) {
-                    try {
-                        BaseManager.INSTANCE.tickPassiveBuffsWithoutEntity(world, blockPos, pokemon);
-                    } catch (Exception ignored) { }
-                } else {
-                    try {
-                        BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
-                    } catch (Exception ignored) { }
-                }
+                // Passive buffs still run for idle mons
+                try {
+                    BaseManager.INSTANCE.tickPokemon(world, blockPos, pokemonEntity);
+                } catch (Exception ignored) { }
             } else {
                 // WORKING MON: normal job execution, no ambient behaviors
                 AmbientBehavior.INSTANCE.clearState(pokemonEntity.getPokemon().getUuid());

@@ -533,10 +533,12 @@ object AmbientBehavior {
         val dayTime = world.timeOfDay % 24000
         val isNight = dayTime in 13000..22999
         if (isNight) {
-            // Always sleep at night
-            Cobblebase.log("[Ambient] ${entity.pokemon.species.name} going to sleep (dayTime=$dayTime)")
-            setState(id, BehaviorState.SLEEPING, now)
-            return true
+            // High chance to sleep at night
+            if (world.random.nextInt(100) < 70) {
+                Cobblebase.log("[Ambient] ${entity.pokemon.species.name} going to sleep (dayTime=$dayTime)")
+                setState(id, BehaviorState.SLEEPING, now)
+                return true
+            }
         }
 
         // Check for nearby mons to interact with

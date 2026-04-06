@@ -143,7 +143,13 @@ public class PokemonPastureBlockEntityMixin {
             String assignment = BaseManager.INSTANCE.getAssignment(pokemonEntity.getPokemon().getUuid());
             boolean isExplicitlyIdle = (assignment == null);
 
-            if (isExplicitlyIdle) {
+            // At night, working mons behave as idle (sleep) but keep their assignment
+            // Minecraft day: 0-12541 = day, 12542-23459 = night, 23460+ = dawn
+            long dayTime = world.getTimeOfDay() % 24000L;
+            boolean isNight = dayTime >= 12542 && dayTime < 23460;
+            boolean treatAsIdle = isExplicitlyIdle || (isNight && assignment != null);
+
+            if (treatAsIdle) {
                 // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
                 boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());

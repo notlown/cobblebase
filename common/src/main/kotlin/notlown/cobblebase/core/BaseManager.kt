@@ -21,7 +21,8 @@ object BaseManager {
     // Unstuck detection: track last known position + time it changed
     private data class PosRecord(val pos: BlockPos, val changedAt: Long)
     private val lastKnownPos = mutableMapOf<UUID, PosRecord>()
-    private const val STUCK_TIMEOUT_TICKS = 160L // 8 seconds without movement = stuck
+    private const val STUCK_TIMEOUT_TICKS = 160L // 8 seconds without movement = clear nav
+    private const val STUCK_RECOVERY_TICKS = 6000L // 5 minutes without movement = teleport to pasture
 
     /**
      * Resolves a form-aware species name for skill lookups.
@@ -42,16 +43,27 @@ object BaseManager {
             save(world)
         }
 
-        // Unstuck check: if Pokemon hasn't moved for 30s, reset its navigation state
+        // Unstuck check: if Pokemon hasn't moved for 8s, reset its navigation state
+        // After 5 minutes of no movement, teleport back to pasture (recovery from stuck-in-block)
         val currentPos = pokemonEntity.blockPos
         val record = lastKnownPos[pokemonId]
         if (record == null || record.pos != currentPos) {
             lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now)
-        } else if (now - record.changedAt > STUCK_TIMEOUT_TICKS) {
-            // Pokemon is stuck — clear navigation targets to unstick it
-            NavigationHelper.clearTargets(pokemonEntity)
-            lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now) // reset timer
-            if (now % 200 == 0L) {
+        } else {
+            val stuckDuration = now - record.changedAt
+            if (stuckDuration > STUCK_RECOVERY_TICKS) {
+                // Stuck for 5+ minutes — teleport back to pasture as recovery
+                val (sx, sz) = getSpawnOffset(world)
+                pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
+                pokemonEntity.setVelocity(0.0, 0.0, 0.0)
+                pokemonEntity.velocityDirty = true
+                NavigationHelper.clearTargets(pokemonEntity)
+                lastKnownPos[pokemonId] = PosRecord(pokemonEntity.blockPos.toImmutable(), now)
+                Cobblebase.LOGGER.info("[BaseManager] Recovered stuck ${pokemonEntity.pokemon.species.name} (5min no movement) — teleported to pasture")
+            } else if (stuckDuration > STUCK_TIMEOUT_TICKS) {
+                // Pokemon is stuck briefly — clear navigation targets to unstick it
+                NavigationHelper.clearTargets(pokemonEntity)
+                lastKnownPos[pokemonId] = PosRecord(currentPos.toImmutable(), now) // reset timer
             }
         }
 

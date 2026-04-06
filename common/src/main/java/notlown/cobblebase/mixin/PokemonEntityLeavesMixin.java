@@ -24,13 +24,19 @@ public abstract class PokemonEntityLeavesMixin {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void cobblebase$leavesPassThroughTick(CallbackInfo ci) {
-        if (!CobblebaseConfig.INSTANCE.getLeavesPassThrough()) return;
+        if (!CobblebaseConfig.INSTANCE.getLeavesPassThrough()) {
+            // Make sure noClip stays false when feature is disabled
+            PokemonEntity disabled = (PokemonEntity)(Object)this;
+            if (disabled.noClip) disabled.noClip = false;
+            return;
+        }
 
         PokemonEntity self = (PokemonEntity)(Object)this;
         World world = self.getWorld();
         if (world == null) return;
 
-        // Check if entity bounding box intersects any leaf block
+        // Check if entity bounding box intersects any leaf block — AND no solid blocks
+        // (only enable noClip when ONLY leaves are around, prevents falling through ground)
         Box box = self.getBoundingBox();
         int minX = (int) Math.floor(box.minX);
         int minY = (int) Math.floor(box.minY);
@@ -41,23 +47,26 @@ public abstract class PokemonEntityLeavesMixin {
 
         BlockPos.Mutable pos = new BlockPos.Mutable();
         boolean inLeaves = false;
+        boolean inSolid = false;
 
-        outer:
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
+        for (int x = minX; x <= maxX && !inSolid; x++) {
+            for (int y = minY; y <= maxY && !inSolid; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
                     pos.set(x, y, z);
                     Block block = world.getBlockState(pos).getBlock();
                     if (block instanceof LeavesBlock) {
                         inLeaves = true;
-                        break outer;
+                    } else if (!world.getBlockState(pos).isAir()) {
+                        // Found a non-leaf, non-air block — entity is partially in solid terrain
+                        inSolid = true;
+                        break;
                     }
                 }
             }
         }
 
-        // Only set noClip when actively intersecting leaves
-        // Cleared automatically next tick if no longer in leaves
-        self.noClip = inLeaves;
+        // Only enable noClip when surrounded ONLY by leaves (and air), NEVER when touching solid blocks
+        // This prevents falling through ground/walls
+        self.noClip = inLeaves && !inSolid;
     }
 }

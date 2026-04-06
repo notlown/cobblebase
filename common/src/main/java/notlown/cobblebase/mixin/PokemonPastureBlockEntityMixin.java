@@ -149,11 +149,13 @@ public class PokemonPastureBlockEntityMixin {
                 boolean inActiveBehavior = AmbientBehavior.INSTANCE.isInActiveBehavior(pokemonEntity.getPokemon().getUuid());
 
                 if (isResting) {
-                    // Stationary: stop nav AND velocity (keeps sleeping mons truly still)
                     NavigationHelper.INSTANCE.clearTargets(pokemonEntity);
                     pokemonEntity.getNavigation().stop();
-                    pokemonEntity.setVelocity(0, Math.min(pokemonEntity.getVelocity().y, 0), 0);
-                    pokemonEntity.velocityDirty = true;
+                    // Only freeze velocity for sleeping mons (not socializing/sitting/etc)
+                    if (AmbientBehavior.INSTANCE.isSleeping(pokemonEntity.getPokemon().getUuid())) {
+                        pokemonEntity.setVelocity(0, Math.min(pokemonEntity.getVelocity().y, 0), 0);
+                        pokemonEntity.velocityDirty = true;
+                    }
                     try {
                         AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                     } catch (Exception ignored) { }

@@ -6,6 +6,10 @@
       "proficiency": 2
     },
     {
+      "skillId": "cobblebase:guard",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:harvester",
       "proficiency": 3
     }

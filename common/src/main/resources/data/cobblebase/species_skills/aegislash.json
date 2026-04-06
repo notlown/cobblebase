@@ -2,6 +2,10 @@
   "species": "aegislash",
   "skills": [
     {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:finder_held",
       "proficiency": 5
     },
@@ -10,12 +14,16 @@
       "proficiency": 4
     },
     {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
+    },
+    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 3
     },
     {
       "skillId": "cobblebase:guard",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mining",

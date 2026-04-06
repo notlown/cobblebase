@@ -2,8 +2,12 @@
   "species": "absol",
   "skills": [
     {
+      "skillId": "cobblebase:finder_held",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:finder_treasure",
-      "proficiency": 2
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
@@ -11,7 +15,7 @@
     },
     {
       "skillId": "cobblebase:guard",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:scout",

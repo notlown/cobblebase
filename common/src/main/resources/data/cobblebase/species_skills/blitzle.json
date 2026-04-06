@@ -2,12 +2,20 @@
   "species": "blitzle",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:friend_recruiter",
       "proficiency": 1
     },
     {
       "skillId": "cobblebase:furnace_fuel",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 1
     }
   ]
 }

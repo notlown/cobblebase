@@ -2,11 +2,27 @@
   "species": "bunnelby",
   "skills": [
     {
+      "skillId": "cobblebase:archeologist",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:finder_bal",
       "proficiency": 1
     },
     {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 1
+    },
+    {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:mining",
       "proficiency": 1
     },
     {

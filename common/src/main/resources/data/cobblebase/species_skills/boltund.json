@@ -2,12 +2,48 @@
   "species": "boltund",
   "skills": [
     {
+      "skillId": "cobblebase:archeologist",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:furnace_fuel",
       "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
     }
   ]
 }

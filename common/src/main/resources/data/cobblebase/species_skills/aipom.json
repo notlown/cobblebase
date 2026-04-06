@@ -2,12 +2,16 @@
   "species": "aipom",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
+      "skillId": "cobblebase:finder_bal",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:finder_bal",
-      "proficiency": 3
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 2
     }
   ]
 }

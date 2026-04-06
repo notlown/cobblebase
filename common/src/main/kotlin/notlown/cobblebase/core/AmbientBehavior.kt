@@ -60,7 +60,8 @@ object AmbientBehavior {
         CHILLING,       // sitting together with another mon
         CHASING,        // one mon runs away, another chases it
         FLEEING,        // the mon being chased (runs away fast)
-        WALKING_TOGETHER // two mons walk side by side
+        WALKING_TOGETHER, // two mons walk side by side
+        KNOCKED_OUT     // fainted/recoil — temporarily immobile with faint animation
     }
 
     // Track last special animation time per Pokemon
@@ -102,7 +103,7 @@ object AmbientBehavior {
         // Only stop movement for stationary states (not chasing/fleeing/following)
         return state == BehaviorState.SLEEPING ||
                state == BehaviorState.SOCIALIZING || state == BehaviorState.STANDING ||
-               state == BehaviorState.CHILLING
+               state == BehaviorState.CHILLING || state == BehaviorState.KNOCKED_OUT
     }
 
     /**
@@ -149,8 +150,32 @@ object AmbientBehavior {
             BehaviorState.CHASING -> tickChasing(world, pokemonEntity, id, now, stateStart)
             BehaviorState.FLEEING -> tickFleeing(world, pokemonEntity, id, now, stateStart, origin)
             BehaviorState.WALKING_TOGETHER -> tickWalkingTogether(world, pokemonEntity, id, now, stateStart, origin)
+            BehaviorState.KNOCKED_OUT -> tickKnockedOut(world, pokemonEntity, id, now, stateStart)
             BehaviorState.WANDERING -> pickNextBehavior(world, pokemonEntity, id, now, origin)
         }
+    }
+
+    /**
+     * Knocked out — play faint/recoil animation and lay still for ~8 seconds.
+     * Uses anim name stored per-entity (can be "faint" or "recoil").
+     */
+    private val knockoutAnimation = mutableMapOf<UUID, String>()
+
+    private fun tickKnockedOut(world: ServerWorld, entity: PokemonEntity, id: UUID, now: Long, stateStart: Long): Boolean {
+        val elapsed = now - stateStart
+        // Knocked out for 8 seconds
+        if (elapsed >= 160L) {
+            knockoutAnimation.remove(id)
+            setState(id, BehaviorState.WANDERING, now)
+            return false
+        }
+        // Replay animation periodically to maintain pose
+        val animName = knockoutAnimation[id] ?: "faint"
+        if (now % 80 == 0L) {
+            SkillEffects.sendAnimationPublic(world, entity, animName, "physical")
+        }
+        NavigationHelper.clearTargets(entity)
+        return true
     }
 
     /**
@@ -210,6 +235,32 @@ object AmbientBehavior {
 
         // Social interaction lasts 8-15 seconds
         if (elapsed >= 160L + world.random.nextInt(140).toLong()) {
+            // 20% chance one falls over with recoil, 20% chance both fall over
+            val roll = world.random.nextInt(100)
+            val partnerId = lastInteractionPartner[id]
+            if (roll < 20) {
+                // Both fall over with recoil
+                knockoutAnimation[id] = "recoil"
+                SkillEffects.sendAnimationPublic(world, entity, "recoil", "physical")
+                setState(id, BehaviorState.KNOCKED_OUT, now)
+                // Also knock out the partner
+                if (partnerId != null) {
+                    val searchBox = Box.of(entity.pos, 20.0, 6.0, 20.0)
+                    val partner = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { it.pokemon.uuid == partnerId }.firstOrNull()
+                    if (partner != null) {
+                        knockoutAnimation[partnerId] = "recoil"
+                        SkillEffects.sendAnimationPublic(world, partner, "recoil", "physical")
+                        setState(partnerId, BehaviorState.KNOCKED_OUT, now)
+                    }
+                }
+                return true
+            } else if (roll < 40) {
+                // Only this one falls over
+                knockoutAnimation[id] = "recoil"
+                SkillEffects.sendAnimationPublic(world, entity, "recoil", "physical")
+                setState(id, BehaviorState.KNOCKED_OUT, now)
+                return true
+            }
             setState(id, BehaviorState.WANDERING, now)
             return false
         }
@@ -347,6 +398,14 @@ object AmbientBehavior {
 
         // Chase lasts 30 seconds
         if (elapsed >= 600L) {
+            // 40% chance: chaser collapses exhausted (faint animation + KO for 8s)
+            if (world.random.nextInt(100) < 40) {
+                knockoutAnimation[id] = "faint"
+                SkillEffects.sendAnimationPublic(world, entity, "faint", "physical")
+                NavigationHelper.clearTargets(entity)
+                setState(id, BehaviorState.KNOCKED_OUT, now)
+                return true
+            }
             setState(id, BehaviorState.WANDERING, now)
             return false
         }
@@ -511,6 +570,10 @@ object AmbientBehavior {
             // High chance to sleep at night
             if (world.random.nextInt(100) < 70) {
                 Cobblebase.log("[Ambient] ${entity.pokemon.species.name} going to sleep (dayTime=$dayTime)")
+                // 20% chance to play faint animation first for smooth fall-asleep transition
+                if (world.random.nextInt(100) < 20) {
+                    SkillEffects.sendAnimationPublic(world, entity, "faint", "physical")
+                }
                 setState(id, BehaviorState.SLEEPING, now)
                 return true
             }

@@ -114,11 +114,6 @@ object RecruiterExecutor : SkillExecutor {
 
             Cobblebase.log("[Recruiter] ${pokemonEntity.pokemon.species.name} found a ${bucket.name} $speciesName (Lv.$level) [${chosenType.name}]")
 
-            // Effects on the RECRUITED mon (not the recruiter)
-            val sx = spawnPos.x + 0.5; val sy = spawnPos.y + 1.0; val sz = spawnPos.z + 0.5
-            world.spawnParticles(ParticleTypes.ENCHANT, sx, sy + 1.0, sz, 30, 0.5, 0.5, 0.5, 0.8)
-            world.spawnParticles(ParticleTypes.END_ROD, sx, sy, sz, 15, 0.4, 0.4, 0.4, 0.03)
-            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, sx, sy + 0.5, sz, 10, 0.3, 0.3, 0.3, 0.02)
             // Track for sparkles and delayed cry (entity needs a tick to sync to clients)
             recruitedEntities.add(entity.id)
             pendingCry[entity.id] = world.time + 20L // cry after 1 second
@@ -252,8 +247,6 @@ object RecruiterExecutor : SkillExecutor {
                 pendingCry.remove(entityId)
                 continue
             }
-            world.spawnParticles(ParticleTypes.ENCHANT, entity.x, entity.y + entity.height + 0.5, entity.z, 3, 0.2, 0.3, 0.2, 0.3)
-
             // Delayed cry - wait for entity to sync to clients
             val cryTick = pendingCry[entityId]
             if (cryTick != null && world.time >= cryTick && entity is PokemonEntity) {

@@ -170,10 +170,9 @@ object AmbientBehavior {
             return false
         }
 
-        // Stay sleeping — play sleep animation periodically to maintain pose
-        // Fallback chain: sleep → faint → ground_idle (not all mons have sleep anim)
-        if (now % 60 == 0L) {
-            SkillEffects.sendAnimationPublic(world, entity, "sleep", "water_sleep", "battle_sleep", "faint", "ground_idle")
+        // Stay sleeping — play sleep animation periodically (only if mon has one)
+        if (now % 100 == 0L) {
+            SkillEffects.sendAnimationPublic(world, entity, "sleep", "water_sleep", "battle_sleep")
         }
 
         // Don't move while sleeping

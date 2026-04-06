@@ -19,8 +19,6 @@
   "text.autoconfig.cobblebase.option.general.enforceVersionCheck.@Tooltip": "Kick players whose Cobblebase version doesn't match the server. Cobblebase must be installed on both server AND client — the client needs it for the Skills GUI, keybinds, and settings.",
   "text.autoconfig.cobblebase.option.general.enableConsoleLogging": "Enable Console Logging",
   "text.autoconfig.cobblebase.option.general.enableConsoleLogging.@Tooltip": "Show job activity logs in the server console (can be noisy on busy servers)",
-  "text.autoconfig.cobblebase.option.general.leavesPassThrough": "Leaves Pass-Through (Performance Heavy)",
-  "text.autoconfig.cobblebase.option.general.leavesPassThrough.@Tooltip": "When enabled, Pokemon can fly/walk through leaf blocks freely — no more getting stuck in trees. WARNING: This adds collision overhead per Pokemon per tick and may cause TPS drops on busy servers with many pastured Pokemon. Disabled by default.",
 
   "text.autoconfig.cobblebase.option.cry": "Pokemon Cries",
   "text.autoconfig.cobblebase.option.cry.cryEnabled": "Enable Pokemon cries",

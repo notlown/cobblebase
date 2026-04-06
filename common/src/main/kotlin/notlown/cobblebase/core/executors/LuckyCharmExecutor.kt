@@ -82,8 +82,6 @@ object LuckyCharmExecutor : SkillExecutor {
 
                 // Visual celebration
                 val sx = wildMon.x; val sy = wildMon.y + 1.0; val sz = wildMon.z
-                world.spawnParticles(ParticleTypes.END_ROD, sx, sy, sz, 30, 0.5, 0.8, 0.5, 0.05)
-                world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, sx, sy + 0.5, sz, 15, 0.4, 0.4, 0.4, 0.02)
 
                 // Notify nearby players
                 val speciesName = wildMon.pokemon.species.name
@@ -108,7 +106,6 @@ object LuckyCharmExecutor : SkillExecutor {
         // Subtle sparkle particles at pasture origin every 5 seconds
         if (now % 100 == 0L) {
             val x = origin.x + 0.5; val y = origin.y + 1.0; val z = origin.z + 0.5
-            world.spawnParticles(ParticleTypes.END_ROD, x, y, z, 2, 0.3, 0.3, 0.3, 0.01)
         }
     }
 

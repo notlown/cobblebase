@@ -206,15 +206,7 @@ object GathererExecutor : SkillExecutor {
         world.spawnEntity(visualItem)
         visualItems[pokemonId] = visualItem
 
-        // Pickup particles (item sparkle effect)
-        val x = pokemonEntity.x
-        val y = pokemonEntity.y
-        val h = pokemonEntity.height.toDouble()
-        val z = pokemonEntity.z
-        world.spawnParticles(ParticleTypes.ENCHANT, x, y + h, z, 15, 0.3, 0.3, 0.3, 0.5)
-        world.spawnParticles(ParticleTypes.END_ROD, x, y + h * 0.5, z, 5, 0.2, 0.2, 0.2, 0.02)
-
-        // Play cry + success effect on pickup
+        // Play cry + success effect on pickup (no particles for performance)
         SkillEffects.playSuccess(world, pokemonEntity, "default")
     }
 
@@ -247,13 +239,6 @@ object GathererExecutor : SkillExecutor {
             InventoryHelper.insertItems(world, chestPos, items)
             heldItems.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
-
-            // Happy villager particles on deposit
-            val x = pokemonEntity.x
-            val y = pokemonEntity.y
-            val h = pokemonEntity.height.toDouble()
-            val z = pokemonEntity.z
-            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y + h, z, 12, 0.4, 0.3, 0.4, 0.03)
 
             // Log the deposit
             for (item in items) {

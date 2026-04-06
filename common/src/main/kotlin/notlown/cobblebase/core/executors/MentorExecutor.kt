@@ -54,22 +54,6 @@ object MentorExecutor : SkillExecutor {
             activeMentors[origin] = existing.copy(lastTick = now)
         }
 
-        // Visual: enchant + xp orb particles every 60 ticks (~3 seconds)
-        if (now % 60 == 0L && world is ServerWorld) {
-            val x = pokemonEntity.x
-            val y = pokemonEntity.y
-            val h = pokemonEntity.height.toDouble()
-            val z = pokemonEntity.z
-            world.spawnParticles(
-                net.minecraft.particle.ParticleTypes.ENCHANT,
-                x, y + h + 0.5, z, 8, 0.4, 0.3, 0.4, 0.5
-            )
-            world.spawnParticles(
-                net.minecraft.particle.ParticleTypes.HAPPY_VILLAGER,
-                x, y + h, z, 4, 0.3, 0.2, 0.3, 0.02
-            )
-        }
-
         if (now % 200 == 0L) {
             Cobblebase.log(
                 "[Mentor] ${pokemonEntity.pokemon.species.name} active at $origin (prof=$proficiency, boost=${getXpMultiplier(origin)}x)"

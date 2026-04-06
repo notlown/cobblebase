@@ -178,23 +178,14 @@ class BuffExecutor(
 
         // Very minimal particles — just a hint that a buff is active
         if (buffType == "speed_boost") {
-            world.spawnParticles(ParticleTypes.CLOUD, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         } else if (buffType == "strength_boost") {
-            world.spawnParticles(ParticleTypes.CRIT, x, y, z, 2, 0.3, 0.2, 0.3, 0.01)
         } else if (buffType == "resistance_boost") {
-            world.spawnParticles(ParticleTypes.ENCHANT, x, y, z, 2, 0.3, 0.3, 0.3, 0.1)
         } else if (buffType == "night_vision") {
-            world.spawnParticles(ParticleTypes.END_ROD, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         } else if (buffType == "water_breathing") {
-            world.spawnParticles(ParticleTypes.BUBBLE_POP, x, y, z, 2, 0.3, 0.2, 0.3, 0.01)
         } else if (buffType == "jump_boost") {
-            world.spawnParticles(ParticleTypes.FIREWORK, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         } else if (buffType == "haste_boost") {
-            world.spawnParticles(ParticleTypes.INSTANT_EFFECT, x, y, z, 1, 0.3, 0.2, 0.3, 0.05)
         } else if (buffType == "saturation_boost") {
-            world.spawnParticles(ParticleTypes.HEART, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         } else {
-            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 1, 0.3, 0.2, 0.3, 0.005)
         }
     }
 

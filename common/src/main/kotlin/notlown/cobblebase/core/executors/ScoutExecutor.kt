@@ -121,8 +121,6 @@ object ScoutExecutor : SkillExecutor {
                 val x = pokemonEntity.x
                 val y = pokemonEntity.y + pokemonEntity.height.toDouble()
                 val z = pokemonEntity.z
-                world.spawnParticles(ParticleTypes.ENCHANT, x, y + 0.5, z, 3, 0.3, 0.3, 0.3, 0.3)
-                world.spawnParticles(ParticleTypes.END_ROD, x, y + 0.8, z, 1, 0.5, 0.3, 0.5, 0.01)
             }
             return
         }

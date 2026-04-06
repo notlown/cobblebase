@@ -59,12 +59,6 @@ object ExtinguisherExecutor : SkillExecutor {
                     // Remove fire blocks
                     if (block == Blocks.FIRE || block == Blocks.SOUL_FIRE) {
                         world.removeBlock(pos, false)
-                        // Steam particles
-                        world.spawnParticles(
-                            ParticleTypes.CLOUD,
-                            pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                            6, 0.3, 0.3, 0.3, 0.02
-                        )
                         extinguishedCount++
                     }
 
@@ -74,11 +68,6 @@ object ExtinguisherExecutor : SkillExecutor {
                         && state.get(CampfireBlock.LIT)
                     ) {
                         world.setBlockState(pos, state.with(CampfireBlock.LIT, false))
-                        world.spawnParticles(
-                            ParticleTypes.CLOUD,
-                            pos.x + 0.5, pos.y + 1.0, pos.z + 0.5,
-                            8, 0.4, 0.3, 0.4, 0.03
-                        )
                         extinguishedCount++
                     }
                 }

@@ -100,7 +100,6 @@ object AuraBoostExecutor : SkillExecutor {
             val x = origin.x + 0.5
             val y = origin.y + 1.0
             val z = origin.z + 0.5
-            world.spawnParticles(ParticleTypes.ENCHANT, x, y, z, 3, 0.4, 0.3, 0.4, 0.1)
         }
     }
 

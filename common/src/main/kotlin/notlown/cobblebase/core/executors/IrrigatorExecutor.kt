@@ -235,8 +235,5 @@ object IrrigatorExecutor : SkillExecutor {
         val x = pos.x + 0.5
         val y = pos.y + 1.5
         val z = pos.z + 0.5
-        world.spawnParticles(ParticleTypes.SPLASH, x, y + 1.0, z, 40, 0.8, 1.0, 0.8, 0.2)
-        world.spawnParticles(ParticleTypes.DRIPPING_WATER, x, y + 2.0, z, 20, 0.6, 1.5, 0.6, 0.0)
-        world.spawnParticles(ParticleTypes.FALLING_WATER, x, y + 2.5, z, 15, 0.5, 1.0, 0.5, 0.0)
     }
 }

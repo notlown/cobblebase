@@ -78,13 +78,6 @@ object GrowthAuraExecutor : SkillExecutor {
             try {
                 state.randomTick(world, pos, world.random)
                 tickedCount++
-
-                // Green sparkle particles on affected crops
-                world.spawnParticles(
-                    ParticleTypes.HAPPY_VILLAGER,
-                    pos.x + 0.5, pos.y + 0.8, pos.z + 0.5,
-                    3, 0.3, 0.2, 0.3, 0.01
-                )
             } catch (e: Exception) {
                 Cobblebase.LOGGER.warn("[GrowthAura] randomTick failed at $pos: ${e.message}")
             }

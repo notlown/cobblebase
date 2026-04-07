@@ -300,19 +300,64 @@ object PokemonSpriteHelper {
     }
 
     /**
+     * Cache of resolved species ids per normalized name. Resolution iterates
+     * the entire Cobblemon registry once per unknown name, so caching is
+     * important for the species sidebar (1300+ entries).
+     */
+    private val speciesIdCache = mutableMapOf<String, Identifier?>()
+
+    /**
      * Try to resolve a species Identifier from a display name.
+     *
+     * The previous version hardcoded the `cobblemon:` namespace, which meant
+     * fakemons (registered under their own mod namespaces like
+     * `babylegends:beta`, `extraparadoxmons:saberjaw`, `livelymons:...`,
+     * etc.) never matched and always fell back to the colored badge. We now
+     * walk Cobblemon's full runtime species registry and pick the species
+     * whose `.name` matches the requested display name, regardless of
+     * namespace. The result is cached.
      */
     private fun resolveSpeciesFromName(name: String): Identifier? {
         val normalized = name.trim().lowercase()
             .replace(" ", "_").replace("-", "_")
             .replace(Regex("[^a-z0-9/._-]"), "") // Strip invalid identifier chars
         if (normalized.isEmpty()) return null
-        return try {
+
+        speciesIdCache[normalized]?.let { return it }
+        if (speciesIdCache.containsKey(normalized)) return null // null cached too
+
+        // 1) Fast path: try cobblemon:<name> directly (works for vanilla mons)
+        try {
             val id = Identifier.of("cobblemon", normalized)
-            if (PokemonSpecies.getByIdentifier(id) != null) id else null
-        } catch (e: Exception) {
-            null
-        }
+            if (PokemonSpecies.getByIdentifier(id) != null) {
+                speciesIdCache[normalized] = id
+                return id
+            }
+        } catch (_: Exception) { }
+
+        // 2) PokemonSpecies.getByName walks every namespace by display name
+        try {
+            val species = PokemonSpecies.getByName(normalized)
+            if (species != null) {
+                val id = species.resourceIdentifier
+                speciesIdCache[normalized] = id
+                return id
+            }
+        } catch (_: Exception) { }
+
+        // 3) Fallback: iterate the whole registry once and match by .name
+        try {
+            for (s in PokemonSpecies.species) {
+                if (s.name.equals(normalized, ignoreCase = true)) {
+                    val id = s.resourceIdentifier
+                    speciesIdCache[normalized] = id
+                    return id
+                }
+            }
+        } catch (_: Exception) { }
+
+        speciesIdCache[normalized] = null
+        return null
     }
 
     /**

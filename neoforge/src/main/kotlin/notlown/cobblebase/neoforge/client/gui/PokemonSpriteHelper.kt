@@ -14,18 +14,25 @@ import java.util.UUID
 /**
  * Renders Pokemon portraits using Cobblemon's drawProfilePokemon for 16x16+ icons,
  * and type-colored badge fallbacks for 12x12 small icons.
+ *
+ * FloatingState instances are cached per-Pokemon to avoid creating them every frame.
  */
 object PokemonSpriteHelper {
 
     const val ICON_SIZE = 16
     private const val BORDER_RADIUS_APPROX = 2
 
+    /** Cached FloatingState per Pokemon UUID to avoid per-frame allocation. */
     private val stateCache = mutableMapOf<String, FloatingState>()
 
+    /** Pre-computed rotation for portrait rendering. */
     private val PORTRAIT_ROTATION: Quaternionf by lazy {
         Quaternionf().fromEulerXYZDegrees(Vector3f(13F, 35F, 0F))
     }
 
+    /**
+     * Type color lookup with fallback. Maps type names to ARGB colors.
+     */
     private val TYPE_COLORS = mapOf(
         "normal" to 0xFFE8E8DA.toInt(),
         "fire" to 0xFFFF6E21.toInt(),
@@ -49,27 +56,52 @@ object PokemonSpriteHelper {
 
     private val DEFAULT_COLOR = 0xFF888888.toInt()
 
+    /**
+     * Get the primary type color for a species Identifier.
+     */
     fun getTypeColor(species: Identifier): Int {
         val speciesData = PokemonSpecies.getByIdentifier(species) ?: return DEFAULT_COLOR
         val typeName = speciesData.primaryType.name.lowercase()
         return TYPE_COLORS[typeName] ?: DEFAULT_COLOR
     }
 
+    /**
+     * Get the first 2 characters of the species display name for the icon label.
+     */
     fun getInitials(displayName: String): String {
         val clean = displayName.trim()
         return if (clean.length >= 2) clean.substring(0, 2).uppercase() else clean.uppercase()
     }
 
+    /**
+     * Get or create a cached FloatingState for a given cache key.
+     */
     private fun getOrCreateState(cacheKey: String, aspects: Set<String>): FloatingState {
         return stateCache.getOrPut(cacheKey) { FloatingState() }.also {
             it.currentAspects = aspects
         }
     }
 
+    /**
+     * Clears the state cache. Call when the GUI is closed or the Pokemon list changes.
+     */
     fun clearCache() {
         stateCache.clear()
     }
 
+    /**
+     * Renders a Pokemon portrait icon at the given position using Cobblemon's 3D renderer.
+     * Falls back to the type-colored badge if rendering fails.
+     *
+     * @param context     The draw context
+     * @param textRenderer The text renderer (used for fallback)
+     * @param species     The species Identifier (e.g. cobblemon:pikachu)
+     * @param displayName The display name of the Pokemon
+     * @param aspects     The Pokemon's aspects (shiny, gender, etc.)
+     * @param x           Left edge of the icon
+     * @param y           Top edge of the icon
+     * @param delta        Partial ticks for animation
+     */
     fun renderIcon(
         context: DrawContext,
         textRenderer: TextRenderer,
@@ -83,21 +115,25 @@ object PokemonSpriteHelper {
         val color = getTypeColor(species)
         val bgColor = darkenColor(color, 0.35f)
 
+        // Draw type-colored background behind the portrait
         context.fill(x + 1, y, x + ICON_SIZE - 1, y + ICON_SIZE, bgColor)
         context.fill(x, y + 1, x + 1, y + ICON_SIZE - 1, bgColor)
         context.fill(x + ICON_SIZE - 1, y + 1, x + ICON_SIZE, y + ICON_SIZE - 1, bgColor)
 
+        // Colored border
         context.fill(x + 1, y, x + ICON_SIZE - 1, y + 1, color)
         context.fill(x + 1, y + ICON_SIZE - 1, x + ICON_SIZE - 1, y + ICON_SIZE, color)
         context.fill(x, y + 1, x + 1, y + ICON_SIZE - 1, color)
         context.fill(x + ICON_SIZE - 1, y + 1, x + ICON_SIZE, y + ICON_SIZE - 1, color)
 
+        // Render the 3D Pokemon portrait on top
         try {
             val cacheKey = "${species}_${aspects.sorted().joinToString(",")}"
             val state = getOrCreateState(cacheKey, aspects)
             val matrixStack = context.matrices
 
             matrixStack.push()
+            // drawProfilePokemon renders the Pokemon above the translate point
             matrixStack.translate(
                 (x + ICON_SIZE / 2.0),
                 (y.toDouble() + 1.0),
@@ -116,6 +152,7 @@ object PokemonSpriteHelper {
 
             matrixStack.pop()
         } catch (_: Exception) {
+            // Fallback: draw initials on the existing background
             val initials = getInitials(displayName)
             val textWidth = textRenderer.getWidth(initials)
             val textX = x + (ICON_SIZE - textWidth) / 2
@@ -124,6 +161,9 @@ object PokemonSpriteHelper {
         }
     }
 
+    /**
+     * Overload without aspects/delta for backward compatibility (falls back to badge).
+     */
     fun renderIcon(
         context: DrawContext,
         textRenderer: TextRenderer,
@@ -135,6 +175,10 @@ object PokemonSpriteHelper {
         renderIcon(context, textRenderer, species, displayName, emptySet(), x, y, 0f)
     }
 
+    /**
+     * Renders a smaller icon (for compact rows like logs).
+     * Size: 12x12 pixels. Uses 3D portrait at smaller scale.
+     */
     fun renderSmallIcon(
         context: DrawContext,
         textRenderer: TextRenderer,
@@ -148,15 +192,18 @@ object PokemonSpriteHelper {
         val color = getTypeColor(species)
         val bgColor = darkenColor(color, 0.35f)
 
+        // Background
         context.fill(x + 1, y, x + size - 1, y + size, bgColor)
         context.fill(x, y + 1, x + 1, y + size - 1, bgColor)
         context.fill(x + size - 1, y + 1, x + size, y + size - 1, bgColor)
 
+        // Border
         context.fill(x + 1, y, x + size - 1, y + 1, color)
         context.fill(x + 1, y + size - 1, x + size - 1, y + size, color)
         context.fill(x, y + 1, x + 1, y + size - 1, color)
         context.fill(x + size - 1, y + 1, x + size, y + size - 1, color)
 
+        // Render small 3D portrait
         try {
             val cacheKey = "${species}_small"
             val state = getOrCreateState(cacheKey, emptySet())
@@ -176,6 +223,7 @@ object PokemonSpriteHelper {
             return
         } catch (_: Exception) { }
 
+        // Fallback: single initial centered
         val fallbackInitial = if (displayName.isNotEmpty()) displayName[0].uppercase() else "?"
         val textWidth = textRenderer.getWidth(fallbackInitial)
         val textX = x + (size - textWidth) / 2
@@ -184,7 +232,12 @@ object PokemonSpriteHelper {
     }
 
     /**
+     * Renders a small icon for log entries where we only have the Pokemon name (no species Identifier).
+     */
+    /**
      * Renders a large zoomed-in Pokemon sprite clipped to a given region.
+     * Used for admin GUI headers where we want a big portrait in a narrow row.
+     * Uses scissor to clip the sprite to [x, y, w, h].
      */
     fun renderLargeSpriteByName(
         context: DrawContext,
@@ -202,9 +255,11 @@ object PokemonSpriteHelper {
             val state = getOrCreateState(cacheKey, emptySet())
             val matrixStack = context.matrices
 
+            // Scissor so the sprite is clipped to the requested region
             context.enableScissor(x, y, x + w, y + h)
 
             matrixStack.push()
+            // Center the sprite horizontally in the region, anchor at bottom of region
             matrixStack.translate(
                 (x + w / 2.0),
                 (y + h).toDouble(),
@@ -237,25 +292,77 @@ object PokemonSpriteHelper {
     ) {
         val speciesId = resolveSpeciesFromName(pokemonName)
         if (speciesId != null) {
+            // Use full-size renderIcon for better visibility (16x16 with 3D portrait)
             renderIcon(context, textRenderer, speciesId, pokemonName, emptySet(), x, y, delta)
         } else {
             renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
         }
     }
 
+    /**
+     * Cache of resolved species ids per normalized name. Resolution iterates
+     * the entire Cobblemon registry once per unknown name, so caching is
+     * important for the species sidebar (1300+ entries).
+     */
+    private val speciesIdCache = mutableMapOf<String, Identifier?>()
+
+    /**
+     * Try to resolve a species Identifier from a display name.
+     *
+     * The previous version hardcoded the `cobblemon:` namespace, which meant
+     * fakemons (registered under their own mod namespaces like
+     * `babylegends:beta`, `extraparadoxmons:saberjaw`, `livelymons:...`,
+     * etc.) never matched and always fell back to the colored badge. We now
+     * walk Cobblemon's full runtime species registry and pick the species
+     * whose `.name` matches the requested display name, regardless of
+     * namespace. The result is cached.
+     */
     private fun resolveSpeciesFromName(name: String): Identifier? {
         val normalized = name.trim().lowercase()
             .replace(" ", "_").replace("-", "_")
-            .replace(Regex("[^a-z0-9/._-]"), "")
+            .replace(Regex("[^a-z0-9/._-]"), "") // Strip invalid identifier chars
         if (normalized.isEmpty()) return null
-        return try {
+
+        speciesIdCache[normalized]?.let { return it }
+        if (speciesIdCache.containsKey(normalized)) return null // null cached too
+
+        // 1) Fast path: try cobblemon:<name> directly (works for vanilla mons)
+        try {
             val id = Identifier.of("cobblemon", normalized)
-            if (PokemonSpecies.getByIdentifier(id) != null) id else null
-        } catch (e: Exception) {
-            null
-        }
+            if (PokemonSpecies.getByIdentifier(id) != null) {
+                speciesIdCache[normalized] = id
+                return id
+            }
+        } catch (_: Exception) { }
+
+        // 2) PokemonSpecies.getByName walks every namespace by display name
+        try {
+            val species = PokemonSpecies.getByName(normalized)
+            if (species != null) {
+                val id = species.resourceIdentifier
+                speciesIdCache[normalized] = id
+                return id
+            }
+        } catch (_: Exception) { }
+
+        // 3) Fallback: iterate the whole registry once and match by .name
+        try {
+            for (s in PokemonSpecies.species) {
+                if (s.name.equals(normalized, ignoreCase = true)) {
+                    val id = s.resourceIdentifier
+                    speciesIdCache[normalized] = id
+                    return id
+                }
+            }
+        } catch (_: Exception) { }
+
+        speciesIdCache[normalized] = null
+        return null
     }
 
+    /**
+     * Generate a consistent color from a Pokemon name hash.
+     */
     private fun nameToColor(name: String): Int {
         val hash = name.hashCode()
         val hue = (hash and 0x7FFFFFFF) % 360
@@ -280,6 +387,9 @@ object PokemonSpriteHelper {
             ((b + m) * 255).toInt()
     }
 
+    /**
+     * Renders a small 12x12 icon with a specific color (for name-based fallback).
+     */
     private fun renderSmallIconWithColor(
         context: DrawContext,
         textRenderer: TextRenderer,
@@ -307,6 +417,9 @@ object PokemonSpriteHelper {
         context.drawTextWithShadow(textRenderer, initial, textX, textY, 0xFFFFFF)
     }
 
+    /**
+     * Darkens an ARGB color by the given factor (0.0 = black, 1.0 = unchanged).
+     */
     private fun darkenColor(color: Int, factor: Float): Int {
         val a = (color shr 24) and 0xFF
         val r = ((color shr 16) and 0xFF) * factor

@@ -6,10 +6,6 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:finder_stat",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:gatherer",
       "proficiency": 4
     },
@@ -30,8 +26,8 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:friend_recruiter",
-      "proficiency": 4
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 2
     }
   ]
 }

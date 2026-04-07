@@ -37,6 +37,9 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     private lateinit var skillEditorPanel: AdminSkillEditorPanel
     private lateinit var jobsPanel: AdminJobsPanel
     private lateinit var lootPanel: AdminLootPanel
+    // generalPanel is intentionally kept but not surfaced — the General tab is
+    // hidden until a later release. Discord button on the Skills panel falls
+    // back to GeneralSettingsCache defaults (enabled = true).
     private lateinit var generalPanel: AdminGeneralPanel
     private lateinit var wikiPanel: AdminWikiPanel
 
@@ -114,12 +117,9 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             addDrawableChild(widget)
         }
 
-        // Init general panel widgets
-        generalPanel.init { widget ->
-            generalWidgets.add(widget)
-            addDrawableChild(widget)
-            widget
-        }
+        // General tab is hidden until a later release — skip widget init.
+        // Discord button on Skills panel uses GeneralSettingsCache defaults
+        // (enabled = true, default Cobblebase invite URL).
 
         // Init wiki panel widgets
         wikiPanel.init { widget ->
@@ -168,18 +168,16 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         val speciesTabX = panelX + 4
         val jobsTabX = speciesTabX + tabW + 4
         val lootTabX = jobsTabX + tabW + 4
-        val generalTabX = lootTabX + tabW + 4
-        val wikiTabX = generalTabX + tabW + 4
+        val wikiTabX = lootTabX + tabW + 4
         val scale = 0.75f
 
+        // General tab is hidden until a later release.
         renderTab(context, "Species", speciesTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
             activeTab == "species", mouseX, mouseY, scale)
         renderTab(context, "Jobs", jobsTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
             activeTab == "jobs", mouseX, mouseY, scale)
         renderTab(context, "Loot", lootTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
             activeTab == "loot", mouseX, mouseY, scale)
-        renderTab(context, "General", generalTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
-            activeTab == "general", mouseX, mouseY, scale)
         renderTab(context, "Wiki", wikiTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
             activeTab == "wiki", mouseX, mouseY, scale)
 
@@ -193,7 +191,6 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             }
             "jobs" -> jobsPanel.render(context, mouseX, mouseY, delta)
             "loot" -> lootPanel.render(context, mouseX, mouseY, delta)
-            "general" -> generalPanel.render(context, mouseX, mouseY, delta)
             "wiki" -> wikiPanel.render(context, mouseX, mouseY, delta)
         }
 
@@ -247,13 +244,12 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         val speciesTabX = panelX + 4
         val jobsTabX = speciesTabX + tabW + 4
         val lootTabX = jobsTabX + tabW + 4
-        val generalTabX = lootTabX + tabW + 4
-        val wikiTabX = generalTabX + tabW + 4
+        val wikiTabX = lootTabX + tabW + 4
+        // General tab is hidden until a later release.
         if (mouseY >= tabBarY + 2 && mouseY <= tabBarY + TAB_HEIGHT - 1) {
             if (mouseX >= speciesTabX && mouseX <= speciesTabX + tabW) { activeTab = "species"; updateWidgetVisibility(); return true }
             if (mouseX >= jobsTabX && mouseX <= jobsTabX + tabW) { activeTab = "jobs"; updateWidgetVisibility(); return true }
             if (mouseX >= lootTabX && mouseX <= lootTabX + tabW) { activeTab = "loot"; updateWidgetVisibility(); return true }
-            if (mouseX >= generalTabX && mouseX <= generalTabX + tabW) { activeTab = "general"; updateWidgetVisibility(); return true }
             if (mouseX >= wikiTabX && mouseX <= wikiTabX + tabW) { activeTab = "wiki"; updateWidgetVisibility(); return true }
         }
 
@@ -270,10 +266,6 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             "loot" -> {
                 if (super.mouseClicked(mouseX, mouseY, button)) return true
                 if (lootPanel.mouseClicked(mouseX, mouseY, button)) return true
-            }
-            "general" -> {
-                if (super.mouseClicked(mouseX, mouseY, button)) return true
-                if (generalPanel.mouseClicked(mouseX, mouseY, button)) return true
             }
             "wiki" -> {
                 if (super.mouseClicked(mouseX, mouseY, button)) return true

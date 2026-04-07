@@ -161,6 +161,10 @@ object GathererExecutor : SkillExecutor {
                 && entity.id !in visualIds // skip floating visual items above gatherer heads
                 && !entity.hasNoGravity() // visual items have no gravity — extra safety filter
                 && belongsToOrAllowed(entity.stack, pastureOrigin)
+                // Skip items more than 4 blocks above/below the pasture — likely on a roof/floor
+                // the gatherer can reach but cannot return from (e.g. stuck on glass ceiling).
+                // The recovery teleport handles this, but prevention is better than cure.
+                && Math.abs(entity.blockY - pastureOrigin.y) <= 4
         }
         // Pick oldest item (highest age = been on ground longest)
         return items.maxByOrNull { it.age }

@@ -10,10 +10,6 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 1
-    },
-    {
       "skillId": "cobblebase:harvester",
       "proficiency": 2
     },

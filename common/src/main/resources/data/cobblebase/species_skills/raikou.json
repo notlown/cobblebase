@@ -4,10 +4,6 @@
     {
       "skillId": "cobblebase:furnace_fuel",
       "proficiency": 5
-    },
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
     }
   ]
 }

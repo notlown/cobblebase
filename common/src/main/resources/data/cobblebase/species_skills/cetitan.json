@@ -6,10 +6,6 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:saturation_boost",
       "proficiency": 3
     },

@@ -2,10 +2,6 @@
   "species": "dragonair",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:guard",
       "proficiency": 4
     },

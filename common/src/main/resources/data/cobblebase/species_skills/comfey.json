@@ -2,10 +2,6 @@
   "species": "comfey",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 1
-    },
-    {
       "skillId": "cobblebase:healer",
       "proficiency": 2
     },

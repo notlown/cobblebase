@@ -2,10 +2,6 @@
   "species": "haxorus",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:guard",
       "proficiency": 4
     },

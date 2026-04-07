@@ -2,10 +2,6 @@
   "species": "kleavor",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:harvester",
       "proficiency": 3
     },

@@ -2,10 +2,6 @@
   "species": "dratini",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 1
-    },
-    {
       "skillId": "cobblebase:guard",
       "proficiency": 4
     },

@@ -2,10 +2,6 @@
   "species": "diancie",
   "skills": [
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
-    },
-    {
       "skillId": "cobblebase:healer",
       "proficiency": 4
     },

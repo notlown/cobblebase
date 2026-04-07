@@ -10,10 +10,6 @@
       "proficiency": 4
     },
     {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 4
-    },
-    {
       "skillId": "cobblebase:lava_fill",
       "proficiency": 5
     }

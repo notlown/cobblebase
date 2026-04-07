@@ -13,10 +13,42 @@ object SpawnData {
     private val speciesBucket = mutableMapOf<String, Bucket>()
 
     fun init() {
-        // We load from Cobblemon's spawn pool at runtime
-        // This ensures we always match the installed version
         Cobblebase.LOGGER.info("[SpawnData] Initialized with bucket lookup")
     }
+
+    /**
+     * Loads bucket data directly from Cobblemon's WORLD_SPAWN_POOL.
+     * Called once after Cobblemon's spawn pool has finished loading.
+     * For each Pokemon, finds the RAREST bucket it appears in.
+     */
+    fun loadFromCobblemonSpawnPool() {
+        try {
+            val pool = com.cobblemon.mod.common.api.spawning.CobblemonSpawnPools.WORLD_SPAWN_POOL ?: run {
+                Cobblebase.LOGGER.warn("[SpawnData] Cobblemon spawn pool not loaded yet")
+                return
+            }
+            speciesBucket.clear()
+            var entries = 0
+            for (detail in pool) {
+                if (detail !is com.cobblemon.mod.common.api.spawning.detail.PokemonSpawnDetail) continue
+                val species = try {
+                    detail.pokemon.species?.lowercase() ?: continue
+                } catch (_: Exception) { continue }
+                val bucketName = detail.bucket?.name?.lowercase() ?: continue
+                val bucket = parseBucket(bucketName)
+                register(species.substringAfterLast(":"), bucket)
+                entries++
+            }
+            Cobblebase.LOGGER.info("[SpawnData] Loaded $entries spawn entries from Cobblemon, ${speciesBucket.size} unique species")
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.error("[SpawnData] Failed to load from Cobblemon spawn pool: ${e.message}")
+        }
+    }
+
+    /**
+     * Get all known species and their buckets (for export/debugging).
+     */
+    fun getAllBuckets(): Map<String, Bucket> = speciesBucket.toMap()
 
     /**
      * Get the rarity bucket for a species. Defaults to COMMON if unknown.

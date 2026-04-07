@@ -44,7 +44,6 @@ object CobblebaseConfig {
     // irrigatorCooldownSeconds removed — uses skill.cooldownSeconds from JSON/admin overrides
     val irrigatorRadius get() = holder.irrigator.irrigatorRadius
 
-    val legendaryRecruiterCooldownSeconds get() = holder.skills.legendaryRecruiterCooldownSeconds.toLong()
 
     // Recruiter rates
     val recruiterCommonRate get() = holder.recruiterRates.commonRate

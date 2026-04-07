@@ -259,6 +259,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         DiscoveryRegistry.load(world)
         SpeciesSkillOverrides.load(world)
         JobConfigOverrides.load(world)
+        notlown.cobblebase.core.SpawnData.loadFromCobblemonSpawnPool()
     }
 
     private fun onServerStopping(event: ServerStoppingEvent) {

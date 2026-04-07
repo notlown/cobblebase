@@ -2,7 +2,7 @@
   "id": "cobblebase:friend_recruiter",
   "name": "Friend Recruiter",
   "description": "Attracts wild Pokemon of the same type to appear nearby",
-  "category": "utility",
+  "category": "social",
   "cooldownSeconds": 300,
   "searchRadius": 15,
   "executor": "recruiter",

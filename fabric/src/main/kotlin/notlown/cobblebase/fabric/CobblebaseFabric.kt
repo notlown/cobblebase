@@ -12,6 +12,7 @@ import notlown.cobblebase.core.DiscoveryRegistry
 import notlown.cobblebase.core.LogManager
 import notlown.cobblebase.core.JobConfigOverrides
 import notlown.cobblebase.core.SkillRegistry
+import notlown.cobblebase.core.SpawnData
 import notlown.cobblebase.core.SpeciesSkillOverrides
 import notlown.cobblebase.core.SpeciesSkillRegistry
 import notlown.cobblebase.core.net.AdminJobsRequestC2SPacket
@@ -164,6 +165,8 @@ object CobblebaseFabric : ModInitializer {
             DiscoveryRegistry.load(world)
             SpeciesSkillOverrides.load(world)
             JobConfigOverrides.load(world)
+            // Load spawn buckets from Cobblemon's actual spawn pool
+            SpawnData.loadFromCobblemonSpawnPool()
         }
 
         // Save assignments, logs, discoveries, and overrides when world stops

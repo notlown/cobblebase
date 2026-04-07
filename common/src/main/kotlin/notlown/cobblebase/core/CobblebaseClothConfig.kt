@@ -71,8 +71,6 @@ class CobblebaseClothConfig : ConfigData {
         var gathererPickupPlayerDrops = true
         @ConfigEntry.BoundedDiscrete(min = 5, max = 300)
         var gathererCooldownSeconds = 10
-        @ConfigEntry.BoundedDiscrete(min = 60, max = 3600)
-        var legendaryRecruiterCooldownSeconds = 600
     }
 
     @ConfigEntry.Gui.CollapsibleObject

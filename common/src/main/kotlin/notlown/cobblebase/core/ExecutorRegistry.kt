@@ -83,8 +83,8 @@ object ExecutorRegistry {
         register("gather_items", GathererExecutor)
         register("scout", ScoutExecutor)                     // Scout: discovers wild Pokemon, structures, biomes
 
-        // -- Legendary / Fairy --
-        register("recruiter", RecruiterExecutor)           // Spawns rare wild Pokemon nearby
+        // -- Special --
+        register("recruiter", RecruiterExecutor)           // Spawns wild Pokemon nearby (used by friend_recruiter)
         register("aura", AuraBoostExecutor)
         register("lucky_charm", LuckyCharmExecutor)          // Boosts shiny rate for nearby wild Pokemon
         register("growth", GrowthAuraExecutor)

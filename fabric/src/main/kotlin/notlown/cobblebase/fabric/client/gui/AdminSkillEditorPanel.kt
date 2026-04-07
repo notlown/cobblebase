@@ -40,7 +40,8 @@ class AdminSkillEditorPanel(
         "combat" to 0xFFF44336.toInt(),
         "support" to 0xFFE91E9E.toInt(),
         "utility" to 0xFF2196F3.toInt(),
-        "legendary" to 0xFFFFD700.toInt()
+        "legendary" to 0xFFFFD700.toInt(),
+        "social" to 0xFFFF55FF.toInt()
     )
 
     var selectedSpecies: String? = null

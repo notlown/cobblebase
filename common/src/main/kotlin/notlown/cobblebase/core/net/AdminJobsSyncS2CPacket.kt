@@ -50,15 +50,12 @@ data class AdminJobsSyncS2CPacket(
                     val skillId = buf.readString()
                     val hasCooldown = buf.readBoolean()
                     val cooldown = if (hasCooldown) buf.readLong() else null
-                    val hasRadiusMin = buf.readBoolean()
-                    val radiusMin = if (hasRadiusMin) buf.readVarInt() else null
-                    val hasRadiusMax = buf.readBoolean()
-                    val radiusMax = if (hasRadiusMax) buf.readVarInt() else null
+                    val hasRadius = buf.readBoolean()
+                    val radius = if (hasRadius) buf.readVarInt() else null
                     val enabled = buf.readBoolean()
                     overrides[skillId] = JobConfigOverrides.JobOverride(
                         cooldownSeconds = cooldown,
-                        radiusMin = radiusMin,
-                        radiusMax = radiusMax,
+                        searchRadius = radius,
                         enabled = enabled
                     )
                 }
@@ -85,10 +82,8 @@ data class AdminJobsSyncS2CPacket(
                     buf.writeString(skillId)
                     buf.writeBoolean(override.cooldownSeconds != null)
                     if (override.cooldownSeconds != null) buf.writeLong(override.cooldownSeconds)
-                    buf.writeBoolean(override.radiusMin != null)
-                    if (override.radiusMin != null) buf.writeVarInt(override.radiusMin)
-                    buf.writeBoolean(override.radiusMax != null)
-                    if (override.radiusMax != null) buf.writeVarInt(override.radiusMax)
+                    buf.writeBoolean(override.searchRadius != null)
+                    if (override.searchRadius != null) buf.writeVarInt(override.searchRadius)
                     buf.writeBoolean(override.enabled)
                 }
             }

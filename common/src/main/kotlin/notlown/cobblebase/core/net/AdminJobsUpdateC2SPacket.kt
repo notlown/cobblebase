@@ -15,8 +15,7 @@ import net.minecraft.util.Identifier
 data class AdminJobsUpdateC2SPacket(
     val skillId: String,
     val cooldownSeconds: Long?,
-    val radiusMin: Int?,
-    val radiusMax: Int?,
+    val searchRadius: Int?,
     val enabled: Boolean
 ) : CustomPayload {
 
@@ -28,22 +27,18 @@ data class AdminJobsUpdateC2SPacket(
                 val skillId = buf.readString()
                 val hasCooldown = buf.readBoolean()
                 val cooldown = if (hasCooldown) buf.readLong() else null
-                val hasRadiusMin = buf.readBoolean()
-                val radiusMin = if (hasRadiusMin) buf.readVarInt() else null
-                val hasRadiusMax = buf.readBoolean()
-                val radiusMax = if (hasRadiusMax) buf.readVarInt() else null
+                val hasRadius = buf.readBoolean()
+                val radius = if (hasRadius) buf.readVarInt() else null
                 val enabled = buf.readBoolean()
-                return AdminJobsUpdateC2SPacket(skillId, cooldown, radiusMin, radiusMax, enabled)
+                return AdminJobsUpdateC2SPacket(skillId, cooldown, radius, enabled)
             }
 
             override fun encode(buf: PacketByteBuf, packet: AdminJobsUpdateC2SPacket) {
                 buf.writeString(packet.skillId)
                 buf.writeBoolean(packet.cooldownSeconds != null)
                 if (packet.cooldownSeconds != null) buf.writeLong(packet.cooldownSeconds)
-                buf.writeBoolean(packet.radiusMin != null)
-                if (packet.radiusMin != null) buf.writeVarInt(packet.radiusMin)
-                buf.writeBoolean(packet.radiusMax != null)
-                if (packet.radiusMax != null) buf.writeVarInt(packet.radiusMax)
+                buf.writeBoolean(packet.searchRadius != null)
+                if (packet.searchRadius != null) buf.writeVarInt(packet.searchRadius)
                 buf.writeBoolean(packet.enabled)
             }
         }
@@ -60,13 +55,12 @@ data class AdminJobsUpdateC2SPacket(
         val world = player.serverWorld
         val override = JobConfigOverrides.JobOverride(
             cooldownSeconds = cooldownSeconds,
-            radiusMin = radiusMin,
-            radiusMax = radiusMax,
+            searchRadius = searchRadius,
             enabled = enabled
         )
 
-        // If all values are default (null cooldown, null radii, enabled=true), remove the override
-        if (cooldownSeconds == null && radiusMin == null && radiusMax == null && enabled) {
+        // If all values are default (null cooldown, null radius, enabled=true), remove the override
+        if (cooldownSeconds == null && searchRadius == null && enabled) {
             JobConfigOverrides.removeOverride(skillId)
         } else {
             JobConfigOverrides.setOverride(skillId, override)

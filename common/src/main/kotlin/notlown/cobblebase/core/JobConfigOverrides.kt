@@ -17,8 +17,6 @@ object JobConfigOverrides {
     data class JobOverride(
         val cooldownSeconds: Long? = null,
         val searchRadius: Int? = null,
-        val radiusMin: Int? = null,
-        val radiusMax: Int? = null,
         val enabled: Boolean = true
     )
 
@@ -54,17 +52,6 @@ object JobConfigOverrides {
     }
 
     /**
-     * Returns the allowed radius range for a skill (for per-pasture settings).
-     * Players can choose a radius within this range at their Pasture Block.
-     */
-    fun getRadiusRange(skill: SkillDef): Pair<Int, Int> {
-        val override = overrides[skill.id]
-        val min = override?.radiusMin ?: 3
-        val max = override?.radiusMax ?: skill.searchRadius.coerceAtLeast(5)
-        return Pair(min, max)
-    }
-
-    /**
      * Returns whether a skill/job is enabled.
      */
     fun isEnabled(skillId: String): Boolean {
@@ -92,8 +79,6 @@ object JobConfigOverrides {
                 mapOf(
                     "cooldownSeconds" to override.cooldownSeconds,
                     "searchRadius" to override.searchRadius,
-                    "radiusMin" to override.radiusMin,
-                    "radiusMax" to override.radiusMax,
                     "enabled" to override.enabled
                 )
             }
@@ -113,10 +98,8 @@ object JobConfigOverrides {
             for ((skillId, fields) in data) {
                 val cooldown = (fields["cooldownSeconds"] as? Double)?.toLong()
                 val radius = (fields["searchRadius"] as? Double)?.toInt()
-                val radiusMin = (fields["radiusMin"] as? Double)?.toInt()
-                val radiusMax = (fields["radiusMax"] as? Double)?.toInt()
                 val enabled = (fields["enabled"] as? Boolean) ?: true
-                overrides[skillId] = JobOverride(cooldown, radius, radiusMin, radiusMax, enabled)
+                overrides[skillId] = JobOverride(cooldown, radius, enabled)
             }
             Cobblebase.LOGGER.info("[Cobblebase] Loaded ${overrides.size} job config overrides")
         } catch (e: Exception) {

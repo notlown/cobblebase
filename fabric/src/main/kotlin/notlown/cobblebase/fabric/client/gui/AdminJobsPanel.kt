@@ -7,15 +7,14 @@ import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.text.Text
 import notlown.cobblebase.core.AdminJobDataCache
 import notlown.cobblebase.core.JobConfigOverrides
-import notlown.cobblebase.core.SkillDef
-import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.net.AdminJobsUpdateC2SPacket
 import java.util.function.Function
 
 /**
- * Full-width panel for the Admin GUI "Jobs" tab.
- * Shows all jobs from SkillRegistry in a scrollable list with per-job
- * cooldown, search radius, and enable/disable controls.
+ * Admin GUI "Jobs" tab — compact layout with category sidebar (left) and
+ * a job list (right). Each row exposes cooldown, search radius, and an
+ * enable toggle. The search radius written here is the value the executors
+ * actually use in-game (via SkillRegistry.getEffective).
  */
 class AdminJobsPanel(
     private val x: Int,
@@ -24,9 +23,13 @@ class AdminJobsPanel(
     private val h: Int,
     private val textRenderer: TextRenderer
 ) {
-    private val ROW_HEIGHT = 20
-    private val PADDING = 6
-    private val CATEGORY_HEADER_HEIGHT = 18
+    // Layout constants — kept tight on purpose so we fit a lot without scrolling
+    private val PADDING = 4
+    private val SIDEBAR_W = 78
+    private val ROW_H = 14
+    private val SCALE = 0.7f
+    private val BUTTON_AREA_H = 18
+    private val HEADER_H = 14
 
     private val CATEGORY_COLORS = mapOf(
         "gathering" to 0xFF4CAF50.toInt(),
@@ -38,29 +41,31 @@ class AdminJobsPanel(
         "social" to 0xFFFF55FF.toInt()
     )
 
-    private val CHECKBOX_ON = 0xFF4CAF50.toInt()
-    private val CHECKBOX_OFF = 0xFF555555.toInt()
     private val FIELD_BG = 0xFF2A2A3E.toInt()
     private val FIELD_BORDER = 0xFF4A4A6E.toInt()
-    private val FIELD_ACTIVE = 0xFF5A5A8E.toInt()
-    private val BUTTON_AREA_HEIGHT = 24
+    private val FIELD_ACTIVE = 0xFF7A7ABE.toInt()
+    private val SIDEBAR_BG = 0xCC15152A.toInt()
+    private val ROW_HOVER = 0x22FFFFFF
+    private val SEPARATOR = 0xFF3A3A5C.toInt()
+    private val CHECKBOX_ON = 0xFF4CAF50.toInt()
+    private val CHECKBOX_OFF = 0xFF555555.toInt()
 
     private var saveButton: ButtonWidget? = null
     private var resetButton: ButtonWidget? = null
 
+    private val jobEdits = mutableListOf<JobEditData>()
+    private val categories = mutableListOf<String>()
+    private var activeCategory: String = ""
+
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
 
-    // Editable job data
-    private val jobEdits = mutableListOf<JobEditData>()
-
-    // Active text field tracking
-    private var activeFieldJob: Int = -1  // index in jobEdits
+    private var activeFieldJob: Int = -1
     private var activeFieldType: FieldType = FieldType.NONE
     private var fieldText = ""
     private var cursorBlink = 0
 
-    enum class FieldType { NONE, COOLDOWN, RADIUS_MIN, RADIUS_MAX }
+    enum class FieldType { NONE, COOLDOWN, RADIUS }
 
     data class JobEditData(
         val skillId: String,
@@ -69,14 +74,15 @@ class AdminJobsPanel(
         val defaultCooldown: Long,
         val defaultRadius: Int,
         var cooldownSeconds: Long,
-        var radiusMin: Int,
-        var radiusMax: Int,
+        var searchRadius: Int,
         var enabled: Boolean,
         var dirty: Boolean = false
     )
 
     fun rebuild() {
         jobEdits.clear()
+        categories.clear()
+
         val allJobs = AdminJobDataCache.allJobs.values.sortedWith(
             compareBy({ it.category }, { it.name })
         )
@@ -91,320 +97,294 @@ class AdminJobsPanel(
                 defaultCooldown = job.cooldownSeconds,
                 defaultRadius = job.searchRadius,
                 cooldownSeconds = override?.cooldownSeconds ?: job.cooldownSeconds,
-                radiusMin = override?.radiusMin ?: 3,
-                radiusMax = override?.radiusMax ?: job.searchRadius.coerceAtLeast(5),
+                searchRadius = override?.searchRadius ?: job.searchRadius,
                 enabled = override?.enabled ?: true
             ))
+        }
+
+        // Build the unique category list in display order
+        val seen = linkedSetOf<String>()
+        for (j in jobEdits) seen.add(j.category)
+        categories.addAll(seen)
+
+        // "All" pseudo-category at index 0
+        categories.add(0, "all")
+
+        if (activeCategory.isEmpty() || activeCategory !in categories) {
+            activeCategory = "all"
         }
         scrollOffset = 0
     }
 
     fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
         saveButton = ButtonWidget.builder(Text.literal("\u00A72Save")) { commitActiveField(); saveAllChanges() }
-            .dimensions(x + w - 90, y + h - 18, 40, 14).build()
+            .dimensions(x + w - 86, y + h - 16, 40, 12).build()
         addWidget.apply(saveButton!!)
 
         resetButton = ButtonWidget.builder(Text.literal("\u00A7cReset")) { resetChanges() }
-            .dimensions(x + w - 46, y + h - 18, 42, 14).build()
+            .dimensions(x + w - 44, y + h - 16, 40, 12).build()
         addWidget.apply(resetButton!!)
     }
 
-    // Build rows: category headers + job rows
-    private data class GridRow(val isHeader: Boolean, val category: String = "", val jobIndex: Int = -1)
-
-    private fun buildGridRows(): List<GridRow> {
-        val rows = mutableListOf<GridRow>()
-        var lastCategory = ""
-        for ((i, job) in jobEdits.withIndex()) {
-            if (job.category != lastCategory) {
-                rows.add(GridRow(isHeader = true, category = job.category))
-                lastCategory = job.category
-            }
-            rows.add(GridRow(isHeader = false, jobIndex = i))
-        }
-        return rows
+    private fun visibleJobs(): List<Int> {
+        if (jobEdits.isEmpty()) return emptyList()
+        return jobEdits.indices.filter { activeCategory == "all" || jobEdits[it].category == activeCategory }
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // Background
         context.fill(x, y, x + w, y + h, 0xCC1E1E2E.toInt())
 
-        // Header
-        val scale = 0.75f
-        context.matrices.push()
-        context.matrices.translate((x + PADDING).toFloat(), (y + PADDING).toFloat(), 0f)
-        context.matrices.scale(scale, scale, 1f)
-        context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7lJob Configuration", 0, 0, 0xFFFFFF)
-        context.matrices.pop()
+        // Sidebar background
+        val sidebarX = x
+        val sidebarY = y
+        val sidebarH = h
+        context.fill(sidebarX, sidebarY, sidebarX + SIDEBAR_W, sidebarY + sidebarH, SIDEBAR_BG)
+        context.fill(sidebarX + SIDEBAR_W, sidebarY, sidebarX + SIDEBAR_W + 1, sidebarY + sidebarH, SEPARATOR)
+
+        // Sidebar header
+        drawScaledText(context, "\u00A7f\u00A7lCategories", sidebarX + PADDING, sidebarY + PADDING, 0xFFFFFF)
+
+        // Sidebar entries
+        var sy = sidebarY + PADDING + 11
+        for (cat in categories) {
+            val isActive = cat == activeCategory
+            val isHovered = mouseX in sidebarX..(sidebarX + SIDEBAR_W) && mouseY in sy..(sy + ROW_H)
+
+            if (isActive) context.fill(sidebarX + 1, sy, sidebarX + SIDEBAR_W, sy + ROW_H, 0x442196F3)
+            else if (isHovered) context.fill(sidebarX + 1, sy, sidebarX + SIDEBAR_W, sy + ROW_H, ROW_HOVER)
+
+            val color = CATEGORY_COLORS[cat] ?: 0xFFAAAAAA.toInt()
+            // Color dot
+            context.fill(sidebarX + 4, sy + 5, sidebarX + 8, sy + 9, color)
+
+            val label = if (cat == "all") "All Jobs" else cat.replaceFirstChar { it.uppercase() }
+            val count = if (cat == "all") jobEdits.size else jobEdits.count { it.category == cat }
+            val labelColor = if (isActive) 0xFFFFFF else 0xCCCCCC
+
+            drawScaledText(context, "$label ($count)", sidebarX + 11, sy + 3, labelColor)
+
+            sy += ROW_H
+            if (sy > sidebarY + sidebarH - ROW_H) break
+        }
+
+        // Right pane
+        val rightX = sidebarX + SIDEBAR_W + 2
+        val rightW = w - SIDEBAR_W - 2
+        val rightY = y
+
+        // Right pane header
+        drawScaledText(context, "\u00A7f\u00A7lJob Configuration", rightX + PADDING, rightY + PADDING, 0xFFFFFF)
 
         // Column headers
-        val colNameX = x + PADDING + 12
-        val colCooldownX = x + w - 280
-        val colRadiusMinX = x + w - 195
-        val colRadiusMaxX = x + w - 120
-        val colEnabledX = x + w - 50
-        val headerY = y + PADDING + 12
+        val colNameX = rightX + PADDING + 8
+        val fieldW = 38
+        val colCooldownX = rightX + rightW - 130
+        val colRadiusX = rightX + rightW - 86
+        val colEnabledX = rightX + rightW - 30
+        val headerY = rightY + PADDING + 9
 
-        context.matrices.push()
-        context.matrices.translate(0f, headerY.toFloat(), 0f)
-        context.matrices.scale(scale, scale, 1f)
-        context.drawTextWithShadow(textRenderer, "\u00A77Job Name", ((colNameX) / scale).toInt(), 0, 0xAAAAAA)
-        context.drawTextWithShadow(textRenderer, "\u00A77Cooldown (s)", ((colCooldownX) / scale).toInt(), 0, 0xAAAAAA)
-        context.drawTextWithShadow(textRenderer, "\u00A77Min", ((colRadiusMinX) / scale).toInt(), 0, 0xAAAAAA)
-        context.drawTextWithShadow(textRenderer, "\u00A77Max", ((colRadiusMaxX) / scale).toInt(), 0, 0xAAAAAA)
-        context.drawTextWithShadow(textRenderer, "\u00A77On", ((colEnabledX) / scale).toInt(), 0, 0xAAAAAA)
-        context.matrices.pop()
+        drawScaledText(context, "\u00A77Name", colNameX, headerY, 0xAAAAAA)
+        drawScaledText(context, "\u00A77Cooldown(s)", colCooldownX - 2, headerY, 0xAAAAAA)
+        drawScaledText(context, "\u00A77Radius", colRadiusX - 2, headerY, 0xAAAAAA)
+        drawScaledText(context, "\u00A77On", colEnabledX, headerY, 0xAAAAAA)
 
-        // Separator under headers
-        val listY = y + PADDING + 24
-        context.fill(x + 2, listY - 1, x + w - 2, listY, 0xFF3A3A5C.toInt())
+        val listY = rightY + PADDING + HEADER_H + 4
+        context.fill(rightX + 2, listY - 1, rightX + rightW - 4, listY, SEPARATOR)
 
-        val listH = h - PADDING - 28 - BUTTON_AREA_HEIGHT
-        val gridRows = buildGridRows()
-        val maxVisible = listH / ROW_HEIGHT
-        val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
+        val listH = h - (listY - y) - BUTTON_AREA_H - 2
+        val visible = visibleJobs()
+        val maxVisible = listH / ROW_H
+        val maxScroll = (visible.size - maxVisible).coerceAtLeast(0)
         scrollOffset = scrollOffset.coerceIn(0, maxScroll)
 
-        context.enableScissor(x, listY, x + w, listY + listH)
-
+        context.enableScissor(rightX, listY, rightX + rightW, listY + listH)
         cursorBlink++
 
-        for (i in 0 until maxVisible + 2) {
-            val idx = i + scrollOffset
-            if (idx >= gridRows.size) break
-            val row = gridRows[idx]
-            val rowY = listY + i * ROW_HEIGHT
+        for (i in 0 until maxVisible + 1) {
+            val visIdx = i + scrollOffset
+            if (visIdx >= visible.size) break
+            val jobIdx = visible[visIdx]
+            val job = jobEdits[jobIdx]
+            val rowY = listY + i * ROW_H
 
-            if (row.isHeader) {
-                val catColor = CATEGORY_COLORS[row.category] ?: 0xFFAAAAAA.toInt()
-                context.fill(x + 2, rowY, x + w - 6, rowY + ROW_HEIGHT, 0x22FFFFFF)
-                context.fill(x + 2, rowY + ROW_HEIGHT - 1, x + w - 6, rowY + ROW_HEIGHT, catColor)
-                val catName = row.category.replaceFirstChar { it.uppercase() }
-                context.matrices.push()
-                context.matrices.translate((x + PADDING).toFloat(), (rowY + 6).toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
-                context.drawTextWithShadow(textRenderer, "\u00A7l$catName", 0, 0, catColor)
-                context.matrices.pop()
-            } else {
-                val job = jobEdits[row.jobIndex]
-                val catColor = CATEGORY_COLORS[job.category] ?: 0xFFAAAAAA.toInt()
-                val nameColor = if (job.enabled) 0xFFFFFF else 0x666666
+            val isHovered = mouseX in rightX..(rightX + rightW - 4) && mouseY in rowY..(rowY + ROW_H)
+            if (isHovered) context.fill(rightX + 2, rowY, rightX + rightW - 4, rowY + ROW_H, ROW_HOVER)
 
-                // Hover highlight
-                val isHovered = mouseX in x..(x + w) && mouseY in rowY..(rowY + ROW_HEIGHT)
-                if (isHovered) {
-                    context.fill(x + 2, rowY, x + w - 6, rowY + ROW_HEIGHT, 0x11FFFFFF)
-                }
+            val catColor = CATEGORY_COLORS[job.category] ?: 0xFFAAAAAA.toInt()
+            // Category color stripe
+            context.fill(rightX + PADDING, rowY + 4, rightX + PADDING + 3, rowY + ROW_H - 3, catColor)
 
-                // Category dot
-                context.fill(x + PADDING, rowY + 7, x + PADDING + 4, rowY + 11, catColor)
-
-                // Job name (0.75x)
-                context.matrices.push()
-                context.matrices.translate((colNameX).toFloat(), (rowY + 6).toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
-                context.drawTextWithShadow(textRenderer, job.displayName, 0, 0, nameColor)
-                // Dirty indicator
-                if (job.dirty) {
-                    val nameW = textRenderer.getWidth(job.displayName)
-                    context.drawTextWithShadow(textRenderer, "\u00A7e*", nameW + 2, 0, 0xFFFF00)
-                }
-                // Show "override" tag if different from default
-                val isOverridden = job.cooldownSeconds != job.defaultCooldown || job.radiusMin != 3 || job.radiusMax != job.defaultRadius.coerceAtLeast(5) || !job.enabled
-                if (isOverridden && !job.dirty) {
-                    val nameW = textRenderer.getWidth(job.displayName)
-                    context.drawTextWithShadow(textRenderer, "\u00A76[o]", nameW + 2, 0, 0xFF9800)
-                }
-                context.matrices.pop()
-
-                // Cooldown field
-                val fieldW = 55
-                val fieldH = 14
-                val cooldownFieldX = colCooldownX
-                val fieldY = rowY + 3
-                val isCooldownActive = activeFieldJob == row.jobIndex && activeFieldType == FieldType.COOLDOWN
-                val cooldownBorder = if (isCooldownActive) FIELD_ACTIVE else FIELD_BORDER
-                context.fill(cooldownFieldX - 1, fieldY - 1, cooldownFieldX + fieldW + 1, fieldY + fieldH + 1, cooldownBorder)
-                context.fill(cooldownFieldX, fieldY, cooldownFieldX + fieldW, fieldY + fieldH, FIELD_BG)
-
-                val cooldownText = if (isCooldownActive) fieldText else job.cooldownSeconds.toString()
-                val cooldownColor = if (job.cooldownSeconds != job.defaultCooldown) 0xFFFF00 else 0xCCCCCC
-                context.matrices.push()
-                context.matrices.translate((cooldownFieldX + 3).toFloat(), (fieldY + 3).toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
-                context.drawTextWithShadow(textRenderer, cooldownText, 0, 0, cooldownColor)
-                // Cursor blink
-                if (isCooldownActive && (cursorBlink / 20) % 2 == 0) {
-                    val cursorX = textRenderer.getWidth(cooldownText)
-                    context.drawTextWithShadow(textRenderer, "|", cursorX, 0, 0xFFFFFF)
-                }
-                context.matrices.pop()
-
-                // Radius Min field
-                val radiusMinFieldX = colRadiusMinX
-                val isRadiusMinActive = activeFieldJob == row.jobIndex && activeFieldType == FieldType.RADIUS_MIN
-                val radiusMinBorder = if (isRadiusMinActive) FIELD_ACTIVE else FIELD_BORDER
-                context.fill(radiusMinFieldX - 1, fieldY - 1, radiusMinFieldX + fieldW + 1, fieldY + fieldH + 1, radiusMinBorder)
-                context.fill(radiusMinFieldX, fieldY, radiusMinFieldX + fieldW, fieldY + fieldH, FIELD_BG)
-
-                val radiusMinText = if (isRadiusMinActive) fieldText else job.radiusMin.toString()
-                val radiusMinColor = if (job.radiusMin != 3) 0xFFFF00 else 0xCCCCCC
-                context.matrices.push()
-                context.matrices.translate((radiusMinFieldX + 3).toFloat(), (fieldY + 3).toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
-                context.drawTextWithShadow(textRenderer, radiusMinText, 0, 0, radiusMinColor)
-                if (isRadiusMinActive && (cursorBlink / 20) % 2 == 0) {
-                    val cursorX = textRenderer.getWidth(radiusMinText)
-                    context.drawTextWithShadow(textRenderer, "|", cursorX, 0, 0xFFFFFF)
-                }
-                context.matrices.pop()
-
-                // Radius Max field
-                val radiusMaxFieldX = colRadiusMaxX
-                val isRadiusMaxActive = activeFieldJob == row.jobIndex && activeFieldType == FieldType.RADIUS_MAX
-                val radiusMaxBorder = if (isRadiusMaxActive) FIELD_ACTIVE else FIELD_BORDER
-                context.fill(radiusMaxFieldX - 1, fieldY - 1, radiusMaxFieldX + fieldW + 1, fieldY + fieldH + 1, radiusMaxBorder)
-                context.fill(radiusMaxFieldX, fieldY, radiusMaxFieldX + fieldW, fieldY + fieldH, FIELD_BG)
-
-                val radiusMaxText = if (isRadiusMaxActive) fieldText else job.radiusMax.toString()
-                val radiusMaxColor = if (job.radiusMax != job.defaultRadius.coerceAtLeast(5)) 0xFFFF00 else 0xCCCCCC
-                context.matrices.push()
-                context.matrices.translate((radiusMaxFieldX + 3).toFloat(), (fieldY + 3).toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
-                context.drawTextWithShadow(textRenderer, radiusMaxText, 0, 0, radiusMaxColor)
-                if (isRadiusMaxActive && (cursorBlink / 20) % 2 == 0) {
-                    val cursorX = textRenderer.getWidth(radiusMaxText)
-                    context.drawTextWithShadow(textRenderer, "|", cursorX, 0, 0xFFFFFF)
-                }
-                context.matrices.pop()
-
-                // Enable/disable checkbox
-                val cbX = colEnabledX + 5
-                val cbY = rowY + 5
-                val cbSize = 10
-                val cbColor = if (job.enabled) CHECKBOX_ON else CHECKBOX_OFF
-                context.fill(cbX, cbY, cbX + cbSize, cbY + cbSize, cbColor)
-                if (job.enabled) {
-                    context.matrices.push()
-                    context.matrices.translate((cbX + 1).toFloat(), (cbY + 1).toFloat(), 0f)
-                    context.matrices.scale(scale, scale, 1f)
-                    context.drawTextWithShadow(textRenderer, "\u2713", 0, 0, 0xFFFFFF)
-                    context.matrices.pop()
-                }
+            // Name
+            val nameColor = if (job.enabled) 0xFFFFFF else 0x666666
+            drawScaledText(context, job.displayName, colNameX, rowY + 3, nameColor)
+            // Dirty / overridden marker
+            val nameW = (textRenderer.getWidth(job.displayName) * SCALE).toInt() + 2
+            if (job.dirty) {
+                drawScaledText(context, "\u00A7e*", colNameX + nameW, rowY + 3, 0xFFFF00)
+            } else if (job.cooldownSeconds != job.defaultCooldown || job.searchRadius != job.defaultRadius || !job.enabled) {
+                drawScaledText(context, "\u00A76\u00B7", colNameX + nameW, rowY + 3, 0xFF9800)
             }
+
+            // Cooldown field
+            val fieldY = rowY + 1
+            val fieldH = ROW_H - 2
+            renderField(
+                context,
+                colCooldownX, fieldY, fieldW, fieldH,
+                if (activeFieldJob == jobIdx && activeFieldType == FieldType.COOLDOWN) fieldText else job.cooldownSeconds.toString(),
+                isActive = activeFieldJob == jobIdx && activeFieldType == FieldType.COOLDOWN,
+                isOverride = job.cooldownSeconds != job.defaultCooldown
+            )
+
+            // Radius field
+            renderField(
+                context,
+                colRadiusX, fieldY, fieldW, fieldH,
+                if (activeFieldJob == jobIdx && activeFieldType == FieldType.RADIUS) fieldText else job.searchRadius.toString(),
+                isActive = activeFieldJob == jobIdx && activeFieldType == FieldType.RADIUS,
+                isOverride = job.searchRadius != job.defaultRadius
+            )
+
+            // Checkbox
+            val cbX = colEnabledX + 2
+            val cbY = rowY + 3
+            val cbSize = 8
+            context.fill(cbX, cbY, cbX + cbSize, cbY + cbSize, if (job.enabled) CHECKBOX_ON else CHECKBOX_OFF)
         }
 
         context.disableScissor()
 
         // Scrollbar
-        if (gridRows.size > maxVisible) {
-            val trackX = x + w - 3
+        if (visible.size > maxVisible) {
+            val trackX = rightX + rightW - 3
             val trackH = listH
-            val thumbH = ((maxVisible.toFloat() / gridRows.size) * trackH).toInt().coerceAtLeast(10)
+            val thumbH = ((maxVisible.toFloat() / visible.size) * trackH).toInt().coerceAtLeast(8)
             val thumbY = listY + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
             context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
 
-        // Unsaved indicator (rendered next to the save button)
-        val hasUnsaved = jobEdits.any { it.dirty }
-        if (hasUnsaved) {
-            val sb = saveButton
-            if (sb != null) {
-                val indicatorX = sb.x - 60
-                val indicatorY = sb.y + 3
-                context.matrices.push()
-                context.matrices.translate(indicatorX.toFloat(), indicatorY.toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
-                context.drawTextWithShadow(textRenderer, "\u00A7e*unsaved", 0, 0, 0xFFFF00)
-                context.matrices.pop()
+        // Unsaved indicator near save button
+        if (jobEdits.any { it.dirty }) {
+            saveButton?.let { sb ->
+                drawScaledText(context, "\u00A7e*unsaved", sb.x - 50, sb.y + 3, 0xFFFF00)
             }
         }
     }
 
-    fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        val listY = y + PADDING + 24
-        val listH = h - PADDING - 28 - BUTTON_AREA_HEIGHT
-        val gridRows = buildGridRows()
-        val maxVisible = listH / ROW_HEIGHT
-        val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
-
-        val colCooldownX = x + w - 280
-        val colRadiusMinX = x + w - 195
-        val colRadiusMaxX = x + w - 120
-        val colEnabledX = x + w - 50
-        val fieldW = 55
-
-        // Check scrollbar click
-        val trackX = x + w - 3
-        if (maxScroll > 0 && mouseX >= trackX - 4 && mouseX <= trackX + 4 && mouseY >= listY && mouseY <= listY + listH) {
-            isDraggingScrollbar = true
-            val relativeY = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (relativeY * maxScroll).toInt()
-            return true
+    private fun renderField(
+        context: DrawContext,
+        fx: Int, fy: Int, fw: Int, fh: Int,
+        text: String,
+        isActive: Boolean,
+        isOverride: Boolean
+    ) {
+        val border = if (isActive) FIELD_ACTIVE else FIELD_BORDER
+        context.fill(fx - 1, fy - 1, fx + fw + 1, fy + fh + 1, border)
+        context.fill(fx, fy, fx + fw, fy + fh, FIELD_BG)
+        val color = if (isOverride) 0xFFFF00 else 0xCCCCCC
+        drawScaledText(context, text, fx + 2, fy + 2, color)
+        if (isActive && (cursorBlink / 20) % 2 == 0) {
+            val cursorX = fx + 2 + (textRenderer.getWidth(text) * SCALE).toInt()
+            drawScaledText(context, "|", cursorX, fy + 2, 0xFFFFFF)
         }
+    }
 
-        // Commit any active field first
-        commitActiveField()
+    private fun drawScaledText(context: DrawContext, text: String, px: Int, py: Int, color: Int) {
+        context.matrices.push()
+        context.matrices.translate(px.toFloat(), py.toFloat(), 0f)
+        context.matrices.scale(SCALE, SCALE, 1f)
+        context.drawTextWithShadow(textRenderer, text, 0, 0, color)
+        context.matrices.pop()
+    }
 
-        if (mouseX >= x && mouseX <= x + w && mouseY >= listY && mouseY <= listY + listH) {
-            val rowVisIdx = ((mouseY - listY) / ROW_HEIGHT).toInt()
-            val rowIdx = rowVisIdx + scrollOffset
-
-            if (rowIdx in gridRows.indices) {
-                val row = gridRows[rowIdx]
-                if (!row.isHeader && row.jobIndex >= 0) {
-                    val job = jobEdits[row.jobIndex]
-                    val fieldY = listY + rowVisIdx * ROW_HEIGHT + 3
-                    val fieldH = 14
-
-                    // Check cooldown field click
-                    if (mouseX >= colCooldownX && mouseX <= colCooldownX + fieldW &&
-                        mouseY >= fieldY && mouseY <= fieldY + fieldH) {
-                        activeFieldJob = row.jobIndex
-                        activeFieldType = FieldType.COOLDOWN
-                        fieldText = job.cooldownSeconds.toString()
-                        return true
-                    }
-
-                    // Check radius min field click
-                    if (mouseX >= colRadiusMinX && mouseX <= colRadiusMinX + fieldW &&
-                        mouseY >= fieldY && mouseY <= fieldY + fieldH) {
-                        activeFieldJob = row.jobIndex
-                        activeFieldType = FieldType.RADIUS_MIN
-                        fieldText = job.radiusMin.toString()
-                        return true
-                    }
-
-                    // Check radius max field click
-                    if (mouseX >= colRadiusMaxX && mouseX <= colRadiusMaxX + fieldW &&
-                        mouseY >= fieldY && mouseY <= fieldY + fieldH) {
-                        activeFieldJob = row.jobIndex
-                        activeFieldType = FieldType.RADIUS_MAX
-                        fieldText = job.radiusMax.toString()
-                        return true
-                    }
-
-                    // Check enabled checkbox click
-                    val cbX = colEnabledX + 5
-                    val cbY = listY + rowVisIdx * ROW_HEIGHT + 5
-                    val cbSize = 10
-                    if (mouseX >= cbX && mouseX <= cbX + cbSize &&
-                        mouseY >= cbY && mouseY <= cbY + cbSize) {
-                        job.enabled = !job.enabled
-                        job.dirty = true
-                        return true
-                    }
-
-                    // Clicking elsewhere in the row deactivates field
-                    activeFieldJob = -1
-                    activeFieldType = FieldType.NONE
+    fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Sidebar click — switch category
+        val sidebarX = x
+        val sidebarY = y
+        if (mouseX in sidebarX.toDouble()..(sidebarX + SIDEBAR_W).toDouble() &&
+            mouseY in sidebarY.toDouble()..(sidebarY + h).toDouble()) {
+            val relY = mouseY - (sidebarY + PADDING + 11)
+            if (relY >= 0) {
+                val idx = (relY / ROW_H).toInt()
+                if (idx in categories.indices) {
+                    commitActiveField()
+                    activeCategory = categories[idx]
+                    scrollOffset = 0
                     return true
                 }
             }
+            return true
         }
 
-        // Click outside rows deactivates field
+        val rightX = sidebarX + SIDEBAR_W + 2
+        val rightW = w - SIDEBAR_W - 2
+        val rightY = y
+        val listY = rightY + PADDING + HEADER_H + 4
+        val listH = h - (listY - y) - BUTTON_AREA_H - 2
+
+        val fieldW = 38
+        val colCooldownX = rightX + rightW - 130
+        val colRadiusX = rightX + rightW - 86
+        val colEnabledX = rightX + rightW - 30
+
+        // Scrollbar drag start
+        val visible = visibleJobs()
+        val maxVisible = listH / ROW_H
+        val maxScroll = (visible.size - maxVisible).coerceAtLeast(0)
+        val trackX = rightX + rightW - 3
+        if (maxScroll > 0 && mouseX in (trackX - 4).toDouble()..(trackX + 4).toDouble() &&
+            mouseY in listY.toDouble()..(listY + listH).toDouble()) {
+            isDraggingScrollbar = true
+            val rel = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (rel * maxScroll).toInt()
+            return true
+        }
+
+        commitActiveField()
+
+        if (mouseX in rightX.toDouble()..(rightX + rightW).toDouble() &&
+            mouseY in listY.toDouble()..(listY + listH).toDouble()) {
+            val visRow = ((mouseY - listY) / ROW_H).toInt()
+            val visIdx = visRow + scrollOffset
+            if (visIdx in visible.indices) {
+                val jobIdx = visible[visIdx]
+                val job = jobEdits[jobIdx]
+                val fieldY = listY + visRow * ROW_H + 1
+                val fieldH = ROW_H - 2
+
+                if (mouseX in colCooldownX.toDouble()..(colCooldownX + fieldW).toDouble() &&
+                    mouseY in fieldY.toDouble()..(fieldY + fieldH).toDouble()) {
+                    activeFieldJob = jobIdx
+                    activeFieldType = FieldType.COOLDOWN
+                    fieldText = job.cooldownSeconds.toString()
+                    return true
+                }
+                if (mouseX in colRadiusX.toDouble()..(colRadiusX + fieldW).toDouble() &&
+                    mouseY in fieldY.toDouble()..(fieldY + fieldH).toDouble()) {
+                    activeFieldJob = jobIdx
+                    activeFieldType = FieldType.RADIUS
+                    fieldText = job.searchRadius.toString()
+                    return true
+                }
+
+                val cbX = colEnabledX + 2
+                val cbY = listY + visRow * ROW_H + 3
+                val cbSize = 8
+                if (mouseX in cbX.toDouble()..(cbX + cbSize).toDouble() &&
+                    mouseY in cbY.toDouble()..(cbY + cbSize).toDouble()) {
+                    job.enabled = !job.enabled
+                    job.dirty = true
+                    return true
+                }
+
+                activeFieldJob = -1
+                activeFieldType = FieldType.NONE
+                return true
+            }
+        }
+
         activeFieldJob = -1
         activeFieldType = FieldType.NONE
         return false
@@ -413,68 +393,45 @@ class AdminJobsPanel(
     private fun commitActiveField() {
         if (activeFieldJob < 0 || activeFieldType == FieldType.NONE) return
         val job = jobEdits[activeFieldJob]
-
         when (activeFieldType) {
             FieldType.COOLDOWN -> {
-                val newValue = fieldText.toLongOrNull()
-                if (newValue != null && newValue > 0) {
-                    job.cooldownSeconds = newValue
+                fieldText.toLongOrNull()?.takeIf { it > 0 }?.let {
+                    job.cooldownSeconds = it
                     job.dirty = true
                 }
             }
-            FieldType.RADIUS_MIN -> {
-                val newValue = fieldText.toIntOrNull()
-                if (newValue != null && newValue > 0) {
-                    job.radiusMin = newValue
-                    job.dirty = true
-                }
-            }
-            FieldType.RADIUS_MAX -> {
-                val newValue = fieldText.toIntOrNull()
-                if (newValue != null && newValue > 0) {
-                    job.radiusMax = newValue
+            FieldType.RADIUS -> {
+                fieldText.toIntOrNull()?.takeIf { it > 0 }?.let {
+                    job.searchRadius = it
                     job.dirty = true
                 }
             }
             FieldType.NONE -> {}
         }
-
         activeFieldJob = -1
         activeFieldType = FieldType.NONE
     }
 
     private fun saveAllChanges() {
         val newOverrides = AdminJobDataCache.jobOverrides.toMutableMap()
-
         for (job in jobEdits) {
             if (!job.dirty) continue
-
             val cooldownOverride = if (job.cooldownSeconds != job.defaultCooldown) job.cooldownSeconds else null
-            val radiusMinOverride = if (job.radiusMin != 3) job.radiusMin else null
-            val radiusMaxOverride = if (job.radiusMax != job.defaultRadius.coerceAtLeast(5)) job.radiusMax else null
-
+            val radiusOverride = if (job.searchRadius != job.defaultRadius) job.searchRadius else null
             ClientPlayNetworking.send(AdminJobsUpdateC2SPacket(
-                job.skillId,
-                cooldownOverride,
-                radiusMinOverride,
-                radiusMaxOverride,
-                job.enabled
+                job.skillId, cooldownOverride, radiusOverride, job.enabled
             ))
-
-            if (cooldownOverride == null && radiusMinOverride == null && radiusMaxOverride == null && job.enabled) {
+            if (cooldownOverride == null && radiusOverride == null && job.enabled) {
                 newOverrides.remove(job.skillId)
             } else {
                 newOverrides[job.skillId] = JobConfigOverrides.JobOverride(
                     cooldownSeconds = cooldownOverride,
-                    radiusMin = radiusMinOverride,
-                    radiusMax = radiusMaxOverride,
+                    searchRadius = radiusOverride,
                     enabled = job.enabled
                 )
             }
-
             job.dirty = false
         }
-
         AdminJobDataCache.update(AdminJobDataCache.allJobs, newOverrides)
     }
 
@@ -495,38 +452,34 @@ class AdminJobsPanel(
 
     fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
         if (activeFieldJob < 0 || activeFieldType == FieldType.NONE) return false
-
-        // Backspace
-        if (keyCode == 259 && fieldText.isNotEmpty()) {
+        if (keyCode == 259 && fieldText.isNotEmpty()) { // backspace
             fieldText = fieldText.dropLast(1)
             return true
         }
-
-        // Enter: commit
-        if (keyCode == 257 || keyCode == 335) {
+        if (keyCode == 257 || keyCode == 335) { // enter
             commitActiveField()
             return true
         }
-
-        // Escape: cancel
-        if (keyCode == 256) {
+        if (keyCode == 256) { // escape
             activeFieldJob = -1
             activeFieldType = FieldType.NONE
             return true
         }
-
         return false
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
         if (isDraggingScrollbar) {
-            val listY = y + PADDING + 24
-            val listH = h - PADDING - 28 - BUTTON_AREA_HEIGHT
-            val gridRows = buildGridRows()
-            val maxVisible = listH / ROW_HEIGHT
-            val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
-            val relativeY = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (relativeY * maxScroll).toInt()
+            val rightX = x + SIDEBAR_W + 2
+            val rightW = w - SIDEBAR_W - 2
+            val rightY = y
+            val listY = rightY + PADDING + HEADER_H + 4
+            val listH = h - (listY - y) - BUTTON_AREA_H - 2
+            val visible = visibleJobs()
+            val maxVisible = listH / ROW_H
+            val maxScroll = (visible.size - maxVisible).coerceAtLeast(0)
+            val rel = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (rel * maxScroll).toInt()
             return true
         }
         return false
@@ -541,11 +494,14 @@ class AdminJobsPanel(
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
-        if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
-            val gridRows = buildGridRows()
-            val listH = h - PADDING - 28 - BUTTON_AREA_HEIGHT
-            val maxVisible = listH / ROW_HEIGHT
-            val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
+        val rightX = x + SIDEBAR_W + 2
+        if (mouseX >= rightX && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
+            val rightY = y
+            val listY = rightY + PADDING + HEADER_H + 4
+            val listH = h - (listY - y) - BUTTON_AREA_H - 2
+            val visible = visibleJobs()
+            val maxVisible = listH / ROW_H
+            val maxScroll = (visible.size - maxVisible).coerceAtLeast(0)
             scrollOffset = (scrollOffset - verticalAmount.toInt() * 3).coerceIn(0, maxScroll)
             return true
         }

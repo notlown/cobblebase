@@ -432,10 +432,17 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         player: net.minecraft.server.network.ServerPlayerEntity,
         context: net.neoforged.neoforge.network.handling.IPayloadContext
     ) {
+        // Filter against Cobblemon's runtime species registry so the admin GUI
+        // only lists mons that are actually installed on this server (so e.g.
+        // fakemons from addons you don't have are hidden). Override entries
+        // are always kept regardless of registry presence.
         val allSpecies = try {
+            val installed = notlown.cobblebase.core.CobblemonSpeciesHelper.getInstalledSpeciesNames()
             val registrySpecies = SpeciesSkillRegistry.getAllAssigned().keys.toList()
             val overrideSpecies = SpeciesSkillOverrides.getAllOverriddenSpecies()
-            (registrySpecies + overrideSpecies).distinct().sorted()
+            val merged = (registrySpecies + overrideSpecies).distinct()
+            if (installed.isEmpty()) merged.sorted()
+            else merged.filter { it.lowercase() in installed || it in overrideSpecies }.sorted()
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to get species list: ${e.message}")
             emptyList()

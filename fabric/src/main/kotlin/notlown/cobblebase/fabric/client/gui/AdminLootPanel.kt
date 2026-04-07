@@ -46,30 +46,35 @@ class AdminLootPanel(
     companion object {
         private const val POOL_SIZE = 25
         private const val PADDING = 4
-        private const val SIDEBAR_W = 116
+        private const val SIDEBAR_W = 88
         private const val ROW_H = 18
         private const val FOOTER_H = 18
-        private const val SCALE = 0.7f
+        private const val SCALE = 0.65f
 
-        // Job base name → human-readable label.
+        // Job base name → human-readable label. These match the names used
+        // in the Skills tab (loaded from the skill JSONs).
         private val PRETTY_NAMES = linkedMapOf(
             "mining" to "Mining",
-            "finder_bal" to "Finder: Balls",
-            "finder_evo" to "Finder: Evolution",
-            "finder_exp" to "Finder: Experience",
-            "finder_food" to "Finder: Food",
-            "finder_hea" to "Finder: Healing",
-            "finder_held" to "Finder: Held Items",
-            "finder_ore" to "Finder: Ores",
-            "finder_see" to "Finder: Seeds",
-            "finder_smith" to "Finder: Smithing",
-            "finder_stat" to "Finder: Statues",
-            "finder_treasure" to "Finder: Treasure",
-            "finder_bui" to "Finder: Building",
+            "finder_bal" to "Collector",
+            "finder_evo" to "Alchemist",
+            "finder_exp" to "Scholar",
+            "finder_food" to "Chef",
+            "finder_hea" to "Pharmacist",
+            "finder_held" to "Armorer",
+            "finder_ore" to "Excavator",
+            "finder_see" to "Botanist",
+            "finder_smith" to "Smith",
+            "finder_stat" to "Trainer",
+            "finder_treasure" to "Prospector",
+            "finder_bui" to "Architect",
             "honey_collect" to "Honey Collect",
             "dive_treasure" to "Dive Treasure"
         )
+        // Order for *display* in the rarity tab bar (left to right).
         private val RARITY_ORDER = listOf("common", "uncommon", "rare", "ultra_rare")
+        // Order for *suffix matching* — longest first so "ultra_rare" wins
+        // over "rare" when both would match.
+        private val RARITY_MATCH_ORDER = listOf("ultra_rare", "uncommon", "rare", "common")
         private val RARITY_LABELS = mapOf(
             "common" to "Common",
             "uncommon" to "Uncommon",
@@ -157,7 +162,7 @@ class AdminLootPanel(
 
         // Pre-allocate row pool
         repeat(POOL_SIZE) { idx ->
-            val itemF = TextFieldWidget(textRenderer, 0, 0, 200, 12, Text.literal("Item ID"))
+            val itemF = TextFieldWidget(textRenderer, 0, 0, 180, 12, Text.literal("Item ID"))
             itemF.setMaxLength(64)
             itemF.setChangedListener { v ->
                 if (idx in editEntries.indices) {
@@ -204,7 +209,7 @@ class AdminLootPanel(
     }
 
     private fun numberField(onChange: (Int) -> Unit): TextFieldWidget {
-        val f = TextFieldWidget(textRenderer, 0, 0, 24, 12, Text.literal(""))
+        val f = TextFieldWidget(textRenderer, 0, 0, 22, 12, Text.literal(""))
         f.setMaxLength(5)
         f.setChangedListener { v -> v.toIntOrNull()?.let { onChange(it); dirty = true } }
         return f
@@ -217,8 +222,9 @@ class AdminLootPanel(
         val grouped = LinkedHashMap<String, LinkedHashMap<String, String>>()
 
         for (id in ids) {
-            // Detect "_common", "_uncommon", "_rare", "_ultra_rare" suffix
-            val rarity = RARITY_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
+            // Detect "_common", "_uncommon", "_rare", "_ultra_rare" suffix.
+            // Check longest suffix first so "ultra_rare" wins over "rare".
+            val rarity = RARITY_MATCH_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
             val base = if (rarity.isEmpty()) id else id.removeSuffix("_$rarity")
             val map = grouped.getOrPut(base) { LinkedHashMap() }
             map[rarity] = "cobblebase:$id"
@@ -260,10 +266,25 @@ class AdminLootPanel(
         for ((i, rw) in rowPool.withIndex()) {
             if (i < editEntries.size) {
                 val e = editEntries[i]
-                if (rw.itemField.text != e.itemId) rw.itemField.text = e.itemId
-                if (rw.weightField.text != e.weight.toString()) rw.weightField.text = e.weight.toString()
-                if (rw.minField.text != e.minCount.toString()) rw.minField.text = e.minCount.toString()
-                if (rw.maxField.text != e.maxCount.toString()) rw.maxField.text = e.maxCount.toString()
+                if (rw.itemField.text != e.itemId) {
+                    rw.itemField.text = e.itemId
+                    // Reset cursor + scroll to the start so the field shows the
+                    // beginning of the id (e.g. "cobblemon:") instead of the
+                    // tail end the user can't read.
+                    rw.itemField.setCursor(0, false)
+                }
+                if (rw.weightField.text != e.weight.toString()) {
+                    rw.weightField.text = e.weight.toString()
+                    rw.weightField.setCursor(0, false)
+                }
+                if (rw.minField.text != e.minCount.toString()) {
+                    rw.minField.text = e.minCount.toString()
+                    rw.minField.setCursor(0, false)
+                }
+                if (rw.maxField.text != e.maxCount.toString()) {
+                    rw.maxField.text = e.maxCount.toString()
+                    rw.maxField.setCursor(0, false)
+                }
             } else {
                 rw.itemField.text = ""
                 rw.weightField.text = ""
@@ -405,10 +426,10 @@ class AdminLootPanel(
         // Column headers — column X positions also drive the row widget layout below
         val headerY = y + 40
         val colItemX = rightX + PADDING + 18
-        val colWeightX = rightX + PADDING + 222
-        val colMinX = rightX + PADDING + 250
-        val colMaxX = rightX + PADDING + 278
-        val colActionX = rightX + PADDING + 306
+        val colWeightX = rightX + PADDING + 200
+        val colMinX = rightX + PADDING + 226
+        val colMaxX = rightX + PADDING + 252
+        val colActionX = rightX + PADDING + 280
         drawScaled(context, "\u00A77Item", colItemX, headerY, 0xAAAAAA, SCALE)
         drawScaled(context, "\u00A77W", colWeightX, headerY, 0xAAAAAA, SCALE)
         drawScaled(context, "\u00A77Min", colMinX, headerY, 0xAAAAAA, SCALE)
@@ -524,7 +545,7 @@ class AdminLootPanel(
         val ids = AdminLootDataCache.tables.map { it.id.removePrefix("cobblebase:") }
         val bases = HashSet<String>()
         for (id in ids) {
-            val rarity = RARITY_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
+            val rarity = RARITY_MATCH_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
             bases.add(if (rarity.isEmpty()) id else id.removeSuffix("_$rarity"))
         }
         return bases.size

@@ -1,9 +1,0 @@
-{
-  "species": "chesture",
-  "skills": [
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    }
-  ]
-}

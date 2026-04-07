@@ -1,9 +1,0 @@
-{
-  "species": "grifowl",
-  "skills": [
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    }
-  ]
-}

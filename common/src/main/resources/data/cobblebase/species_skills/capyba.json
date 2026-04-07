@@ -1,9 +1,0 @@
-{
-  "species": "capyba",
-  "skills": [
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    }
-  ]
-}

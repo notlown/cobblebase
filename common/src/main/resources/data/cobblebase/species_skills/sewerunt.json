@@ -1,9 +1,0 @@
-{
-  "species": "sewerunt",
-  "skills": [
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    }
-  ]
-}

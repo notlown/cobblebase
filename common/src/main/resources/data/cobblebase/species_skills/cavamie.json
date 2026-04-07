@@ -1,9 +1,0 @@
-{
-  "species": "cavamie",
-  "skills": [
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    }
-  ]
-}

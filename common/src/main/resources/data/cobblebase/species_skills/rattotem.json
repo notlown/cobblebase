@@ -1,9 +1,0 @@
-{
-  "species": "rattotem",
-  "skills": [
-    {
-      "skillId": "cobblebase:gatherer",
-      "proficiency": 2
-    }
-  ]
-}

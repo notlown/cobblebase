@@ -70,6 +70,7 @@ class AdminJobsPanel(
     data class JobEditData(
         val skillId: String,
         val displayName: String,
+        val description: String,
         val category: String,
         val defaultCooldown: Long,
         val defaultRadius: Int,
@@ -78,6 +79,17 @@ class AdminJobsPanel(
         var enabled: Boolean,
         var dirty: Boolean = false
     )
+
+    /**
+     * Tooltip lines to render after the widgets layer (set during render(),
+     * read by AdminScreen). Empty when nothing should be shown.
+     */
+    var pendingTooltip: List<String> = emptyList()
+        private set
+    var tooltipX: Int = 0
+        private set
+    var tooltipY: Int = 0
+        private set
 
     fun rebuild() {
         jobEdits.clear()
@@ -93,6 +105,7 @@ class AdminJobsPanel(
             jobEdits.add(JobEditData(
                 skillId = job.id,
                 displayName = job.name,
+                description = job.description,
                 category = job.category,
                 defaultCooldown = job.cooldownSeconds,
                 defaultRadius = job.searchRadius,
@@ -132,6 +145,9 @@ class AdminJobsPanel(
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // Reset tooltip request — render() will set it again if hovering
+        pendingTooltip = emptyList()
+
         // Background
         context.fill(x, y, x + w, y + h, 0xCC1E1E2E.toInt())
 
@@ -218,8 +234,21 @@ class AdminJobsPanel(
             // Name
             val nameColor = if (job.enabled) 0xFFFFFF else 0x666666
             drawScaledText(context, job.displayName, colNameX, rowY + 3, nameColor)
-            // Dirty / overridden marker
             val nameW = (textRenderer.getWidth(job.displayName) * SCALE).toInt() + 2
+
+            // Tooltip on hover over the name area (left of cooldown column)
+            if (mouseX in colNameX..(colCooldownX - 4) && mouseY in rowY..(rowY + ROW_H)) {
+                val tip = mutableListOf<String>()
+                tip.add("\u00A7f\u00A7l${job.displayName}")
+                if (job.description.isNotBlank()) tip.add("\u00A77${job.description}")
+                tip.add("\u00A78Category: \u00A7f${job.category.replaceFirstChar { it.uppercase() }}")
+                tip.add("\u00A78Default cooldown: \u00A7f${job.defaultCooldown}s   \u00A78Default radius: \u00A7f${job.defaultRadius}")
+                pendingTooltip = tip
+                tooltipX = mouseX
+                tooltipY = mouseY
+            }
+
+            // Dirty / overridden marker
             if (job.dirty) {
                 drawScaledText(context, "\u00A7e*", colNameX + nameW, rowY + 3, 0xFFFF00)
             } else if (job.cooldownSeconds != job.defaultCooldown || job.searchRadius != job.defaultRadius || !job.enabled) {

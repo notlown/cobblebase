@@ -37,11 +37,13 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     private lateinit var skillEditorPanel: AdminSkillEditorPanel
     private lateinit var jobsPanel: AdminJobsPanel
     private lateinit var generalPanel: AdminGeneralPanel
+    private lateinit var wikiPanel: AdminWikiPanel
 
     // Track widgets per tab for visibility toggling
     private val speciesWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
     private val jobsWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
     private val generalWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
+    private val wikiWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
 
     override fun init() {
         super.init()
@@ -78,10 +80,15 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             panelX, contentY, panelW, panelH - 22 - TAB_HEIGHT, textRenderer
         )
 
+        wikiPanel = AdminWikiPanel(
+            panelX, contentY, panelW, panelH - 22 - TAB_HEIGHT, textRenderer
+        )
+
         clearChildren()
         speciesWidgets.clear()
         jobsWidgets.clear()
         generalWidgets.clear()
+        wikiWidgets.clear()
 
         // Init list panel search field
         speciesListPanel.init { widget: TextFieldWidget ->
@@ -108,6 +115,13 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             widget
         }
 
+        // Init wiki panel widgets
+        wikiPanel.init { widget ->
+            wikiWidgets.add(widget)
+            addDrawableChild(widget)
+            widget
+        }
+
         updateWidgetVisibility()
     }
 
@@ -115,6 +129,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         for (w in speciesWidgets) w.visible = (activeTab == "species")
         for (w in jobsWidgets) w.visible = (activeTab == "jobs")
         for (w in generalWidgets) w.visible = (activeTab == "general")
+        for (w in wikiWidgets) w.visible = (activeTab == "wiki")
     }
 
     private fun getTabBarY(): Int = panelY + 22
@@ -139,6 +154,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         val speciesTabX = panelX + 4
         val jobsTabX = speciesTabX + tabW + 4
         val generalTabX = jobsTabX + tabW + 4
+        val wikiTabX = generalTabX + tabW + 4
         val scale = 0.75f
 
         renderTab(context, "Species", speciesTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
@@ -147,6 +163,8 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             activeTab == "jobs", mouseX, mouseY, scale)
         renderTab(context, "General", generalTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
             activeTab == "general", mouseX, mouseY, scale)
+        renderTab(context, "Wiki", wikiTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
+            activeTab == "wiki", mouseX, mouseY, scale)
 
         // Render active tab content
         when (activeTab) {
@@ -160,6 +178,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             }
             "jobs" -> jobsPanel.render(context, mouseX, mouseY, delta)
             "general" -> generalPanel.render(context, mouseX, mouseY, delta)
+            "wiki" -> wikiPanel.render(context, mouseX, mouseY, delta)
         }
 
         // Render widgets without calling super.render() (avoids 1.21+ blur shader)
@@ -167,6 +186,12 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             if (child is Drawable) {
                 child.render(context, mouseX, mouseY, delta)
             }
+        }
+
+        // Tooltips render on top of everything
+        if (activeTab == "jobs" && jobsPanel.pendingTooltip.isNotEmpty()) {
+            val lines = jobsPanel.pendingTooltip.map { Text.literal(it) }
+            context.drawTooltip(textRenderer, lines, jobsPanel.tooltipX, jobsPanel.tooltipY)
         }
     }
 
@@ -205,6 +230,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         val jobsTabX = speciesTabX + tabW + 4
 
         val generalTabX = jobsTabX + tabW + 4
+        val wikiTabX = generalTabX + tabW + 4
         if (mouseY >= tabBarY + 2 && mouseY <= tabBarY + TAB_HEIGHT - 1) {
             if (mouseX >= speciesTabX && mouseX <= speciesTabX + tabW) {
                 activeTab = "species"
@@ -218,6 +244,11 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             }
             if (mouseX >= generalTabX && mouseX <= generalTabX + tabW) {
                 activeTab = "general"
+                updateWidgetVisibility()
+                return true
+            }
+            if (mouseX >= wikiTabX && mouseX <= wikiTabX + tabW) {
+                activeTab = "wiki"
                 updateWidgetVisibility()
                 return true
             }
@@ -236,6 +267,9 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             "general" -> {
                 if (super.mouseClicked(mouseX, mouseY, button)) return true
                 if (generalPanel.mouseClicked(mouseX, mouseY, button)) return true
+            }
+            "wiki" -> {
+                if (super.mouseClicked(mouseX, mouseY, button)) return true
             }
         }
         return false

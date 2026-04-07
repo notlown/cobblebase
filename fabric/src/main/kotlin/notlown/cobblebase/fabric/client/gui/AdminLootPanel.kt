@@ -586,9 +586,23 @@ class AdminLootPanel(
     private fun renderSuggestions(context: DrawContext, mouseX: Int, mouseY: Int, px: Int, py: Int, pw: Int) {
         val itemH = 11
         val ph = suggestions.size * itemH + 2
+
+        // Flush pending draws so everything rendered earlier in this frame
+        // (rows, text, item icons) is committed to the screen *before* we
+        // draw the popup. Without this flush the text geometry from the rows
+        // bleeds through the popup background even though the fill is fully
+        // opaque, because all DrawContext.fill / drawTextWithShadow calls in
+        // a frame share a single buffer that flushes at the end.
+        context.draw()
+
+        // Push a high Z too so anything that *does* batch with the popup ends
+        // up behind it.
+        context.matrices.push()
+        context.matrices.translate(0f, 0f, 400f)
+
         // Drop shadow
-        context.fill(px + 1, py + 1, px + pw + 1, py + ph + 1, 0x88000000.toInt())
-        // Border + bg
+        context.fill(px + 1, py + 1, px + pw + 1, py + ph + 1, 0xC0000000.toInt())
+        // Border + bg (fully opaque so nothing bleeds through)
         context.fill(px - 1, py - 1, px + pw + 1, py + ph + 1, 0xFF7A7ABE.toInt())
         context.fill(px, py, px + pw, py + ph, 0xFF15152A.toInt())
 
@@ -617,6 +631,10 @@ class AdminLootPanel(
             val textX = if (s.startsWith("#")) px + 4 else px + 13
             drawScaled(context, s, textX, ry + 2, if (isSel) 0xFFFFFF else 0xCCCCCC, SCALE)
         }
+
+        // Flush the popup's own draws while still translated, then pop.
+        context.draw()
+        context.matrices.pop()
     }
 
     private fun renderField(

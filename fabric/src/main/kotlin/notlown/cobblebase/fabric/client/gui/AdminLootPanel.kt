@@ -5,7 +5,6 @@ import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.gui.widget.ClickableWidget
-import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
@@ -18,23 +17,21 @@ import notlown.cobblebase.core.net.AdminLootUpdateC2SPacket
 import java.util.function.Function
 
 /**
- * Admin GUI "Loot" tab.
+ * Admin GUI "Loot" tab — visually consistent with the Jobs tab.
  *
- * Layout:
- *  - Sidebar (left): list of *jobs* (e.g. "Mining", "Finder: Balls"), grouped
- *    so the four `_common`/`_uncommon`/`_rare`/`_ultra_rare` tables collapse
- *    into a single sidebar entry. Tables without a rarity suffix become their
- *    own job (e.g. "Honey Collect").
- *  - Right pane: rarity tabs across the top (only the rarities that exist for
- *    the selected job), and below that an item-by-item editor with the actual
- *    Minecraft item icon, item id, weight and min/max count.
+ * The previous version used native [net.minecraft.client.gui.widget.TextFieldWidget]s
+ * for the editable cells, which forced their text to render at the
+ * native Minecraft font size and made the rows visibly larger than the
+ * Jobs tab. This rewrite drops the TextFieldWidget pool entirely and
+ * draws every cell manually with [drawScaled] / [renderField], using
+ * exactly the same SCALE/ROW_H constants as AdminJobsPanel. Click,
+ * charTyped, and keyPressed are now routed by the panel itself to the
+ * currently-active cell, so 7-8 rows fit on screen at once.
  *
- * Widget bookkeeping:
- *  - The row widgets are a *fixed pool* (POOL_SIZE rows) created once during
- *    [init]. Picking a different table or rarity just rebinds those widgets
- *    to the new entries. This avoids the bug where dynamically-added widgets
- *    accumulated in the screen's child list and re-appeared on top of other
- *    tabs after a tab switch.
+ * Sidebar groups loot tables by job (e.g. "Mining") with a rarity tab
+ * bar in the right pane (Common / Uncommon / Rare / Ultra Rare). Default
+ * items get an On/Off toggle (kept across overrides); custom items get
+ * a delete button.
  */
 class AdminLootPanel(
     private val x: Int,
@@ -44,15 +41,14 @@ class AdminLootPanel(
     private val textRenderer: TextRenderer
 ) {
     companion object {
-        private const val POOL_SIZE = 25
         private const val PADDING = 4
         private const val SIDEBAR_W = 88
         private const val ROW_H = 14
         private const val FOOTER_H = 18
-        private const val SCALE = 0.65f
+        private const val HEADER_H = 14
+        private const val SCALE = 0.7f
 
-        // Job base name → human-readable label. These match the names used
-        // in the Skills tab (loaded from the skill JSONs).
+        // Job base name → human-readable label. These match the Skills tab.
         private val PRETTY_NAMES = linkedMapOf(
             "mining" to "Mining",
             "finder_bal" to "Collector",
@@ -70,10 +66,7 @@ class AdminLootPanel(
             "honey_collect" to "Honey Collect",
             "dive_treasure" to "Dive Treasure"
         )
-        // Order for *display* in the rarity tab bar (left to right).
         private val RARITY_ORDER = listOf("common", "uncommon", "rare", "ultra_rare")
-        // Order for *suffix matching* — longest first so "ultra_rare" wins
-        // over "rare" when both would match.
         private val RARITY_MATCH_ORDER = listOf("ultra_rare", "uncommon", "rare", "common")
         private val RARITY_LABELS = mapOf(
             "common" to "Common",
@@ -87,6 +80,17 @@ class AdminLootPanel(
             "rare" to 0xFF5555FF.toInt(),
             "ultra_rare" to 0xFFFFAA00.toInt()
         )
+
+        // Theme colors copied from AdminJobsPanel for visual consistency.
+        private const val FIELD_BG = 0xFF2A2A3E.toInt()
+        private const val FIELD_BORDER = 0xFF4A4A6E.toInt()
+        private const val FIELD_ACTIVE = 0xFF7A7ABE.toInt()
+        private const val SIDEBAR_BG = 0xCC15152A.toInt()
+        private const val ROW_HOVER = 0x22FFFFFF
+        private const val SEPARATOR = 0xFF3A3A5C.toInt()
+        private const val CHECKBOX_ON = 0xFF4CAF50.toInt()
+        private const val CHECKBOX_OFF = 0xFFD32F2F.toInt()
+        private const val DELETE_BG = 0xFFD32F2F.toInt()
     }
 
     /** A logical "job" in the sidebar. Holds 1..4 loot table ids. */
@@ -97,8 +101,9 @@ class AdminLootPanel(
         val rarities: LinkedHashMap<String, String>
     )
 
+    enum class FieldType { NONE, ITEM, WEIGHT, MIN, MAX, ROLLS }
+
     // -------- state --------
-    private var addWidgetFn: Function<ClickableWidget, ClickableWidget>? = null
     private val jobs = mutableListOf<JobGroup>()
     private var selectedJob: JobGroup? = null
     private var selectedRarity: String = ""
@@ -109,8 +114,11 @@ class AdminLootPanel(
     private var editRolls = 1
     private var dirty = false
 
-    /** Tooltip lines set during render() and drawn by AdminScreen *after* the
-     *  widgets layer so they always appear on top. */
+    private var activeFieldRow: Int = -1
+    private var activeFieldType: FieldType = FieldType.NONE
+    private var fieldText = ""
+    private var cursorBlink = 0
+
     var pendingTooltip: List<String> = emptyList()
         private set
     var tooltipX: Int = 0
@@ -118,44 +126,30 @@ class AdminLootPanel(
     var tooltipY: Int = 0
         private set
 
-    // -------- widgets (fixed pool) --------
-    private data class RowWidgets(
-        val itemField: TextFieldWidget,
-        val weightField: TextFieldWidget,
-        val minField: TextFieldWidget,
-        val maxField: TextFieldWidget,
-        val deleteBtn: ButtonWidget,
-        val toggleBtn: ButtonWidget
-    )
-    private val rowPool = mutableListOf<RowWidgets>()
-    private var rollsField: TextFieldWidget? = null
-    private var addRowBtn: ButtonWidget? = null
     private var saveBtn: ButtonWidget? = null
     private var resetBtn: ButtonWidget? = null
     private var refreshBtn: ButtonWidget? = null
+    private var addRowBtn: ButtonWidget? = null
 
     fun init(addWidget: Function<ClickableWidget, ClickableWidget>) {
-        addWidgetFn = addWidget
-
-        // Static action buttons
         refreshBtn = ButtonWidget.builder(Text.literal("\u00A7bRefresh")) {
             ClientPlayNetworking.send(AdminLootRequestC2SPacket())
         }.dimensions(x + PADDING, y + h - FOOTER_H + 2, 50, 12).build()
         addWidget.apply(refreshBtn!!)
 
         addRowBtn = ButtonWidget.builder(Text.literal("\u00A7a+ Add Item")) {
-            if (editEntries.size < POOL_SIZE) {
-                // Insert at index 0 so the new (empty) row is the first thing
-                // the user sees instead of being hidden at the bottom of a long list.
-                editEntries.add(0, LootEntry("", 1, 1, 1))
-                dirty = true
-                listScroll = 0
-                bindRowWidgetsToBuffer()
-            }
+            // Insert at the top so the user immediately sees the new row.
+            editEntries.add(0, LootEntry("", 1, 1, 1))
+            dirty = true
+            listScroll = 0
+            // Activate the new item id field for immediate typing.
+            activeFieldRow = 0
+            activeFieldType = FieldType.ITEM
+            fieldText = ""
         }.dimensions(x + SIDEBAR_W + PADDING + 4, y + h - FOOTER_H + 2, 60, 12).build()
         addWidget.apply(addRowBtn!!)
 
-        saveBtn = ButtonWidget.builder(Text.literal("\u00A72Save")) { saveCurrent() }
+        saveBtn = ButtonWidget.builder(Text.literal("\u00A72Save")) { commitActiveField(); saveCurrent() }
             .dimensions(x + w - 88, y + h - FOOTER_H + 2, 40, 12).build()
         addWidget.apply(saveBtn!!)
 
@@ -163,68 +157,7 @@ class AdminLootPanel(
             .dimensions(x + w - 46, y + h - FOOTER_H + 2, 42, 12).build()
         addWidget.apply(resetBtn!!)
 
-        // Rolls field
-        val rf = TextFieldWidget(textRenderer, 0, 0, 26, 12, Text.literal("Rolls"))
-        rf.setMaxLength(3)
-        rf.setChangedListener { v ->
-            v.toIntOrNull()?.let { editRolls = it.coerceAtLeast(1); dirty = true }
-        }
-        rollsField = rf
-        addWidget.apply(rf)
-
-        // Pre-allocate row pool
-        repeat(POOL_SIZE) { idx ->
-            val itemF = TextFieldWidget(textRenderer, 0, 0, 180, 12, Text.literal("Item ID"))
-            itemF.setMaxLength(64)
-            itemF.setChangedListener { v ->
-                if (idx in editEntries.indices) {
-                    editEntries[idx] = editEntries[idx].copy(itemId = v)
-                    dirty = true
-                }
-            }
-            val weightF = numberField { v ->
-                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(weight = v.coerceAtLeast(1))
-            }
-            val minF = numberField { v ->
-                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(minCount = v.coerceAtLeast(1))
-            }
-            val maxF = numberField { v ->
-                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(maxCount = v.coerceAtLeast(1))
-            }
-            val delBtn = ButtonWidget.builder(Text.literal("\u00A7c\u00d7")) {
-                if (idx in editEntries.indices) {
-                    editEntries.removeAt(idx)
-                    dirty = true
-                    bindRowWidgetsToBuffer()
-                }
-            }.dimensions(0, 0, 14, 12).build()
-            val toggleBtn = ButtonWidget.builder(Text.literal("on")) {
-                if (idx in editEntries.indices) {
-                    val cur = editEntries[idx]
-                    editEntries[idx] = cur.copy(disabled = !cur.disabled)
-                    dirty = true
-                    bindRowWidgetsToBuffer()
-                }
-            }.dimensions(0, 0, 22, 12).build()
-
-            addWidget.apply(itemF)
-            addWidget.apply(weightF)
-            addWidget.apply(minF)
-            addWidget.apply(maxF)
-            addWidget.apply(delBtn)
-            addWidget.apply(toggleBtn)
-            rowPool.add(RowWidgets(itemF, weightF, minF, maxF, delBtn, toggleBtn))
-        }
-
-        // Initial sync
         ClientPlayNetworking.send(AdminLootRequestC2SPacket())
-    }
-
-    private fun numberField(onChange: (Int) -> Unit): TextFieldWidget {
-        val f = TextFieldWidget(textRenderer, 0, 0, 22, 12, Text.literal(""))
-        f.setMaxLength(5)
-        f.setChangedListener { v -> v.toIntOrNull()?.let { onChange(it); dirty = true } }
-        return f
     }
 
     /** Recomputes [jobs] from the current cache. */
@@ -234,20 +167,16 @@ class AdminLootPanel(
         val grouped = LinkedHashMap<String, LinkedHashMap<String, String>>()
 
         for (id in ids) {
-            // Detect "_common", "_uncommon", "_rare", "_ultra_rare" suffix.
-            // Check longest suffix first so "ultra_rare" wins over "rare".
             val rarity = RARITY_MATCH_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
             val base = if (rarity.isEmpty()) id else id.removeSuffix("_$rarity")
             val map = grouped.getOrPut(base) { LinkedHashMap() }
             map[rarity] = "cobblebase:$id"
         }
 
-        // Stable order: PRETTY_NAMES order first, then any unknowns alphabetically
         val orderedKeys = PRETTY_NAMES.keys.filter { it in grouped }.toMutableList()
         orderedKeys.addAll(grouped.keys.filter { it !in PRETTY_NAMES }.sorted())
 
         for (base in orderedKeys) {
-            // Sort rarities by canonical order
             val sorted = LinkedHashMap<String, String>()
             for (r in (RARITY_ORDER + listOf(""))) {
                 grouped[base]?.get(r)?.let { sorted[r] = it }
@@ -257,6 +186,7 @@ class AdminLootPanel(
     }
 
     private fun loadCurrentTable() {
+        commitActiveField()
         val job = selectedJob ?: return
         val tableId = job.rarities[selectedRarity] ?: job.rarities.values.firstOrNull() ?: return
         val def = AdminLootDataCache.get(tableId)
@@ -269,41 +199,8 @@ class AdminLootPanel(
         }
         dirty = false
         listScroll = 0
-        rollsField?.text = editRolls.toString()
-        bindRowWidgetsToBuffer()
-    }
-
-    /** Push entry buffer values into the fixed row widget pool. */
-    private fun bindRowWidgetsToBuffer() {
-        for ((i, rw) in rowPool.withIndex()) {
-            if (i < editEntries.size) {
-                val e = editEntries[i]
-                if (rw.itemField.text != e.itemId) {
-                    rw.itemField.text = e.itemId
-                    // Reset cursor + scroll to the start so the field shows the
-                    // beginning of the id (e.g. "cobblemon:") instead of the
-                    // tail end the user can't read.
-                    rw.itemField.setCursor(0, false)
-                }
-                if (rw.weightField.text != e.weight.toString()) {
-                    rw.weightField.text = e.weight.toString()
-                    rw.weightField.setCursor(0, false)
-                }
-                if (rw.minField.text != e.minCount.toString()) {
-                    rw.minField.text = e.minCount.toString()
-                    rw.minField.setCursor(0, false)
-                }
-                if (rw.maxField.text != e.maxCount.toString()) {
-                    rw.maxField.text = e.maxCount.toString()
-                    rw.maxField.setCursor(0, false)
-                }
-            } else {
-                rw.itemField.text = ""
-                rw.weightField.text = ""
-                rw.minField.text = ""
-                rw.maxField.text = ""
-            }
-        }
+        activeFieldRow = -1
+        activeFieldType = FieldType.NONE
     }
 
     private fun currentTableId(): String? {
@@ -323,10 +220,20 @@ class AdminLootPanel(
         dirty = false
     }
 
+    private fun distinctJobCount(): Int {
+        val ids = AdminLootDataCache.tables.map { it.id.removePrefix("cobblebase:") }
+        val bases = HashSet<String>()
+        for (id in ids) {
+            val rarity = RARITY_MATCH_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
+            bases.add(if (rarity.isEmpty()) id else id.removeSuffix("_$rarity"))
+        }
+        return bases.size
+    }
+
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         pendingTooltip = emptyList()
+        cursorBlink++
 
-        // Refresh job list if cache changed
         if (jobs.size != distinctJobCount()) rebuildJobs()
         if (selectedJob == null && jobs.isNotEmpty()) {
             selectedJob = jobs.first()
@@ -337,18 +244,15 @@ class AdminLootPanel(
         // Background
         context.fill(x, y, x + w, y + h, 0xCC1E1E2E.toInt())
 
-        // Sidebar bg
-        context.fill(x, y, x + SIDEBAR_W, y + h, 0xCC15152A.toInt())
-        context.fill(x + SIDEBAR_W, y, x + SIDEBAR_W + 1, y + h, 0xFF3A3A5C.toInt())
-
-        // Sidebar header
+        // Sidebar
+        context.fill(x, y, x + SIDEBAR_W, y + h, SIDEBAR_BG)
+        context.fill(x + SIDEBAR_W, y, x + SIDEBAR_W + 1, y + h, SEPARATOR)
         drawScaled(context, "\u00A7f\u00A7lJobs", x + PADDING, y + PADDING, 0xFFFFFF, 0.85f)
 
         if (jobs.isEmpty()) {
-            drawScaled(context, "\u00A77Loading…", x + PADDING, y + 14, 0xAAAAAA, SCALE)
+            drawScaled(context, "\u00A77Loading...", x + PADDING, y + 14, 0xAAAAAA, SCALE)
         }
 
-        // Sidebar list
         val sidebarListY = y + 14
         val sidebarListH = h - 14 - FOOTER_H
         val maxSidebarRows = sidebarListH / ROW_H
@@ -363,19 +267,16 @@ class AdminLootPanel(
             val isSelected = job === selectedJob
             val isHovered = mouseX in x..(x + SIDEBAR_W) && mouseY in rowY..(rowY + ROW_H)
             if (isSelected) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, 0x442196F3)
-            else if (isHovered) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, 0x22FFFFFF)
-
-            // Indicator if any rarity for this job is overridden
+            else if (isHovered) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, ROW_HOVER)
             val anyOverridden = job.rarities.values.any { AdminLootDataCache.isOverridden(it) }
             val color = if (isSelected) 0xFFFFFF else 0xCCCCCC
-            drawScaled(context, job.displayName, x + PADDING + 4, rowY + 5, color, SCALE)
+            drawScaled(context, job.displayName, x + PADDING + 4, rowY + 3, color, SCALE)
             if (anyOverridden) {
-                drawScaled(context, "\u00A76\u25CF", x + SIDEBAR_W - 9, rowY + 4, 0xFF9800, 0.7f)
+                drawScaled(context, "\u00A76\u25CF", x + SIDEBAR_W - 9, rowY + 3, 0xFF9800, 0.7f)
             }
         }
         context.disableScissor()
 
-        // Sidebar scrollbar
         if (jobs.size > maxSidebarRows) {
             val trackX = x + SIDEBAR_W - 3
             val trackH = sidebarListH
@@ -389,22 +290,15 @@ class AdminLootPanel(
         // Right pane
         val rightX = x + SIDEBAR_W + 2
         val rightW = w - SIDEBAR_W - 2
+        val job = selectedJob ?: return
 
-        val job = selectedJob
-        if (job == null) {
-            // Hide everything
-            hideEditorWidgets()
-            return
-        }
-
-        // Job title
-        drawScaled(context, "\u00A7f\u00A7l${job.displayName}", rightX + PADDING, y + PADDING, 0xFFFFFF, 0.9f)
+        drawScaled(context, "\u00A7f\u00A7l${job.displayName}", rightX + PADDING, y + PADDING, 0xFFFFFF, 0.85f)
         if (dirty) drawScaled(context, "\u00A7e*unsaved", rightX + rightW - 50, y + PADDING + 1, 0xFFFF00, SCALE)
 
         // Rarity tabs
         val tabY = y + 12
         val tabH = 11
-        val tabW = 56
+        val tabW = 48
         val rarityKeys = job.rarities.keys.toList()
         var tx = rightX + PADDING
         for (rk in rarityKeys) {
@@ -428,41 +322,41 @@ class AdminLootPanel(
             tx += tabW + 2
         }
 
-        // Rolls + label
+        // Rolls field
         val rollsLabelY = y + 26
         drawScaled(context, "\u00A77Rolls per generation:", rightX + PADDING, rollsLabelY + 2, 0xAAAAAA, SCALE)
-        rollsField?.let {
-            it.x = rightX + PADDING + 76
-            it.y = rollsLabelY
-            it.visible = true
-        }
-        // Hover tooltip for rolls label
-        if (mouseX in (rightX + PADDING)..(rightX + PADDING + 100) && mouseY in rollsLabelY..(rollsLabelY + 10)) {
-            pendingTooltip = listOf(
+        val rollsFieldX = rightX + PADDING + 76
+        val rollsFieldW = 26
+        val rollsActive = activeFieldRow == -1 && activeFieldType == FieldType.ROLLS
+        renderField(
+            context, rollsFieldX, rollsLabelY, rollsFieldW, 11,
+            if (rollsActive) fieldText else editRolls.toString(),
+            isActive = rollsActive,
+            isOverride = false
+        )
+        if (mouseX in (rightX + PADDING)..(rightX + PADDING + 100) && mouseY in rollsLabelY..(rollsLabelY + 11)) {
+            setTip(mouseX, mouseY,
                 "\u00A7f\u00A7lRolls per generation",
                 "\u00A77How many items the job produces each time it ticks.",
                 "\u00A77Each roll picks one item using the weight values below.",
                 "\u00A78Example: Rolls = 3 -> the job spits out 3 items per tick."
             )
-            tooltipX = mouseX
-            tooltipY = mouseY
         }
 
-        // Column headers — column X positions also drive the row widget layout below
-        val headerY = y + 40
-        val colItemX = rightX + PADDING + 18
-        val colWeightX = rightX + PADDING + 200
-        val colMinX = rightX + PADDING + 226
-        val colMaxX = rightX + PADDING + 252
+        // Column headers
+        val headerY = y + 41
+        val colItemX = rightX + PADDING + 14
+        val colWeightX = rightX + PADDING + 188
+        val colMinX = rightX + PADDING + 218
+        val colMaxX = rightX + PADDING + 248
         val colActionX = rightX + PADDING + 280
         drawScaled(context, "\u00A77Item", colItemX, headerY, 0xAAAAAA, SCALE)
-        drawScaled(context, "\u00A77W", colWeightX, headerY, 0xAAAAAA, SCALE)
-        drawScaled(context, "\u00A77Min", colMinX, headerY, 0xAAAAAA, SCALE)
-        drawScaled(context, "\u00A77Max", colMaxX, headerY, 0xAAAAAA, SCALE)
-        drawScaled(context, "\u00A77Action", colActionX, headerY, 0xAAAAAA, SCALE)
-        context.fill(rightX + 2, headerY + 8, rightX + rightW - 4, headerY + 9, 0xFF3A3A5C.toInt())
+        drawScaled(context, "\u00A77Weight", colWeightX - 2, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77Min", colMinX - 2, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77Max", colMaxX - 2, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77Action", colActionX - 2, headerY, 0xAAAAAA, SCALE)
 
-        // Column header tooltips
+        // Header tooltips
         if (mouseY in headerY..(headerY + 8)) {
             when {
                 mouseX in colItemX..(colItemX + 30) -> setTip(mouseX, mouseY,
@@ -470,18 +364,18 @@ class AdminLootPanel(
                     "\u00A77The Minecraft item identifier including the mod namespace.",
                     "\u00A78Examples: minecraft:diamond, cobblemon:rare_candy"
                 )
-                mouseX in colWeightX..(colWeightX + 26) -> setTip(mouseX, mouseY,
+                mouseX in colWeightX..(colWeightX + 28) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lWeight",
                     "\u00A77How likely this item is to be picked on a roll.",
                     "\u00A77Relative to the sum of all weights in this table.",
                     "\u00A78Example: weights 10/5/1 -> 62.5% / 31.3% / 6.3%."
                 )
-                mouseX in colMinX..(colMinX + 26) -> setTip(mouseX, mouseY,
+                mouseX in colMinX..(colMinX + 28) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lMin Count",
                     "\u00A77Smallest stack size produced when this item is picked.",
                     "\u00A78Example: Min 1 Max 3 -> 1, 2 or 3 of this item."
                 )
-                mouseX in colMaxX..(colMaxX + 26) -> setTip(mouseX, mouseY,
+                mouseX in colMaxX..(colMaxX + 28) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lMax Count",
                     "\u00A77Largest stack size produced when this item is picked.",
                     "\u00A78If Min == Max the count is always exactly that value."
@@ -496,42 +390,38 @@ class AdminLootPanel(
             }
         }
 
+        context.fill(rightX + 2, headerY + 9, rightX + rightW - 4, headerY + 10, SEPARATOR)
+
         // Rows
-        val listY = headerY + 11
+        val listY = headerY + 12
         val listH = y + h - FOOTER_H - listY - 2
         val maxRows = listH / ROW_H
         listScroll = listScroll.coerceIn(0, (editEntries.size - maxRows).coerceAtLeast(0))
-
-        // Position pool widgets and draw icons
         val tableId = currentTableId()
-        for (i in 0 until POOL_SIZE) {
-            val rw = rowPool[i]
-            val visualIdx = i - listScroll
-            val visible = i < editEntries.size && visualIdx in 0 until maxRows
-            if (!visible) {
-                rw.itemField.visible = false
-                rw.weightField.visible = false
-                rw.minField.visible = false
-                rw.maxField.visible = false
-                rw.deleteBtn.visible = false
-                rw.toggleBtn.visible = false
-                continue
-            }
 
-            val entry = editEntries[i]
-            val rowY = listY + visualIdx * ROW_H
+        context.enableScissor(rightX, listY, rightX + rightW, listY + listH)
+        for (i in 0 until maxRows + 1) {
+            val rowIdx = i + listScroll
+            if (rowIdx >= editEntries.size) break
+            val entry = editEntries[rowIdx]
+            val rowY = listY + i * ROW_H
             val isDefault = tableId != null && AdminLootDataCache.isDefaultEntry(tableId, entry.itemId)
 
-            // Dim the row when disabled
+            // Hover background
+            val isHovered = mouseX in rightX..(rightX + rightW - 4) && mouseY in rowY..(rowY + ROW_H)
+            if (isHovered) context.fill(rightX + 2, rowY, rightX + rightW - 4, rowY + ROW_H, ROW_HOVER)
+
+            // Dim disabled rows
             if (entry.disabled) {
-                context.fill(rightX + 2, rowY, rightX + rightW - 4, rowY + ROW_H - 1, 0x44000000)
+                context.fill(rightX + 2, rowY, rightX + rightW - 4, rowY + ROW_H, 0x66000000)
             }
 
-            // Item icon — scaled to 12x12 so it fits the compact row height
+            // Item icon — scaled to 11x11 to match the row height
             val stack = makeStack(entry.itemId)
+            val iconScale = (ROW_H - 3).toFloat() / 16f
             context.matrices.push()
-            context.matrices.translate((rightX + PADDING).toFloat(), (rowY).toFloat(), 0f)
-            context.matrices.scale(0.75f, 0.75f, 1f)
+            context.matrices.translate((rightX + PADDING).toFloat(), (rowY + 1).toFloat(), 0f)
+            context.matrices.scale(iconScale, iconScale, 1f)
             if (!stack.isEmpty) {
                 context.drawItem(stack, 0, 0)
             } else {
@@ -539,35 +429,63 @@ class AdminLootPanel(
             }
             context.matrices.pop()
 
-            rw.itemField.visible = true
-            rw.weightField.visible = true
-            rw.minField.visible = true
-            rw.maxField.visible = true
-            rw.itemField.x = colItemX
-            rw.itemField.y = rowY + 1
-            rw.weightField.x = colWeightX - 2
-            rw.weightField.y = rowY + 1
-            rw.minField.x = colMinX - 2
-            rw.minField.y = rowY + 1
-            rw.maxField.x = colMaxX - 2
-            rw.maxField.y = rowY + 1
+            // Item ID field
+            val isItemActive = activeFieldRow == rowIdx && activeFieldType == FieldType.ITEM
+            renderField(
+                context,
+                colItemX, rowY + 1, 170, ROW_H - 2,
+                if (isItemActive) fieldText else entry.itemId.ifEmpty { "<empty>" },
+                isActive = isItemActive,
+                isOverride = false,
+                grayWhenEmpty = entry.itemId.isEmpty() && !isItemActive
+            )
 
-            // Action: toggle for default-origin entries, delete for custom
+            // Weight
+            val isWActive = activeFieldRow == rowIdx && activeFieldType == FieldType.WEIGHT
+            renderField(
+                context,
+                colWeightX, rowY + 1, 26, ROW_H - 2,
+                if (isWActive) fieldText else entry.weight.toString(),
+                isActive = isWActive,
+                isOverride = false
+            )
+
+            // Min
+            val isMinActive = activeFieldRow == rowIdx && activeFieldType == FieldType.MIN
+            renderField(
+                context,
+                colMinX, rowY + 1, 26, ROW_H - 2,
+                if (isMinActive) fieldText else entry.minCount.toString(),
+                isActive = isMinActive,
+                isOverride = false
+            )
+
+            // Max
+            val isMaxActive = activeFieldRow == rowIdx && activeFieldType == FieldType.MAX
+            renderField(
+                context,
+                colMaxX, rowY + 1, 26, ROW_H - 2,
+                if (isMaxActive) fieldText else entry.maxCount.toString(),
+                isActive = isMaxActive,
+                isOverride = false
+            )
+
+            // Action: toggle for default-origin, delete (X) for custom
+            val actX = colActionX
+            val actY = rowY + 2
+            val actW = 22
+            val actH = ROW_H - 4
             if (isDefault) {
-                rw.toggleBtn.visible = true
-                rw.deleteBtn.visible = false
-                rw.toggleBtn.x = colActionX - 2
-                rw.toggleBtn.y = rowY + 1
-                rw.toggleBtn.message = Text.literal(
-                    if (entry.disabled) "\u00A7coff" else "\u00A7aon"
-                )
+                val on = !entry.disabled
+                val bg = if (on) CHECKBOX_ON else CHECKBOX_OFF
+                context.fill(actX, actY, actX + actW, actY + actH, bg)
+                drawScaled(context, if (on) "\u00A7fon" else "\u00A7foff", actX + 5, actY + 2, 0xFFFFFF, SCALE)
             } else {
-                rw.toggleBtn.visible = false
-                rw.deleteBtn.visible = true
-                rw.deleteBtn.x = colActionX - 2
-                rw.deleteBtn.y = rowY + 1
+                context.fill(actX, actY, actX + actW, actY + actH, DELETE_BG)
+                drawScaled(context, "\u00A7f\u00d7", actX + 9, actY + 2, 0xFFFFFF, SCALE)
             }
         }
+        context.disableScissor()
 
         // List scrollbar
         if (editEntries.size > maxRows) {
@@ -581,37 +499,30 @@ class AdminLootPanel(
         }
     }
 
-    private fun hideEditorWidgets() {
-        rollsField?.visible = false
-        for (rw in rowPool) {
-            rw.itemField.visible = false
-            rw.weightField.visible = false
-            rw.minField.visible = false
-            rw.maxField.visible = false
-            rw.deleteBtn.visible = false
-            rw.toggleBtn.visible = false
+    private fun renderField(
+        context: DrawContext,
+        fx: Int, fy: Int, fw: Int, fh: Int,
+        text: String,
+        isActive: Boolean,
+        isOverride: Boolean,
+        grayWhenEmpty: Boolean = false
+    ) {
+        val border = if (isActive) FIELD_ACTIVE else FIELD_BORDER
+        context.fill(fx - 1, fy - 1, fx + fw + 1, fy + fh + 1, border)
+        context.fill(fx, fy, fx + fw, fy + fh, FIELD_BG)
+        val color = when {
+            grayWhenEmpty -> 0x666666
+            isOverride -> 0xFFFF00
+            else -> 0xCCCCCC
         }
-    }
-
-    private fun makeStack(itemId: String): ItemStack {
-        return try {
-            val parts = itemId.split(":", limit = 2)
-            val id = if (parts.size == 2) Identifier.of(parts[0], parts[1]) else Identifier.of("minecraft", itemId)
-            val item = Registries.ITEM.get(id)
-            if (item == net.minecraft.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
-        } catch (_: Exception) {
-            ItemStack.EMPTY
+        // Clip text inside the field via scissor
+        context.enableScissor(fx + 1, fy, fx + fw - 1, fy + fh)
+        drawScaled(context, text, fx + 2, fy + 2, color, SCALE)
+        if (isActive && (cursorBlink / 20) % 2 == 0) {
+            val cursorX = fx + 2 + (textRenderer.getWidth(text) * SCALE).toInt()
+            drawScaled(context, "|", cursorX, fy + 2, 0xFFFFFF, SCALE)
         }
-    }
-
-    private fun distinctJobCount(): Int {
-        val ids = AdminLootDataCache.tables.map { it.id.removePrefix("cobblebase:") }
-        val bases = HashSet<String>()
-        for (id in ids) {
-            val rarity = RARITY_MATCH_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
-            bases.add(if (rarity.isEmpty()) id else id.removeSuffix("_$rarity"))
-        }
-        return bases.size
+        context.disableScissor()
     }
 
     private fun setTip(mx: Int, my: Int, vararg lines: String) {
@@ -628,7 +539,20 @@ class AdminLootPanel(
         context.matrices.pop()
     }
 
+    private fun makeStack(itemId: String): ItemStack {
+        return try {
+            val parts = itemId.split(":", limit = 2)
+            val id = if (parts.size == 2) Identifier.of(parts[0], parts[1]) else Identifier.of("minecraft", itemId)
+            val item = Registries.ITEM.get(id)
+            if (item == net.minecraft.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
+        } catch (_: Exception) {
+            ItemStack.EMPTY
+        }
+    }
+
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        commitActiveField()
+
         // Sidebar selection
         val sidebarListY = y + 14
         if (mouseX in x.toDouble()..(x + SIDEBAR_W).toDouble() &&
@@ -643,26 +567,151 @@ class AdminLootPanel(
             }
         }
 
-        // Rarity tab click
-        val job = selectedJob
-        if (job != null) {
-            val rightX = x + SIDEBAR_W + 2
-            val tabY = y + 12
-            val tabH = 11
-            val tabW = 56
-            var tx = rightX + PADDING
-            for (rk in job.rarities.keys) {
-                if (mouseX in tx.toDouble()..(tx + tabW).toDouble() &&
-                    mouseY in tabY.toDouble()..(tabY + tabH).toDouble()
-                ) {
-                    selectedRarity = rk
-                    loadCurrentTable()
-                    return true
-                }
-                tx += tabW + 2
+        val job = selectedJob ?: return false
+        val rightX = x + SIDEBAR_W + 2
+
+        // Rarity tab clicks
+        val tabY = y + 12
+        val tabH = 11
+        val tabW = 48
+        var tx = rightX + PADDING
+        for (rk in job.rarities.keys) {
+            if (mouseX in tx.toDouble()..(tx + tabW).toDouble() &&
+                mouseY in tabY.toDouble()..(tabY + tabH).toDouble()
+            ) {
+                selectedRarity = rk
+                loadCurrentTable()
+                return true
             }
+            tx += tabW + 2
         }
+
+        // Rolls field click
+        val rollsLabelY = y + 26
+        val rollsFieldX = rightX + PADDING + 76
+        val rollsFieldW = 26
+        if (mouseX in rollsFieldX.toDouble()..(rollsFieldX + rollsFieldW).toDouble() &&
+            mouseY in rollsLabelY.toDouble()..(rollsLabelY + 11).toDouble()
+        ) {
+            activeFieldRow = -1
+            activeFieldType = FieldType.ROLLS
+            fieldText = editRolls.toString()
+            return true
+        }
+
+        // Row cells
+        val headerY = y + 41
+        val listY = headerY + 12
+        val listH = y + h - FOOTER_H - listY - 2
+        val maxRows = listH / ROW_H
+
+        val colItemX = rightX + PADDING + 14
+        val colWeightX = rightX + PADDING + 188
+        val colMinX = rightX + PADDING + 218
+        val colMaxX = rightX + PADDING + 248
+        val colActionX = rightX + PADDING + 280
+
+        if (mouseX in rightX.toDouble()..(rightX + (w - SIDEBAR_W)).toDouble() &&
+            mouseY in listY.toDouble()..(listY + listH).toDouble()
+        ) {
+            val visRow = ((mouseY - listY) / ROW_H).toInt()
+            val rowIdx = visRow + listScroll
+            if (rowIdx in editEntries.indices) {
+                val rowY = listY + visRow * ROW_H
+                val cellY = (rowY + 1).toDouble()..(rowY + ROW_H - 1).toDouble()
+                when {
+                    mouseX in colItemX.toDouble()..(colItemX + 170).toDouble() && mouseY in cellY -> {
+                        activeFieldRow = rowIdx
+                        activeFieldType = FieldType.ITEM
+                        fieldText = editEntries[rowIdx].itemId
+                        return true
+                    }
+                    mouseX in colWeightX.toDouble()..(colWeightX + 26).toDouble() && mouseY in cellY -> {
+                        activeFieldRow = rowIdx
+                        activeFieldType = FieldType.WEIGHT
+                        fieldText = editEntries[rowIdx].weight.toString()
+                        return true
+                    }
+                    mouseX in colMinX.toDouble()..(colMinX + 26).toDouble() && mouseY in cellY -> {
+                        activeFieldRow = rowIdx
+                        activeFieldType = FieldType.MIN
+                        fieldText = editEntries[rowIdx].minCount.toString()
+                        return true
+                    }
+                    mouseX in colMaxX.toDouble()..(colMaxX + 26).toDouble() && mouseY in cellY -> {
+                        activeFieldRow = rowIdx
+                        activeFieldType = FieldType.MAX
+                        fieldText = editEntries[rowIdx].maxCount.toString()
+                        return true
+                    }
+                    mouseX in colActionX.toDouble()..(colActionX + 22).toDouble() && mouseY in cellY -> {
+                        val entry = editEntries[rowIdx]
+                        val tableId = currentTableId()
+                        val isDefault = tableId != null && AdminLootDataCache.isDefaultEntry(tableId, entry.itemId)
+                        if (isDefault) {
+                            editEntries[rowIdx] = entry.copy(disabled = !entry.disabled)
+                        } else {
+                            editEntries.removeAt(rowIdx)
+                            // Adjust active field if it pointed past the removed row
+                            if (activeFieldRow >= editEntries.size) activeFieldRow = -1
+                        }
+                        dirty = true
+                        return true
+                    }
+                }
+            }
+            // Click in row area but not on a cell -> commit & deactivate
+            activeFieldRow = -1
+            activeFieldType = FieldType.NONE
+            return true
+        }
+
+        activeFieldRow = -1
+        activeFieldType = FieldType.NONE
         return false
+    }
+
+    private fun commitActiveField() {
+        if (activeFieldType == FieldType.NONE) return
+        when (activeFieldType) {
+            FieldType.ROLLS -> fieldText.toIntOrNull()?.takeIf { it > 0 }?.let {
+                editRolls = it
+                dirty = true
+            }
+            FieldType.ITEM -> {
+                if (activeFieldRow in editEntries.indices) {
+                    editEntries[activeFieldRow] = editEntries[activeFieldRow].copy(itemId = fieldText)
+                    dirty = true
+                }
+            }
+            FieldType.WEIGHT -> {
+                if (activeFieldRow in editEntries.indices) {
+                    fieldText.toIntOrNull()?.takeIf { it >= 0 }?.let {
+                        editEntries[activeFieldRow] = editEntries[activeFieldRow].copy(weight = it.coerceAtLeast(1))
+                        dirty = true
+                    }
+                }
+            }
+            FieldType.MIN -> {
+                if (activeFieldRow in editEntries.indices) {
+                    fieldText.toIntOrNull()?.takeIf { it >= 1 }?.let {
+                        editEntries[activeFieldRow] = editEntries[activeFieldRow].copy(minCount = it)
+                        dirty = true
+                    }
+                }
+            }
+            FieldType.MAX -> {
+                if (activeFieldRow in editEntries.indices) {
+                    fieldText.toIntOrNull()?.takeIf { it >= 1 }?.let {
+                        editEntries[activeFieldRow] = editEntries[activeFieldRow].copy(maxCount = it)
+                        dirty = true
+                    }
+                }
+            }
+            FieldType.NONE -> {}
+        }
+        activeFieldRow = -1
+        activeFieldType = FieldType.NONE
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean = false
@@ -681,7 +730,7 @@ class AdminLootPanel(
         if (mouseX in (x + SIDEBAR_W).toDouble()..(x + w).toDouble() &&
             mouseY in y.toDouble()..(y + h).toDouble()
         ) {
-            val listY = y + 51
+            val listY = y + 53
             val listH = y + h - FOOTER_H - listY - 2
             val maxRows = listH / ROW_H
             val maxScroll = (editEntries.size - maxRows).coerceAtLeast(0)
@@ -691,6 +740,42 @@ class AdminLootPanel(
         return false
     }
 
-    fun charTyped(chr: Char, modifiers: Int): Boolean = false
-    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean = false
+    fun charTyped(chr: Char, modifiers: Int): Boolean {
+        if (activeFieldType == FieldType.NONE) return false
+        when (activeFieldType) {
+            FieldType.ITEM -> {
+                // Item ids allow letters, digits, underscore, colon
+                if ((chr.isLetterOrDigit() || chr == '_' || chr == ':') && fieldText.length < 64) {
+                    fieldText += chr.lowercaseChar()
+                    return true
+                }
+            }
+            FieldType.WEIGHT, FieldType.MIN, FieldType.MAX, FieldType.ROLLS -> {
+                if (chr.isDigit() && fieldText.length < 5) {
+                    fieldText += chr
+                    return true
+                }
+            }
+            FieldType.NONE -> return false
+        }
+        return false
+    }
+
+    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+        if (activeFieldType == FieldType.NONE) return false
+        if (keyCode == 259 && fieldText.isNotEmpty()) { // backspace
+            fieldText = fieldText.dropLast(1)
+            return true
+        }
+        if (keyCode == 257 || keyCode == 335) { // enter
+            commitActiveField()
+            return true
+        }
+        if (keyCode == 256) { // escape
+            activeFieldRow = -1
+            activeFieldType = FieldType.NONE
+            return true
+        }
+        return false
+    }
 }

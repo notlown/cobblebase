@@ -324,12 +324,18 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         if (activeTab == "jobs") {
             if (jobsPanel.charTyped(chr, modifiers)) return true
         }
+        if (activeTab == "loot") {
+            if (lootPanel.charTyped(chr, modifiers)) return true
+        }
         return super.charTyped(chr, modifiers)
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
         if (activeTab == "jobs") {
             if (jobsPanel.keyPressed(keyCode, scanCode, modifiers)) return true
+        }
+        if (activeTab == "loot") {
+            if (lootPanel.keyPressed(keyCode, scanCode, modifiers)) return true
         }
         return super.keyPressed(keyCode, scanCode, modifiers)
     }

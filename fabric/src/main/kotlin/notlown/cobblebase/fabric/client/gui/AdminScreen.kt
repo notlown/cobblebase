@@ -270,6 +270,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             }
             "wiki" -> {
                 if (super.mouseClicked(mouseX, mouseY, button)) return true
+                if (wikiPanel.mouseClicked(mouseX, mouseY, button)) return true
             }
         }
         return false
@@ -279,6 +280,8 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         if (activeTab == "species") {
             if (speciesListPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
             if (skillEditorPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+        } else if (activeTab == "wiki") {
+            if (wikiPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
         } else {
             if (jobsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
         }
@@ -289,6 +292,8 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         if (activeTab == "species") {
             if (speciesListPanel.mouseReleased(mouseX, mouseY, button)) return true
             if (skillEditorPanel.mouseReleased(mouseX, mouseY, button)) return true
+        } else if (activeTab == "wiki") {
+            if (wikiPanel.mouseReleased(mouseX, mouseY, button)) return true
         } else {
             if (jobsPanel.mouseReleased(mouseX, mouseY, button)) return true
         }
@@ -296,11 +301,13 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
-        if (activeTab == "species") {
-            if (speciesListPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
-            if (skillEditorPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
-        } else {
-            if (jobsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
+        when (activeTab) {
+            "species" -> {
+                if (speciesListPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
+                if (skillEditorPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
+            }
+            "jobs" -> if (jobsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
+            "wiki" -> if (wikiPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
         }
         return false
     }

@@ -56,18 +56,11 @@ object GenericLootExecutor : SkillExecutor {
             return
         }
 
-        // Generate loot from the skill's loot table
+        // Generate loot from the skill's loot table (admin override > bundled > vanilla)
         val lootTableId = skill.lootTable ?: return
-
-        val lootParams = LootContextParameterSet.Builder(world)
-            .add(LootContextParameters.ORIGIN, pokemonEntity.blockPos.toCenterPos())
-            .addOptional(LootContextParameters.THIS_ENTITY, pokemonEntity)
-            .build(LootContextTypes.CHEST)
-
-        val identifier = Identifier.of(lootTableId.substringBefore(":"), lootTableId.substringAfter(":"))
-        val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, identifier)
-        val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
-        val drops = lootTable.generateLoot(lootParams)
+        val drops = notlown.cobblebase.core.LootHelper.generateLoot(
+            lootTableId, world, pokemonEntity.blockPos, pokemonEntity
+        )
 
         if (drops.isNotEmpty()) {
             lastLootTime[pokemonId] = now

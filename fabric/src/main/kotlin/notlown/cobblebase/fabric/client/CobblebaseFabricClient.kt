@@ -118,6 +118,13 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Register S2C admin loot sync packet receiver
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminLootSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.core.AdminLootDataCache.update(packet.tables, packet.overriddenIds)
+            }
+        }
+
         // Register /cobblebase admin client command
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.register(

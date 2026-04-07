@@ -36,11 +36,13 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     private lateinit var speciesListPanel: AdminSpeciesListPanel
     private lateinit var skillEditorPanel: AdminSkillEditorPanel
     private lateinit var jobsPanel: AdminJobsPanel
+    private lateinit var lootPanel: AdminLootPanel
     private lateinit var generalPanel: AdminGeneralPanel
     private lateinit var wikiPanel: AdminWikiPanel
 
     private val speciesWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
     private val jobsWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
+    private val lootWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
     private val generalWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
     private val wikiWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
 
@@ -83,9 +85,14 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             panelX, contentY, panelW, panelH - 22 - TAB_HEIGHT, textRenderer
         )
 
+        lootPanel = AdminLootPanel(
+            panelX, contentY, panelW, panelH - 22 - TAB_HEIGHT, textRenderer
+        )
+
         clearChildren()
         speciesWidgets.clear()
         jobsWidgets.clear()
+        lootWidgets.clear()
         generalWidgets.clear()
         wikiWidgets.clear()
 
@@ -121,12 +128,20 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             widget
         }
 
+        // Init loot panel widgets
+        lootPanel.init { widget ->
+            lootWidgets.add(widget)
+            addDrawableChild(widget)
+            widget
+        }
+
         updateWidgetVisibility()
     }
 
     private fun updateWidgetVisibility() {
         for (w in speciesWidgets) w.visible = (activeTab == "species")
         for (w in jobsWidgets) w.visible = (activeTab == "jobs")
+        for (w in lootWidgets) w.visible = (activeTab == "loot")
         for (w in generalWidgets) w.visible = (activeTab == "general")
         for (w in wikiWidgets) w.visible = (activeTab == "wiki")
     }
@@ -148,11 +163,12 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         context.fill(panelX, tabBarY, panelX + panelW, tabBarY + TAB_HEIGHT, 0xCC1A1A30.toInt())
         context.fill(panelX, tabBarY + TAB_HEIGHT - 1, panelX + panelW, tabBarY + TAB_HEIGHT, PANEL_BORDER)
 
-        // Species tab
-        val tabW = 70
+        // Tab bar
+        val tabW = 64
         val speciesTabX = panelX + 4
         val jobsTabX = speciesTabX + tabW + 4
-        val generalTabX = jobsTabX + tabW + 4
+        val lootTabX = jobsTabX + tabW + 4
+        val generalTabX = lootTabX + tabW + 4
         val wikiTabX = generalTabX + tabW + 4
         val scale = 0.75f
 
@@ -160,6 +176,8 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             activeTab == "species", mouseX, mouseY, scale)
         renderTab(context, "Jobs", jobsTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
             activeTab == "jobs", mouseX, mouseY, scale)
+        renderTab(context, "Loot", lootTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
+            activeTab == "loot", mouseX, mouseY, scale)
         renderTab(context, "General", generalTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
             activeTab == "general", mouseX, mouseY, scale)
         renderTab(context, "Wiki", wikiTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
@@ -174,6 +192,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
                 skillEditorPanel.render(context, mouseX, mouseY, delta)
             }
             "jobs" -> jobsPanel.render(context, mouseX, mouseY, delta)
+            "loot" -> lootPanel.render(context, mouseX, mouseY, delta)
             "general" -> generalPanel.render(context, mouseX, mouseY, delta)
             "wiki" -> wikiPanel.render(context, mouseX, mouseY, delta)
         }
@@ -219,35 +238,19 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        // Check tab clicks
         val tabBarY = getTabBarY()
-        val tabW = 70
+        val tabW = 64
         val speciesTabX = panelX + 4
         val jobsTabX = speciesTabX + tabW + 4
-
-        val generalTabX = jobsTabX + tabW + 4
+        val lootTabX = jobsTabX + tabW + 4
+        val generalTabX = lootTabX + tabW + 4
         val wikiTabX = generalTabX + tabW + 4
         if (mouseY >= tabBarY + 2 && mouseY <= tabBarY + TAB_HEIGHT - 1) {
-            if (mouseX >= speciesTabX && mouseX <= speciesTabX + tabW) {
-                activeTab = "species"
-                updateWidgetVisibility()
-                return true
-            }
-            if (mouseX >= jobsTabX && mouseX <= jobsTabX + tabW) {
-                activeTab = "jobs"
-                updateWidgetVisibility()
-                return true
-            }
-            if (mouseX >= generalTabX && mouseX <= generalTabX + tabW) {
-                activeTab = "general"
-                updateWidgetVisibility()
-                return true
-            }
-            if (mouseX >= wikiTabX && mouseX <= wikiTabX + tabW) {
-                activeTab = "wiki"
-                updateWidgetVisibility()
-                return true
-            }
+            if (mouseX >= speciesTabX && mouseX <= speciesTabX + tabW) { activeTab = "species"; updateWidgetVisibility(); return true }
+            if (mouseX >= jobsTabX && mouseX <= jobsTabX + tabW) { activeTab = "jobs"; updateWidgetVisibility(); return true }
+            if (mouseX >= lootTabX && mouseX <= lootTabX + tabW) { activeTab = "loot"; updateWidgetVisibility(); return true }
+            if (mouseX >= generalTabX && mouseX <= generalTabX + tabW) { activeTab = "general"; updateWidgetVisibility(); return true }
+            if (mouseX >= wikiTabX && mouseX <= wikiTabX + tabW) { activeTab = "wiki"; updateWidgetVisibility(); return true }
         }
 
         when (activeTab) {
@@ -259,6 +262,10 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             "jobs" -> {
                 if (super.mouseClicked(mouseX, mouseY, button)) return true
                 if (jobsPanel.mouseClicked(mouseX, mouseY, button)) return true
+            }
+            "loot" -> {
+                if (super.mouseClicked(mouseX, mouseY, button)) return true
+                if (lootPanel.mouseClicked(mouseX, mouseY, button)) return true
             }
             "general" -> {
                 if (super.mouseClicked(mouseX, mouseY, button)) return true
@@ -303,6 +310,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
                 if (skillEditorPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
             }
             "jobs" -> if (jobsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
+            "loot" -> if (lootPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
             "wiki" -> if (wikiPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
         }
         return false

@@ -25,6 +25,7 @@ object Cobblebase {
         AutoConfig.register(CobblebaseClothConfig::class.java, ::GsonConfigSerializer)
         registerSounds()
         SkillRegistry.init()
+        CobblebaseLootRegistry.init()
         ExecutorRegistry.init()
         SpeciesSkillRegistry.init()
         loadSpawnData()

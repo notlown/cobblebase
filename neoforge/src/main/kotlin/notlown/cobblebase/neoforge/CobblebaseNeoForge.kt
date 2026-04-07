@@ -241,6 +241,56 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             }
         }
 
+        // C2S: Admin loot request
+        registrar.playToServer(
+            notlown.cobblebase.core.net.AdminLootRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.AdminLootRequestC2SPacket.CODEC
+        ) { _, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!player.hasPermissionLevel(2)) return@enqueueWork
+                val tables = notlown.cobblebase.core.CobblebaseLootRegistry.getAllIds().mapNotNull { id ->
+                    notlown.cobblebase.core.LootHelper.getEffective(id)
+                }
+                val overridden = notlown.cobblebase.core.LootOverrides.getAll().keys.toSet()
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+                    player,
+                    notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden)
+                )
+            }
+        }
+
+        // S2C: Admin loot sync
+        registrar.playToClient(
+            notlown.cobblebase.core.net.AdminLootSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.AdminLootSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.AdminLootDataCache.update(packet.tables, packet.overriddenIds)
+            }
+        }
+
+        // C2S: Admin loot update
+        registrar.playToServer(
+            notlown.cobblebase.core.net.AdminLootUpdateC2SPacket.ID,
+            notlown.cobblebase.core.net.AdminLootUpdateC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                packet.handle(player)
+                val tables = notlown.cobblebase.core.CobblebaseLootRegistry.getAllIds().mapNotNull { id ->
+                    notlown.cobblebase.core.LootHelper.getEffective(id)
+                }
+                val overridden = notlown.cobblebase.core.LootOverrides.getAll().keys.toSet()
+                val sync = notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden)
+                for (p in player.server.playerManager.playerList) {
+                    if (p.hasPermissionLevel(2)) {
+                        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, sync)
+                    }
+                }
+            }
+        }
+
         // S2C: General settings sync (Discord URL, enabled)
         registrar.playToClient(
             notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.ID,
@@ -299,6 +349,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         SpeciesSkillOverrides.load(world)
         JobConfigOverrides.load(world)
         notlown.cobblebase.core.GeneralSettings.load(world)
+        notlown.cobblebase.core.LootOverrides.load(world)
         notlown.cobblebase.core.SpawnData.loadFromCobblemonSpawnPool()
     }
 
@@ -310,6 +361,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         SpeciesSkillOverrides.save(world)
         JobConfigOverrides.save(world)
         notlown.cobblebase.core.GeneralSettings.save(world)
+        notlown.cobblebase.core.LootOverrides.save(world)
     }
 
     /**

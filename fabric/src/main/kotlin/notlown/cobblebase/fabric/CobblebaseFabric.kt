@@ -157,6 +157,45 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // Register loot table admin packets
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.AdminLootRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.AdminLootRequestC2SPacket.CODEC
+        )
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.AdminLootSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.AdminLootSyncS2CPacket.CODEC
+        )
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.AdminLootUpdateC2SPacket.ID,
+            notlown.cobblebase.core.net.AdminLootUpdateC2SPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminLootRequestC2SPacket.ID) { _, context ->
+            context.server().execute {
+                val player = context.player()
+                if (!player.hasPermissionLevel(2)) return@execute
+                val tables = notlown.cobblebase.core.CobblebaseLootRegistry.getAllIds().mapNotNull { id ->
+                    notlown.cobblebase.core.LootHelper.getEffective(id)
+                }
+                val overridden = notlown.cobblebase.core.LootOverrides.getAll().keys.toSet()
+                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden))
+            }
+        }
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminLootUpdateC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                packet.handle(context.player())
+                // Re-broadcast updated state to all OPs viewing the GUI (cheap and rare)
+                val tables = notlown.cobblebase.core.CobblebaseLootRegistry.getAllIds().mapNotNull { id ->
+                    notlown.cobblebase.core.LootHelper.getEffective(id)
+                }
+                val overridden = notlown.cobblebase.core.LootOverrides.getAll().keys.toSet()
+                val sync = notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden)
+                for (p in context.player().server.playerManager.playerList) {
+                    if (p.hasPermissionLevel(2)) ServerPlayNetworking.send(p, sync)
+                }
+            }
+        }
+
         // Register general settings packets
         PayloadTypeRegistry.playS2C().register(
             notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.ID,
@@ -202,6 +241,7 @@ object CobblebaseFabric : ModInitializer {
             SpeciesSkillOverrides.load(world)
             JobConfigOverrides.load(world)
             notlown.cobblebase.core.GeneralSettings.load(world)
+            notlown.cobblebase.core.LootOverrides.load(world)
             // Load spawn buckets from Cobblemon's actual spawn pool
             SpawnData.loadFromCobblemonSpawnPool()
         }
@@ -215,6 +255,7 @@ object CobblebaseFabric : ModInitializer {
             SpeciesSkillOverrides.save(world)
             JobConfigOverrides.save(world)
             notlown.cobblebase.core.GeneralSettings.save(world)
+            notlown.cobblebase.core.LootOverrides.save(world)
         }
     }
 

@@ -38,11 +38,11 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
 
     private val logTag = "[${finderType.replaceFirstChar { it.uppercase() }}]"
 
-    // Cached loot table keys (avoid Identifier.of/RegistryKey.of allocations every tick)
-    private val lootKeyCommon = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase:${finderType}_common"))
-    private val lootKeyUncommon = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase:${finderType}_uncommon"))
-    private val lootKeyRare = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase:${finderType}_rare"))
-    private val lootKeyUltraRare = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of("cobblebase:${finderType}_ultra_rare"))
+    // Loot table ids resolved through LootHelper (admin override > bundled default > vanilla)
+    private val lootIdCommon = "cobblebase:${finderType}_common"
+    private val lootIdUncommon = "cobblebase:${finderType}_uncommon"
+    private val lootIdRare = "cobblebase:${finderType}_rare"
+    private val lootIdUltraRare = "cobblebase:${finderType}_ultra_rare"
 
     override fun tick(
         world: World,
@@ -78,20 +78,15 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
         try {
             // Pick a loot tier based on proficiency
             val tier = pickLootTier(world, skillEntry.proficiency)
-            val lootTableKey = when (tier) {
-                3 -> lootKeyUltraRare
-                2 -> lootKeyRare
-                1 -> lootKeyUncommon
-                else -> lootKeyCommon
+            val lootTableId = when (tier) {
+                3 -> lootIdUltraRare
+                2 -> lootIdRare
+                1 -> lootIdUncommon
+                else -> lootIdCommon
             }
-            val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
-
-            val lootParams = LootContextParameterSet.Builder(world)
-                .add(LootContextParameters.ORIGIN, pokemonEntity.pos)
-                .addOptional(LootContextParameters.THIS_ENTITY, pokemonEntity)
-                .build(LootContextTypes.CHEST)
-
-            val drops = lootTable.generateLoot(lootParams)
+            val drops = notlown.cobblebase.core.LootHelper.generateLoot(
+                lootTableId, world, pokemonEntity.blockPos, pokemonEntity
+            )
 
             if (drops.isNotEmpty()) {
                 heldItems[pokemonId] = drops

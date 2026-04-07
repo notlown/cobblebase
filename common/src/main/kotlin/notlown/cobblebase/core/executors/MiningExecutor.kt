@@ -148,15 +148,9 @@ object MiningExecutor : SkillExecutor {
     ): Boolean {
         try {
             val lootTableName = pickLootTable(world, skillEntry.proficiency)
-            val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of(lootTableName))
-            val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
-
-            val lootParams = LootContextParameterSet.Builder(world)
-                .add(LootContextParameters.ORIGIN, pokemonEntity.pos)
-                .addOptional(LootContextParameters.THIS_ENTITY, pokemonEntity)
-                .build(LootContextTypes.CHEST)
-
-            val drops = lootTable.generateLoot(lootParams)
+            val drops = notlown.cobblebase.core.LootHelper.generateLoot(
+                lootTableName, world, pokemonEntity.blockPos, pokemonEntity
+            )
 
             if (drops.isNotEmpty()) {
                 heldItems[pokemonId] = drops

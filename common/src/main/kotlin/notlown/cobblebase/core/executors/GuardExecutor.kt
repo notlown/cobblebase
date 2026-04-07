@@ -83,14 +83,9 @@ object GuardExecutor : SkillExecutor {
                 if (world.random.nextInt(100) < CANDY_DROP_CHANCE) {
                     val lootTableId = skill.lootTable
                     if (lootTableId != null) {
-                        val lootParams = LootContextParameterSet.Builder(world)
-                            .add(LootContextParameters.ORIGIN, pokemonEntity.pos)
-                            .addOptional(LootContextParameters.THIS_ENTITY, pokemonEntity)
-                            .build(LootContextTypes.CHEST)
-
-                        val lootTableKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of(Cobblebase.MODID, lootTableId.removePrefix("cobblebase:")))
-                        val lootTable = world.server.reloadableRegistries.getLootTable(lootTableKey)
-                        val drops = lootTable.generateLoot(lootParams)
+                        val drops = notlown.cobblebase.core.LootHelper.generateLoot(
+                            lootTableId, world, pokemonEntity.blockPos, pokemonEntity
+                        )
                         if (drops.isNotEmpty()) {
                             heldItems[pokemonId] = drops
                         }

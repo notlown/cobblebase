@@ -109,6 +109,15 @@ class AdminLootPanel(
     private var editRolls = 1
     private var dirty = false
 
+    /** Tooltip lines set during render() and drawn by AdminScreen *after* the
+     *  widgets layer so they always appear on top. */
+    var pendingTooltip: List<String> = emptyList()
+        private set
+    var tooltipX: Int = 0
+        private set
+    var tooltipY: Int = 0
+        private set
+
     // -------- widgets (fixed pool) --------
     private data class RowWidgets(
         val itemField: TextFieldWidget,
@@ -312,6 +321,8 @@ class AdminLootPanel(
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        pendingTooltip = emptyList()
+
         // Refresh job list if cache changed
         if (jobs.size != distinctJobCount()) rebuildJobs()
         if (selectedJob == null && jobs.isNotEmpty()) {
@@ -422,6 +433,17 @@ class AdminLootPanel(
             it.y = rollsLabelY
             it.visible = true
         }
+        // Hover tooltip for rolls label
+        if (mouseX in (rightX + PADDING)..(rightX + PADDING + 100) && mouseY in rollsLabelY..(rollsLabelY + 10)) {
+            pendingTooltip = listOf(
+                "\u00A7f\u00A7lRolls per generation",
+                "\u00A77Wie viele Items der Job pro Cooldown ausspuckt.",
+                "\u00A77Pro Roll wird genau ein Item nach Weight gewuerfelt.",
+                "\u00A78Beispiel: Rolls = 3 -> es kommen 3 Items raus pro Tick."
+            )
+            tooltipX = mouseX
+            tooltipY = mouseY
+        }
 
         // Column headers — column X positions also drive the row widget layout below
         val headerY = y + 40
@@ -436,6 +458,40 @@ class AdminLootPanel(
         drawScaled(context, "\u00A77Max", colMaxX, headerY, 0xAAAAAA, SCALE)
         drawScaled(context, "\u00A77Action", colActionX, headerY, 0xAAAAAA, SCALE)
         context.fill(rightX + 2, headerY + 8, rightX + rightW - 4, headerY + 9, 0xFF3A3A5C.toInt())
+
+        // Column header tooltips
+        if (mouseY in headerY..(headerY + 8)) {
+            when {
+                mouseX in colItemX..(colItemX + 30) -> setTip(mouseX, mouseY,
+                    "\u00A7f\u00A7lItem ID",
+                    "\u00A77Minecraft Item Identifier mit Mod-Namespace.",
+                    "\u00A78Beispiele: minecraft:diamond, cobblemon:rare_candy"
+                )
+                mouseX in colWeightX..(colWeightX + 26) -> setTip(mouseX, mouseY,
+                    "\u00A7f\u00A7lWeight",
+                    "\u00A77Wahrscheinlichkeit dass dieses Item gewaehlt wird.",
+                    "\u00A77Verhaeltnis zur Summe aller Weights in der Tabelle.",
+                    "\u00A78Beispiel: Weights 10/5/1 -> 62.5%/31.3%/6.3%."
+                )
+                mouseX in colMinX..(colMinX + 26) -> setTip(mouseX, mouseY,
+                    "\u00A7f\u00A7lMin Count",
+                    "\u00A77Minimale Stack-Groesse wenn dieses Item gewaehlt wird.",
+                    "\u00A78Beispiel: Min 1 Max 3 -> 1, 2 oder 3 Stueck."
+                )
+                mouseX in colMaxX..(colMaxX + 26) -> setTip(mouseX, mouseY,
+                    "\u00A7f\u00A7lMax Count",
+                    "\u00A77Maximale Stack-Groesse wenn dieses Item gewaehlt wird.",
+                    "\u00A78Wenn Min == Max gibts immer genau diese Anzahl."
+                )
+                mouseX in colActionX..(colActionX + 32) -> setTip(mouseX, mouseY,
+                    "\u00A7f\u00A7lAction",
+                    "\u00A7aon/off\u00A77 Toggle fuer Default-Items aus dem Loot Pool.",
+                    "\u00A77Disabled Items bleiben in der Tabelle aber werden nie",
+                    "\u00A77ausgewaehlt - kannst du jederzeit wieder aktivieren.",
+                    "\u00A77Custom Items (selber hinzugefuegt) zeigen \u00A7c\u00d7\u00A77 zum Loeschen."
+                )
+            }
+        }
 
         // Rows
         val listY = headerY + 11
@@ -549,6 +605,12 @@ class AdminLootPanel(
             bases.add(if (rarity.isEmpty()) id else id.removeSuffix("_$rarity"))
         }
         return bases.size
+    }
+
+    private fun setTip(mx: Int, my: Int, vararg lines: String) {
+        pendingTooltip = lines.toList()
+        tooltipX = mx
+        tooltipY = my
     }
 
     private fun drawScaled(context: DrawContext, text: String, px: Int, py: Int, color: Int, scale: Float) {

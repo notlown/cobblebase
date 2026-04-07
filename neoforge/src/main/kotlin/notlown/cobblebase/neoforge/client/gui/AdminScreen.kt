@@ -208,6 +208,10 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             val lines = jobsPanel.pendingTooltip.map { Text.literal(it) }
             context.drawTooltip(textRenderer, lines, jobsPanel.tooltipX, jobsPanel.tooltipY)
         }
+        if (activeTab == "loot" && lootPanel.pendingTooltip.isNotEmpty()) {
+            val lines = lootPanel.pendingTooltip.map { Text.literal(it) }
+            context.drawTooltip(textRenderer, lines, lootPanel.tooltipX, lootPanel.tooltipY)
+        }
     }
 
     private fun renderTab(

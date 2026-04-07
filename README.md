@@ -25,7 +25,7 @@
 
 **Cobblebase** transforms the Pasture Block into a living, breathing Pokemon base. Every Pokemon species has hand-crafted job skills and proficiency levels — not based on type, but on identity. A Charizard fills lava cauldrons and guards your base. An Alakazam mentors your entire team. A Mew recruits legendaries.
 
-- 💎 **8,426 Pokemon** with unique skill assignments (996 hand-crafted + 7,430 Fakemon)
+- 💎 **1,318 Pokemon** with unique skill assignments (996 hand-crafted + 322 Fakemon)
 - ⚡ **43 jobs** across 10 categories — gathering, finding, combat, support, logistics, exploration, environmental, recruiting, passive buffs, and legendary
 - ⭐ **Proficiency 1-5** per skill per species — novice to master
 - 🎯 **Tabbed GUI** with Skills, Buffs, Logs, and Discovery panels
@@ -38,7 +38,7 @@
 | Tool | Description |
 |------|-------------|
 | 📚 [Documentation](https://notlown.github.io/cobblebase-web/docs/) | Full guides for jobs, proficiency, GUI, admin, datapacks, and more |
-| 📊 [Species Database](https://notlown.github.io/cobblebase-web/database/) | Browse all 8,426 Pokemon with skills, proficiency, and an inline editor |
+| 📊 [Species Database](https://notlown.github.io/cobblebase-web/database/) | Browse all 1,318 Pokemon with skills, proficiency, and an inline editor |
 | 🔧 [Datapack Generator](https://notlown.github.io/cobblebase-web/generator/) | Create custom species skill datapacks without editing JSON |
 
 ### 💬 Community & Support
@@ -233,9 +233,8 @@ Server admins can manage skill assignments for any Pokemon species in-game — n
 | **Alatias Fakemon Pack** | 87 | Auto-assigned by typing + stats |
 | **Laser's Fakemon Pack** | 53 | Auto-assigned by typing + stats |
 | **Wilbayan's Fakemons** | 37 | Auto-assigned by typing + stats |
-| **Gravelmon** | 7,194 | Auto-assigned by typing + stats |
 
-**Total: 8,426 species with skill assignments**
+**Total: 1,318 species with skill assignments**
 
 ---
 
@@ -295,7 +294,7 @@ Output JARs in `fabric/build/libs/` and `neoforge/build/libs/`. Requires **Java 
 - [Discord](https://discord.gg/6As3sVZgVT) — Get help, report bugs, suggest features
 - [Ko-fi](https://ko-fi.com/notlown) — Support the project
 - [Documentation](https://notlown.github.io/cobblebase-web/docs/) — Full guides and reference
-- [Species Database](https://notlown.github.io/cobblebase-web/database/) — Browse and edit all 8,426 Pokemon
+- [Species Database](https://notlown.github.io/cobblebase-web/database/) — Browse and edit all 1,318 Pokemon
 - [Datapack Generator](https://notlown.github.io/cobblebase-web/generator/) — Create custom skill datapacks
 
 ---

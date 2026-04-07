@@ -97,6 +97,13 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Register S2C general settings sync (Discord URL, enabled, etc.)
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.core.GeneralSettingsCache.update(packet.discordUrl, packet.discordEnabled)
+            }
+        }
+
         // Lazy-loaded skills response
         ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket.ID) { packet, context ->
             context.client().execute {

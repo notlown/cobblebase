@@ -73,18 +73,25 @@ class SkillsPanel(
         contentY = panelY + HEADER_HEIGHT + PANEL_PADDING
 
         // Bottom bar: Discord icon | Mute toggle | Done button
-        // Discord icon button (bottom-left)
-        addWidget.apply(ButtonWidget.builder(Text.literal("\u00A79\u2689")) {
-            try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI("https://discord.gg/6As3sVZgVT")) } catch (_: Exception) {}
-        }.dimensions(panelX + 4, panelY + panelH - 16, 14, 12).build())
+        // Discord icon button (bottom-left) — only if enabled via GeneralSettings
+        val discordEnabled = notlown.cobblebase.core.GeneralSettingsCache.discordEnabled
+        val muteBtnX = if (discordEnabled) {
+            addWidget.apply(ButtonWidget.builder(Text.literal("\u00A79\u2689")) {
+                val url = notlown.cobblebase.core.GeneralSettingsCache.discordUrl
+                try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI(url)) } catch (_: Exception) {}
+            }.dimensions(panelX + 4, panelY + panelH - 16, 14, 12).build())
+            panelX + 22
+        } else {
+            panelX + 4
+        }
 
-        // Mute toggle button (next to Discord)
+        // Mute toggle button (next to Discord, or leftmost if Discord disabled)
         val muteBtn = ButtonWidget.builder(Text.literal(getMuteIcon())) { btn ->
             val config = me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).config
             config.cry.cryEnabled = !config.cry.cryEnabled
             me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).save()
             btn.message = Text.literal(getMuteIcon())
-        }.dimensions(panelX + 22, panelY + panelH - 16, 14, 12).build()
+        }.dimensions(muteBtnX, panelY + panelH - 16, 14, 12).build()
         addWidget.apply(muteBtn)
 
         // Admin button (only if OP) — bottom-right, before Done

@@ -157,6 +157,42 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // Register general settings packets
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.CODEC
+        )
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket.ID,
+            notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                val player = context.player()
+                if (!player.hasPermissionLevel(2)) return@execute
+                val newSettings = notlown.cobblebase.core.GeneralSettings.Settings(
+                    discordUrl = packet.discordUrl,
+                    discordEnabled = packet.discordEnabled
+                )
+                notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
+                notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
+                // Broadcast updated settings to ALL players
+                for (p in player.server.playerManager.playerList) {
+                    ServerPlayNetworking.send(p, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
+                        packet.discordUrl, packet.discordEnabled
+                    ))
+                }
+            }
+        }
+
+        // Send general settings to player on join
+        ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
+            val s = notlown.cobblebase.core.GeneralSettings.getSettings()
+            ServerPlayNetworking.send(handler.player, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
+                s.discordUrl, s.discordEnabled
+            ))
+        }
+
         // Load assignments, logs, discoveries, and overrides when world starts
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             val world = server.overworld
@@ -165,6 +201,7 @@ object CobblebaseFabric : ModInitializer {
             DiscoveryRegistry.load(world)
             SpeciesSkillOverrides.load(world)
             JobConfigOverrides.load(world)
+            notlown.cobblebase.core.GeneralSettings.load(world)
             // Load spawn buckets from Cobblemon's actual spawn pool
             SpawnData.loadFromCobblemonSpawnPool()
         }
@@ -177,6 +214,7 @@ object CobblebaseFabric : ModInitializer {
             DiscoveryRegistry.save(world)
             SpeciesSkillOverrides.save(world)
             JobConfigOverrides.save(world)
+            notlown.cobblebase.core.GeneralSettings.save(world)
         }
     }
 

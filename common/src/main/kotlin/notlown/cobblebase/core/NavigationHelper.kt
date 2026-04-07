@@ -208,6 +208,23 @@ object NavigationHelper {
                     pokemonEntity.velocityDirty = true
                 }
 
+                // Escape solid block: at intensity 2+, check if entity is clipped inside a solid block
+                // If yes, push 1.5 blocks straight up to escape (handles glass ceilings, between-chests, stair pockets)
+                if (intensity >= 2 && isClippedInSolid(pokemonEntity)) {
+                    val newY = findEscapeY(pokemonEntity)
+                    if (newY != null) {
+                        pokemonEntity.refreshPositionAndAngles(
+                            pokemonEntity.x, newY, pokemonEntity.z,
+                            pokemonEntity.yaw, pokemonEntity.pitch
+                        )
+                        pokemonEntity.setVelocity(0.0, 0.0, 0.0)
+                        pokemonEntity.velocityDirty = true
+                        notlown.cobblebase.core.Cobblebase.LOGGER.info(
+                            "[Unstick] Escaped clipped ${pokemonEntity.pokemon.species.name} from solid block to y=$newY"
+                        )
+                    }
+                }
+
                 // Don't reset stuckSince — let intensity escalate on next check
                 stuckSince[id] = since // keep original stuck time for escalation
             }
@@ -216,6 +233,60 @@ object NavigationHelper {
             lastPositions[id] = currentPos.toImmutable()
             stuckSince.remove(id)
         }
+    }
+
+    /**
+     * Checks if a Pokemon's bounding box intersects any solid block.
+     * Used to detect mons clipped INSIDE blocks (glass ceilings, between chests, stair pockets, etc.)
+     */
+    private fun isClippedInSolid(pokemonEntity: PokemonEntity): Boolean {
+        val world = pokemonEntity.world
+        val box = pokemonEntity.boundingBox
+        // Shrink box slightly to avoid false positives from edge contact
+        val shrunk = box.contract(0.1, 0.1, 0.1)
+        val minX = Math.floor(shrunk.minX).toInt()
+        val minY = Math.floor(shrunk.minY).toInt()
+        val minZ = Math.floor(shrunk.minZ).toInt()
+        val maxX = Math.floor(shrunk.maxX).toInt()
+        val maxY = Math.floor(shrunk.maxY).toInt()
+        val maxZ = Math.floor(shrunk.maxZ).toInt()
+
+        val pos = BlockPos.Mutable()
+        for (x in minX..maxX) {
+            for (y in minY..maxY) {
+                for (z in minZ..maxZ) {
+                    pos.set(x, y, z)
+                    val state = world.getBlockState(pos)
+                    if (state.isAir) continue
+                    // Check if this block has solid collision (not air, not pass-through)
+                    val shape = state.getCollisionShape(world, pos)
+                    if (!shape.isEmpty) return true
+                }
+            }
+        }
+        return false
+    }
+
+    /**
+     * Find a safe Y position above the current location to escape to.
+     * Walks upward until finding 2 consecutive air blocks (enough space for the entity).
+     * Returns null if no safe spot found within 6 blocks above.
+     */
+    private fun findEscapeY(pokemonEntity: PokemonEntity): Double? {
+        val world = pokemonEntity.world
+        val startY = pokemonEntity.blockY
+        val pos = BlockPos.Mutable()
+        for (offset in 1..6) {
+            val checkY = startY + offset
+            pos.set(pokemonEntity.blockX, checkY, pokemonEntity.blockZ)
+            val below = world.getBlockState(pos)
+            pos.set(pokemonEntity.blockX, checkY + 1, pokemonEntity.blockZ)
+            val above = world.getBlockState(pos)
+            if (below.isAir && above.isAir) {
+                return checkY.toDouble()
+            }
+        }
+        return null
     }
 
     private val lastWanderTick = mutableMapOf<UUID, Long>()

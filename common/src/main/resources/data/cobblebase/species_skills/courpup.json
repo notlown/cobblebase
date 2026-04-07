@@ -1,0 +1,17 @@
+{
+  "species": "courpup",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 2
+    }
+  ]
+}

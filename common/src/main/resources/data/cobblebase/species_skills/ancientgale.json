@@ -1,0 +1,29 @@
+{
+  "species": "ancientgale",
+  "skills": [
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 4
+    }
+  ]
+}

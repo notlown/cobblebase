@@ -1,0 +1,37 @@
+{
+  "species": "raygul",
+  "skills": [
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 3
+    }
+  ]
+}

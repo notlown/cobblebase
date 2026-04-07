@@ -1,0 +1,29 @@
+{
+  "species": "ohho",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 2
+    }
+  ]
+}

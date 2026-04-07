@@ -1,0 +1,17 @@
+{
+  "species": "haidon",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_stat",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    }
+  ]
+}

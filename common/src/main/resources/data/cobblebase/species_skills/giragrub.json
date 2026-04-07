@@ -1,0 +1,25 @@
+{
+  "species": "giragrub",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    }
+  ]
+}

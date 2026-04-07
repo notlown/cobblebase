@@ -1,0 +1,25 @@
+{
+  "species": "delcalf",
+  "skills": [
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:fishing",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 4
+    }
+  ]
+}

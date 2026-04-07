@@ -1,0 +1,29 @@
+{
+  "species": "shivershrub",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 4
+    }
+  ]
+}

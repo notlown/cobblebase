@@ -1,0 +1,29 @@
+{
+  "species": "irondrone",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:water_breathing",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 4
+    }
+  ]
+}

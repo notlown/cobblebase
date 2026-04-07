@@ -1,0 +1,21 @@
+{
+  "species": "yangram",
+  "skills": [
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 3
+    }
+  ]
+}

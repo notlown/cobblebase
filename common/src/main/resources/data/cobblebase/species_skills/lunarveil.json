@@ -1,0 +1,29 @@
+{
+  "species": "lunarveil",
+  "skills": [
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_bui",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:snow_fill",
+      "proficiency": 4
+    }
+  ]
+}

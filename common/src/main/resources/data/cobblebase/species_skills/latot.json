@@ -1,0 +1,25 @@
+{
+  "species": "latot",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_exp",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "species": "feralwish",
+  "skills": [
+    {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mining",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
+    }
+  ]
+}

@@ -7,6 +7,8 @@ import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.tag.TagKey
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import notlown.cobblebase.core.AdminLootDataCache
@@ -366,7 +368,12 @@ class AdminLootPanel(
                 mouseX in colItemX..(colItemX + 30) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lItem ID",
                     "\u00A77The Minecraft item identifier including the mod namespace.",
-                    "\u00A78Examples: minecraft:diamond, cobblemon:rare_candy"
+                    "\u00A78Example: \u00A7fminecraft:diamond\u00A78, \u00A7fcobblemon:rare_candy",
+                    "",
+                    "\u00A7e\u00A7lBulk add via item tag",
+                    "\u00A77Type \u00A7f#namespace:tag\u00A77 to expand all items in a tag",
+                    "\u00A77into one entry each (weight/min/max copied from this row).",
+                    "\u00A78Examples: \u00A7f#minecraft:logs\u00A78, \u00A7f#c:ores\u00A78, \u00A7f#minecraft:flowers"
                 )
                 mouseX in colWeightX..(colWeightX + 28) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lWeight",
@@ -420,8 +427,12 @@ class AdminLootPanel(
                 context.fill(rightX + 2, rowY, rightX + rightW - 4, rowY + ROW_H, 0x66000000)
             }
 
-            // Item icon — scaled to 11x11 to match the row height
-            val stack = makeStack(entry.itemId)
+            // Item icon — scaled to ~11x11 to match the row height. While the
+            // user is editing this row's item id, preview the live typed value
+            // instead of the committed one so the icon updates as you type.
+            val isItemActiveForIcon = activeFieldRow == rowIdx && activeFieldType == FieldType.ITEM
+            val previewId = if (isItemActiveForIcon) fieldText else entry.itemId
+            val stack = makeStack(previewId)
             val iconScale = (ROW_H - 3).toFloat() / 16f
             context.matrices.push()
             context.matrices.translate((rightX + PADDING).toFloat(), (rowY + 1).toFloat(), 0f)
@@ -435,10 +446,15 @@ class AdminLootPanel(
 
             // Item ID field
             val isItemActive = activeFieldRow == rowIdx && activeFieldType == FieldType.ITEM
+            val itemDisplay = when {
+                isItemActive -> fieldText
+                entry.itemId.isEmpty() -> "id or #c:ores"
+                else -> entry.itemId
+            }
             renderField(
                 context,
                 colItemX, rowY + 1, 136, ROW_H - 2,
-                if (isItemActive) fieldText else entry.itemId.ifEmpty { "<empty>" },
+                itemDisplay,
                 isActive = isItemActive,
                 isOverride = false,
                 grayWhenEmpty = entry.itemId.isEmpty() && !isItemActive
@@ -707,6 +723,31 @@ class AdminLootPanel(
         return false
     }
 
+    /**
+     * Expands `#namespace:path` into all item ids contained in that vanilla
+     * item tag (resolved against the client-side item registry — tags sync
+     * from server to client during world join). Returns null if [text] is
+     * not a tag query.
+     */
+    private fun expandItemTag(text: String): List<String>? {
+        if (!text.startsWith("#")) return null
+        val raw = text.removePrefix("#").trim()
+        if (raw.isEmpty()) return emptyList()
+        val parts = raw.split(":", limit = 2)
+        val ns = if (parts.size == 2) parts[0] else "minecraft"
+        val path = if (parts.size == 2) parts[1] else parts[0]
+        val tagId = try { Identifier.of(ns, path) } catch (_: Exception) { return emptyList() }
+        val tagKey = TagKey.of(RegistryKeys.ITEM, tagId)
+        return try {
+            Registries.ITEM.iterateEntries(tagKey)
+                .mapNotNull { entry -> Registries.ITEM.getId(entry.value())?.toString() }
+                .distinct()
+                .sorted()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     private fun commitActiveField() {
         if (activeFieldType == FieldType.NONE) return
         when (activeFieldType) {
@@ -716,8 +757,22 @@ class AdminLootPanel(
             }
             FieldType.ITEM -> {
                 if (activeFieldRow in editEntries.indices) {
-                    editEntries[activeFieldRow] = editEntries[activeFieldRow].copy(itemId = fieldText)
-                    dirty = true
+                    val expanded = expandItemTag(fieldText)
+                    if (expanded != null) {
+                        // Tag query: replace this row with one row per matching item.
+                        // Reuse the row's weight/min/max as the template for every new entry.
+                        if (expanded.isNotEmpty()) {
+                            val template = editEntries[activeFieldRow]
+                            editEntries.removeAt(activeFieldRow)
+                            for ((i, id) in expanded.withIndex()) {
+                                editEntries.add(activeFieldRow + i, template.copy(itemId = id))
+                            }
+                            dirty = true
+                        }
+                    } else {
+                        editEntries[activeFieldRow] = editEntries[activeFieldRow].copy(itemId = fieldText)
+                        dirty = true
+                    }
                 }
             }
             FieldType.WEIGHT -> {
@@ -814,8 +869,9 @@ class AdminLootPanel(
         if (activeFieldType == FieldType.NONE) return false
         when (activeFieldType) {
             FieldType.ITEM -> {
-                // Item ids allow letters, digits, underscore, colon
-                if ((chr.isLetterOrDigit() || chr == '_' || chr == ':') && fieldText.length < 64) {
+                // Item ids and item-tag references allow letters, digits, underscore,
+                // colon, and a leading '#' (for "#minecraft:logs"-style bulk expansion).
+                if ((chr.isLetterOrDigit() || chr == '_' || chr == ':' || chr == '#') && fieldText.length < 64) {
                     fieldText += chr.lowercaseChar()
                     return true
                 }

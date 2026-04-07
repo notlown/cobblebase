@@ -35,6 +35,42 @@ class AdminSpeciesListPanel(
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
 
+    /** Sort modes cycled by the toggle button next to the "Species" header. */
+    private enum class SortMode { POKEDEX, A_Z, Z_A }
+    private var sortMode = SortMode.POKEDEX
+
+    /** Cached lookup of national pokedex numbers from Cobblemon's runtime registry. */
+    private val pokedexCache = mutableMapOf<String, Int>()
+    private fun pokedexNumber(name: String): Int {
+        return pokedexCache.getOrPut(name) {
+            try {
+                val species = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.getByName(name)
+                // nationalPokedexNumber is the canonical field on cobblemon's Species class
+                species?.nationalPokedexNumber ?: Int.MAX_VALUE
+            } catch (_: Throwable) {
+                Int.MAX_VALUE
+            }
+        }
+    }
+
+    private fun applySort(list: List<String>): List<String> = when (sortMode) {
+        SortMode.POKEDEX -> list.sortedWith(compareBy({ pokedexNumber(it) }, { it }))
+        SortMode.A_Z -> list.sortedBy { it }
+        SortMode.Z_A -> list.sortedByDescending { it }
+    }
+
+    /**
+     * Hit-box of the sort toggle button next to the Species header.
+     * Returns (x, y, w, h).
+     */
+    private fun sortToggleBounds(): IntArray {
+        val toggleW = 28
+        val toggleH = 10
+        val toggleX = x + w - PADDING - toggleW - 4
+        val toggleY = y + PADDING + SEARCH_HEIGHT + 3
+        return intArrayOf(toggleX, toggleY, toggleW, toggleH)
+    }
+
     fun init(addWidget: Function<TextFieldWidget, TextFieldWidget>) {
         searchField = TextFieldWidget(textRenderer, x + PADDING, y + PADDING, w - PADDING * 2, SEARCH_HEIGHT, Text.literal("Search..."))
         searchField!!.setPlaceholder(Text.literal("\u00A77Search species..."))
@@ -49,11 +85,8 @@ class AdminSpeciesListPanel(
     private fun updateFilter() {
         val query = searchField?.text?.lowercase()?.trim() ?: ""
         val allSpecies = AdminDataCache.allSpecies
-        filteredSpecies = if (query.isEmpty()) {
-            allSpecies
-        } else {
-            allSpecies.filter { it.contains(query) }
-        }
+        val matched = if (query.isEmpty()) allSpecies else allSpecies.filter { it.contains(query) }
+        filteredSpecies = applySort(matched)
         // Show "Add new species" option when query doesn't match any existing species exactly
         showAddOption = query.isNotEmpty() && query !in allSpecies
         addQuery = query
@@ -69,8 +102,26 @@ class AdminSpeciesListPanel(
         // Background
         context.fill(x, y, x + w, y + h, 0xCC1A1A2E.toInt())
 
-        // Header
-        context.drawTextWithShadow(textRenderer, "\u00A7fSpecies", x + PADDING, y + PADDING + SEARCH_HEIGHT + 4, 0xFFFFFF)
+        // Header — "Species" label + sort toggle button on the right
+        val headerY = y + PADDING + SEARCH_HEIGHT + 4
+        context.drawTextWithShadow(textRenderer, "\u00A7fSpecies", x + PADDING, headerY, 0xFFFFFF)
+
+        val tb = sortToggleBounds()
+        val toggleX = tb[0]; val toggleY = tb[1]; val toggleW = tb[2]; val toggleH = tb[3]
+        val toggleHovered = mouseX in toggleX..(toggleX + toggleW) && mouseY in toggleY..(toggleY + toggleH)
+        val toggleBg = if (toggleHovered) 0xFF3A3A6C.toInt() else 0xFF252545.toInt()
+        context.fill(toggleX, toggleY, toggleX + toggleW, toggleY + toggleH, toggleBg)
+        context.fill(toggleX, toggleY, toggleX + toggleW, toggleY + 1, 0xFF6A6AFF.toInt())
+        val label = when (sortMode) {
+            SortMode.POKEDEX -> "\u00A7fDex#"
+            SortMode.A_Z -> "\u00A7fA-Z"
+            SortMode.Z_A -> "\u00A7fZ-A"
+        }
+        context.matrices.push()
+        context.matrices.translate((toggleX + 4).toFloat(), (toggleY + 2).toFloat(), 0f)
+        context.matrices.scale(0.75f, 0.75f, 1f)
+        context.drawTextWithShadow(textRenderer, label, 0, 0, 0xFFFFFF)
+        context.matrices.pop()
 
         val listY = y + PADDING + SEARCH_HEIGHT + 16
         val listH = h - PADDING - SEARCH_HEIGHT - 20
@@ -150,6 +201,20 @@ class AdminSpeciesListPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Sort toggle click — cycle POKEDEX → A_Z → Z_A → POKEDEX
+        val tb = sortToggleBounds()
+        if (mouseX in tb[0].toDouble()..(tb[0] + tb[2]).toDouble() &&
+            mouseY in tb[1].toDouble()..(tb[1] + tb[3]).toDouble()
+        ) {
+            sortMode = when (sortMode) {
+                SortMode.POKEDEX -> SortMode.A_Z
+                SortMode.A_Z -> SortMode.Z_A
+                SortMode.Z_A -> SortMode.POKEDEX
+            }
+            updateFilter()
+            return true
+        }
+
         val listY = y + PADDING + SEARCH_HEIGHT + 16
         val listH = h - PADDING - SEARCH_HEIGHT - 20
 

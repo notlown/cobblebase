@@ -299,25 +299,27 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     }
 
     override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        if (activeTab == "species") {
-            if (speciesListPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
-            if (skillEditorPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
-        } else if (activeTab == "wiki") {
-            if (wikiPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
-        } else {
-            if (jobsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+        when (activeTab) {
+            "species" -> {
+                if (speciesListPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+                if (skillEditorPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+            }
+            "jobs" -> if (jobsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+            "loot" -> if (lootPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+            "wiki" -> if (wikiPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (activeTab == "species") {
-            if (speciesListPanel.mouseReleased(mouseX, mouseY, button)) return true
-            if (skillEditorPanel.mouseReleased(mouseX, mouseY, button)) return true
-        } else if (activeTab == "wiki") {
-            if (wikiPanel.mouseReleased(mouseX, mouseY, button)) return true
-        } else {
-            if (jobsPanel.mouseReleased(mouseX, mouseY, button)) return true
+        when (activeTab) {
+            "species" -> {
+                if (speciesListPanel.mouseReleased(mouseX, mouseY, button)) return true
+                if (skillEditorPanel.mouseReleased(mouseX, mouseY, button)) return true
+            }
+            "jobs" -> if (jobsPanel.mouseReleased(mouseX, mouseY, button)) return true
+            "loot" -> if (lootPanel.mouseReleased(mouseX, mouseY, button)) return true
+            "wiki" -> if (wikiPanel.mouseReleased(mouseX, mouseY, button)) return true
         }
         return super.mouseReleased(mouseX, mouseY, button)
     }

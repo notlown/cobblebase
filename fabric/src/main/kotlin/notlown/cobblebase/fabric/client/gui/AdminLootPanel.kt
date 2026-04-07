@@ -119,6 +119,10 @@ class AdminLootPanel(
     private var fieldText = ""
     private var cursorBlink = 0
 
+    /** Which scrollbar is currently being dragged (null = none). */
+    private enum class DragTarget { SIDEBAR, LIST }
+    private var dragging: DragTarget? = null
+
     var pendingTooltip: List<String> = emptyList()
         private set
     var tooltipX: Int = 0
@@ -346,10 +350,10 @@ class AdminLootPanel(
         // Column headers
         val headerY = y + 41
         val colItemX = rightX + PADDING + 14
-        val colWeightX = rightX + PADDING + 188
-        val colMinX = rightX + PADDING + 218
-        val colMaxX = rightX + PADDING + 248
-        val colActionX = rightX + PADDING + 280
+        val colWeightX = rightX + PADDING + 154
+        val colMinX = rightX + PADDING + 184
+        val colMaxX = rightX + PADDING + 214
+        val colActionX = rightX + PADDING + 246
         drawScaled(context, "\u00A77Item", colItemX, headerY, 0xAAAAAA, SCALE)
         drawScaled(context, "\u00A77Weight", colWeightX - 2, headerY, 0xAAAAAA, SCALE)
         drawScaled(context, "\u00A77Min", colMinX - 2, headerY, 0xAAAAAA, SCALE)
@@ -433,7 +437,7 @@ class AdminLootPanel(
             val isItemActive = activeFieldRow == rowIdx && activeFieldType == FieldType.ITEM
             renderField(
                 context,
-                colItemX, rowY + 1, 170, ROW_H - 2,
+                colItemX, rowY + 1, 136, ROW_H - 2,
                 if (isItemActive) fieldText else entry.itemId.ifEmpty { "<empty>" },
                 isActive = isItemActive,
                 isOverride = false,
@@ -553,9 +557,43 @@ class AdminLootPanel(
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         commitActiveField()
 
-        // Sidebar selection
+        // Sidebar scrollbar drag start
         val sidebarListY = y + 14
-        if (mouseX in x.toDouble()..(x + SIDEBAR_W).toDouble() &&
+        val sidebarListH = h - 14 - FOOTER_H
+        val sidebarMaxRows = sidebarListH / ROW_H
+        val sidebarMaxScroll = (jobs.size - sidebarMaxRows).coerceAtLeast(0)
+        val sidebarTrackX = x + SIDEBAR_W - 3
+        if (sidebarMaxScroll > 0 &&
+            mouseX in (sidebarTrackX - 3).toDouble()..(sidebarTrackX + 5).toDouble() &&
+            mouseY in sidebarListY.toDouble()..(sidebarListY + sidebarListH).toDouble()
+        ) {
+            dragging = DragTarget.SIDEBAR
+            val rel = ((mouseY - sidebarListY) / sidebarListH.toDouble()).coerceIn(0.0, 1.0)
+            sidebarScroll = (rel * sidebarMaxScroll).toInt()
+            return true
+        }
+
+        // Right list scrollbar drag start
+        val rightX = x + SIDEBAR_W + 2
+        val rightW = w - SIDEBAR_W - 2
+        val headerY = y + 41
+        val rightListY = headerY + 12
+        val rightListH = y + h - FOOTER_H - rightListY - 2
+        val rightMaxRows = rightListH / ROW_H
+        val rightMaxScroll = (editEntries.size - rightMaxRows).coerceAtLeast(0)
+        val rightTrackX = rightX + rightW - 3
+        if (rightMaxScroll > 0 &&
+            mouseX in (rightTrackX - 3).toDouble()..(rightTrackX + 5).toDouble() &&
+            mouseY in rightListY.toDouble()..(rightListY + rightListH).toDouble()
+        ) {
+            dragging = DragTarget.LIST
+            val rel = ((mouseY - rightListY) / rightListH.toDouble()).coerceIn(0.0, 1.0)
+            listScroll = (rel * rightMaxScroll).toInt()
+            return true
+        }
+
+        // Sidebar selection (only when not clicking the scrollbar)
+        if (mouseX in x.toDouble()..(x + SIDEBAR_W - 4).toDouble() &&
             mouseY in sidebarListY.toDouble()..(y + h - FOOTER_H).toDouble()
         ) {
             val idx = ((mouseY - sidebarListY) / ROW_H).toInt() + sidebarScroll
@@ -568,7 +606,6 @@ class AdminLootPanel(
         }
 
         val job = selectedJob ?: return false
-        val rightX = x + SIDEBAR_W + 2
 
         // Rarity tab clicks
         val tabY = y + 12
@@ -599,17 +636,16 @@ class AdminLootPanel(
             return true
         }
 
-        // Row cells
-        val headerY = y + 41
-        val listY = headerY + 12
-        val listH = y + h - FOOTER_H - listY - 2
+        // Row cells (reuse rightListY/H from the scrollbar block above)
+        val listY = rightListY
+        val listH = rightListH
         val maxRows = listH / ROW_H
 
         val colItemX = rightX + PADDING + 14
-        val colWeightX = rightX + PADDING + 188
-        val colMinX = rightX + PADDING + 218
-        val colMaxX = rightX + PADDING + 248
-        val colActionX = rightX + PADDING + 280
+        val colWeightX = rightX + PADDING + 154
+        val colMinX = rightX + PADDING + 184
+        val colMaxX = rightX + PADDING + 214
+        val colActionX = rightX + PADDING + 246
 
         if (mouseX in rightX.toDouble()..(rightX + (w - SIDEBAR_W)).toDouble() &&
             mouseY in listY.toDouble()..(listY + listH).toDouble()
@@ -620,7 +656,7 @@ class AdminLootPanel(
                 val rowY = listY + visRow * ROW_H
                 val cellY = (rowY + 1).toDouble()..(rowY + ROW_H - 1).toDouble()
                 when {
-                    mouseX in colItemX.toDouble()..(colItemX + 170).toDouble() && mouseY in cellY -> {
+                    mouseX in colItemX.toDouble()..(colItemX + 136).toDouble() && mouseY in cellY -> {
                         activeFieldRow = rowIdx
                         activeFieldType = FieldType.ITEM
                         fieldText = editEntries[rowIdx].itemId
@@ -714,8 +750,42 @@ class AdminLootPanel(
         activeFieldType = FieldType.NONE
     }
 
-    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean = false
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = false
+    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        when (dragging) {
+            DragTarget.SIDEBAR -> {
+                val sidebarListY = y + 14
+                val sidebarListH = h - 14 - FOOTER_H
+                val maxRows = sidebarListH / ROW_H
+                val maxScroll = (jobs.size - maxRows).coerceAtLeast(0)
+                if (maxScroll > 0) {
+                    val rel = ((mouseY - sidebarListY) / sidebarListH.toDouble()).coerceIn(0.0, 1.0)
+                    sidebarScroll = (rel * maxScroll).toInt()
+                }
+                return true
+            }
+            DragTarget.LIST -> {
+                val headerY = y + 41
+                val rightListY = headerY + 12
+                val rightListH = y + h - FOOTER_H - rightListY - 2
+                val maxRows = rightListH / ROW_H
+                val maxScroll = (editEntries.size - maxRows).coerceAtLeast(0)
+                if (maxScroll > 0) {
+                    val rel = ((mouseY - rightListY) / rightListH.toDouble()).coerceIn(0.0, 1.0)
+                    listScroll = (rel * maxScroll).toInt()
+                }
+                return true
+            }
+            null -> return false
+        }
+    }
+
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (dragging != null) {
+            dragging = null
+            return true
+        }
+        return false
+    }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontal: Double, vertical: Double): Boolean {
         if (mouseX in x.toDouble()..(x + SIDEBAR_W).toDouble() &&

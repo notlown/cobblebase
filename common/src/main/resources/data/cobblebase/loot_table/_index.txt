@@ -1,4 +1,3 @@
-dive_treasure.json
 finder_bal_common.json
 finder_bal_rare.json
 finder_bal_ultra_rare.json
@@ -47,7 +46,6 @@ finder_treasure_common.json
 finder_treasure_rare.json
 finder_treasure_ultra_rare.json
 finder_treasure_uncommon.json
-honey_collect.json
 mining_common.json
 mining_rare.json
 mining_ultra_rare.json

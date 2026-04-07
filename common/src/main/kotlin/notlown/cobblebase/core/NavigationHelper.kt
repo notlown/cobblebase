@@ -278,42 +278,73 @@ object NavigationHelper {
     }
 
     /**
-     * Find a safe escape position. Tries vertical (up) first, then horizontal (8 directions),
-     * then upward+horizontal combos. Returns (x, y, z) of a safe air pocket.
+     * Find a safe escape position. Tries vertical (up) first, then horizontal (8 directions).
+     * Returns (x, y, z) of a position where the entity's bounding box would NOT clip into any solid.
      */
     private fun findEscapePosition(pokemonEntity: PokemonEntity): Triple<Double, Double, Double>? {
         val world = pokemonEntity.world
         val startX = pokemonEntity.blockX
         val startY = pokemonEntity.blockY
         val startZ = pokemonEntity.blockZ
-        val pos = BlockPos.Mutable()
+        val entityBox = pokemonEntity.boundingBox
+        val width = entityBox.maxX - entityBox.minX
+        val height = entityBox.maxY - entityBox.minY
+        val depth = entityBox.maxZ - entityBox.minZ
 
-        fun isSafe(x: Int, y: Int, z: Int): Boolean {
-            pos.set(x, y, z)
-            if (!world.getBlockState(pos).isAir) return false
-            pos.set(x, y + 1, z)
-            return world.getBlockState(pos).isAir
+        // Test if a candidate (cx, cy, cz) — block-center coordinates — is safe.
+        // Builds a virtual bounding box at the destination and checks for any solid block intersection.
+        fun isSafePosition(cx: Double, cy: Double, cz: Double): Boolean {
+            val testBox = net.minecraft.util.math.Box(
+                cx - width / 2, cy, cz - depth / 2,
+                cx + width / 2, cy + height, cz + depth / 2
+            )
+            val minX = Math.floor(testBox.minX + 0.001).toInt()
+            val minY = Math.floor(testBox.minY + 0.001).toInt()
+            val minZ = Math.floor(testBox.minZ + 0.001).toInt()
+            val maxX = Math.floor(testBox.maxX - 0.001).toInt()
+            val maxY = Math.floor(testBox.maxY - 0.001).toInt()
+            val maxZ = Math.floor(testBox.maxZ - 0.001).toInt()
+            val pos = BlockPos.Mutable()
+            for (x in minX..maxX) {
+                for (y in minY..maxY) {
+                    for (z in minZ..maxZ) {
+                        pos.set(x, y, z)
+                        val state = world.getBlockState(pos)
+                        if (state.isAir) continue
+                        val shape = state.getCollisionShape(world, pos)
+                        if (shape.isEmpty) continue
+                        for (sb in shape.boundingBoxes) {
+                            val worldBox = sb.offset(x.toDouble(), y.toDouble(), z.toDouble())
+                            if (testBox.intersects(worldBox)) return false
+                        }
+                    }
+                }
+            }
+            return true
         }
 
-        // Try vertical escape first (1-6 blocks up)
-        for (offset in 1..6) {
-            if (isSafe(startX, startY + offset, startZ)) {
-                return Triple(startX + 0.5, (startY + offset).toDouble(), startZ + 0.5)
+        // Try vertical escape first (1-8 blocks up)
+        for (offset in 1..8) {
+            val cx = startX + 0.5
+            val cy = (startY + offset).toDouble()
+            val cz = startZ + 0.5
+            if (isSafePosition(cx, cy, cz)) {
+                return Triple(cx, cy, cz)
             }
         }
-        // Try horizontal escape — 8 directions × 1-3 block distances
+        // Try horizontal escape — 8 directions × 1-4 block distances × 0-3 height steps
         val dirs = listOf(
             1 to 0, -1 to 0, 0 to 1, 0 to -1,
             1 to 1, 1 to -1, -1 to 1, -1 to -1
         )
-        for (dist in 1..3) {
+        for (dist in 1..4) {
             for ((dx, dz) in dirs) {
-                val x = startX + dx * dist
-                val z = startZ + dz * dist
-                // Check at current Y, also Y+1 (over a 1-block obstacle)
-                for (dy in 0..2) {
-                    if (isSafe(x, startY + dy, z)) {
-                        return Triple(x + 0.5, (startY + dy).toDouble(), z + 0.5)
+                for (dy in 0..3) {
+                    val cx = startX + 0.5 + dx * dist
+                    val cy = (startY + dy).toDouble()
+                    val cz = startZ + 0.5 + dz * dist
+                    if (isSafePosition(cx, cy, cz)) {
+                        return Triple(cx, cy, cz)
                     }
                 }
             }

@@ -6,7 +6,10 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.gui.widget.TextFieldWidget
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import notlown.cobblebase.core.AdminLootDataCache
 import notlown.cobblebase.core.LootEntry
 import notlown.cobblebase.core.LootTableDef
@@ -17,15 +20,21 @@ import java.util.function.Function
 /**
  * Admin GUI "Loot" tab.
  *
- * Two-pane layout — sidebar with all bundled loot tables (sorted, with an
- * orange dot when an override is active), and an editor on the right that
- * shows the entries of the selected table. The editor uses the standard
- * Minecraft `TextFieldWidget` for both the item id and the numeric fields,
- * since each row needs three editable values.
+ * Layout:
+ *  - Sidebar (left): list of *jobs* (e.g. "Mining", "Finder: Balls"), grouped
+ *    so the four `_common`/`_uncommon`/`_rare`/`_ultra_rare` tables collapse
+ *    into a single sidebar entry. Tables without a rarity suffix become their
+ *    own job (e.g. "Honey Collect").
+ *  - Right pane: rarity tabs across the top (only the rarities that exist for
+ *    the selected job), and below that an item-by-item editor with the actual
+ *    Minecraft item icon, item id, weight and min/max count.
  *
- * The whole entry list is destroyed and rebuilt every time the user picks
- * a different table or adds/removes a row — this keeps widget bookkeeping
- * simple and the row count is always small (≈10–20 entries per table).
+ * Widget bookkeeping:
+ *  - The row widgets are a *fixed pool* (POOL_SIZE rows) created once during
+ *    [init]. Picking a different table or rarity just rebinds those widgets
+ *    to the new entries. This avoids the bug where dynamically-added widgets
+ *    accumulated in the screen's child list and re-appeared on top of other
+ *    tabs after a tab switch.
  */
 class AdminLootPanel(
     private val x: Int,
@@ -34,27 +43,68 @@ class AdminLootPanel(
     private val h: Int,
     private val textRenderer: TextRenderer
 ) {
-    private val PADDING = 4
-    private val SIDEBAR_W = 130
-    private val ROW_H = 16
-    private val SCALE = 0.7f
-    private val FOOTER_H = 18
+    companion object {
+        private const val POOL_SIZE = 25
+        private const val PADDING = 4
+        private const val SIDEBAR_W = 116
+        private const val ROW_H = 18
+        private const val FOOTER_H = 18
+        private const val SCALE = 0.7f
 
+        // Job base name → human-readable label.
+        private val PRETTY_NAMES = linkedMapOf(
+            "mining" to "Mining",
+            "finder_bal" to "Finder: Balls",
+            "finder_evo" to "Finder: Evolution",
+            "finder_exp" to "Finder: Experience",
+            "finder_food" to "Finder: Food",
+            "finder_hea" to "Finder: Healing",
+            "finder_held" to "Finder: Held Items",
+            "finder_ore" to "Finder: Ores",
+            "finder_see" to "Finder: Seeds",
+            "finder_smith" to "Finder: Smithing",
+            "finder_stat" to "Finder: Statues",
+            "finder_treasure" to "Finder: Treasure",
+            "finder_bui" to "Finder: Building",
+            "honey_collect" to "Honey Collect",
+            "dive_treasure" to "Dive Treasure"
+        )
+        private val RARITY_ORDER = listOf("common", "uncommon", "rare", "ultra_rare")
+        private val RARITY_LABELS = mapOf(
+            "common" to "Common",
+            "uncommon" to "Uncommon",
+            "rare" to "Rare",
+            "ultra_rare" to "Ultra Rare"
+        )
+        private val RARITY_COLORS = mapOf(
+            "common" to 0xFFFFFFFF.toInt(),
+            "uncommon" to 0xFF55FF55.toInt(),
+            "rare" to 0xFF5555FF.toInt(),
+            "ultra_rare" to 0xFFFFAA00.toInt()
+        )
+    }
+
+    /** A logical "job" in the sidebar. Holds 1..4 loot table ids. */
+    private data class JobGroup(
+        val baseName: String,
+        val displayName: String,
+        /** rarityKey ("common"/"uncommon"/"rare"/"ultra_rare"/"") → table id */
+        val rarities: LinkedHashMap<String, String>
+    )
+
+    // -------- state --------
     private var addWidgetFn: Function<ClickableWidget, ClickableWidget>? = null
-
-    private var selectedId: String? = null
+    private val jobs = mutableListOf<JobGroup>()
+    private var selectedJob: JobGroup? = null
+    private var selectedRarity: String = ""
     private var sidebarScroll = 0
     private var listScroll = 0
 
-    /** All loot table ids in sorted order. Recomputed when cache changes. */
-    private fun allTables(): List<LootTableDef> = AdminLootDataCache.tables
-
-    /** Current edit buffer for the selected table (mutable, drives the UI). */
     private val editEntries = mutableListOf<LootEntry>()
     private var editRolls = 1
     private var dirty = false
 
-    /** Per-row widgets for the editor pane. */
+    // -------- widgets (fixed pool) --------
     private data class RowWidgets(
         val itemField: TextFieldWidget,
         val weightField: TextFieldWidget,
@@ -62,7 +112,7 @@ class AdminLootPanel(
         val maxField: TextFieldWidget,
         val deleteBtn: ButtonWidget
     )
-    private val rowWidgets = mutableListOf<RowWidgets>()
+    private val rowPool = mutableListOf<RowWidgets>()
     private var rollsField: TextFieldWidget? = null
     private var addRowBtn: ButtonWidget? = null
     private var saveBtn: ButtonWidget? = null
@@ -72,35 +122,116 @@ class AdminLootPanel(
     fun init(addWidget: Function<ClickableWidget, ClickableWidget>) {
         addWidgetFn = addWidget
 
-        // Bottom action buttons (always present)
+        // Static action buttons
         refreshBtn = ButtonWidget.builder(Text.literal("\u00A7bRefresh")) {
             ClientPlayNetworking.send(AdminLootRequestC2SPacket())
         }.dimensions(x + PADDING, y + h - FOOTER_H + 2, 50, 12).build()
         addWidget.apply(refreshBtn!!)
 
-        addRowBtn = ButtonWidget.builder(Text.literal("\u00A7a+ Add Entry")) {
-            editEntries.add(LootEntry("minecraft:apple", 1, 1, 1))
-            dirty = true
-            rebuildRowWidgets()
-        }.dimensions(x + SIDEBAR_W + PADDING + 4, y + h - FOOTER_H + 2, 70, 12).build()
-        addWidgetFn?.apply(addRowBtn!!)
+        addRowBtn = ButtonWidget.builder(Text.literal("\u00A7a+ Add Item")) {
+            if (editEntries.size < POOL_SIZE) {
+                editEntries.add(LootEntry("minecraft:apple", 1, 1, 1))
+                dirty = true
+                bindRowWidgetsToBuffer()
+            }
+        }.dimensions(x + SIDEBAR_W + PADDING + 4, y + h - FOOTER_H + 2, 60, 12).build()
+        addWidget.apply(addRowBtn!!)
 
         saveBtn = ButtonWidget.builder(Text.literal("\u00A72Save")) { saveCurrent() }
             .dimensions(x + w - 88, y + h - FOOTER_H + 2, 40, 12).build()
-        addWidgetFn?.apply(saveBtn!!)
+        addWidget.apply(saveBtn!!)
 
         resetBtn = ButtonWidget.builder(Text.literal("\u00A7cReset")) { resetCurrent() }
             .dimensions(x + w - 46, y + h - FOOTER_H + 2, 42, 12).build()
-        addWidgetFn?.apply(resetBtn!!)
+        addWidget.apply(resetBtn!!)
 
-        // Trigger initial sync request — server will reply with the current state
+        // Rolls field
+        val rf = TextFieldWidget(textRenderer, 0, 0, 26, 12, Text.literal("Rolls"))
+        rf.setMaxLength(3)
+        rf.setChangedListener { v ->
+            v.toIntOrNull()?.let { editRolls = it.coerceAtLeast(1); dirty = true }
+        }
+        rollsField = rf
+        addWidget.apply(rf)
+
+        // Pre-allocate row pool
+        repeat(POOL_SIZE) { idx ->
+            val itemF = TextFieldWidget(textRenderer, 0, 0, 96, 12, Text.literal("Item ID"))
+            itemF.setMaxLength(64)
+            itemF.setChangedListener { v ->
+                if (idx in editEntries.indices) {
+                    editEntries[idx] = editEntries[idx].copy(itemId = v)
+                    dirty = true
+                }
+            }
+            val weightF = numberField { v ->
+                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(weight = v.coerceAtLeast(1))
+            }
+            val minF = numberField { v ->
+                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(minCount = v.coerceAtLeast(1))
+            }
+            val maxF = numberField { v ->
+                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(maxCount = v.coerceAtLeast(1))
+            }
+            val delBtn = ButtonWidget.builder(Text.literal("\u00A7c\u00d7")) {
+                if (idx in editEntries.indices) {
+                    editEntries.removeAt(idx)
+                    dirty = true
+                    bindRowWidgetsToBuffer()
+                }
+            }.dimensions(0, 0, 12, 12).build()
+
+            addWidget.apply(itemF)
+            addWidget.apply(weightF)
+            addWidget.apply(minF)
+            addWidget.apply(maxF)
+            addWidget.apply(delBtn)
+            rowPool.add(RowWidgets(itemF, weightF, minF, maxF, delBtn))
+        }
+
+        // Initial sync
         ClientPlayNetworking.send(AdminLootRequestC2SPacket())
     }
 
-    /** Loads the entries of the currently selected table into the edit buffer. */
-    private fun loadIntoBuffer(id: String) {
-        selectedId = id
-        val def = AdminLootDataCache.get(id)
+    private fun numberField(onChange: (Int) -> Unit): TextFieldWidget {
+        val f = TextFieldWidget(textRenderer, 0, 0, 24, 12, Text.literal(""))
+        f.setMaxLength(5)
+        f.setChangedListener { v -> v.toIntOrNull()?.let { onChange(it); dirty = true } }
+        return f
+    }
+
+    /** Recomputes [jobs] from the current cache. */
+    private fun rebuildJobs() {
+        jobs.clear()
+        val ids = AdminLootDataCache.tables.map { it.id.removePrefix("cobblebase:") }
+        val grouped = LinkedHashMap<String, LinkedHashMap<String, String>>()
+
+        for (id in ids) {
+            // Detect "_common", "_uncommon", "_rare", "_ultra_rare" suffix
+            val rarity = RARITY_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
+            val base = if (rarity.isEmpty()) id else id.removeSuffix("_$rarity")
+            val map = grouped.getOrPut(base) { LinkedHashMap() }
+            map[rarity] = "cobblebase:$id"
+        }
+
+        // Stable order: PRETTY_NAMES order first, then any unknowns alphabetically
+        val orderedKeys = PRETTY_NAMES.keys.filter { it in grouped }.toMutableList()
+        orderedKeys.addAll(grouped.keys.filter { it !in PRETTY_NAMES }.sorted())
+
+        for (base in orderedKeys) {
+            // Sort rarities by canonical order
+            val sorted = LinkedHashMap<String, String>()
+            for (r in (RARITY_ORDER + listOf(""))) {
+                grouped[base]?.get(r)?.let { sorted[r] = it }
+            }
+            jobs.add(JobGroup(base, PRETTY_NAMES[base] ?: base.replaceFirstChar { it.uppercase() }, sorted))
+        }
+    }
+
+    private fun loadCurrentTable() {
+        val job = selectedJob ?: return
+        val tableId = job.rarities[selectedRarity] ?: job.rarities.values.firstOrNull() ?: return
+        val def = AdminLootDataCache.get(tableId)
         editEntries.clear()
         if (def != null) {
             editRolls = def.rolls
@@ -110,94 +241,54 @@ class AdminLootPanel(
         }
         dirty = false
         listScroll = 0
-        rebuildRowWidgets()
+        rollsField?.text = editRolls.toString()
+        bindRowWidgetsToBuffer()
     }
 
-    /** Wipes and recreates one set of TextFieldWidgets per row. */
-    private fun rebuildRowWidgets() {
-        // Remove old row widgets from the screen
-        for (rw in rowWidgets) {
-            rw.itemField.visible = false
-            rw.weightField.visible = false
-            rw.minField.visible = false
-            rw.maxField.visible = false
-            rw.deleteBtn.visible = false
-        }
-        rowWidgets.clear()
-
-        if (rollsField == null) {
-            val rf = TextFieldWidget(textRenderer, 0, 0, 30, 12, Text.literal("Rolls"))
-            rf.setMaxLength(3)
-            rf.text = editRolls.toString()
-            rf.setChangedListener { v ->
-                v.toIntOrNull()?.let { editRolls = it.coerceAtLeast(1); dirty = true }
+    /** Push entry buffer values into the fixed row widget pool. */
+    private fun bindRowWidgetsToBuffer() {
+        for ((i, rw) in rowPool.withIndex()) {
+            if (i < editEntries.size) {
+                val e = editEntries[i]
+                if (rw.itemField.text != e.itemId) rw.itemField.text = e.itemId
+                if (rw.weightField.text != e.weight.toString()) rw.weightField.text = e.weight.toString()
+                if (rw.minField.text != e.minCount.toString()) rw.minField.text = e.minCount.toString()
+                if (rw.maxField.text != e.maxCount.toString()) rw.maxField.text = e.maxCount.toString()
+            } else {
+                rw.itemField.text = ""
+                rw.weightField.text = ""
+                rw.minField.text = ""
+                rw.maxField.text = ""
             }
-            rollsField = rf
-            addWidgetFn?.apply(rf)
-        } else {
-            rollsField!!.text = editRolls.toString()
-        }
-
-        for ((idx, entry) in editEntries.withIndex()) {
-            val itemF = TextFieldWidget(textRenderer, 0, 0, 100, 12, Text.literal("Item ID"))
-            itemF.setMaxLength(64)
-            itemF.text = entry.itemId
-            itemF.setChangedListener { v ->
-                if (idx in editEntries.indices) {
-                    editEntries[idx] = editEntries[idx].copy(itemId = v)
-                    dirty = true
-                }
-            }
-            val weightF = numberField(entry.weight) { v ->
-                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(weight = v.coerceAtLeast(1))
-            }
-            val minF = numberField(entry.minCount) { v ->
-                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(minCount = v.coerceAtLeast(1))
-            }
-            val maxF = numberField(entry.maxCount) { v ->
-                if (idx in editEntries.indices) editEntries[idx] = editEntries[idx].copy(maxCount = v.coerceAtLeast(1))
-            }
-            val capturedIdx = idx
-            val delBtn = ButtonWidget.builder(Text.literal("\u00A7c\u00d7")) {
-                if (capturedIdx in editEntries.indices) {
-                    editEntries.removeAt(capturedIdx)
-                    dirty = true
-                    rebuildRowWidgets()
-                }
-            }.dimensions(0, 0, 12, 12).build()
-
-            addWidgetFn?.apply(itemF)
-            addWidgetFn?.apply(weightF)
-            addWidgetFn?.apply(minF)
-            addWidgetFn?.apply(maxF)
-            addWidgetFn?.apply(delBtn)
-            rowWidgets.add(RowWidgets(itemF, weightF, minF, maxF, delBtn))
         }
     }
 
-    private fun numberField(initial: Int, onChange: (Int) -> Unit): TextFieldWidget {
-        val f = TextFieldWidget(textRenderer, 0, 0, 26, 12, Text.literal(""))
-        f.setMaxLength(5)
-        f.text = initial.toString()
-        f.setChangedListener { v ->
-            v.toIntOrNull()?.let { onChange(it); dirty = true }
-        }
-        return f
+    private fun currentTableId(): String? {
+        val job = selectedJob ?: return null
+        return job.rarities[selectedRarity] ?: job.rarities.values.firstOrNull()
     }
 
     private fun saveCurrent() {
-        val id = selectedId ?: return
+        val id = currentTableId() ?: return
         ClientPlayNetworking.send(AdminLootUpdateC2SPacket(id, false, editRolls, editEntries.toList()))
         dirty = false
     }
 
     private fun resetCurrent() {
-        val id = selectedId ?: return
+        val id = currentTableId() ?: return
         ClientPlayNetworking.send(AdminLootUpdateC2SPacket(id, true, 1, emptyList()))
         dirty = false
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // Refresh job list if cache changed
+        if (jobs.size != distinctJobCount()) rebuildJobs()
+        if (selectedJob == null && jobs.isNotEmpty()) {
+            selectedJob = jobs.first()
+            selectedRarity = jobs.first().rarities.keys.first()
+            loadCurrentTable()
+        }
+
         // Background
         context.fill(x, y, x + w, y + h, 0xCC1E1E2E.toInt())
 
@@ -206,101 +297,120 @@ class AdminLootPanel(
         context.fill(x + SIDEBAR_W, y, x + SIDEBAR_W + 1, y + h, 0xFF3A3A5C.toInt())
 
         // Sidebar header
-        drawScaled(context, "\u00A7f\u00A7lLoot Tables", x + PADDING, y + PADDING, 0xFFFFFF, 0.85f)
+        drawScaled(context, "\u00A7f\u00A7lJobs", x + PADDING, y + PADDING, 0xFFFFFF, 0.85f)
 
-        val tables = allTables()
-        if (tables.isEmpty()) {
-            drawScaled(context, "\u00A77Loading…", x + PADDING, y + 14, 0xAAAAAA, 0.7f)
+        if (jobs.isEmpty()) {
+            drawScaled(context, "\u00A77Loading…", x + PADDING, y + 14, 0xAAAAAA, SCALE)
         }
 
-        // Sidebar rows
+        // Sidebar list
         val sidebarListY = y + 14
         val sidebarListH = h - 14 - FOOTER_H
         val maxSidebarRows = sidebarListH / ROW_H
-        sidebarScroll = sidebarScroll.coerceIn(0, (tables.size - maxSidebarRows).coerceAtLeast(0))
+        sidebarScroll = sidebarScroll.coerceIn(0, (jobs.size - maxSidebarRows).coerceAtLeast(0))
 
         context.enableScissor(x, sidebarListY, x + SIDEBAR_W, sidebarListY + sidebarListH)
         for (i in 0 until maxSidebarRows + 1) {
             val idx = i + sidebarScroll
-            if (idx >= tables.size) break
-            val def = tables[idx]
+            if (idx >= jobs.size) break
+            val job = jobs[idx]
             val rowY = sidebarListY + i * ROW_H
-            val isSelected = def.id == selectedId
+            val isSelected = job === selectedJob
             val isHovered = mouseX in x..(x + SIDEBAR_W) && mouseY in rowY..(rowY + ROW_H)
             if (isSelected) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, 0x442196F3)
             else if (isHovered) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, 0x22FFFFFF)
 
-            val isOverridden = AdminLootDataCache.isOverridden(def.id)
+            // Indicator if any rarity for this job is overridden
+            val anyOverridden = job.rarities.values.any { AdminLootDataCache.isOverridden(it) }
             val color = if (isSelected) 0xFFFFFF else 0xCCCCCC
-            // Strip "cobblebase:" prefix for display
-            val display = def.id.removePrefix("cobblebase:")
-            drawScaled(context, display, x + PADDING + 4, rowY + 4, color, 0.7f)
-            if (isOverridden) {
-                drawScaled(context, "\u00A76\u00B7", x + SIDEBAR_W - 8, rowY + 3, 0xFF9800, 0.85f)
+            drawScaled(context, job.displayName, x + PADDING + 4, rowY + 5, color, SCALE)
+            if (anyOverridden) {
+                drawScaled(context, "\u00A76\u25CF", x + SIDEBAR_W - 9, rowY + 4, 0xFF9800, 0.7f)
             }
         }
         context.disableScissor()
 
         // Sidebar scrollbar
-        if (tables.size > maxSidebarRows) {
+        if (jobs.size > maxSidebarRows) {
             val trackX = x + SIDEBAR_W - 3
             val trackH = sidebarListH
-            val maxScroll = (tables.size - maxSidebarRows).coerceAtLeast(1)
-            val thumbH = ((maxSidebarRows.toFloat() / tables.size) * trackH).toInt().coerceAtLeast(8)
+            val maxScroll = (jobs.size - maxSidebarRows).coerceAtLeast(1)
+            val thumbH = ((maxSidebarRows.toFloat() / jobs.size) * trackH).toInt().coerceAtLeast(8)
             val thumbY = sidebarListY + ((sidebarScroll.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
             context.fill(trackX, sidebarListY, trackX + 2, sidebarListY + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
 
-        // Right pane header
+        // Right pane
         val rightX = x + SIDEBAR_W + 2
         val rightW = w - SIDEBAR_W - 2
-        val selId = selectedId
-        if (selId == null) {
-            drawScaled(context, "\u00A77Select a loot table on the left to edit it.", rightX + PADDING, y + PADDING + 4, 0xAAAAAA, 0.75f)
-            // Hide row widgets
-            for (rw in rowWidgets) { rw.itemField.visible = false; rw.weightField.visible = false; rw.minField.visible = false; rw.maxField.visible = false; rw.deleteBtn.visible = false }
-            rollsField?.visible = false
-            addRowBtn?.visible = false
-            saveBtn?.visible = false
-            resetBtn?.visible = false
+
+        val job = selectedJob
+        if (job == null) {
+            // Hide everything
+            hideEditorWidgets()
             return
         }
 
-        addRowBtn?.visible = true
-        saveBtn?.visible = true
-        resetBtn?.visible = true
-        rollsField?.visible = true
+        // Job title
+        drawScaled(context, "\u00A7f\u00A7l${job.displayName}", rightX + PADDING, y + PADDING, 0xFFFFFF, 0.9f)
+        if (dirty) drawScaled(context, "\u00A7e*unsaved", rightX + rightW - 50, y + PADDING + 1, 0xFFFF00, SCALE)
 
-        drawScaled(context, "\u00A7f\u00A7l${selId.removePrefix("cobblebase:")}", rightX + PADDING, y + PADDING, 0xFFFFFF, 0.85f)
-        if (dirty) drawScaled(context, "\u00A7e*unsaved", rightX + PADDING + 100, y + PADDING + 1, 0xFFFF00, 0.7f)
-        if (AdminLootDataCache.isOverridden(selId)) {
-            drawScaled(context, "\u00A76[overridden]", rightX + PADDING + 100, y + PADDING + 8, 0xFF9800, 0.65f)
+        // Rarity tabs
+        val tabY = y + 12
+        val tabH = 11
+        val tabW = 56
+        val rarityKeys = job.rarities.keys.toList()
+        var tx = rightX + PADDING
+        for (rk in rarityKeys) {
+            val tableId = job.rarities[rk]!!
+            val isOverridden = AdminLootDataCache.isOverridden(tableId)
+            val isActive = rk == selectedRarity
+            val isHov = mouseX in tx..(tx + tabW) && mouseY in tabY..(tabY + tabH)
+            val bg = when {
+                isActive -> 0xFF3A3A6C.toInt()
+                isHov -> 0xFF2E2E55.toInt()
+                else -> 0xFF252545.toInt()
+            }
+            context.fill(tx, tabY, tx + tabW, tabY + tabH, bg)
+            if (isActive) context.fill(tx, tabY + tabH - 1, tx + tabW, tabY + tabH, 0xFF6A6AFF.toInt())
+            val label = if (rk.isEmpty()) "Default" else (RARITY_LABELS[rk] ?: rk)
+            val labelColor = if (isActive) (RARITY_COLORS[rk] ?: 0xFFFFFF) else 0xFFAAAAAA.toInt()
+            drawScaled(context, label, tx + 4, tabY + 3, labelColor, SCALE)
+            if (isOverridden) {
+                drawScaled(context, "\u00A76\u25CF", tx + tabW - 8, tabY + 2, 0xFF9800, 0.65f)
+            }
+            tx += tabW + 2
         }
 
-        // Rolls field label
-        drawScaled(context, "\u00A77Rolls per generation:", rightX + PADDING, y + 14, 0xAAAAAA, 0.7f)
+        // Rolls + label
+        val rollsLabelY = y + 26
+        drawScaled(context, "\u00A77Rolls per generation:", rightX + PADDING, rollsLabelY + 2, 0xAAAAAA, SCALE)
         rollsField?.let {
-            it.x = rightX + PADDING + 70
-            it.y = y + 12
+            it.x = rightX + PADDING + 76
+            it.y = rollsLabelY
+            it.visible = true
         }
 
         // Column headers
-        val headerY = y + 26
-        drawScaled(context, "\u00A77Item ID", rightX + PADDING, headerY, 0xAAAAAA, 0.7f)
-        drawScaled(context, "\u00A77Weight", rightX + PADDING + 110, headerY, 0xAAAAAA, 0.7f)
-        drawScaled(context, "\u00A77Min", rightX + PADDING + 142, headerY, 0xAAAAAA, 0.7f)
-        drawScaled(context, "\u00A77Max", rightX + PADDING + 172, headerY, 0xAAAAAA, 0.7f)
-        context.fill(rightX + 2, headerY + 9, rightX + rightW - 4, headerY + 10, 0xFF3A3A5C.toInt())
+        val headerY = y + 40
+        drawScaled(context, "\u00A77Item", rightX + PADDING + 18, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77W", rightX + PADDING + 122, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77Min", rightX + PADDING + 150, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77Max", rightX + PADDING + 178, headerY, 0xAAAAAA, SCALE)
+        context.fill(rightX + 2, headerY + 8, rightX + rightW - 4, headerY + 9, 0xFF3A3A5C.toInt())
 
-        val listY = headerY + 12
+        // Rows
+        val listY = headerY + 11
         val listH = y + h - FOOTER_H - listY - 2
         val maxRows = listH / ROW_H
-        listScroll = listScroll.coerceIn(0, (rowWidgets.size - maxRows).coerceAtLeast(0))
+        listScroll = listScroll.coerceIn(0, (editEntries.size - maxRows).coerceAtLeast(0))
 
-        for ((i, rw) in rowWidgets.withIndex()) {
+        // Position pool widgets and draw icons
+        for (i in 0 until POOL_SIZE) {
+            val rw = rowPool[i]
             val visualIdx = i - listScroll
-            val visible = visualIdx in 0 until maxRows
+            val visible = i < editEntries.size && visualIdx in 0 until maxRows
             rw.itemField.visible = visible
             rw.weightField.visible = visible
             rw.minField.visible = visible
@@ -308,29 +418,71 @@ class AdminLootPanel(
             rw.deleteBtn.visible = visible
             if (visible) {
                 val rowY = listY + visualIdx * ROW_H
-                rw.itemField.x = rightX + PADDING
-                rw.itemField.y = rowY
-                rw.weightField.x = rightX + PADDING + 108
-                rw.weightField.y = rowY
-                rw.minField.x = rightX + PADDING + 138
-                rw.minField.y = rowY
-                rw.maxField.x = rightX + PADDING + 168
-                rw.maxField.y = rowY
-                rw.deleteBtn.x = rightX + PADDING + 198
-                rw.deleteBtn.y = rowY
+
+                // Item icon
+                val stack = makeStack(editEntries[i].itemId)
+                if (!stack.isEmpty) {
+                    context.drawItem(stack, rightX + PADDING, rowY)
+                } else {
+                    // Pink square for unknown item
+                    context.fill(rightX + PADDING, rowY, rightX + PADDING + 16, rowY + 16, 0xFFFF00FF.toInt())
+                }
+
+                rw.itemField.x = rightX + PADDING + 18
+                rw.itemField.y = rowY + 2
+                rw.weightField.x = rightX + PADDING + 118
+                rw.weightField.y = rowY + 2
+                rw.minField.x = rightX + PADDING + 146
+                rw.minField.y = rowY + 2
+                rw.maxField.x = rightX + PADDING + 174
+                rw.maxField.y = rowY + 2
+                rw.deleteBtn.x = rightX + PADDING + 202
+                rw.deleteBtn.y = rowY + 2
             }
         }
 
-        // Right scrollbar
-        if (rowWidgets.size > maxRows) {
+        // List scrollbar
+        if (editEntries.size > maxRows) {
             val trackX = rightX + rightW - 3
             val trackH = listH
-            val maxScroll = (rowWidgets.size - maxRows).coerceAtLeast(1)
-            val thumbH = ((maxRows.toFloat() / rowWidgets.size) * trackH).toInt().coerceAtLeast(8)
+            val maxScroll = (editEntries.size - maxRows).coerceAtLeast(1)
+            val thumbH = ((maxRows.toFloat() / editEntries.size) * trackH).toInt().coerceAtLeast(8)
             val thumbY = listY + ((listScroll.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
             context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
+    }
+
+    private fun hideEditorWidgets() {
+        rollsField?.visible = false
+        for (rw in rowPool) {
+            rw.itemField.visible = false
+            rw.weightField.visible = false
+            rw.minField.visible = false
+            rw.maxField.visible = false
+            rw.deleteBtn.visible = false
+        }
+    }
+
+    private fun makeStack(itemId: String): ItemStack {
+        return try {
+            val parts = itemId.split(":", limit = 2)
+            val id = if (parts.size == 2) Identifier.of(parts[0], parts[1]) else Identifier.of("minecraft", itemId)
+            val item = Registries.ITEM.get(id)
+            if (item == net.minecraft.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
+        } catch (_: Exception) {
+            ItemStack.EMPTY
+        }
+    }
+
+    private fun distinctJobCount(): Int {
+        val ids = AdminLootDataCache.tables.map { it.id.removePrefix("cobblebase:") }
+        val bases = HashSet<String>()
+        for (id in ids) {
+            val rarity = RARITY_ORDER.firstOrNull { id.endsWith("_$it") } ?: ""
+            bases.add(if (rarity.isEmpty()) id else id.removeSuffix("_$rarity"))
+        }
+        return bases.size
     }
 
     private fun drawScaled(context: DrawContext, text: String, px: Int, py: Int, color: Int, scale: Float) {
@@ -348,10 +500,31 @@ class AdminLootPanel(
             mouseY in sidebarListY.toDouble()..(y + h - FOOTER_H).toDouble()
         ) {
             val idx = ((mouseY - sidebarListY) / ROW_H).toInt() + sidebarScroll
-            val tables = allTables()
-            if (idx in tables.indices) {
-                loadIntoBuffer(tables[idx].id)
+            if (idx in jobs.indices) {
+                selectedJob = jobs[idx]
+                selectedRarity = jobs[idx].rarities.keys.first()
+                loadCurrentTable()
                 return true
+            }
+        }
+
+        // Rarity tab click
+        val job = selectedJob
+        if (job != null) {
+            val rightX = x + SIDEBAR_W + 2
+            val tabY = y + 12
+            val tabH = 11
+            val tabW = 56
+            var tx = rightX + PADDING
+            for (rk in job.rarities.keys) {
+                if (mouseX in tx.toDouble()..(tx + tabW).toDouble() &&
+                    mouseY in tabY.toDouble()..(tabY + tabH).toDouble()
+                ) {
+                    selectedRarity = rk
+                    loadCurrentTable()
+                    return true
+                }
+                tx += tabW + 2
             }
         }
         return false
@@ -361,27 +534,22 @@ class AdminLootPanel(
     fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = false
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontal: Double, vertical: Double): Boolean {
-        // Sidebar
         if (mouseX in x.toDouble()..(x + SIDEBAR_W).toDouble() &&
             mouseY in y.toDouble()..(y + h).toDouble()
         ) {
-            val tables = allTables()
             val sidebarListH = h - 14 - FOOTER_H
             val maxRows = sidebarListH / ROW_H
-            val maxScroll = (tables.size - maxRows).coerceAtLeast(0)
+            val maxScroll = (jobs.size - maxRows).coerceAtLeast(0)
             sidebarScroll = (sidebarScroll - vertical.toInt() * 2).coerceIn(0, maxScroll)
             return true
         }
-        // Right list
         if (mouseX in (x + SIDEBAR_W).toDouble()..(x + w).toDouble() &&
             mouseY in y.toDouble()..(y + h).toDouble()
         ) {
-            val rightX = x + SIDEBAR_W + 2
-            val rightW = w - SIDEBAR_W - 2
-            val listY = y + 38
+            val listY = y + 51
             val listH = y + h - FOOTER_H - listY - 2
             val maxRows = listH / ROW_H
-            val maxScroll = (rowWidgets.size - maxRows).coerceAtLeast(0)
+            val maxScroll = (editEntries.size - maxRows).coerceAtLeast(0)
             listScroll = (listScroll - vertical.toInt() * 2).coerceIn(0, maxScroll)
             return true
         }

@@ -125,10 +125,11 @@ object InventoryHelper {
             val entity = ItemEntity(
                 world,
                 pos.x + 0.5,
-                pos.y + 1.0,
+                pos.y + 0.25, // slight offset above ground, not a full block
                 pos.z + 0.5,
                 taggedStack
             )
+            entity.setVelocity(0.0, 0.0, 0.0) // no spread — items stay where dropped
             entity.setPickupDelay(20) // 1 second before pickup
             world.spawnEntity(entity)
         }

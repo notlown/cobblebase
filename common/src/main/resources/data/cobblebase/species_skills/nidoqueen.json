@@ -2,10 +2,6 @@
   "species": "nidoqueen",
   "skills": [
     {
-      "skillId": "cobblebase:archeologist",
-      "proficiency": 3
-    },
-    {
       "skillId": "cobblebase:finder_hea",
       "proficiency": 3
     },

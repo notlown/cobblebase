@@ -2,10 +2,6 @@
   "species": "boltund",
   "skills": [
     {
-      "skillId": "cobblebase:archeologist",
-      "proficiency": 2
-    },
-    {
       "skillId": "cobblebase:finder_bal",
       "proficiency": 2
     },

@@ -2,10 +2,6 @@
   "species": "nidoking",
   "skills": [
     {
-      "skillId": "cobblebase:archeologist",
-      "proficiency": 4
-    },
-    {
       "skillId": "cobblebase:finder_hea",
       "proficiency": 3
     },

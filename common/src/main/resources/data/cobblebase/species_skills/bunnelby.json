@@ -2,10 +2,6 @@
   "species": "bunnelby",
   "skills": [
     {
-      "skillId": "cobblebase:archeologist",
-      "proficiency": 1
-    },
-    {
       "skillId": "cobblebase:finder_bal",
       "proficiency": 1
     },

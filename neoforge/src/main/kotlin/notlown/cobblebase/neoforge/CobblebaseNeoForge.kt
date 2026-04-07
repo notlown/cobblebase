@@ -240,11 +240,50 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
             }
         }
+
+        // S2C: General settings sync (Discord URL, enabled)
+        registrar.playToClient(
+            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.GeneralSettingsCache.update(packet.discordUrl, packet.discordEnabled)
+            }
+        }
+
+        // C2S: General settings update (admin only)
+        registrar.playToServer(
+            notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket.ID,
+            notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!player.hasPermissionLevel(2)) return@enqueueWork
+                val newSettings = notlown.cobblebase.core.GeneralSettings.Settings(
+                    discordUrl = packet.discordUrl,
+                    discordEnabled = packet.discordEnabled
+                )
+                notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
+                notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
+                val syncPacket = notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
+                    packet.discordUrl, packet.discordEnabled
+                )
+                for (p in player.server.playerManager.playerList) {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, syncPacket)
+                }
+            }
+        }
     }
 
     private fun onPlayerLoggedIn(event: PlayerEvent.PlayerLoggedInEvent) {
         val player = event.entity as? net.minecraft.server.network.ServerPlayerEntity ?: return
         VersionChecker.onPlayerJoin(player)
+        // Sync general settings to joining player
+        val s = notlown.cobblebase.core.GeneralSettings.getSettings()
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+            player,
+            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(s.discordUrl, s.discordEnabled)
+        )
     }
 
     private fun onPlayerLoggedOut(event: PlayerEvent.PlayerLoggedOutEvent) {
@@ -259,6 +298,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         DiscoveryRegistry.load(world)
         SpeciesSkillOverrides.load(world)
         JobConfigOverrides.load(world)
+        notlown.cobblebase.core.GeneralSettings.load(world)
         notlown.cobblebase.core.SpawnData.loadFromCobblemonSpawnPool()
     }
 
@@ -269,6 +309,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         DiscoveryRegistry.save(world)
         SpeciesSkillOverrides.save(world)
         JobConfigOverrides.save(world)
+        notlown.cobblebase.core.GeneralSettings.save(world)
     }
 
     /**

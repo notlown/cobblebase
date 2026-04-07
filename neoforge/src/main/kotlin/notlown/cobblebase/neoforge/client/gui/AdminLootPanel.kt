@@ -47,7 +47,7 @@ class AdminLootPanel(
         private const val POOL_SIZE = 25
         private const val PADDING = 4
         private const val SIDEBAR_W = 88
-        private const val ROW_H = 18
+        private const val ROW_H = 14
         private const val FOOTER_H = 18
         private const val SCALE = 0.65f
 
@@ -145,8 +145,11 @@ class AdminLootPanel(
 
         addRowBtn = ButtonWidget.builder(Text.literal("\u00A7a+ Add Item")) {
             if (editEntries.size < POOL_SIZE) {
-                editEntries.add(LootEntry("minecraft:apple", 1, 1, 1))
+                // Insert at index 0 so the new (empty) row is the first thing
+                // the user sees instead of being hidden at the bottom of a long list.
+                editEntries.add(0, LootEntry("", 1, 1, 1))
                 dirty = true
+                listScroll = 0
                 bindRowWidgetsToBuffer()
             }
         }.dimensions(x + SIDEBAR_W + PADDING + 4, y + h - FOOTER_H + 2, 60, 12).build()
@@ -437,9 +440,9 @@ class AdminLootPanel(
         if (mouseX in (rightX + PADDING)..(rightX + PADDING + 100) && mouseY in rollsLabelY..(rollsLabelY + 10)) {
             pendingTooltip = listOf(
                 "\u00A7f\u00A7lRolls per generation",
-                "\u00A77Wie viele Items der Job pro Cooldown ausspuckt.",
-                "\u00A77Pro Roll wird genau ein Item nach Weight gewuerfelt.",
-                "\u00A78Beispiel: Rolls = 3 -> es kommen 3 Items raus pro Tick."
+                "\u00A77How many items the job produces each time it ticks.",
+                "\u00A77Each roll picks one item using the weight values below.",
+                "\u00A78Example: Rolls = 3 -> the job spits out 3 items per tick."
             )
             tooltipX = mouseX
             tooltipY = mouseY
@@ -464,31 +467,31 @@ class AdminLootPanel(
             when {
                 mouseX in colItemX..(colItemX + 30) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lItem ID",
-                    "\u00A77Minecraft Item Identifier mit Mod-Namespace.",
-                    "\u00A78Beispiele: minecraft:diamond, cobblemon:rare_candy"
+                    "\u00A77The Minecraft item identifier including the mod namespace.",
+                    "\u00A78Examples: minecraft:diamond, cobblemon:rare_candy"
                 )
                 mouseX in colWeightX..(colWeightX + 26) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lWeight",
-                    "\u00A77Wahrscheinlichkeit dass dieses Item gewaehlt wird.",
-                    "\u00A77Verhaeltnis zur Summe aller Weights in der Tabelle.",
-                    "\u00A78Beispiel: Weights 10/5/1 -> 62.5%/31.3%/6.3%."
+                    "\u00A77How likely this item is to be picked on a roll.",
+                    "\u00A77Relative to the sum of all weights in this table.",
+                    "\u00A78Example: weights 10/5/1 -> 62.5% / 31.3% / 6.3%."
                 )
                 mouseX in colMinX..(colMinX + 26) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lMin Count",
-                    "\u00A77Minimale Stack-Groesse wenn dieses Item gewaehlt wird.",
-                    "\u00A78Beispiel: Min 1 Max 3 -> 1, 2 oder 3 Stueck."
+                    "\u00A77Smallest stack size produced when this item is picked.",
+                    "\u00A78Example: Min 1 Max 3 -> 1, 2 or 3 of this item."
                 )
                 mouseX in colMaxX..(colMaxX + 26) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lMax Count",
-                    "\u00A77Maximale Stack-Groesse wenn dieses Item gewaehlt wird.",
-                    "\u00A78Wenn Min == Max gibts immer genau diese Anzahl."
+                    "\u00A77Largest stack size produced when this item is picked.",
+                    "\u00A78If Min == Max the count is always exactly that value."
                 )
                 mouseX in colActionX..(colActionX + 32) -> setTip(mouseX, mouseY,
                     "\u00A7f\u00A7lAction",
-                    "\u00A7aon/off\u00A77 Toggle fuer Default-Items aus dem Loot Pool.",
-                    "\u00A77Disabled Items bleiben in der Tabelle aber werden nie",
-                    "\u00A77ausgewaehlt - kannst du jederzeit wieder aktivieren.",
-                    "\u00A77Custom Items (selber hinzugefuegt) zeigen \u00A7c\u00d7\u00A77 zum Loeschen."
+                    "\u00A7aon/off\u00A77 toggle for default items from the bundled loot pool.",
+                    "\u00A77Disabled items stay in the table but are never picked,",
+                    "\u00A77so you can flip them back on later.",
+                    "\u00A77Custom items (added by you) show \u00A7c\u00d7\u00A77 to remove them entirely."
                 )
             }
         }
@@ -524,33 +527,37 @@ class AdminLootPanel(
                 context.fill(rightX + 2, rowY, rightX + rightW - 4, rowY + ROW_H - 1, 0x44000000)
             }
 
-            // Item icon
+            // Item icon — scaled to 12x12 so it fits the compact row height
             val stack = makeStack(entry.itemId)
+            context.matrices.push()
+            context.matrices.translate((rightX + PADDING).toFloat(), (rowY).toFloat(), 0f)
+            context.matrices.scale(0.75f, 0.75f, 1f)
             if (!stack.isEmpty) {
-                context.drawItem(stack, rightX + PADDING, rowY)
+                context.drawItem(stack, 0, 0)
             } else {
-                context.fill(rightX + PADDING, rowY, rightX + PADDING + 16, rowY + 16, 0xFFFF00FF.toInt())
+                context.fill(0, 0, 16, 16, 0xFFFF00FF.toInt())
             }
+            context.matrices.pop()
 
             rw.itemField.visible = true
             rw.weightField.visible = true
             rw.minField.visible = true
             rw.maxField.visible = true
             rw.itemField.x = colItemX
-            rw.itemField.y = rowY + 2
+            rw.itemField.y = rowY + 1
             rw.weightField.x = colWeightX - 2
-            rw.weightField.y = rowY + 2
+            rw.weightField.y = rowY + 1
             rw.minField.x = colMinX - 2
-            rw.minField.y = rowY + 2
+            rw.minField.y = rowY + 1
             rw.maxField.x = colMaxX - 2
-            rw.maxField.y = rowY + 2
+            rw.maxField.y = rowY + 1
 
             // Action: toggle for default-origin entries, delete for custom
             if (isDefault) {
                 rw.toggleBtn.visible = true
                 rw.deleteBtn.visible = false
                 rw.toggleBtn.x = colActionX - 2
-                rw.toggleBtn.y = rowY + 2
+                rw.toggleBtn.y = rowY + 1
                 rw.toggleBtn.message = Text.literal(
                     if (entry.disabled) "\u00A7coff" else "\u00A7aon"
                 )
@@ -558,7 +565,7 @@ class AdminLootPanel(
                 rw.toggleBtn.visible = false
                 rw.deleteBtn.visible = true
                 rw.deleteBtn.x = colActionX - 2
-                rw.deleteBtn.y = rowY + 2
+                rw.deleteBtn.y = rowY + 1
             }
         }
 

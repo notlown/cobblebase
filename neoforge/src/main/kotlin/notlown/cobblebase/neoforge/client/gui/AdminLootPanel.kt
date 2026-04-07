@@ -125,6 +125,58 @@ class AdminLootPanel(
     private enum class DragTarget { SIDEBAR, LIST }
     private var dragging: DragTarget? = null
 
+    // Autocomplete state for the active item id field.
+    private var suggestions: List<String> = emptyList()
+    private var selectedSuggestion = -1
+    private var allItemIdsCache: List<String>? = null
+    private var allItemTagsCache: List<String>? = null
+
+    private fun allItemIds(): List<String> {
+        var c = allItemIdsCache
+        if (c == null) {
+            c = try {
+                Registries.ITEM.ids.map { it.toString() }.sorted()
+            } catch (_: Throwable) {
+                emptyList()
+            }
+            allItemIdsCache = c
+        }
+        return c
+    }
+
+    private fun allItemTags(): List<String> {
+        var c = allItemTagsCache
+        if (c == null) {
+            c = try {
+                // Registry.streamTags() yields Stream<TagKey<T>> which has an `id` field directly.
+                val out = mutableListOf<String>()
+                Registries.ITEM.streamTags().forEach { tag ->
+                    out.add("#" + tag.id.toString())
+                }
+                out.sorted()
+            } catch (_: Throwable) {
+                emptyList()
+            }
+            allItemTagsCache = c
+        }
+        return c
+    }
+
+    private fun recomputeSuggestions() {
+        if (activeFieldType != FieldType.ITEM || fieldText.isEmpty()) {
+            suggestions = emptyList()
+            selectedSuggestion = -1
+            return
+        }
+        val q = fieldText.lowercase()
+        val source = if (q.startsWith("#")) allItemTags() else allItemIds()
+        val (prefixMatches, containsMatches) = source.asSequence()
+            .filter { it.contains(q) }
+            .partition { it.startsWith(q) }
+        suggestions = (prefixMatches + containsMatches).take(8).toList()
+        selectedSuggestion = if (suggestions.isNotEmpty()) 0 else -1
+    }
+
     var pendingTooltip: List<String> = emptyList()
         private set
     var tooltipX: Int = 0
@@ -152,6 +204,8 @@ class AdminLootPanel(
             activeFieldRow = 0
             activeFieldType = FieldType.ITEM
             fieldText = ""
+            suggestions = emptyList()
+            selectedSuggestion = -1
         }.dimensions(x + SIDEBAR_W + PADDING + 4, y + h - FOOTER_H + 2, 60, 12).build()
         addWidget.apply(addRowBtn!!)
 
@@ -517,6 +571,52 @@ class AdminLootPanel(
             context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
+
+        // Autocomplete popup — drawn after the rows so it overlays subsequent
+        // rows. Anchored under the active item field.
+        if (activeFieldType == FieldType.ITEM && suggestions.isNotEmpty() && activeFieldRow >= 0) {
+            val visualIdx = activeFieldRow - listScroll
+            if (visualIdx in 0 until maxRows) {
+                val activeRowY = listY + visualIdx * ROW_H
+                renderSuggestions(context, mouseX, mouseY, colItemX, activeRowY + ROW_H + 1, 156)
+            }
+        }
+    }
+
+    private fun renderSuggestions(context: DrawContext, mouseX: Int, mouseY: Int, px: Int, py: Int, pw: Int) {
+        val itemH = 11
+        val ph = suggestions.size * itemH + 2
+        // Drop shadow
+        context.fill(px + 1, py + 1, px + pw + 1, py + ph + 1, 0x88000000.toInt())
+        // Border + bg
+        context.fill(px - 1, py - 1, px + pw + 1, py + ph + 1, 0xFF7A7ABE.toInt())
+        context.fill(px, py, px + pw, py + ph, 0xFF15152A.toInt())
+
+        for ((i, s) in suggestions.withIndex()) {
+            val ry = py + 1 + i * itemH
+            val isHover = mouseX in px..(px + pw) && mouseY in ry..(ry + itemH)
+            val isSel = i == selectedSuggestion
+            val bg = when {
+                isSel -> 0xFF3A3A6C.toInt()
+                isHover -> 0xFF2E2E55.toInt()
+                else -> 0
+            }
+            if (bg != 0) context.fill(px + 1, ry, px + pw - 1, ry + itemH, bg)
+
+            // Icon for item suggestions (skip for tag suggestions starting with #)
+            if (!s.startsWith("#")) {
+                val stack = makeStack(s)
+                if (!stack.isEmpty) {
+                    context.matrices.push()
+                    context.matrices.translate((px + 2).toFloat(), (ry + 1).toFloat(), 0f)
+                    context.matrices.scale(0.55f, 0.55f, 1f)
+                    context.drawItem(stack, 0, 0)
+                    context.matrices.pop()
+                }
+            }
+            val textX = if (s.startsWith("#")) px + 4 else px + 13
+            drawScaled(context, s, textX, ry + 2, if (isSel) 0xFFFFFF else 0xCCCCCC, SCALE)
+        }
     }
 
     private fun renderField(
@@ -571,6 +671,35 @@ class AdminLootPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Suggestion popup click — must run before commitActiveField since it
+        // would clear the active state and the suggestions.
+        if (activeFieldType == FieldType.ITEM && suggestions.isNotEmpty() && activeFieldRow >= 0) {
+            val rightX = x + SIDEBAR_W + 2
+            val colItemX = rightX + PADDING + 14
+            val headerY = y + 41
+            val rightListY = headerY + 12
+            val rightListH = y + h - FOOTER_H - rightListY - 2
+            val maxRows = rightListH / ROW_H
+            val visualIdx = activeFieldRow - listScroll
+            if (visualIdx in 0 until maxRows) {
+                val popupX = colItemX
+                val popupY = rightListY + visualIdx * ROW_H + ROW_H + 1
+                val popupW = 156
+                val itemH = 11
+                val popupH = suggestions.size * itemH + 2
+                if (mouseX in popupX.toDouble()..(popupX + popupW).toDouble() &&
+                    mouseY in popupY.toDouble()..(popupY + popupH).toDouble()
+                ) {
+                    val rel = ((mouseY - popupY - 1) / itemH.toDouble()).toInt()
+                    if (rel in suggestions.indices) {
+                        fieldText = suggestions[rel]
+                        commitActiveField()
+                    }
+                    return true
+                }
+            }
+        }
+
         commitActiveField()
 
         // Sidebar scrollbar drag start
@@ -676,6 +805,7 @@ class AdminLootPanel(
                         activeFieldRow = rowIdx
                         activeFieldType = FieldType.ITEM
                         fieldText = editEntries[rowIdx].itemId
+                        recomputeSuggestions()
                         return true
                     }
                     mouseX in colWeightX.toDouble()..(colWeightX + 26).toDouble() && mouseY in cellY -> {
@@ -803,6 +933,8 @@ class AdminLootPanel(
         }
         activeFieldRow = -1
         activeFieldType = FieldType.NONE
+        suggestions = emptyList()
+        selectedSuggestion = -1
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
@@ -873,6 +1005,7 @@ class AdminLootPanel(
                 // colon, and a leading '#' (for "#minecraft:logs"-style bulk expansion).
                 if ((chr.isLetterOrDigit() || chr == '_' || chr == ':' || chr == '#') && fieldText.length < 64) {
                     fieldText += chr.lowercaseChar()
+                    recomputeSuggestions()
                     return true
                 }
             }
@@ -889,17 +1022,45 @@ class AdminLootPanel(
 
     fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
         if (activeFieldType == FieldType.NONE) return false
+
+        // Suggestion navigation only applies to the item field
+        if (activeFieldType == FieldType.ITEM && suggestions.isNotEmpty()) {
+            if (keyCode == 264) { // Down
+                selectedSuggestion = (selectedSuggestion + 1).coerceAtMost(suggestions.size - 1)
+                return true
+            }
+            if (keyCode == 265) { // Up
+                selectedSuggestion = (selectedSuggestion - 1).coerceAtLeast(0)
+                return true
+            }
+            if (keyCode == 258) { // Tab — autocomplete to the highlighted suggestion
+                val pick = suggestions.getOrNull(selectedSuggestion.coerceAtLeast(0))
+                if (pick != null) {
+                    fieldText = pick
+                    recomputeSuggestions()
+                }
+                return true
+            }
+        }
+
         if (keyCode == 259 && fieldText.isNotEmpty()) { // backspace
             fieldText = fieldText.dropLast(1)
+            if (activeFieldType == FieldType.ITEM) recomputeSuggestions()
             return true
         }
         if (keyCode == 257 || keyCode == 335) { // enter
+            // If a suggestion is highlighted, commit that text instead of the typed string
+            if (activeFieldType == FieldType.ITEM && selectedSuggestion >= 0 && selectedSuggestion < suggestions.size) {
+                fieldText = suggestions[selectedSuggestion]
+            }
             commitActiveField()
             return true
         }
         if (keyCode == 256) { // escape
             activeFieldRow = -1
             activeFieldType = FieldType.NONE
+            suggestions = emptyList()
+            selectedSuggestion = -1
             return true
         }
         return false

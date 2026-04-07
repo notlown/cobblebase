@@ -169,8 +169,13 @@ object NavigationHelper {
         val now = world.time
         val currentPos = pokemonEntity.blockPos
 
+        // Tolerance: consider mons "stuck" even if blockPos oscillates by 1 block
+        // (handles small flying mons hovering in glass that bob between y=64 and y=65)
         val lastPos = lastPositions[id]
-        if (lastPos != null && lastPos == currentPos) {
+        val moved = lastPos == null || Math.abs(lastPos.x - currentPos.x) > 1
+            || Math.abs(lastPos.y - currentPos.y) > 1
+            || Math.abs(lastPos.z - currentPos.z) > 1
+        if (!moved) {
             // Same BlockPos — check if stuck long enough
             val since = stuckSince.getOrPut(id) { now }
             val stuckDuration = now - since
@@ -236,20 +241,20 @@ object NavigationHelper {
     }
 
     /**
-     * Checks if a Pokemon's bounding box intersects any solid block.
-     * Used to detect mons clipped INSIDE blocks (glass ceilings, between chests, stair pockets, etc.)
+     * Checks if a Pokemon's bounding box intersects any solid block collision shape.
+     * Uses the actual entity bounding box (not contracted) to catch edge cases like
+     * small flying mons clipped into ceiling glass.
      */
     private fun isClippedInSolid(pokemonEntity: PokemonEntity): Boolean {
         val world = pokemonEntity.world
         val box = pokemonEntity.boundingBox
-        // Shrink box slightly to avoid false positives from edge contact
-        val shrunk = box.contract(0.1, 0.1, 0.1)
-        val minX = Math.floor(shrunk.minX).toInt()
-        val minY = Math.floor(shrunk.minY).toInt()
-        val minZ = Math.floor(shrunk.minZ).toInt()
-        val maxX = Math.floor(shrunk.maxX).toInt()
-        val maxY = Math.floor(shrunk.maxY).toInt()
-        val maxZ = Math.floor(shrunk.maxZ).toInt()
+        // Use ceil for max so we check ALL blocks the box touches (even partially)
+        val minX = Math.floor(box.minX + 0.001).toInt()
+        val minY = Math.floor(box.minY + 0.001).toInt()
+        val minZ = Math.floor(box.minZ + 0.001).toInt()
+        val maxX = Math.floor(box.maxX - 0.001).toInt()
+        val maxY = Math.floor(box.maxY - 0.001).toInt()
+        val maxZ = Math.floor(box.maxZ - 0.001).toInt()
 
         val pos = BlockPos.Mutable()
         for (x in minX..maxX) {
@@ -258,9 +263,14 @@ object NavigationHelper {
                     pos.set(x, y, z)
                     val state = world.getBlockState(pos)
                     if (state.isAir) continue
-                    // Check if this block has solid collision (not air, not pass-through)
                     val shape = state.getCollisionShape(world, pos)
-                    if (!shape.isEmpty) return true
+                    if (shape.isEmpty) continue
+                    // Check if any of the shape's voxel boxes actually overlap the entity box
+                    val shapeBoxes = shape.boundingBoxes
+                    for (sb in shapeBoxes) {
+                        val worldBox = sb.offset(x.toDouble(), y.toDouble(), z.toDouble())
+                        if (box.intersects(worldBox)) return true
+                    }
                 }
             }
         }

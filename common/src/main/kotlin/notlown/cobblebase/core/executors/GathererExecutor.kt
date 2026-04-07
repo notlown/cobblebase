@@ -34,6 +34,7 @@ object GathererExecutor : SkillExecutor {
     private val originalHeldItem = mutableMapOf<UUID, ItemStack>()  // backup of Pokemon's real held item
     private val visualItems = mutableMapOf<UUID, ItemEntity>()  // floating visual item above Pokemon's head
     private val pickupCooldown = mutableMapOf<UUID, Long>()      // prevents dupe loop after deposit timeout
+    private val depositFails = mutableMapOf<UUID, Int>()         // consecutive deposit timeouts (recovery trigger)
     private val targetItem = mutableMapOf<UUID, Int>()          // entity ID of target ItemEntity
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastPickupTime = mutableMapOf<UUID, Long>()
@@ -259,6 +260,7 @@ object GathererExecutor : SkillExecutor {
             InventoryHelper.insertItems(world, chestPos, items)
             heldItems.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
+            depositFails.remove(pokemonId)  // reset failure counter on success
 
             // Log the deposit
             for (item in items) {
@@ -282,7 +284,23 @@ object GathererExecutor : SkillExecutor {
             depositStartTime.remove(pokemonId)
             // Cooldown: don't pickup new items for 30 seconds (prevents dupe loop)
             pickupCooldown[pokemonId] = world.time + 600L
-            Cobblebase.log("[Gatherer] ${pokemonEntity.pokemon.species.name} deposit timeout — dropped items (couldn't reach chest), 30s cooldown")
+
+            // Track consecutive failures — after 3, teleport mon back to pasture (it's stuck somewhere unreachable)
+            val fails = (depositFails[pokemonId] ?: 0) + 1
+            depositFails[pokemonId] = fails
+            Cobblebase.log("[Gatherer] ${pokemonEntity.pokemon.species.name} deposit timeout #$fails")
+            if (fails >= 3) {
+                // Recovery teleport — find a safe air position 1 block above pasture
+                pokemonEntity.refreshPositionAndAngles(
+                    origin.x + 0.5, origin.y + 1.0, origin.z + 0.5,
+                    pokemonEntity.yaw, pokemonEntity.pitch
+                )
+                pokemonEntity.setVelocity(0.0, 0.0, 0.0)
+                pokemonEntity.velocityDirty = true
+                depositFails.remove(pokemonId)
+                pickupCooldown[pokemonId] = world.time + 200L  // brief cooldown after recovery
+                Cobblebase.LOGGER.info("[Gatherer] Recovered ${pokemonEntity.pokemon.species.name} (3x deposit timeout) — teleported to pasture")
+            }
         }
     }
 

@@ -208,19 +208,19 @@ object NavigationHelper {
                     pokemonEntity.velocityDirty = true
                 }
 
-                // Escape solid block: at intensity 2+, check if entity is clipped inside a solid block
-                // If yes, push 1.5 blocks straight up to escape (handles glass ceilings, between-chests, stair pockets)
-                if (intensity >= 2 && isClippedInSolid(pokemonEntity)) {
-                    val newY = findEscapeY(pokemonEntity)
-                    if (newY != null) {
+                // Escape solid block: at intensity 1+ (7s), check if entity is clipped inside a solid block
+                // First try vertical escape (push up), then horizontal if no safe Y
+                if (intensity >= 1 && isClippedInSolid(pokemonEntity)) {
+                    val escape = findEscapePosition(pokemonEntity)
+                    if (escape != null) {
                         pokemonEntity.refreshPositionAndAngles(
-                            pokemonEntity.x, newY, pokemonEntity.z,
+                            escape.first, escape.second, escape.third,
                             pokemonEntity.yaw, pokemonEntity.pitch
                         )
                         pokemonEntity.setVelocity(0.0, 0.0, 0.0)
                         pokemonEntity.velocityDirty = true
                         notlown.cobblebase.core.Cobblebase.LOGGER.info(
-                            "[Unstick] Escaped clipped ${pokemonEntity.pokemon.species.name} from solid block to y=$newY"
+                            "[Unstick] Escaped clipped ${pokemonEntity.pokemon.species.name} to ${escape.first},${escape.second},${escape.third}"
                         )
                     }
                 }
@@ -268,22 +268,44 @@ object NavigationHelper {
     }
 
     /**
-     * Find a safe Y position above the current location to escape to.
-     * Walks upward until finding 2 consecutive air blocks (enough space for the entity).
-     * Returns null if no safe spot found within 6 blocks above.
+     * Find a safe escape position. Tries vertical (up) first, then horizontal (8 directions),
+     * then upward+horizontal combos. Returns (x, y, z) of a safe air pocket.
      */
-    private fun findEscapeY(pokemonEntity: PokemonEntity): Double? {
+    private fun findEscapePosition(pokemonEntity: PokemonEntity): Triple<Double, Double, Double>? {
         val world = pokemonEntity.world
+        val startX = pokemonEntity.blockX
         val startY = pokemonEntity.blockY
+        val startZ = pokemonEntity.blockZ
         val pos = BlockPos.Mutable()
+
+        fun isSafe(x: Int, y: Int, z: Int): Boolean {
+            pos.set(x, y, z)
+            if (!world.getBlockState(pos).isAir) return false
+            pos.set(x, y + 1, z)
+            return world.getBlockState(pos).isAir
+        }
+
+        // Try vertical escape first (1-6 blocks up)
         for (offset in 1..6) {
-            val checkY = startY + offset
-            pos.set(pokemonEntity.blockX, checkY, pokemonEntity.blockZ)
-            val below = world.getBlockState(pos)
-            pos.set(pokemonEntity.blockX, checkY + 1, pokemonEntity.blockZ)
-            val above = world.getBlockState(pos)
-            if (below.isAir && above.isAir) {
-                return checkY.toDouble()
+            if (isSafe(startX, startY + offset, startZ)) {
+                return Triple(startX + 0.5, (startY + offset).toDouble(), startZ + 0.5)
+            }
+        }
+        // Try horizontal escape — 8 directions × 1-3 block distances
+        val dirs = listOf(
+            1 to 0, -1 to 0, 0 to 1, 0 to -1,
+            1 to 1, 1 to -1, -1 to 1, -1 to -1
+        )
+        for (dist in 1..3) {
+            for ((dx, dz) in dirs) {
+                val x = startX + dx * dist
+                val z = startZ + dz * dist
+                // Check at current Y, also Y+1 (over a 1-block obstacle)
+                for (dy in 0..2) {
+                    if (isSafe(x, startY + dy, z)) {
+                        return Triple(x + 0.5, (startY + dy).toDouble(), z + 0.5)
+                    }
+                }
             }
         }
         return null

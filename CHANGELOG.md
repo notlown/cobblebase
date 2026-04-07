@@ -4,6 +4,53 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [1.5.0] - 2026-04-08
+
+The biggest release since launch — full Admin GUI overhaul, in-game Loot Editor, two new fakemon packs, and a long batch of performance + stability fixes.
+
+### Performance
+- **Particle stripping** — every job except Healer no longer emits its working particles (TPS optimization)
+- **Finder / Producer / Recruiter throttling** — long-cooldown jobs skip the bulk of their tick logic 19 ticks out of 20
+- **Cached loot table keys** — Finder no longer allocates `Identifier`/`RegistryKey` per roll
+- **Targeted leaves pass-through** — restricted to the pasture area instead of the entire world
+- **Admin GUI lazy loading** — species skill data fetched on demand
+- **Smooth-scroll fix** for touchpad / smooth-scroll mice in the species list
+
+### Admin GUI Overhaul
+- New **Wiki** tab — curated outbound links to Documentation, Species Database, Datapack Generator, Job Reference, Loot Tables, GitHub, Modrinth, Discord
+- New **Loot Editor** tab — edit bundled loot tables live in-game without datapacks. Per-job sidebar with rarity tabs, item id / weight / min / max / on-off toggle per entry, live item icon preview, **autocomplete suggestions** for item ids and item tags, **bulk add by tag** (`#minecraft:logs`, `#c:ores`), tooltips on every column header, save/reset buttons. Overrides persist in `<world>/cobblebase_loot_overrides.json` and apply immediately.
+- **Jobs tab redesign** — compact sidebar with category list, custom-drawn rows at scale 0.7, hover tooltips with description/cooldown/radius, **per-job radius now actually applies in-game** (the previous version stored `radiusMin/radiusMax` which were dead fields)
+- **Species tab improvements** — **sort toggle** (Pokedex# / A-Z / Z-A), species list **filtered to installed mons** so addon species you don't have are hidden, species sprite in the editor header, auto-refresh after lazy load
+- Two orphaned loot tables removed: `honey_collect` and `dive_treasure`
+
+### New Fakemon Pack Support
+- **Baby Legends** (22 species) — baby forms of legendaries, each inheriting its evolution target's skill set with prof -1
+- **Extra Paradox Mons** (27 species) — paradox alternates with ultra-rare-tier curated skills, prof capped at 4
+- **Gravelmon removed** — Cobblemon 1.6 only and incompatible with 1.7+. 7,194 species removed.
+- 39 missing species added: paradox pokemon, tapus, treasures of ruin, naming aliases
+- Applied user submissions #JLZI (5 species) and #QPKX (2 species)
+- **Total species: 8,426 → 1,367** (996 hand-crafted + 371 fakemon)
+
+### Stability & Bug Fixes
+- **Stuck detection** — escape from solid blocks via virtual bounding-box collision test, improved clip detection with `Box.intersects()`, 1-block oscillation tolerance, escalating unstick with Y-axis variation for flying mons, velocity impulse instead of immediate teleport at intensity 3+
+- **Gatherer item dupe glitch fixed** — visual item entity no longer detected by pickup search, pickup cooldown after deposit timeout, drop-on-timeout instead of teleporting to chest, breadcrumb retrace for stair-stuck recovery
+- **Mining items spawn at ground level** (was 1 block too high so gatherers couldn't reach them)
+- **Sleep behavior** — working mons now sleep at night and wake up at sunrise to resume working, `forceSleep` instead of waiting for random chance, periodic sleep animation packets every 4s, animation chain fallback, wake-up animation sent before clearing rest state, velocity freeze only for sleeping mons (not sitting/socializing), passive buffs continue while sleeping
+- **Hearty grain harvesting** — 2-block tall crops harvest both blocks, only adjacent block harvested if also mature
+- **Berry harvest** uses Berry API for drops and resets to MATURE_AGE
+- **22 broken `cobblebase:cauldron_fill` skill references** in species_skills replaced with `cobblebase:water_fill` (those species had no-op skills before this fix)
+- **Cobblemon dependency** declared in fabric.mod.json so users on Cobblemon 1.6 get a clean unmet-dependency error instead of a mixin crash
+- **Recruiter consolidation** into `friend_recruiter` + spawn buckets loaded from Cobblemon
+- **Archeologist skill removed** (was unused)
+
+### GUI Polish
+- **Bottom bar redesign** — Discord icon | Mute toggle | Admin button (OP only) | Done
+- **Mute button updates instantly** on click
+- **Admin button** uses pending pattern to wait for data before opening
+- New behavior variants: faint after chase, recoil in socialize, faint-to-sleep
+
+---
+
 ## [1.3.9] - 2026-04-06
 
 ### Bug Fixes

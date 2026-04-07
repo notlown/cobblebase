@@ -15,7 +15,7 @@
     },
     {
       "skillId": "cobblebase:finder_hea",
-      "proficiency": 4
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
@@ -23,7 +23,7 @@
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 4
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:mentor",

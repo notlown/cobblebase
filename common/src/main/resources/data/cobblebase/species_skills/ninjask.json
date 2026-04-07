@@ -15,11 +15,11 @@
     },
     {
       "skillId": "cobblebase:scout",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:speed_boost",
-      "proficiency": 5
+      "proficiency": 4
     }
   ]
 }

@@ -15,11 +15,11 @@
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:resistance_boost",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:producer",

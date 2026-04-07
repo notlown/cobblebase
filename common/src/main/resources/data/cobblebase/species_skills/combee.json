@@ -7,7 +7,7 @@
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 3
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:harvester",
@@ -15,7 +15,7 @@
     },
     {
       "skillId": "cobblebase:producer",
-      "proficiency": 4
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:scout",

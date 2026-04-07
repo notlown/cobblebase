@@ -3341,7 +3341,6 @@ haildeer.json
 hailoman.json
 hairibble.json
 hairubb.json
-hakamo-o.json
 hakamoo.json
 haleet.json
 halitox.json
@@ -3496,7 +3495,6 @@ hitmontop.json
 hitotsoni.json
 hivernate.json
 hiveum.json
-ho-oh.json
 hoatrex.json
 hoatstink.json
 hoatzan.json
@@ -3773,7 +3771,6 @@ jamowar.json
 jampear.json
 jamphibian.json
 janbos.json
-jangmo-o.json
 jangmoo.json
 jarboen.json
 jarmalade.json
@@ -4044,7 +4041,6 @@ komala.json
 kombantis.json
 komido.json
 komisaur.json
-kommo-o.json
 kommoo.json
 komodraco.json
 komoragon.json
@@ -4731,7 +4727,6 @@ milkitt.json
 milotic.json
 miltank.json
 milthunk.json
-mime_jr.json
 mimectar.json
 mimejr.json
 mimentron.json
@@ -4902,9 +4897,7 @@ moustiny.json
 mousummit.json
 mouszerker.json
 mozz.json
-mr_mime.json
 mr_mime_galarian.json
-mr_rime.json
 mrmime.json
 mrrime.json
 mudarek.json
@@ -5055,8 +5048,6 @@ nicklack.json
 niddevour.json
 nidoking.json
 nidoqueen.json
-nidoran-f.json
-nidoran-m.json
 nidoranf.json
 nidoranm.json
 nidoregina.json
@@ -5774,7 +5765,6 @@ porklay.json
 porkupid.json
 porpice.json
 porscythe.json
-porygon-z.json
 porygon.json
 porygon0.json
 porygon2.json

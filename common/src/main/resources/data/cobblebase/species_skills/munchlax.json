@@ -7,15 +7,15 @@
     },
     {
       "skillId": "cobblebase:finder_food",
-      "proficiency": 4
+      "proficiency": 3
     },
     {
       "skillId": "cobblebase:gatherer",
-      "proficiency": 4
+      "proficiency": 2
     },
     {
       "skillId": "cobblebase:saturation_boost",
-      "proficiency": 4
+      "proficiency": 3
     }
   ]
 }

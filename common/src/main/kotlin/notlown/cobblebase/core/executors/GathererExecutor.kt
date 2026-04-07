@@ -35,6 +35,13 @@ object GathererExecutor : SkillExecutor {
     private val visualItems = mutableMapOf<UUID, ItemEntity>()  // floating visual item above Pokemon's head
     private val pickupCooldown = mutableMapOf<UUID, Long>()      // prevents dupe loop after deposit timeout
     private val depositFails = mutableMapOf<UUID, Int>()         // consecutive deposit timeouts (recovery trigger)
+
+    // Breadcrumb trail: positions visited during pickup phase, used to retrace path back to chest
+    private val breadcrumbs = mutableMapOf<UUID, MutableList<BlockPos>>()
+    private val lastBreadcrumbTick = mutableMapOf<UUID, Long>()
+    private const val BREADCRUMB_INTERVAL_TICKS = 20L  // record every 1 second
+    private const val BREADCRUMB_MAX = 30              // last 30 positions = ~30 sec of trail
+    private val breadcrumbIndex = mutableMapOf<UUID, Int>()  // current index when retracing
     private val targetItem = mutableMapOf<UUID, Int>()          // entity ID of target ItemEntity
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastPickupTime = mutableMapOf<UUID, Long>()
@@ -80,6 +87,18 @@ object GathererExecutor : SkillExecutor {
         if (visual != null && visual.isAlive) {
             visual.setPosition(pokemonEntity.x, pokemonEntity.y + pokemonEntity.height + 0.5, pokemonEntity.z)
             visual.setVelocity(0.0, 0.0, 0.0)
+        }
+
+        // Record breadcrumb (every 1s, only when NOT holding items — that's the "outbound" trip)
+        if (items.isNullOrEmpty() && now - (lastBreadcrumbTick[pokemonId] ?: 0L) >= BREADCRUMB_INTERVAL_TICKS) {
+            val trail = breadcrumbs.getOrPut(pokemonId) { mutableListOf() }
+            val curPos = pokemonEntity.blockPos.toImmutable()
+            // Avoid duplicates: only add if different from last
+            if (trail.isEmpty() || trail.last() != curPos) {
+                trail.add(curPos)
+                if (trail.size > BREADCRUMB_MAX) trail.removeAt(0)
+            }
+            lastBreadcrumbTick[pokemonId] = now
         }
 
         // Phase 1: deposit items if holding any
@@ -158,13 +177,9 @@ object GathererExecutor : SkillExecutor {
         val visualIds = visualItems.values.map { it.id }.toSet()
         val items = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { entity ->
             entity.isAlive && !entity.stack.isEmpty
-                && entity.id !in visualIds // skip floating visual items above gatherer heads
-                && !entity.hasNoGravity() // visual items have no gravity — extra safety filter
+                && entity.id !in visualIds
+                && !entity.hasNoGravity()
                 && belongsToOrAllowed(entity.stack, pastureOrigin)
-                // Skip items more than 4 blocks above/below the pasture — likely on a roof/floor
-                // the gatherer can reach but cannot return from (e.g. stuck on glass ceiling).
-                // The recovery teleport handles this, but prevention is better than cure.
-                && Math.abs(entity.blockY - pastureOrigin.y) <= 4
         }
         // Pick oldest item (highest age = been on ground longest)
         return items.maxByOrNull { it.age }
@@ -255,7 +270,31 @@ object GathererExecutor : SkillExecutor {
         val startTime = depositStartTime.getOrPut(pokemonId) { world.time }
         val elapsed = world.time - startTime
 
-        NavigationHelper.navigateTo(pokemonEntity, chestPos, speed)
+        // Phase A (first 3 seconds): try direct path to chest
+        // Phase B (3-10 seconds): retrace breadcrumbs back through the path we came from
+        // This handles the case where the gatherer climbed stairs to get items but pathfinder
+        // can't find a way back down (asymmetric pathfinding bug)
+        val trail = breadcrumbs[pokemonId]
+        val useBreadcrumbs = elapsed >= 60L && !trail.isNullOrEmpty()
+
+        if (useBreadcrumbs) {
+            // Walk through breadcrumbs in reverse order (newest → oldest = back to where we came from)
+            var idx = breadcrumbIndex.getOrPut(pokemonId) { trail.size - 1 }
+            // Skip already-reached breadcrumbs
+            while (idx >= 0 && NavigationHelper.isPokemonAtPosition(pokemonEntity, trail[idx], 1.5)) {
+                idx--
+            }
+            breadcrumbIndex[pokemonId] = idx
+            if (idx >= 0) {
+                NavigationHelper.navigateTo(pokemonEntity, trail[idx], speed)
+            } else {
+                // All breadcrumbs visited — try direct path to chest now
+                NavigationHelper.navigateTo(pokemonEntity, chestPos, speed)
+            }
+        } else {
+            NavigationHelper.navigateTo(pokemonEntity, chestPos, speed)
+        }
+
         val atChest = NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)
         val timedOut = elapsed >= DEPOSIT_TIMEOUT_TICKS
 
@@ -265,6 +304,9 @@ object GathererExecutor : SkillExecutor {
             heldItems.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
             depositFails.remove(pokemonId)  // reset failure counter on success
+            // Reset breadcrumbs (we're back at chest, fresh trail next time)
+            breadcrumbs.remove(pokemonId)
+            breadcrumbIndex.remove(pokemonId)
 
             // Log the deposit
             for (item in items) {
@@ -288,6 +330,8 @@ object GathererExecutor : SkillExecutor {
             depositStartTime.remove(pokemonId)
             // Cooldown: don't pickup new items for 30 seconds (prevents dupe loop)
             pickupCooldown[pokemonId] = world.time + 600L
+            // Reset breadcrumb index (next attempt starts fresh)
+            breadcrumbIndex.remove(pokemonId)
 
             // Track consecutive failures — after 3, teleport mon back to pasture (it's stuck somewhere unreachable)
             val fails = (depositFails[pokemonId] ?: 0) + 1
@@ -303,6 +347,7 @@ object GathererExecutor : SkillExecutor {
                 pokemonEntity.velocityDirty = true
                 depositFails.remove(pokemonId)
                 pickupCooldown[pokemonId] = world.time + 200L  // brief cooldown after recovery
+                breadcrumbs.remove(pokemonId)  // reset trail after recovery teleport
                 Cobblebase.LOGGER.info("[Gatherer] Recovered ${pokemonEntity.pokemon.species.name} (3x deposit timeout) — teleported to pasture")
             }
         }

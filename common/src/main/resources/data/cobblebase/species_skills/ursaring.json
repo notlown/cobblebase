@@ -4,6 +4,10 @@
     {
       "skillId": "cobblebase:finder_bal",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
     }
   ]
 }

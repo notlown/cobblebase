@@ -7,7 +7,11 @@
     },
     {
       "skillId": "cobblebase:water_fill",
-      "proficiency": 3
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:cauldron_fill",
+      "proficiency": 4
     }
   ]
 }

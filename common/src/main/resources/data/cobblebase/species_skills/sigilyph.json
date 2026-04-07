@@ -11,11 +11,15 @@
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 2
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:scout",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
     }
   ]
 }

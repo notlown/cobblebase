@@ -20,6 +20,14 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:cauldron_fill",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 4
     }
   ]
 }

@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:lava_fill",
+      "proficiency": 5
     }
   ]
 }

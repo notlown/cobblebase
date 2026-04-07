@@ -19,11 +19,15 @@
     },
     {
       "skillId": "cobblebase:speed_boost",
-      "proficiency": 2
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:finder_stat",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:brew_fuel",
+      "proficiency": 4
     }
   ]
 }

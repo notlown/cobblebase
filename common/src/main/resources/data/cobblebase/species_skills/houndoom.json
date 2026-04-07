@@ -11,11 +11,19 @@
     },
     {
       "skillId": "cobblebase:furnace_fuel",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:guard",
-      "proficiency": 3
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:lava_fill",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 4
     }
   ]
 }

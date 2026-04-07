@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 5
     }
   ]
 }

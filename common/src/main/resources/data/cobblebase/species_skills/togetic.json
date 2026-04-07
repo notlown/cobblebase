@@ -28,6 +28,10 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 3
     }
   ]
 }

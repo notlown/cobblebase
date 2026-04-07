@@ -7,7 +7,7 @@
     },
     {
       "skillId": "cobblebase:furnace_fuel",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:speed_boost",
@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:lava_fill",
+      "proficiency": 3
     }
   ]
 }

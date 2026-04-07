@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:water_breathing",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 5
     }
   ]
 }

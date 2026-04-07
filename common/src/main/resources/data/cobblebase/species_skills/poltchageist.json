@@ -24,6 +24,10 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:brew_fuel",
+      "proficiency": 2
     }
   ]
 }

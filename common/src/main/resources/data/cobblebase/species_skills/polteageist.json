@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:brew_fuel",
+      "proficiency": 4
     }
   ]
 }

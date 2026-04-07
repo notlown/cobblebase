@@ -20,6 +20,14 @@
     {
       "skillId": "cobblebase:mentor",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:saturation_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 4
     }
   ]
 }

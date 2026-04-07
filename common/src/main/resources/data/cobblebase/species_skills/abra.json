@@ -11,6 +11,10 @@
     },
     {
       "skillId": "cobblebase:mentor",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:brew_fuel",
       "proficiency": 1
     }
   ]

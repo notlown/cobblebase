@@ -16,6 +16,14 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:cauldron_fill",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 4
     }
   ]
 }

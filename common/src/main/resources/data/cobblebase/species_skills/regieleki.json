@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:speed_boost",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:haste_boost",
+      "proficiency": 5
     }
   ]
 }

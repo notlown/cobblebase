@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
     }
   ]
 }

@@ -32,6 +32,10 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:lucky_charm",
+      "proficiency": 3
     }
   ]
 }

@@ -8,6 +8,10 @@
     {
       "skillId": "cobblebase:furnace_fuel",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
     }
   ]
 }

@@ -15,7 +15,7 @@
     },
     {
       "skillId": "cobblebase:lucky_charm",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mentor",
@@ -23,6 +23,10 @@
     },
     {
       "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:healer",
       "proficiency": 5
     }
   ]

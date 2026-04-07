@@ -51,7 +51,8 @@ object LootOverrides {
                             "itemId" to e.itemId,
                             "weight" to e.weight,
                             "minCount" to e.minCount,
-                            "maxCount" to e.maxCount
+                            "maxCount" to e.maxCount,
+                            "disabled" to e.disabled
                         )
                     }
                 )
@@ -78,7 +79,8 @@ object LootOverrides {
                     val weight = (e["weight"] as? Double)?.toInt() ?: 1
                     val minCount = (e["minCount"] as? Double)?.toInt() ?: 1
                     val maxCount = (e["maxCount"] as? Double)?.toInt() ?: minCount
-                    LootEntry(itemId, weight, minCount, maxCount)
+                    val disabled = (e["disabled"] as? Boolean) ?: false
+                    LootEntry(itemId, weight, minCount, maxCount, disabled)
                 }
                 overrides[normalize(id)] = LootTableDef(normalize(id), rolls, entries)
             }

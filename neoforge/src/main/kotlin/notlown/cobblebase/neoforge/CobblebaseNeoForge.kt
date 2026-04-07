@@ -249,13 +249,11 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             context.enqueueWork {
                 val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
                 if (!player.hasPermissionLevel(2)) return@enqueueWork
-                val tables = notlown.cobblebase.core.CobblebaseLootRegistry.getAllIds().mapNotNull { id ->
-                    notlown.cobblebase.core.LootHelper.getEffective(id)
-                }
+                val (tables, defaults) = notlown.cobblebase.core.LootSyncBuilder.buildSnapshot()
                 val overridden = notlown.cobblebase.core.LootOverrides.getAll().keys.toSet()
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
                     player,
-                    notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden)
+                    notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden, defaults)
                 )
             }
         }
@@ -266,7 +264,9 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             notlown.cobblebase.core.net.AdminLootSyncS2CPacket.CODEC
         ) { packet, context ->
             context.enqueueWork {
-                notlown.cobblebase.core.AdminLootDataCache.update(packet.tables, packet.overriddenIds)
+                notlown.cobblebase.core.AdminLootDataCache.update(
+                    packet.tables, packet.overriddenIds, packet.defaultItemIds
+                )
             }
         }
 
@@ -278,11 +278,9 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             context.enqueueWork {
                 val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
                 packet.handle(player)
-                val tables = notlown.cobblebase.core.CobblebaseLootRegistry.getAllIds().mapNotNull { id ->
-                    notlown.cobblebase.core.LootHelper.getEffective(id)
-                }
+                val (tables, defaults) = notlown.cobblebase.core.LootSyncBuilder.buildSnapshot()
                 val overridden = notlown.cobblebase.core.LootOverrides.getAll().keys.toSet()
-                val sync = notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden)
+                val sync = notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden, defaults)
                 for (p in player.server.playerManager.playerList) {
                     if (p.hasPermissionLevel(2)) {
                         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, sync)

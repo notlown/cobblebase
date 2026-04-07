@@ -44,7 +44,8 @@ data class AdminLootUpdateC2SPacket(
                             itemId = buf.readString(),
                             weight = buf.readVarInt(),
                             minCount = buf.readVarInt(),
-                            maxCount = buf.readVarInt()
+                            maxCount = buf.readVarInt(),
+                            disabled = buf.readBoolean()
                         )
                     )
                 }
@@ -61,6 +62,7 @@ data class AdminLootUpdateC2SPacket(
                     buf.writeVarInt(e.weight)
                     buf.writeVarInt(e.minCount)
                     buf.writeVarInt(e.maxCount)
+                    buf.writeBoolean(e.disabled)
                 }
             }
         }

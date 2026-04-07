@@ -19,7 +19,10 @@ import net.minecraft.util.Identifier
  */
 data class AdminLootSyncS2CPacket(
     val tables: List<LootTableDef>,
-    val overriddenIds: Set<String>
+    val overriddenIds: Set<String>,
+    /** For each table id, the set of item ids that exist in the bundled default
+     *  (used by the GUI to know which entries get an On/Off toggle vs a delete). */
+    val defaultItemIds: Map<String, List<String>>
 ) : CustomPayload {
 
     companion object {
@@ -40,7 +43,8 @@ data class AdminLootSyncS2CPacket(
                                 itemId = buf.readString(),
                                 weight = buf.readVarInt(),
                                 minCount = buf.readVarInt(),
-                                maxCount = buf.readVarInt()
+                                maxCount = buf.readVarInt(),
+                                disabled = buf.readBoolean()
                             )
                         )
                     }
@@ -49,7 +53,17 @@ data class AdminLootSyncS2CPacket(
                 val overrideCount = buf.readVarInt()
                 val overridden = HashSet<String>(overrideCount)
                 repeat(overrideCount) { overridden.add(buf.readString()) }
-                return AdminLootSyncS2CPacket(tables, overridden)
+
+                val defCount = buf.readVarInt()
+                val defaults = HashMap<String, List<String>>(defCount)
+                repeat(defCount) {
+                    val tid = buf.readString()
+                    val n = buf.readVarInt()
+                    val items = ArrayList<String>(n)
+                    repeat(n) { items.add(buf.readString()) }
+                    defaults[tid] = items
+                }
+                return AdminLootSyncS2CPacket(tables, overridden, defaults)
             }
 
             override fun encode(buf: PacketByteBuf, packet: AdminLootSyncS2CPacket) {
@@ -63,10 +77,18 @@ data class AdminLootSyncS2CPacket(
                         buf.writeVarInt(e.weight)
                         buf.writeVarInt(e.minCount)
                         buf.writeVarInt(e.maxCount)
+                        buf.writeBoolean(e.disabled)
                     }
                 }
                 buf.writeVarInt(packet.overriddenIds.size)
                 for (id in packet.overriddenIds) buf.writeString(id)
+
+                buf.writeVarInt(packet.defaultItemIds.size)
+                for ((tid, items) in packet.defaultItemIds) {
+                    buf.writeString(tid)
+                    buf.writeVarInt(items.size)
+                    for (i in items) buf.writeString(i)
+                }
             }
         }
     }

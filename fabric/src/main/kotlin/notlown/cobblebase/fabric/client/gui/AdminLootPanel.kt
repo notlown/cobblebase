@@ -110,7 +110,8 @@ class AdminLootPanel(
         val weightField: TextFieldWidget,
         val minField: TextFieldWidget,
         val maxField: TextFieldWidget,
-        val deleteBtn: ButtonWidget
+        val deleteBtn: ButtonWidget,
+        val toggleBtn: ButtonWidget
     )
     private val rowPool = mutableListOf<RowWidgets>()
     private var rollsField: TextFieldWidget? = null
@@ -156,7 +157,7 @@ class AdminLootPanel(
 
         // Pre-allocate row pool
         repeat(POOL_SIZE) { idx ->
-            val itemF = TextFieldWidget(textRenderer, 0, 0, 96, 12, Text.literal("Item ID"))
+            val itemF = TextFieldWidget(textRenderer, 0, 0, 200, 12, Text.literal("Item ID"))
             itemF.setMaxLength(64)
             itemF.setChangedListener { v ->
                 if (idx in editEntries.indices) {
@@ -179,14 +180,23 @@ class AdminLootPanel(
                     dirty = true
                     bindRowWidgetsToBuffer()
                 }
-            }.dimensions(0, 0, 12, 12).build()
+            }.dimensions(0, 0, 14, 12).build()
+            val toggleBtn = ButtonWidget.builder(Text.literal("on")) {
+                if (idx in editEntries.indices) {
+                    val cur = editEntries[idx]
+                    editEntries[idx] = cur.copy(disabled = !cur.disabled)
+                    dirty = true
+                    bindRowWidgetsToBuffer()
+                }
+            }.dimensions(0, 0, 22, 12).build()
 
             addWidget.apply(itemF)
             addWidget.apply(weightF)
             addWidget.apply(minF)
             addWidget.apply(maxF)
             addWidget.apply(delBtn)
-            rowPool.add(RowWidgets(itemF, weightF, minF, maxF, delBtn))
+            addWidget.apply(toggleBtn)
+            rowPool.add(RowWidgets(itemF, weightF, minF, maxF, delBtn, toggleBtn))
         }
 
         // Initial sync
@@ -392,12 +402,18 @@ class AdminLootPanel(
             it.visible = true
         }
 
-        // Column headers
+        // Column headers — column X positions also drive the row widget layout below
         val headerY = y + 40
-        drawScaled(context, "\u00A77Item", rightX + PADDING + 18, headerY, 0xAAAAAA, SCALE)
-        drawScaled(context, "\u00A77W", rightX + PADDING + 122, headerY, 0xAAAAAA, SCALE)
-        drawScaled(context, "\u00A77Min", rightX + PADDING + 150, headerY, 0xAAAAAA, SCALE)
-        drawScaled(context, "\u00A77Max", rightX + PADDING + 178, headerY, 0xAAAAAA, SCALE)
+        val colItemX = rightX + PADDING + 18
+        val colWeightX = rightX + PADDING + 222
+        val colMinX = rightX + PADDING + 250
+        val colMaxX = rightX + PADDING + 278
+        val colActionX = rightX + PADDING + 306
+        drawScaled(context, "\u00A77Item", colItemX, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77W", colWeightX, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77Min", colMinX, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77Max", colMaxX, headerY, 0xAAAAAA, SCALE)
+        drawScaled(context, "\u00A77Action", colActionX, headerY, 0xAAAAAA, SCALE)
         context.fill(rightX + 2, headerY + 8, rightX + rightW - 4, headerY + 9, 0xFF3A3A5C.toInt())
 
         // Rows
@@ -407,36 +423,64 @@ class AdminLootPanel(
         listScroll = listScroll.coerceIn(0, (editEntries.size - maxRows).coerceAtLeast(0))
 
         // Position pool widgets and draw icons
+        val tableId = currentTableId()
         for (i in 0 until POOL_SIZE) {
             val rw = rowPool[i]
             val visualIdx = i - listScroll
             val visible = i < editEntries.size && visualIdx in 0 until maxRows
-            rw.itemField.visible = visible
-            rw.weightField.visible = visible
-            rw.minField.visible = visible
-            rw.maxField.visible = visible
-            rw.deleteBtn.visible = visible
-            if (visible) {
-                val rowY = listY + visualIdx * ROW_H
+            if (!visible) {
+                rw.itemField.visible = false
+                rw.weightField.visible = false
+                rw.minField.visible = false
+                rw.maxField.visible = false
+                rw.deleteBtn.visible = false
+                rw.toggleBtn.visible = false
+                continue
+            }
 
-                // Item icon
-                val stack = makeStack(editEntries[i].itemId)
-                if (!stack.isEmpty) {
-                    context.drawItem(stack, rightX + PADDING, rowY)
-                } else {
-                    // Pink square for unknown item
-                    context.fill(rightX + PADDING, rowY, rightX + PADDING + 16, rowY + 16, 0xFFFF00FF.toInt())
-                }
+            val entry = editEntries[i]
+            val rowY = listY + visualIdx * ROW_H
+            val isDefault = tableId != null && AdminLootDataCache.isDefaultEntry(tableId, entry.itemId)
 
-                rw.itemField.x = rightX + PADDING + 18
-                rw.itemField.y = rowY + 2
-                rw.weightField.x = rightX + PADDING + 118
-                rw.weightField.y = rowY + 2
-                rw.minField.x = rightX + PADDING + 146
-                rw.minField.y = rowY + 2
-                rw.maxField.x = rightX + PADDING + 174
-                rw.maxField.y = rowY + 2
-                rw.deleteBtn.x = rightX + PADDING + 202
+            // Dim the row when disabled
+            if (entry.disabled) {
+                context.fill(rightX + 2, rowY, rightX + rightW - 4, rowY + ROW_H - 1, 0x44000000)
+            }
+
+            // Item icon
+            val stack = makeStack(entry.itemId)
+            if (!stack.isEmpty) {
+                context.drawItem(stack, rightX + PADDING, rowY)
+            } else {
+                context.fill(rightX + PADDING, rowY, rightX + PADDING + 16, rowY + 16, 0xFFFF00FF.toInt())
+            }
+
+            rw.itemField.visible = true
+            rw.weightField.visible = true
+            rw.minField.visible = true
+            rw.maxField.visible = true
+            rw.itemField.x = colItemX
+            rw.itemField.y = rowY + 2
+            rw.weightField.x = colWeightX - 2
+            rw.weightField.y = rowY + 2
+            rw.minField.x = colMinX - 2
+            rw.minField.y = rowY + 2
+            rw.maxField.x = colMaxX - 2
+            rw.maxField.y = rowY + 2
+
+            // Action: toggle for default-origin entries, delete for custom
+            if (isDefault) {
+                rw.toggleBtn.visible = true
+                rw.deleteBtn.visible = false
+                rw.toggleBtn.x = colActionX - 2
+                rw.toggleBtn.y = rowY + 2
+                rw.toggleBtn.message = Text.literal(
+                    if (entry.disabled) "\u00A7coff" else "\u00A7aon"
+                )
+            } else {
+                rw.toggleBtn.visible = false
+                rw.deleteBtn.visible = true
+                rw.deleteBtn.x = colActionX - 2
                 rw.deleteBtn.y = rowY + 2
             }
         }
@@ -461,6 +505,7 @@ class AdminLootPanel(
             rw.minField.visible = false
             rw.maxField.visible = false
             rw.deleteBtn.visible = false
+            rw.toggleBtn.visible = false
         }
     }
 

@@ -17,7 +17,14 @@ data class LootEntry(
     val itemId: String,
     val weight: Int,
     val minCount: Int,
-    val maxCount: Int
+    val maxCount: Int,
+    /**
+     * Admin-set kill switch for an entry. Disabled entries are kept in the
+     * override (so a default item can be re-enabled later) but are skipped
+     * during loot generation. The Admin GUI shows an On/Off toggle for
+     * default-origin entries; admin-added entries can be deleted instead.
+     */
+    val disabled: Boolean = false
 )
 
 /**

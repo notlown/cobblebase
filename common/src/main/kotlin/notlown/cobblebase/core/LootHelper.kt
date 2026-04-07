@@ -90,15 +90,18 @@ object LootHelper {
         if (id.contains(":")) id else "cobblebase:$id"
 
     private fun rollDef(def: LootTableDef, world: ServerWorld): List<ItemStack> {
-        if (def.entries.isEmpty()) return emptyList()
-        val totalWeight = def.entries.sumOf { it.weight }
+        // Skip disabled entries entirely — they exist only so they can be
+        // re-enabled from the admin GUI later.
+        val active = def.entries.filter { !it.disabled }
+        if (active.isEmpty()) return emptyList()
+        val totalWeight = active.sumOf { it.weight }
         if (totalWeight <= 0) return emptyList()
 
         val drops = mutableListOf<ItemStack>()
         val random = world.random
         repeat(def.rolls.coerceAtLeast(1)) {
             var roll = random.nextInt(totalWeight)
-            for (entry in def.entries) {
+            for (entry in active) {
                 roll -= entry.weight
                 if (roll < 0) {
                     val stack = createStack(entry, random)

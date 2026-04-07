@@ -174,22 +174,18 @@ object CobblebaseFabric : ModInitializer {
             context.server().execute {
                 val player = context.player()
                 if (!player.hasPermissionLevel(2)) return@execute
-                val tables = notlown.cobblebase.core.CobblebaseLootRegistry.getAllIds().mapNotNull { id ->
-                    notlown.cobblebase.core.LootHelper.getEffective(id)
-                }
+                val (tables, defaults) = notlown.cobblebase.core.LootSyncBuilder.buildSnapshot()
                 val overridden = notlown.cobblebase.core.LootOverrides.getAll().keys.toSet()
-                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden))
+                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden, defaults))
             }
         }
         ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminLootUpdateC2SPacket.ID) { packet, context ->
             context.server().execute {
                 packet.handle(context.player())
                 // Re-broadcast updated state to all OPs viewing the GUI (cheap and rare)
-                val tables = notlown.cobblebase.core.CobblebaseLootRegistry.getAllIds().mapNotNull { id ->
-                    notlown.cobblebase.core.LootHelper.getEffective(id)
-                }
+                val (tables, defaults) = notlown.cobblebase.core.LootSyncBuilder.buildSnapshot()
                 val overridden = notlown.cobblebase.core.LootOverrides.getAll().keys.toSet()
-                val sync = notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden)
+                val sync = notlown.cobblebase.core.net.AdminLootSyncS2CPacket(tables, overridden, defaults)
                 for (p in context.player().server.playerManager.playerList) {
                     if (p.hasPermissionLevel(2)) ServerPlayNetworking.send(p, sync)
                 }

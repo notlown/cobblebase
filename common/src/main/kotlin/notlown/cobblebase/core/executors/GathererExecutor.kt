@@ -33,6 +33,7 @@ object GathererExecutor : SkillExecutor {
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
     private val originalHeldItem = mutableMapOf<UUID, ItemStack>()  // backup of Pokemon's real held item
     private val visualItems = mutableMapOf<UUID, ItemEntity>()  // floating visual item above Pokemon's head
+    private val pickupCooldown = mutableMapOf<UUID, Long>()      // prevents dupe loop after deposit timeout
     private val targetItem = mutableMapOf<UUID, Int>()          // entity ID of target ItemEntity
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastPickupTime = mutableMapOf<UUID, Long>()
@@ -120,6 +121,10 @@ object GathererExecutor : SkillExecutor {
             return
         }
 
+        // Pickup cooldown after deposit timeout (prevents dupe loop when stuck)
+        val pickupCd = pickupCooldown[pokemonId] ?: 0L
+        if (now < pickupCd) return
+
         // Phase 4: search for dropped items (throttled to avoid lag)
         val lastSearch = lastSearchTime[pokemonId] ?: 0L
         if (now - lastSearch < SEARCH_INTERVAL_TICKS) return
@@ -148,8 +153,13 @@ object GathererExecutor : SkillExecutor {
      */
     private fun findNearestDroppedItem(world: ServerWorld, pokemonEntity: PokemonEntity, radius: Double, pastureOrigin: BlockPos): ItemEntity? {
         val searchBox = Box.of(pokemonEntity.pos, radius * 2, radius * 2, radius * 2)
+        // Collect all visual item entity IDs across all gatherers (avoid picking up own/other visuals)
+        val visualIds = visualItems.values.map { it.id }.toSet()
         val items = world.getEntitiesByClass(ItemEntity::class.java, searchBox) { entity ->
-            entity.isAlive && !entity.stack.isEmpty && belongsToOrAllowed(entity.stack, pastureOrigin)
+            entity.isAlive && !entity.stack.isEmpty
+                && entity.id !in visualIds // skip floating visual items above gatherer heads
+                && !entity.hasNoGravity() // visual items have no gravity — extra safety filter
+                && belongsToOrAllowed(entity.stack, pastureOrigin)
         }
         // Pick oldest item (highest age = been on ground longest)
         return items.maxByOrNull { it.age }
@@ -182,9 +192,15 @@ object GathererExecutor : SkillExecutor {
         itemEntity.discard()
 
         // Also grab ALL other items within 3 blocks (batch pickup) — only from own pasture
+        // Skip visual items (no gravity, max pickup delay) to prevent dupe loop
+        val visualIds = visualItems.values.map { it.id }.toSet()
         val nearbyItems = world.getEntitiesByClass(ItemEntity::class.java,
             net.minecraft.util.math.Box.of(pokemonEntity.pos, 6.0, 4.0, 6.0)
-        ) { it.isAlive && !it.stack.isEmpty && it.id != itemEntity.id && ItemOriginHelper.belongsTo(it.stack, pastureOrigin) }
+        ) {
+            it.isAlive && !it.stack.isEmpty && it.id != itemEntity.id
+                && it.id !in visualIds && !it.hasNoGravity()
+                && ItemOriginHelper.belongsTo(it.stack, pastureOrigin)
+        }
 
         val allStacks = mutableListOf(stack)
         for (nearby in nearbyItems.take(15)) { // max 15 items per batch
@@ -259,11 +275,14 @@ object GathererExecutor : SkillExecutor {
             depositStartTime.remove(pokemonId)
         } else if (timedOut) {
             // Couldn't reach chest in 10s — drop items on ground (no fake success)
-            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+            // Tag with pasture origin so OTHER gatherers can pick them up, but apply cooldown to THIS gatherer
+            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items, origin)
             heldItems.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
             depositStartTime.remove(pokemonId)
-            Cobblebase.log("[Gatherer] ${pokemonEntity.pokemon.species.name} deposit timeout — dropped items (couldn't reach chest)")
+            // Cooldown: don't pickup new items for 30 seconds (prevents dupe loop)
+            pickupCooldown[pokemonId] = world.time + 600L
+            Cobblebase.log("[Gatherer] ${pokemonEntity.pokemon.species.name} deposit timeout — dropped items (couldn't reach chest), 30s cooldown")
         }
     }
 

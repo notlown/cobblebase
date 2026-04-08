@@ -4,6 +4,19 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [1.5.1] - 2026-04-08
+
+Fast-follow patch for four critical 1.5.0 bugs.
+
+### Critical Fixes
+- **Items don't stack in chests anymore (regression since 1.5)** — `InventoryHelper.insertItems` only stripped the `cobblebase_origin` NBT tag in the vanilla fallback path, not in the platform-specific path used by Fabric Transfer API / NeoForge Capabilities. The tag is now stripped up front for both paths so items merge normally with vanilla stacks.
+- **Items from destroyed pastures would never go away** — the Gatherer's ownership check now detects orphan origins (pasture block no longer exists) and lets any Gatherer clean them up.
+- **Species skill overrides didn't show up in the Pasture Skills tab on multiplayer** — new `SpeciesOverrideSyncS2CPacket` broadcasts every override to every player on join and after admin updates. Fixes the "admin set custom skills but pasture still shows default skills" bug on dedicated servers.
+- **Disabled jobs still appeared in the Pasture Skills tab on multiplayer** — new `JobOverrideSyncS2CPacket` with the same join-sync + post-update broadcast pattern. Fixes the "admin disabled job but players can still assign it" bug on dedicated servers.
+- **Fakemons showed the wrong preview icon in the Admin GUI** — `PokemonSpriteHelper.resolveSpeciesFromName` hardcoded the `cobblemon:` namespace so fakemon species (`babylegends:*`, `extraparadoxmons:*`, `livelymons:*`, etc.) never resolved. Resolver now walks the full Cobblemon runtime registry with a per-name cache.
+
+---
+
 ## [1.5.0] - 2026-04-08
 
 The biggest release since launch — full Admin GUI overhaul, in-game Loot Editor, two new fakemon packs, and a long batch of performance + stability fixes.

@@ -56,25 +56,33 @@ object InventoryHelper {
      * like Sophisticated Storage that don't implement vanilla Inventory).
      */
     fun insertItems(world: World, containerPos: BlockPos, items: List<ItemStack>): List<ItemStack> {
+        // Strip the cobblebase_origin NBT tag from every incoming stack *before*
+        // handing them to any insertion path. The origin tag is only useful
+        // while items are floating on the ground waiting for a Gatherer —
+        // once they enter a container it just prevents them from merging with
+        // vanilla stacks of the same item (pre-1.5.1 bug report: "items won't
+        // stack anymore since the update").
+        val cleanItems = items.map { stack ->
+            if (stack.isEmpty) stack else stack.copy().also { ItemOriginHelper.removeTag(it) }
+        }
+
         // Platform-specific path (Fabric Transfer API / NeoForge Capabilities)
         val helper = ContainerHelperRegistry.instance
         if (helper != null) {
-            return helper.insertItems(world, containerPos, items)
+            return helper.insertItems(world, containerPos, cleanItems)
         }
 
         // Fallback: vanilla Inventory only
         val blockEntity = world.getBlockEntity(containerPos)
         val inventory: Inventory = when (blockEntity) {
             is Inventory -> blockEntity
-            else -> return items
+            else -> return cleanItems
         }
 
         val leftovers = mutableListOf<ItemStack>()
-        for (stack in items) {
+        for (stack in cleanItems) {
             if (stack.isEmpty) continue
-            val cleanStack = stack.copy()
-            ItemOriginHelper.removeTag(cleanStack) // Strip origin tag so items stack normally
-            val remaining = insertStack(inventory, cleanStack)
+            val remaining = insertStack(inventory, stack)
             if (!remaining.isEmpty) {
                 leftovers.add(remaining)
             }

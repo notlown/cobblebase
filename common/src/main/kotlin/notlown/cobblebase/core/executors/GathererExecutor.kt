@@ -179,7 +179,7 @@ object GathererExecutor : SkillExecutor {
             entity.isAlive && !entity.stack.isEmpty
                 && entity.id !in visualIds
                 && !entity.hasNoGravity()
-                && belongsToOrAllowed(entity.stack, pastureOrigin)
+                && belongsToOrAllowed(entity.stack, pastureOrigin, world)
         }
         // Pick oldest item (highest age = been on ground longest)
         return items.maxByOrNull { it.age }
@@ -187,16 +187,27 @@ object GathererExecutor : SkillExecutor {
 
     /**
      * Checks if an item should be picked up by this Gatherer.
-     * Uses the original v1.3.7 belongsTo logic + optional player drop setting.
+     * Uses the original v1.3.7 belongsTo logic + optional player drop setting,
+     * plus an orphan-pasture fallback so items from destroyed pastures don't
+     * linger forever on the ground.
      */
-    private fun belongsToOrAllowed(stack: ItemStack, pastureOrigin: BlockPos): Boolean {
+    private fun belongsToOrAllowed(
+        stack: ItemStack,
+        pastureOrigin: BlockPos,
+        world: net.minecraft.world.World
+    ): Boolean {
         val origin = ItemOriginHelper.getOrigin(stack)
         if (origin == null) {
             // Untagged = player/mob drop — respect setting
             return CobblebaseConfig.gathererPickupPlayerDrops
         }
         // Tagged = from a Cobblebase job — check if same pasture
-        return origin == pastureOrigin
+        if (origin == pastureOrigin) return true
+        // If the origin pasture no longer exists, treat as orphaned and
+        // allow any Gatherer to clean it up (fixes "broke pasture, items
+        // won't go away" bug report).
+        val pastureStillExists = world.getBlockEntity(origin) is com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+        return !pastureStillExists
     }
 
     /**
@@ -219,7 +230,7 @@ object GathererExecutor : SkillExecutor {
         ) {
             it.isAlive && !it.stack.isEmpty && it.id != itemEntity.id
                 && it.id !in visualIds && !it.hasNoGravity()
-                && ItemOriginHelper.belongsTo(it.stack, pastureOrigin)
+                && belongsToOrAllowed(it.stack, pastureOrigin, world)
         }
 
         val allStacks = mutableListOf(stack)

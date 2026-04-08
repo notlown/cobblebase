@@ -202,7 +202,31 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             AdminSpeciesUpdateC2SPacket.CODEC
         ) { packet, context ->
             context.enqueueWork {
-                packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                packet.handle(player)
+                // Re-broadcast every override to every player so their Pasture
+                // Skills tab picks up the change without a reconnect.
+                val sync = notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket(
+                    SpeciesSkillOverrides.getAllOverriddenSpecies()
+                        .associateWith { SpeciesSkillOverrides.getOverride(it) ?: emptyList() }
+                )
+                for (p in player.server.playerManager.playerList) {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, sync)
+                }
+            }
+        }
+
+        // S2C: Species override sync
+        registrar.playToClient(
+            notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                for ((species, skills) in packet.overrides) {
+                    notlown.cobblebase.core.SpeciesSkillRegistry.register(
+                        notlown.cobblebase.core.SpeciesSkills(species, skills)
+                    )
+                }
             }
         }
 
@@ -332,6 +356,13 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             player,
             notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(s.discordUrl, s.discordEnabled)
         )
+        // Sync all species skill overrides so the Pasture Skills tab sees
+        // the admin-set skill set instead of the bundled default.
+        val overrideSync = notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket(
+            SpeciesSkillOverrides.getAllOverriddenSpecies()
+                .associateWith { SpeciesSkillOverrides.getOverride(it) ?: emptyList() }
+        )
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, overrideSync)
     }
 
     private fun onPlayerLoggedOut(event: PlayerEvent.PlayerLoggedOutEvent) {

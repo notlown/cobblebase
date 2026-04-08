@@ -127,6 +127,19 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Register S2C species override sync — applies admin-set skill overrides
+        // to the client's SpeciesSkillRegistry so they show up in the Pasture
+        // Skills / Buffs tabs.
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                for ((species, skills) in packet.overrides) {
+                    notlown.cobblebase.core.SpeciesSkillRegistry.register(
+                        notlown.cobblebase.core.SpeciesSkills(species, skills)
+                    )
+                }
+            }
+        }
+
         // Register /cobblebase admin client command
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.register(

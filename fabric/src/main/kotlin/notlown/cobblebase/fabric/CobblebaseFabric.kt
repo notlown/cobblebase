@@ -119,8 +119,23 @@ object CobblebaseFabric : ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(AdminSpeciesUpdateC2SPacket.ID) { packet, context ->
             context.server().execute {
                 packet.handle(context.player())
+                // Re-broadcast every override to every player so the Pasture
+                // Skills tab picks up the change without a reconnect.
+                val sync = notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket(
+                    SpeciesSkillOverrides.getAllOverriddenSpecies()
+                        .associateWith { SpeciesSkillOverrides.getOverride(it) ?: emptyList() }
+                )
+                for (p in context.player().server.playerManager.playerList) {
+                    ServerPlayNetworking.send(p, sync)
+                }
             }
         }
+
+        // Register S2C packet for species override sync (sent on join + after admin updates)
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket.CODEC
+        )
 
         // Register C2S packet for lazy-loading individual species skills
         PayloadTypeRegistry.playC2S().register(notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.ID, notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.CODEC)
@@ -226,6 +241,13 @@ object CobblebaseFabric : ModInitializer {
             ServerPlayNetworking.send(handler.player, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                 s.discordUrl, s.discordEnabled
             ))
+            // Sync all species skill overrides so the client's Pasture Skills
+            // tab sees the admin-set skill set instead of the bundled default.
+            val overrideSync = notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket(
+                SpeciesSkillOverrides.getAllOverriddenSpecies()
+                    .associateWith { SpeciesSkillOverrides.getOverride(it) ?: emptyList() }
+            )
+            ServerPlayNetworking.send(handler.player, overrideSync)
         }
 
         // Load assignments, logs, discoveries, and overrides when world starts

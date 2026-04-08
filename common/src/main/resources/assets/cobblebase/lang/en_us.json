@@ -55,5 +55,5 @@
 
   "text.autoconfig.cobblebase.option.mentor": "Mentor",
   "text.autoconfig.cobblebase.option.mentor.mentorEnabled": "Mentor skill enabled",
-  "text.autoconfig.cobblebase.option.mentor.mentorMaxBoost": "Max XP boost multiplier"
+  "text.autoconfig.cobblebase.option.mentor.mentorMaxBoost": "Max passive XP multiplier"
 }

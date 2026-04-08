@@ -134,7 +134,7 @@ class BuffsPanel(
             "mentor" -> {
                 val multiplier = (prof / 3.0) * CobblebaseConfig.mentorMaxBoost
                 val percent = ((multiplier) * 100).toInt()
-                "+${percent}% Bonus XP · every 60s"
+                "Pokemon gain ${percent}% Passive XP · every 60s"
             }
             "harvester" -> "Harvesting crops, berries & apricorns$cooldownLabel"
             "mining" -> "Mining ores, fossils & gems$cooldownLabel"

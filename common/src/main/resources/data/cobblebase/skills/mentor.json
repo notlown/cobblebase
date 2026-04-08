@@ -1,7 +1,7 @@
 {
   "id": "cobblebase:mentor",
   "name": "Mentor",
-  "description": "Boosts passive XP gain for all Pokemon in the base",
+  "description": "Pokemon in the base gain passive XP over time (no Mentor = no passive XP)",
   "category": "support",
   "cooldownSeconds": 0,
   "searchRadius": 10,

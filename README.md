@@ -26,7 +26,7 @@
 **Cobblebase** transforms the Pasture Block into a living, breathing Pokemon base. Every Pokemon species has hand-crafted job skills and proficiency levels — not based on type, but on identity. A Charizard fills lava cauldrons and guards your base. An Alakazam mentors your entire team. A Mew recruits legendaries.
 
 - 💎 **1,367 Pokemon** with unique skill assignments (996 hand-crafted + 371 Fakemon)
-- ⚡ **43 jobs** across 10 categories — gathering, finding, combat, support, logistics, exploration, environmental, recruiting, passive buffs, and legendary
+- ⚡ **42 jobs** across 7 categories — gathering, generation, combat, support, social, utility, and legendary
 - ⭐ **Proficiency 1-5** per skill per species — novice to master
 - 🎯 **Tabbed GUI** with Skills, Buffs, Logs, and Discovery panels
 - 🔧 **Admin GUI** for in-game species skill editing (`/cobblebase admin`)
@@ -99,7 +99,7 @@ Twelve specialized Finder subtypes with dedicated loot tables for targeted item 
 | Job | Effect | Example Pokemon |
 |-----|--------|-----------------|
 | 💚 **Healer** | Heals injured Pokemon in your team, revives fainted Pokemon | Blissey, Xerneas, Zacian |
-| 🎓 **Mentor** | Passive XP boost for all Pokemon in the pasture | Alakazam, Latios, Mesprit |
+| 🎓 **Mentor** | Pokemon in the pasture gain passive XP over time (no Mentor = no XP gain) | Alakazam, Latios, Mesprit |
 
 ---
 
@@ -170,26 +170,25 @@ Smart sorting prioritizes chests already containing the same item type. Deposit 
 
 ---
 
-## 🤝 Recruiting
+## 🤝 Social
 
 | Job | Description | Example Pokemon |
 |-----|-------------|-----------------|
-| 🤝 **Friend Recruiter** | Attracts wild Pokemon of the same type | Togekiss, Sylveon, Gardevoir |
-| ⭐ **Legendary Recruiter** | Spawns rare/legendary Pokemon (540s cooldown) | Arceus, Mew, Jirachi |
+| 🤝 **Friend Recruiter** | Attracts wild Pokemon of the same type to spawn nearby | Togekiss, Sylveon, Gardevoir |
 
 ---
 
 ## ⭐ Proficiency System
 
-Every Pokemon has a proficiency level (1-5) for each of its skills. Higher proficiency means faster cooldowns, larger range, and better loot quality. Standard base cooldown is **300 seconds** (Harvester: 60s, Legendary Recruiter: 540s).
+Every Pokemon has a proficiency level (1-5) for each of its skills, shown as **stars** in the in-game GUI. Higher proficiency means faster cooldowns, larger range, and better loot quality. Standard base cooldown is **300 seconds** (Harvester: 60s, Friend Recruiter: 300s).
 
-| Level | Cooldown Multiplier | Effect |
-|-------|---------------------|--------|
-| 1 | 1.67x (slower) | Base rates, small range |
-| 2 | 1.33x | Slightly improved |
-| 3 | 1.00x (normal) | Standard performance |
-| 4 | 0.67x (faster) | Better loot tiers, wider range |
-| 5 | 0.33x (fastest) | Best rates, maximum range |
+| Stars | Level | Cooldown Multiplier | Effect |
+|-------|-------|---------------------|--------|
+| ⭐ | 1 | 1.67x (slower) | Base rates, small range |
+| ⭐⭐ | 2 | 1.33x | Slightly improved |
+| ⭐⭐⭐ | 3 | 1.00x (normal) | Standard performance |
+| ⭐⭐⭐⭐ | 4 | 0.67x (faster) | Better loot tiers, wider range |
+| ⭐⭐⭐⭐⭐ | 5 | 0.33x (fastest) | Best rates, maximum range |
 
 ---
 
@@ -228,13 +227,13 @@ Server admins can manage skill assignments for any Pokemon species in-game — n
 
 | Pack | Species | Method |
 |------|---------|--------|
-| **Cobblemon** (official) | 996 | Hand-crafted, individually tuned |
-| **Lively Mons** | 59 | Auto-assigned by typing + stats |
-| **Alatias Fakemon Pack** | 87 | Auto-assigned by typing + stats |
-| **Laser's Fakemon Pack** | 53 | Auto-assigned by typing + stats |
-| **Wilbayan's Fakemons** | 37 | Auto-assigned by typing + stats |
-| **Baby Legends** | 22 | Inherited from legendary evolution (prof -1) |
-| **Extra Paradox Mons** | 27 | Auto-assigned by typing (ultra-rare tier) |
+| [**Cobblemon**](https://modrinth.com/mod/cobblemon) (official) | 996 | Hand-crafted, individually tuned |
+| [**Lively Mons**](https://modrinth.com/mod/lively-mons) | 59 | Auto-assigned by typing + stats |
+| [**Alatia's Fakemon Pack**](https://modrinth.com/mod/cobblemon-alatias-fakemon-pack) | 87 | Auto-assigned by typing + stats |
+| [**Laser's Fakemon Pack**](https://modrinth.com/mod/lasers-fakemon-pack) | 53 | Auto-assigned by typing + stats |
+| [**Wilbayan's Fakemons**](https://modrinth.com/mod/wilbayans-fakemons) | 37 | Auto-assigned by typing + stats |
+| [**Baby Legends**](https://modrinth.com/mod/baby-legends-cobblemon) | 22 | Inherited from legendary evolution (prof -1) |
+| [**Extra Paradox Mons**](https://modrinth.com/mod/extra-paradox-mons) | 27 | Auto-assigned by typing (ultra-rare tier) |
 
 **Total: 1,367 species with skill assignments**
 
@@ -259,7 +258,7 @@ Press **K** to open the Cloth Config settings screen. Key options:
 - **Skill Toggles** — Enable/disable entire skill categories
 - **Recruiter Settings** — Cooldowns and spawn rates
 - **Search Radius** — Default block search radius for all skills
-- **Mentor Max Boost** — Cap the mentor XP multiplier (default 100% at Prof 5)
+- **Mentor Max Boost** — Maximum passive XP percentage at Prof 5 (default 100%)
 
 Everything is also JSON-configurable and customizable via **[datapacks](https://notlown.github.io/cobblebase-web/docs/datapacks.html)**.
 

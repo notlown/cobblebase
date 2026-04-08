@@ -140,6 +140,15 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Register S2C job override sync — applies admin-set job config
+        // (cooldown / radius / enabled) to the client's JobConfigOverrides so
+        // disabled jobs disappear from the Pasture Skills tab.
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.JobOverrideSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.core.JobConfigOverrides.updateAll(packet.overrides)
+            }
+        }
+
         // Register /cobblebase admin client command
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.register(

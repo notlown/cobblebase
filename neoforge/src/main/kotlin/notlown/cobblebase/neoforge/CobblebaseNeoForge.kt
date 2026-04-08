@@ -261,7 +261,26 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             AdminJobsUpdateC2SPacket.CODEC
         ) { packet, context ->
             context.enqueueWork {
-                packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                packet.handle(player)
+                // Re-broadcast every job override to every player so the
+                // Pasture Skills tab hides jobs the admin just disabled.
+                val sync = notlown.cobblebase.core.net.JobOverrideSyncS2CPacket(
+                    JobConfigOverrides.getAllOverrides()
+                )
+                for (p in player.server.playerManager.playerList) {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, sync)
+                }
+            }
+        }
+
+        // S2C: Job override sync
+        registrar.playToClient(
+            notlown.cobblebase.core.net.JobOverrideSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.JobOverrideSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.JobConfigOverrides.updateAll(packet.overrides)
             }
         }
 
@@ -363,6 +382,12 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 .associateWith { SpeciesSkillOverrides.getOverride(it) ?: emptyList() }
         )
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, overrideSync)
+        // Sync all job config overrides so disabled jobs are hidden from
+        // the Pasture Skills tab.
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+            player,
+            notlown.cobblebase.core.net.JobOverrideSyncS2CPacket(JobConfigOverrides.getAllOverrides())
+        )
     }
 
     private fun onPlayerLoggedOut(event: PlayerEvent.PlayerLoggedOutEvent) {

@@ -137,6 +137,12 @@ object CobblebaseFabric : ModInitializer {
             notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket.CODEC
         )
 
+        // Register S2C packet for job override sync (sent on join + after admin updates)
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.JobOverrideSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.JobOverrideSyncS2CPacket.CODEC
+        )
+
         // Register C2S packet for lazy-loading individual species skills
         PayloadTypeRegistry.playC2S().register(notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.ID, notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.CODEC)
         ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket.ID) { packet, context ->
@@ -169,6 +175,14 @@ object CobblebaseFabric : ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(AdminJobsUpdateC2SPacket.ID) { packet, context ->
             context.server().execute {
                 packet.handle(context.player())
+                // Re-broadcast every job override to every player so the
+                // Pasture Skills tab hides jobs the admin just disabled.
+                val sync = notlown.cobblebase.core.net.JobOverrideSyncS2CPacket(
+                    JobConfigOverrides.getAllOverrides()
+                )
+                for (p in context.player().server.playerManager.playerList) {
+                    ServerPlayNetworking.send(p, sync)
+                }
             }
         }
 
@@ -248,6 +262,12 @@ object CobblebaseFabric : ModInitializer {
                     .associateWith { SpeciesSkillOverrides.getOverride(it) ?: emptyList() }
             )
             ServerPlayNetworking.send(handler.player, overrideSync)
+            // Sync all job config overrides so disabled jobs are hidden from
+            // the Pasture Skills tab.
+            ServerPlayNetworking.send(
+                handler.player,
+                notlown.cobblebase.core.net.JobOverrideSyncS2CPacket(JobConfigOverrides.getAllOverrides())
+            )
         }
 
         // Load assignments, logs, discoveries, and overrides when world starts

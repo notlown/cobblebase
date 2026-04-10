@@ -241,7 +241,7 @@ object BaseManager {
             for ((key, value) in data) {
                 assignments[UUID.fromString(key)] = value
             }
-            Cobblebase.LOGGER.info("[Cobblebase] Loaded ${assignments.size} skill assignments")
+            Cobblebase.log("[Cobblebase] Loaded ${assignments.size} skill assignments")
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to load assignments: ${e.message}")
         }

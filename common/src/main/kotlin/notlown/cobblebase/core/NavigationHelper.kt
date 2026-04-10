@@ -224,7 +224,7 @@ object NavigationHelper {
                         )
                         pokemonEntity.setVelocity(0.0, 0.0, 0.0)
                         pokemonEntity.velocityDirty = true
-                        notlown.cobblebase.core.Cobblebase.LOGGER.info(
+                        notlown.cobblebase.core.Cobblebase.log(
                             "[Unstick] Escaped clipped ${pokemonEntity.pokemon.species.name} to ${escape.first},${escape.second},${escape.third}"
                         )
                     }

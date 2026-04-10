@@ -234,7 +234,7 @@ object RecruiterExecutor : SkillExecutor {
         }
 
         speciesByType = map
-        Cobblebase.LOGGER.info("[Recruiter] Type map: ${map.size} types, ${map.values.sumOf { it.size }} entries (excluded $skipped legendary/mythical/ultra beast)")
+        Cobblebase.log("[Recruiter] Type map: ${map.size} types, ${map.values.sumOf { it.size }} entries (excluded $skipped legendary/mythical/ultra beast)")
         return map
     }
 

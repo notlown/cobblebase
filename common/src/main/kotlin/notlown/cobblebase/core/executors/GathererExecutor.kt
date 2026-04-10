@@ -358,7 +358,7 @@ object GathererExecutor : SkillExecutor {
                 depositFails.remove(pokemonId)
                 pickupCooldown[pokemonId] = world.time + 200L  // brief cooldown after recovery
                 breadcrumbs.remove(pokemonId)  // reset trail after recovery teleport
-                Cobblebase.LOGGER.info("[Gatherer] Recovered ${pokemonEntity.pokemon.species.name} (3x deposit timeout) — teleported to pasture")
+                Cobblebase.log("[Gatherer] Recovered ${pokemonEntity.pokemon.species.name} (3x deposit timeout) — teleported to pasture")
             }
         }
     }

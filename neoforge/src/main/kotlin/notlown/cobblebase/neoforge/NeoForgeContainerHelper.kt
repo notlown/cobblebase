@@ -28,10 +28,12 @@ class NeoForgeContainerHelper : ContainerHelper {
         val blockEntity = world.getBlockEntity(pos) ?: return false
         if (blockEntity is PokemonPastureBlockEntity) return false
 
-        // Vanilla Inventory
-        if (blockEntity is Inventory) return true
+        // Vanilla storage containers (chests, barrels, hoppers, dispensers, shulker boxes, furnaces).
+        // Excludes non-storage blocks that happen to implement Inventory (waystones, modded
+        // crafting tables, etc.) — those don't extend LockableContainerBlockEntity.
+        if (blockEntity is net.minecraft.block.entity.LockableContainerBlockEntity) return true
 
-        // NeoForge IItemHandler capability
+        // NeoForge IItemHandler capability (modded storage containers)
         val handler = world.getCapability(Capabilities.ItemHandler.BLOCK, pos, null)
         return handler != null
     }
@@ -103,7 +105,7 @@ class NeoForgeContainerHelper : ContainerHelper {
         for (stack in items) {
             if (stack.isEmpty) continue
             val cleanStack = stack.copy()
-            ItemOriginHelper.removeTag(cleanStack)
+            // Origin tags now live on entities, not stacks — no cleanup needed
 
             var remaining = cleanStack
             // Try each slot
@@ -127,7 +129,7 @@ class NeoForgeContainerHelper : ContainerHelper {
         for (stack in items) {
             if (stack.isEmpty) continue
             val cleanStack = stack.copy()
-            ItemOriginHelper.removeTag(cleanStack)
+            // Origin tags now live on entities, not stacks — no cleanup needed
             val remaining = insertStack(inventory, cleanStack)
             if (!remaining.isEmpty) {
                 leftovers.add(remaining)

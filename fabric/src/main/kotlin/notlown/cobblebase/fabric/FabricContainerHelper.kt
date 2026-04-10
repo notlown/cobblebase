@@ -31,10 +31,13 @@ class FabricContainerHelper : ContainerHelper {
         val blockEntity = world.getBlockEntity(pos) ?: return false
         if (blockEntity is PokemonPastureBlockEntity) return false
 
-        // Vanilla Inventory (chests, barrels, hoppers, etc.)
-        if (blockEntity is Inventory) return true
+        // Vanilla storage containers (chests, barrels, hoppers, dispensers, shulker boxes, furnaces).
+        // Excludes non-storage blocks that happen to implement Inventory (waystones, modded
+        // crafting tables, etc.) — those don't extend LockableContainerBlockEntity.
+        if (blockEntity is net.minecraft.block.entity.LockableContainerBlockEntity) return true
 
-        // Fabric Transfer API (Sophisticated Storage, modded containers)
+        // Fabric Transfer API (Sophisticated Storage, modded containers that explicitly
+        // expose item storage). Non-storage blocks don't register here.
         val storage = ItemStorage.SIDED.find(world, pos, null)
         return storage != null
     }
@@ -55,7 +58,7 @@ class FabricContainerHelper : ContainerHelper {
             for (stack in items) {
                 if (stack.isEmpty) continue
                 val cleanStack = stack.copy()
-                ItemOriginHelper.removeTag(cleanStack)
+                // Origin tags now live on entities, not stacks — no cleanup needed
                 val variant = ItemVariant.of(cleanStack)
                 val inserted = storage.insert(variant, cleanStack.count.toLong(), transaction)
                 val remaining = cleanStack.count - inserted.toInt()
@@ -125,7 +128,7 @@ class FabricContainerHelper : ContainerHelper {
         for (stack in items) {
             if (stack.isEmpty) continue
             val cleanStack = stack.copy()
-            ItemOriginHelper.removeTag(cleanStack)
+            // Origin tags now live on entities, not stacks — no cleanup needed
             val remaining = insertStack(inventory, cleanStack)
             if (!remaining.isEmpty) {
                 leftovers.add(remaining)

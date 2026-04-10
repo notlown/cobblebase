@@ -15,9 +15,9 @@ object Cobblebase {
     val LOGGER: Logger = LogManager.getLogger(MODID)
     val registeredSounds = mutableSetOf<Identifier>()
 
-    /** Logs info only when console logging is enabled in config. Use for runtime job/tick logs. */
+    /** Debug-level log — hidden in production, visible only with log4j DEBUG enabled. */
     fun log(message: String) {
-        if (CobblebaseConfig.enableConsoleLogging) LOGGER.info(message)
+        LOGGER.debug(message)
     }
 
     fun init() {

@@ -179,24 +179,23 @@ object GathererExecutor : SkillExecutor {
             entity.isAlive && !entity.stack.isEmpty
                 && entity.id !in visualIds
                 && !entity.hasNoGravity()
-                && belongsToOrAllowed(entity.stack, pastureOrigin, world)
+                && belongsToOrAllowed(entity, pastureOrigin, world)
         }
         // Pick oldest item (highest age = been on ground longest)
         return items.maxByOrNull { it.age }
     }
 
     /**
-     * Checks if an item should be picked up by this Gatherer.
-     * Uses the original v1.3.7 belongsTo logic + optional player drop setting,
-     * plus an orphan-pasture fallback so items from destroyed pastures don't
-     * linger forever on the ground.
+     * Checks if an item entity should be picked up by this Gatherer.
+     * Uses entity command tags (not ItemStack NBT) so player-picked items
+     * stay clean and stack normally with vanilla items.
      */
     private fun belongsToOrAllowed(
-        stack: ItemStack,
+        entity: ItemEntity,
         pastureOrigin: BlockPos,
         world: net.minecraft.world.World
     ): Boolean {
-        val origin = ItemOriginHelper.getOrigin(stack)
+        val origin = ItemOriginHelper.getOrigin(entity)
         if (origin == null) {
             // Untagged = player/mob drop — respect setting
             return CobblebaseConfig.gathererPickupPlayerDrops
@@ -230,7 +229,7 @@ object GathererExecutor : SkillExecutor {
         ) {
             it.isAlive && !it.stack.isEmpty && it.id != itemEntity.id
                 && it.id !in visualIds && !it.hasNoGravity()
-                && belongsToOrAllowed(it.stack, pastureOrigin, world)
+                && belongsToOrAllowed(it, pastureOrigin, world)
         }
 
         val allStacks = mutableListOf(stack)

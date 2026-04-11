@@ -41,6 +41,8 @@ object RecruiterExecutor : SkillExecutor {
 
     // Cache: type name -> list of species names (built once)
     private var speciesByType: Map<String, List<String>>? = null
+    // Cache: all legendary/mythical/ultra beast species (for Prof 5 recruiter)
+    private var legendarySpecies: List<String>? = null
 
     override fun tick(
         world: World,
@@ -62,8 +64,13 @@ object RecruiterExecutor : SkillExecutor {
 
         val pokemonId = pokemonEntity.pokemon.uuid
 
-        // Use skill.cooldownSeconds which already has admin overrides applied via SkillRegistry.getEffective()
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        // Prof 5 = Legendary Recruiter with much higher cooldown (30 min base, no prof reduction)
+        val isLegendaryMode = skillEntry.proficiency >= 5
+        val cooldownTicks = if (isLegendaryMode) {
+            LEGENDARY_COOLDOWN_SECONDS * 20L // Fixed, no proficiency scaling
+        } else {
+            CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        }
 
         val lastTime = lastRecruitTime[pokemonId] ?: now.also { lastRecruitTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
@@ -75,16 +82,25 @@ object RecruiterExecutor : SkillExecutor {
 
         lastRecruitTime[pokemonId] = now
 
-        // Pick a type from the recruiter
-        val recruiterTypes = pokemonEntity.pokemon.types.toList()
-        if (recruiterTypes.isEmpty()) return
-        val chosenType = recruiterTypes[world.random.nextInt(recruiterTypes.size)]
+        val speciesName: String
+        val bucket: SpawnData.Bucket
+        val chosenType: com.cobblemon.mod.common.api.types.ElementalType
 
-        // Roll for rarity bucket based on proficiency
-        val bucket = rollBucket(world, skillEntry.proficiency)
-
-        // Find a species of that type in that bucket
-        val speciesName = pickSpecies(world, chosenType.name, bucket) ?: return
+        if (isLegendaryMode) {
+            // Prof 5: summon a random legendary regardless of type
+            val legendaries = getOrBuildLegendaryList()
+            if (legendaries.isEmpty()) return
+            speciesName = legendaries[world.random.nextInt(legendaries.size)]
+            bucket = SpawnData.Bucket.ULTRA_RARE
+            chosenType = pokemonEntity.pokemon.types.first()
+        } else {
+            // Normal recruiter: pick by type + rarity
+            val recruiterTypes = pokemonEntity.pokemon.types.toList()
+            if (recruiterTypes.isEmpty()) return
+            chosenType = recruiterTypes[world.random.nextInt(recruiterTypes.size)]
+            bucket = rollBucket(world, skillEntry.proficiency)
+            speciesName = pickSpecies(world, chosenType.name, bucket) ?: return
+        }
 
         // Spawn near the pasture block (works for both ground and flying mons)
         val spawnPos = findSpawnPos(world, origin, 5) ?: return
@@ -119,18 +135,25 @@ object RecruiterExecutor : SkillExecutor {
             pendingCry[entity.id] = world.time + 20L // cry after 1 second
 
             // Notify nearby players
-            val bucketColor = if (bucket == SpawnData.Bucket.ULTRA_RARE) Formatting.GOLD
-                else if (bucket == SpawnData.Bucket.RARE) Formatting.LIGHT_PURPLE
-                else if (bucket == SpawnData.Bucket.UNCOMMON) Formatting.GREEN
-                else Formatting.WHITE
-            val bucketLabel = if (bucket == SpawnData.Bucket.ULTRA_RARE) "Ultra Rare"
-                else if (bucket == SpawnData.Bucket.RARE) "Rare"
-                else if (bucket == SpawnData.Bucket.UNCOMMON) "Uncommon"
-                else "Common"
+            val bucketColor: Formatting
+            val bucketLabel: String
+            if (isLegendaryMode) {
+                bucketColor = Formatting.LIGHT_PURPLE
+                bucketLabel = "Legendary"
+            } else {
+                bucketColor = if (bucket == SpawnData.Bucket.ULTRA_RARE) Formatting.GOLD
+                    else if (bucket == SpawnData.Bucket.RARE) Formatting.LIGHT_PURPLE
+                    else if (bucket == SpawnData.Bucket.UNCOMMON) Formatting.GREEN
+                    else Formatting.WHITE
+                bucketLabel = if (bucket == SpawnData.Bucket.ULTRA_RARE) "Ultra Rare"
+                    else if (bucket == SpawnData.Bucket.RARE) "Rare"
+                    else if (bucket == SpawnData.Bucket.UNCOMMON) "Uncommon"
+                    else "Common"
+            }
             val message = Text.literal("")
                 .append(Text.literal("[Cobblebase] ").formatted(Formatting.AQUA))
                 .append(Text.literal("${pokemonEntity.pokemon.species.name}").formatted(Formatting.YELLOW))
-                .append(Text.literal(" found a ").formatted(Formatting.GRAY))
+                .append(Text.literal(if (isLegendaryMode) " summoned a " else " found a ").formatted(Formatting.GRAY))
                 .append(Text.literal(bucketLabel).formatted(bucketColor, Formatting.BOLD))
                 .append(Text.literal(" $speciesName").formatted(Formatting.WHITE, Formatting.BOLD))
                 .append(Text.literal(" (Lv.$level)!").formatted(Formatting.GRAY))
@@ -140,7 +163,7 @@ object RecruiterExecutor : SkillExecutor {
             val targetPlayers = world.players.filter { it.uuid == ownerUuid }
             for (player in targetPlayers) {
                 player.sendMessage(message, false)
-                if (bucket.ordinal >= SpawnData.Bucket.RARE.ordinal) {
+                if (isLegendaryMode || bucket.ordinal >= SpawnData.Bucket.RARE.ordinal) {
                     player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f)
                 }
             }
@@ -210,6 +233,30 @@ object RecruiterExecutor : SkillExecutor {
     }
 
     private val EXCLUDED_LABELS = setOf("legendary", "mythical", "ultra_beast")
+    private const val LEGENDARY_COOLDOWN_SECONDS = 1800L // 30 minutes — no proficiency reduction
+
+    /**
+     * Build or return cached list of all legendary/mythical/ultra beast species.
+     * Used by Prof 5 recruiter to summon legendaries regardless of type.
+     */
+    private fun getOrBuildLegendaryList(): List<String> {
+        legendarySpecies?.let { return it }
+
+        val list = mutableListOf<String>()
+        try {
+            for (species in PokemonSpecies.species) {
+                if (species.labels.any { it.lowercase() in EXCLUDED_LABELS }) {
+                    list.add(species.name.lowercase())
+                }
+            }
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.error("[Recruiter] Failed to build legendary list: ${e.message}")
+        }
+
+        legendarySpecies = list
+        Cobblebase.log("[Recruiter] Legendary list: ${list.size} species")
+        return list
+    }
 
     private fun getOrBuildTypeMap(): Map<String, List<String>> {
         speciesByType?.let { return it }

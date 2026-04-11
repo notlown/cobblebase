@@ -37,9 +37,12 @@ class FabricContainerHelper : ContainerHelper {
         if (blockEntity is net.minecraft.block.entity.LockableContainerBlockEntity) return true
 
         // Fabric Transfer API (Sophisticated Storage, modded containers that explicitly
-        // expose item storage). Non-storage blocks don't register here.
-        val storage = ItemStorage.SIDED.find(world, pos, null)
-        return storage != null
+        // expose item storage). Filter out small inventories like crafting tables that
+        // expose Transfer API but only have a few slots.
+        val storage = ItemStorage.SIDED.find(world, pos, null) ?: return false
+        var slotCount = 0L
+        for (view in storage) { slotCount++ }
+        return slotCount >= 9
     }
 
     override fun insertItems(world: World, pos: BlockPos, items: List<ItemStack>): List<ItemStack> {

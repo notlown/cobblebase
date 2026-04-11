@@ -46,7 +46,7 @@ public class PastureLeafCollisionMixin {
         long now = System.currentTimeMillis();
         if (now - cobblebase$lastLogTime > 2000) {
             cobblebase$lastLogTime = now;
-            notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().info(
+            notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().debug(
                 "[LeafMixin] " + pokemon.getPokemon().getSpecies().getName() +
                 " vs leaf at " + pos.getX() + "," + pos.getY() + "," + pos.getZ() +
                 " → isPastureLeaf=" + isPastureLeaf

@@ -33,9 +33,10 @@ class NeoForgeContainerHelper : ContainerHelper {
         // crafting tables, etc.) — those don't extend LockableContainerBlockEntity.
         if (blockEntity is net.minecraft.block.entity.LockableContainerBlockEntity) return true
 
-        // NeoForge IItemHandler capability (modded storage containers)
-        val handler = world.getCapability(Capabilities.ItemHandler.BLOCK, pos, null)
-        return handler != null
+        // NeoForge IItemHandler capability (modded storage containers).
+        // Filter out small inventories like crafting tables (< 9 slots).
+        val handler = world.getCapability(Capabilities.ItemHandler.BLOCK, pos, null) ?: return false
+        return handler.slots >= 9
     }
 
     override fun insertItems(world: World, pos: BlockPos, items: List<ItemStack>): List<ItemStack> {

@@ -179,6 +179,7 @@ object GathererExecutor : SkillExecutor {
             entity.isAlive && !entity.stack.isEmpty
                 && entity.id !in visualIds
                 && !entity.hasNoGravity()
+                && !isContainerItem(entity.stack)
                 && belongsToOrAllowed(entity, pastureOrigin, world)
         }
         // Pick oldest item (highest age = been on ground longest)
@@ -210,6 +211,28 @@ object GathererExecutor : SkillExecutor {
     }
 
     /**
+     * Filters out container-type items (backpacks, shulker boxes, etc.) that can cause
+     * infinite dupe loops when the Gatherer picks them up and the source mod respawns them.
+     */
+    private fun isContainerItem(stack: ItemStack): Boolean {
+        val item = stack.item
+        // Shulker boxes and similar block-items that store inventory in their NBT
+        if (item is net.minecraft.item.BlockItem) {
+            val block = item.block
+            if (block is net.minecraft.block.ShulkerBoxBlock) return true
+        }
+        // Items with BlockEntityTag (contains stored inventory data) — backpacks, portable storage, etc.
+        val nbt = stack.get(net.minecraft.component.DataComponentTypes.CUSTOM_DATA)
+        if (nbt != null) {
+            val compound = nbt.copyNbt()
+            if (compound.contains("BlockEntityTag") || compound.contains("Inventory") || compound.contains("Items")) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
      * Picks up a dropped item: removes the entity, stores the stack in state.
      * Spawns pickup particles.
      * Only picks up nearby items that belong to this Pasture Block (or are untagged).
@@ -229,6 +252,7 @@ object GathererExecutor : SkillExecutor {
         ) {
             it.isAlive && !it.stack.isEmpty && it.id != itemEntity.id
                 && it.id !in visualIds && !it.hasNoGravity()
+                && !isContainerItem(it.stack)
                 && belongsToOrAllowed(it, pastureOrigin, world)
         }
 

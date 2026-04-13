@@ -24,10 +24,6 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:water_fill",
-      "proficiency": 3
     }
   ]
 }

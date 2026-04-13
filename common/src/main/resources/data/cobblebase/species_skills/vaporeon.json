@@ -16,10 +16,6 @@
     {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:water_fill",
-      "proficiency": 4
     }
   ]
 }

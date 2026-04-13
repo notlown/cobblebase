@@ -31,6 +31,7 @@ public abstract class PastureWidgetMixin {
     @Unique
     private ButtonWidget cobblebase$mainButton;
 
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void cobblebase$onInit(
         com.cobblemon.mod.common.client.gui.pc.StorageWidget storageWidget,
@@ -39,27 +40,31 @@ public abstract class PastureWidgetMixin {
         CallbackInfo ci
     ) {
         cobblebase$mainButton = ButtonWidget.builder(Text.literal("\u00A7bCobblebase"), btn -> {
-            cobblebase$openCobblebaseScreen();
+            cobblebase$requestOpen();
         }).dimensions(x + 2, y - 18, 78, 16).build();
     }
 
     @Inject(method = "renderWidget", at = @At("TAIL"))
     private void cobblebase$onRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (cobblebase$mainButton != null) {
+            // Push Z translation to render above Chiselmon's buttons
+            context.getMatrices().push();
+            context.getMatrices().translate(0, 0, 200);
             cobblebase$mainButton.render(context, mouseX, mouseY, delta);
+            context.getMatrices().pop();
         }
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void cobblebase$onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         if (cobblebase$mainButton != null && cobblebase$mainButton.isMouseOver(mouseX, mouseY)) {
-            cobblebase$openCobblebaseScreen();
+            cobblebase$requestOpen();
             cir.setReturnValue(true);
         }
     }
 
     @Unique
-    private void cobblebase$openCobblebaseScreen() {
+    private void cobblebase$requestOpen() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client == null || client.player == null) return;
 
@@ -82,6 +87,9 @@ public abstract class PastureWidgetMixin {
             // Packet might not be registered yet on first join
         }
 
-        client.setScreen(new CobblebaseScreen(pokemonList, null, client.currentScreen));
+        // Set pending screen — will be opened by END_CLIENT_TICK handler
+        // outside the render/event iteration cycle
+        notlown.cobblebase.fabric.client.PendingScreenHolder.pendingScreen =
+            new CobblebaseScreen(pokemonList, null, client.currentScreen);
     }
 }

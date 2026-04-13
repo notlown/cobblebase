@@ -61,6 +61,13 @@ object CobblebaseFabricClient : ClientModInitializer {
                 pendingAdminScreen = false
                 client.setScreen(AdminScreen())
             }
+
+            // Open Cobblebase screen from pasture (deferred from PastureWidgetMixin)
+            val pendingScreen = PendingScreenHolder.pendingScreen
+            if (pendingScreen != null) {
+                PendingScreenHolder.pendingScreen = null
+                client.setScreen(pendingScreen)
+            }
         }
 
         // Send version handshake + pre-fetch assignments when joining a server

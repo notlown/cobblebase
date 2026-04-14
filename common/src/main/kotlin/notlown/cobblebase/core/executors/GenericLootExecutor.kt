@@ -62,16 +62,12 @@ object GenericLootExecutor : SkillExecutor {
             return
         }
 
-        Cobblebase.log("[GenericLoot] ${pokemonEntity.pokemon.species.name} attempting loot from '$lootTableId' (cooldown: ${cooldownTicks}t)")
-
         val drops = notlown.cobblebase.core.LootHelper.generateLoot(
             lootTableId, world, pokemonEntity.blockPos, pokemonEntity
         )
 
         // Always reset cooldown even if no drops (random chance can produce empty rolls)
         lastLootTime[pokemonId] = now
-
-        Cobblebase.LOGGER.warn("[GenericLoot] ${pokemonEntity.pokemon.species.name} got ${drops.size} drops from '$lootTableId'")
 
         if (drops.isNotEmpty()) {
             heldItems[pokemonId] = drops

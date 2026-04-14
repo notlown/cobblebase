@@ -164,34 +164,6 @@ public class PokemonPastureBlockEntityMixin {
                 continue;
             }
 
-            // DEBUG: Track water-type Pokemon position changes to find tether source
-            if (world.getTime() % 20 == 0) { // Every second
-                boolean isWater = false;
-                for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
-                    if (t.getName().equalsIgnoreCase("water")) { isWater = true; break; }
-                }
-                if (isWater) {
-                    Vec3d pos = pokemonEntity.getPos();
-                    UUID pid = pokemon.getUuid();
-                    Vec3d lastPos = cobblebase$debugPositions.get(pid);
-                    if (lastPos != null) {
-                        double dist = lastPos.distanceTo(pos);
-                        if (dist > 3.0) {
-                            notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().warn(
-                                "[Cobblebase] TETHER DEBUG: {} jumped {:.1f} blocks! From ({:.0f},{:.0f},{:.0f}) to ({:.0f},{:.0f},{:.0f}). Touching water: {}, Pasture at: {}",
-                                pokemon.getSpecies().getName(), dist,
-                                lastPos.x, lastPos.y, lastPos.z,
-                                pos.x, pos.y, pos.z,
-                                pokemonEntity.isTouchingWater(), blockPos
-                            );
-                            // Print stack trace to find WHO moved this entity
-                            new Exception("[Cobblebase] TETHER TRACE for " + pokemon.getSpecies().getName()).printStackTrace();
-                        }
-                    }
-                    cobblebase$debugPositions.put(pid, pos);
-                }
-            }
-
             // Passive XP for all pastured Pokemon (even sleeping)
             try {
                 PassiveXp.INSTANCE.tick(world, pokemonEntity, blockPos);

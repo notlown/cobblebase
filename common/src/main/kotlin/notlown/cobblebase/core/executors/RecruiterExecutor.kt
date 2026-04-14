@@ -104,8 +104,9 @@ object RecruiterExecutor : SkillExecutor {
             }
         }
 
-        // Spawn near the pasture block (works for both ground and flying mons)
-        val spawnPos = findSpawnPos(world, origin, 5) ?: run {
+        // Spawn near the pasture block — water-type recruiters can also spawn in/on water
+        val isWaterRecruiter = pokemonEntity.pokemon.types.any { it.name.lowercase() == "water" }
+        val spawnPos = findSpawnPos(world, origin, 5, isWaterRecruiter) ?: run {
             // Don't reset cooldown on failed spawn position — retry sooner
             Cobblebase.log("[Recruiter] ${pokemonEntity.pokemon.species.name} failed to find spawn position near $origin")
             return
@@ -313,14 +314,34 @@ object RecruiterExecutor : SkillExecutor {
         recruitedEntities.removeAll(toRemove)
     }
 
-    private fun findSpawnPos(world: ServerWorld, origin: BlockPos, radius: Int): BlockPos? {
+    private fun findSpawnPos(world: ServerWorld, origin: BlockPos, radius: Int, isWaterType: Boolean = false): BlockPos? {
         for (i in 0..10) {
             val x = origin.x + world.random.nextInt(radius * 2 + 1) - radius
             val z = origin.z + world.random.nextInt(radius * 2 + 1) - radius
             val y = world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z)
             val pos = BlockPos(x, y, z)
+
+            // Standard ground spawn: air above solid block
             if (world.getBlockState(pos).isAir && world.getBlockState(pos.down()).isSolidBlock(world, pos.down())) {
                 return pos
+            }
+
+            // Water spawn: for water-type recruiters, allow spawning in/on water
+            if (isWaterType) {
+                val below = world.getBlockState(pos.down())
+                // Spawn on water surface (air above water)
+                if (world.getBlockState(pos).isAir && below.fluidState.isStill) {
+                    return pos
+                }
+                // Spawn in water (water block with more water or solid below)
+                if (world.getBlockState(pos).fluidState.isStill) {
+                    return pos
+                }
+                // Also check at origin Y level for underwater pastures
+                val underwaterPos = BlockPos(x, origin.y, z)
+                if (world.getBlockState(underwaterPos).fluidState.isStill) {
+                    return underwaterPos
+                }
             }
         }
         return null

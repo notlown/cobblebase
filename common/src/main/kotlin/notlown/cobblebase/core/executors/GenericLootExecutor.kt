@@ -68,10 +68,11 @@ object GenericLootExecutor : SkillExecutor {
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
 
             // Log loot
+            val speciesDisplay = pokemonEntity.pokemon.species.name
             for (drop in drops) {
                 LogManager.log(
                     origin, world.time,
-                    pokemonEntity.pokemon.species.name,
+                    speciesDisplay,
                     skill.name,
                     "${drop.name.string} x${drop.count}",
                     LogManager.Rarity.COMMON
@@ -82,9 +83,20 @@ object GenericLootExecutor : SkillExecutor {
 
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
-        // Drop on ground — let Gatherer mons pick up and sort into chests
-        InventoryHelper.dropItems(world, pokemonEntity.blockPos, items, origin)
-        heldItems.remove(pokemonId)
+        // Try smart chest deposit first (finds chests that already contain these items)
+        val containerPos = InventoryHelper.findBestContainer(world, origin, 10, items)
+        if (containerPos != null) {
+            val remaining = InventoryHelper.insertItems(world, containerPos, items)
+            if (remaining.isEmpty()) {
+                heldItems.remove(pokemonId)
+            } else {
+                heldItems[pokemonId] = remaining // Some items didn't fit, try again next tick
+            }
+        } else {
+            // Fallback: drop near pasture block (NOT at pokemon position, which may be underwater)
+            InventoryHelper.dropItems(world, origin, items, origin)
+            heldItems.remove(pokemonId)
+        }
     }
 
 

@@ -45,30 +45,24 @@ public class PokemonPastureBlockEntityMixin {
                 PokemonEntity entity = pokemon.getEntity();
                 if (entity == null) continue;
 
-                // Only protect mons that CAN swim — water-type, diving job, or fishing job
-                if (entity.isTouchingWater()) {
-                    boolean canSwim = false;
-                    try {
-                        for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
-                            if (t.getName().equalsIgnoreCase("water")) {
-                                canSwim = true;
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Fallback: check species primary/secondary type name
-                        String specName = pokemon.getSpecies().getName().toLowerCase();
-                        String primary = pokemon.getSpecies().getPrimaryType().getName().toLowerCase();
-                        canSwim = primary.equals("water");
+                // Water-type Pokemon are NEVER tethered back — they can swim freely
+                boolean isWaterType = false;
+                for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
+                    if (t.getName().equalsIgnoreCase("water")) {
+                        isWaterType = true;
+                        break;
                     }
-                    if (!canSwim) {
-                        // Check if on fishing or diving job
-                        String assignment = notlown.cobblebase.core.BaseManager.INSTANCE.getAssignment(pokemon.getUuid());
-                        canSwim = assignment != null && (assignment.contains("fishing") || assignment.contains("diving"));
+                }
+                // Also protect mons on fishing/diving jobs
+                if (!isWaterType) {
+                    String assignment = notlown.cobblebase.core.BaseManager.INSTANCE.getAssignment(pokemon.getUuid());
+                    if (assignment != null && (assignment.contains("fishing") || assignment.contains("diving"))) {
+                        isWaterType = true;
                     }
-                    if (canSwim) {
-                        waterPositions.put(entity.getUuid(), entity.getPos());
-                    }
+                }
+                if (isWaterType) {
+                    // Always save position — prevents tether teleport regardless of water contact
+                    waterPositions.put(entity.getUuid(), entity.getPos());
                 }
             } catch (Exception e) {
                 notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().debug("[Cobblebase] Tether check error: " + e.getMessage());

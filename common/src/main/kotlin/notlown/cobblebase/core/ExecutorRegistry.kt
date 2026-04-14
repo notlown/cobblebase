@@ -34,9 +34,11 @@ object ExecutorRegistry {
         register("fishing", FishingExecutor)
         register("mining", MiningExecutor)                 // Mining: cooldown-based loot (ores, fossils, gems)
 
-        // -- Loot-table based (pickup, archeology) --
+        // -- Loot-table based (pickup, archeology, diving) --
         register("pickup", GenericLootExecutor)
         register("archeology", GenericLootExecutor)
+        register("generic_loot", GenericLootExecutor)
+        register("diving", GenericLootExecutor)
 
         // -- Production --
         register("producer", ProducerExecutor)   // Species-specific passive item production

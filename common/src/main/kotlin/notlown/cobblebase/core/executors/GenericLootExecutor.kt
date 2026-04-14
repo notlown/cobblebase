@@ -57,13 +57,21 @@ object GenericLootExecutor : SkillExecutor {
         }
 
         // Generate loot from the skill's loot table (admin override > bundled > vanilla)
-        val lootTableId = skill.lootTable ?: return
+        val lootTableId = skill.lootTable ?: run {
+            Cobblebase.LOGGER.warn("[GenericLoot] ${pokemonEntity.pokemon.species.name} skill '${skill.name}' has no lootTable configured!")
+            return
+        }
+
+        Cobblebase.log("[GenericLoot] ${pokemonEntity.pokemon.species.name} attempting loot from '$lootTableId' (cooldown: ${cooldownTicks}t)")
+
         val drops = notlown.cobblebase.core.LootHelper.generateLoot(
             lootTableId, world, pokemonEntity.blockPos, pokemonEntity
         )
 
         // Always reset cooldown even if no drops (random chance can produce empty rolls)
         lastLootTime[pokemonId] = now
+
+        Cobblebase.LOGGER.warn("[GenericLoot] ${pokemonEntity.pokemon.species.name} got ${drops.size} drops from '$lootTableId'")
 
         if (drops.isNotEmpty()) {
             heldItems[pokemonId] = drops

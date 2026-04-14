@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:lucky_charm",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 5
     }
   ]
 }

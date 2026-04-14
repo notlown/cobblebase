@@ -40,6 +40,10 @@
     {
       "skillId": "cobblebase:guard",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
     }
   ]
 }

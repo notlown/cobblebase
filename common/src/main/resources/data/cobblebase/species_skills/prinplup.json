@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:gatherer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
     }
   ]
 }

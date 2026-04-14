@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:water_fill",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
     }
   ]
 }

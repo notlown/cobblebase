@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:water_breathing",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 3
     }
   ]
 }

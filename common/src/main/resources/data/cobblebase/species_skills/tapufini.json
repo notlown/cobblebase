@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 5
     }
   ]
 }

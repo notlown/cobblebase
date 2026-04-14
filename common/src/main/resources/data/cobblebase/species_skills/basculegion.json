@@ -12,6 +12,10 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:diving",
+      "proficiency": 5
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "id": "cobblebase:diving",
+  "name": "Diving",
+  "description": "Dives underwater to find treasures and rare items",
+  "category": "gathering",
+  "cooldownSeconds": 360,
+  "searchRadius": 15,
+  "executor": "generic_loot",
+  "effectType": "water",
+  "lootTable": "cobblebase:diving",
+  "targetBlock": "minecraft:water",
+  "requiresNearby": true
+}

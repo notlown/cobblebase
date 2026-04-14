@@ -165,6 +165,17 @@ object NavigationHelper {
     fun checkAndUnstick(pokemonEntity: PokemonEntity, origin: BlockPos) {
         val world = pokemonEntity.world
         if (world.isClient) return
+
+        // Water-type Pokemon in/near water are swimming, not stuck — skip entirely
+        if (pokemonEntity.isTouchingWater || pokemonEntity.isSubmergedInWater) {
+            val isWaterType = pokemonEntity.pokemon.types.any { it.name.equals("water", ignoreCase = true) }
+            if (isWaterType) {
+                // Clear any stuck tracking so they start fresh if they leave water
+                stuckSince.remove(pokemonEntity.pokemon.uuid)
+                lastPositions.remove(pokemonEntity.pokemon.uuid)
+                return
+            }
+        }
         val id = pokemonEntity.pokemon.uuid
         val now = world.time
         val currentPos = pokemonEntity.blockPos
@@ -373,6 +384,12 @@ object NavigationHelper {
 
         if (now - last < WANDER_INTERVAL_TICKS) return
         lastWanderTick[id] = now
+
+        // Water-type Pokemon in water: don't wander toward land, let them swim freely
+        val isWaterType = pokemonEntity.pokemon.types.any { it.name.equals("water", ignoreCase = true) }
+        if (isWaterType && (pokemonEntity.isTouchingWater || pokemonEntity.isSubmergedInWater)) {
+            return // Already in water — no need to wander toward pasture block on land
+        }
 
         // Pick a random position near the origin (use thread-safe Random to avoid C2ME crash)
         val random = java.util.concurrent.ThreadLocalRandom.current()

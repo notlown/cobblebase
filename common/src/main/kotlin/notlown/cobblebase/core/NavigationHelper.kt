@@ -389,7 +389,19 @@ object NavigationHelper {
 
         if (isWaterType) {
             if (pokemonEntity.isTouchingWater || pokemonEntity.isSubmergedInWater) {
-                // Already in water — swim freely, no need to navigate
+                // In water — check if too far from pasture, swim back toward nearby water closer to origin
+                val distFromOrigin = kotlin.math.sqrt(pokemonEntity.squaredDistanceTo(
+                    origin.x + 0.5, origin.y.toDouble(), origin.z + 0.5
+                ))
+                if (distFromOrigin > 20) {
+                    // Swim back toward pasture — find water block closer to origin
+                    val dirX = (origin.x - pokemonEntity.blockX).coerceIn(-5, 5)
+                    val dirZ = (origin.z - pokemonEntity.blockZ).coerceIn(-5, 5)
+                    val targetPos = pokemonEntity.blockPos.add(dirX, 0, dirZ)
+                    pokemonEntity.navigation.startMovingTo(
+                        targetPos.x + 0.5, pokemonEntity.y, targetPos.z + 0.5, 0.4
+                    )
+                }
                 return
             }
             // On land: navigate toward nearest water block so they can swim

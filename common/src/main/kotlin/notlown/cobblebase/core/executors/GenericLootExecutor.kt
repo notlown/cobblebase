@@ -81,22 +81,42 @@ object GenericLootExecutor : SkillExecutor {
         }
     }
 
+    private val depositTarget = mutableMapOf<UUID, BlockPos>()
+
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
-        // Try smart chest deposit first (finds chests that already contain these items)
-        val containerPos = InventoryHelper.findBestContainer(world, origin, 10, items)
-        if (containerPos != null) {
-            val remaining = InventoryHelper.insertItems(world, containerPos, items)
-            if (remaining.isEmpty()) {
-                heldItems.remove(pokemonId)
+
+        // Find chest if not already targeted
+        val target = depositTarget[pokemonId] ?: run {
+            val found = InventoryHelper.findBestContainer(world, origin, 15, items)
+            if (found != null) {
+                depositTarget[pokemonId] = found
+                found
             } else {
-                heldItems[pokemonId] = remaining // Some items didn't fit, try again next tick
+                // No chest found — drop near pasture block
+                InventoryHelper.dropItems(world, origin, items, origin)
+                heldItems.remove(pokemonId)
+                return
             }
-        } else {
-            // Fallback: drop near pasture block (NOT at pokemon position, which may be underwater)
-            InventoryHelper.dropItems(world, origin, items, origin)
-            heldItems.remove(pokemonId)
         }
+
+        // Navigate to chest visually
+        val dist = pokemonEntity.squaredDistanceTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5)
+        if (dist > 4.0) {
+            // Still walking to chest
+            NavigationHelper.navigateTo(pokemonEntity, target)
+            return
+        }
+
+        // At chest — deposit items
+        val remaining = InventoryHelper.insertItems(world, target, items)
+        if (remaining.isEmpty()) {
+            heldItems.remove(pokemonId)
+        } else {
+            heldItems[pokemonId] = remaining
+        }
+        depositTarget.remove(pokemonId)
+        NavigationHelper.clearTargets(pokemonEntity)
     }
 
 

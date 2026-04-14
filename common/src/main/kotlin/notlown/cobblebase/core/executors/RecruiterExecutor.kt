@@ -112,11 +112,14 @@ object RecruiterExecutor : SkillExecutor {
             return
         }
 
-        // Only reset cooldown AFTER successful species pick + spawn position found
-        lastRecruitTime[pokemonId] = now
-
         try {
-            val species = PokemonSpecies.getByName(speciesName) ?: return
+            val species = PokemonSpecies.getByName(speciesName) ?: run {
+                Cobblebase.log("[Recruiter] ${pokemonEntity.pokemon.species.name} species '$speciesName' not found in registry")
+                return
+            }
+
+            // Only reset cooldown AFTER all validation passed
+            lastRecruitTime[pokemonId] = now
 
             // Create a proper wild Pokemon
             val pokemon = Pokemon()

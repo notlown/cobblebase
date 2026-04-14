@@ -4,6 +4,7 @@ import com.cobblemon.mod.common.client.gui.pc.StorageSlot;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import notlown.cobblebase.core.SkillDef;
 import notlown.cobblebase.core.SkillEntry;
@@ -23,13 +24,12 @@ import java.util.Set;
 
 /**
  * Adds hover tooltip to Pokemon storage slots showing Cobblebase skills.
- *
- * NOTE: This mixin uses remap=true (default) so Minecraft methods like getX/getY
- * are properly remapped. The Cobblemon renderSlot method is targeted by its
- * full descriptor since it's not a Minecraft method.
+ * Extends ClickableWidget so getX/getY/getWidth/getHeight are properly remapped.
  */
 @Mixin(StorageSlot.class)
-public abstract class StorageSlotTooltipMixin {
+public abstract class StorageSlotTooltipMixin extends ClickableWidget {
+
+    private StorageSlotTooltipMixin() { super(0, 0, 0, 0, Text.empty()); }
 
     @Inject(
         method = "renderSlot(Lnet/minecraft/class_332;IIF)V",
@@ -42,12 +42,15 @@ public abstract class StorageSlotTooltipMixin {
             Pokemon pokemon = self.getPokemon();
             if (pokemon == null) return;
 
-            // getX() and getY() are remapped Minecraft ClickableWidget methods
-            // because the @Mixin class-level remap is true (default)
-            int slotX = self.getX();
-            int slotY = self.getY();
-            int size = StorageSlot.SIZE; // 25
-            if (mouseX < slotX || mouseX > slotX + size || mouseY < slotY || mouseY > slotY + size) return;
+            // Use inherited ClickableWidget methods (properly remapped via extends)
+            int slotX = this.getX();
+            int slotY = this.getY();
+            int slotW = this.getWidth();
+            int slotH = this.getHeight();
+
+            // Check hover bounds
+            if (mouseX < slotX || mouseX > slotX + slotW ||
+                mouseY < slotY || mouseY > slotY + slotH) return;
 
             String speciesName = pokemon.getSpecies().getName().toLowerCase();
             Set<String> aspects = pokemon.getAspects();

@@ -9,10 +9,14 @@ import net.minecraft.util.Identifier
 
 /**
  * Server -> Client: response with skills for a single requested species.
+ * Includes optional producer data (item ID, count, display name).
  */
 data class AdminSpeciesSkillsResponseS2CPacket(
     val species: String,
-    val skills: List<SkillEntry>
+    val skills: List<SkillEntry>,
+    val producerItemId: String? = null,
+    val producerCount: Int = 0,
+    val producerDisplayName: String? = null
 ) : CustomPayload {
 
     companion object {
@@ -29,7 +33,20 @@ data class AdminSpeciesSkillsResponseS2CPacket(
                         proficiency = buf.readVarInt()
                     ))
                 }
-                return AdminSpeciesSkillsResponseS2CPacket(species, skills)
+                val hasProducer = buf.readBoolean()
+                val producerItemId: String?
+                val producerCount: Int
+                val producerDisplayName: String?
+                if (hasProducer) {
+                    producerItemId = buf.readString()
+                    producerCount = buf.readVarInt()
+                    producerDisplayName = buf.readString()
+                } else {
+                    producerItemId = null
+                    producerCount = 0
+                    producerDisplayName = null
+                }
+                return AdminSpeciesSkillsResponseS2CPacket(species, skills, producerItemId, producerCount, producerDisplayName)
             }
 
             override fun encode(buf: PacketByteBuf, packet: AdminSpeciesSkillsResponseS2CPacket) {
@@ -38,6 +55,13 @@ data class AdminSpeciesSkillsResponseS2CPacket(
                 for (skill in packet.skills) {
                     buf.writeString(skill.skillId)
                     buf.writeVarInt(skill.proficiency)
+                }
+                val hasProducer = packet.producerItemId != null
+                buf.writeBoolean(hasProducer)
+                if (hasProducer) {
+                    buf.writeString(packet.producerItemId!!)
+                    buf.writeVarInt(packet.producerCount)
+                    buf.writeString(packet.producerDisplayName ?: "")
                 }
             }
         }

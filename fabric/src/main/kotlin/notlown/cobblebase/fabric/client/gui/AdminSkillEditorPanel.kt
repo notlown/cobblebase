@@ -4,6 +4,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
+import net.minecraft.client.gui.widget.TextFieldWidget
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import notlown.cobblebase.core.AdminDataCache
 import notlown.cobblebase.core.SkillEntry
@@ -13,6 +15,7 @@ import java.util.function.Function
 
 /**
  * Right pane of the Admin GUI: skill toggle + proficiency editor for selected species.
+ * Includes Producer item configuration when the Producer skill is assigned.
  */
 class AdminSkillEditorPanel(
     private val x: Int,
@@ -56,6 +59,15 @@ class AdminSkillEditorPanel(
     private var dirty = false
     private var lastGridRows = listOf<Any>()
 
+    // Producer editing state
+    private var producerItemField: TextFieldWidget? = null
+    private var producerCount = 1
+    private var producerEnabled = false
+    private var itemSuggestions: List<String> = emptyList()
+    private var showSuggestions = false
+    private var selectedSuggestionIdx = -1
+    private var allItemIds: List<String>? = null
+
     fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
         saveButton = ButtonWidget.builder(Text.literal("\u00A72Save")) { saveChanges() }
             .dimensions(x + w - 90, y + h - 18, 40, 14).build()
@@ -66,20 +78,71 @@ class AdminSkillEditorPanel(
         addWidget.apply(resetButton!!)
     }
 
+    /** Must be called from AdminScreen.init() to add the TextFieldWidget */
+    fun initProducerField(addDrawable: (net.minecraft.client.gui.widget.ClickableWidget) -> Unit) {
+        val fieldY = y + h - 52
+        producerItemField = TextFieldWidget(textRenderer, x + PADDING + 70, fieldY, w - PADDING * 2 - 120, 12, Text.literal(""))
+        producerItemField!!.setMaxLength(128)
+        producerItemField!!.setChangedListener { text ->
+            dirty = true
+            updateSuggestions(text)
+        }
+        producerItemField!!.visible = false
+        addDrawable(producerItemField!!)
+    }
+
+    private fun updateSuggestions(text: String) {
+        if (text.isBlank()) {
+            itemSuggestions = emptyList()
+            showSuggestions = false
+            return
+        }
+        if (allItemIds == null) {
+            allItemIds = Registries.ITEM.ids.map { it.toString() }.sorted()
+        }
+        val query = text.lowercase()
+        itemSuggestions = allItemIds!!
+            .filter { it.contains(query) }
+            .take(8)
+        showSuggestions = itemSuggestions.isNotEmpty()
+        selectedSuggestionIdx = -1
+    }
+
     fun setSpecies(species: String) {
         selectedSpecies = species
         scrollOffset = 0
         dirty = false
         lastCachedSkillsRef = null
+        showSuggestions = false
         // Lazy load: request skills from server if not cached yet
         if (!AdminDataCache.speciesSkills.containsKey(species) && AdminDataCache.markPending(species)) {
             ClientPlayNetworking.send(notlown.cobblebase.core.net.AdminSpeciesSkillsRequestC2SPacket(species))
         }
         rebuildSkillEdits()
+        loadProducerData()
+    }
+
+    private fun loadProducerData() {
+        val species = selectedSpecies ?: return
+        val data = AdminDataCache.speciesProducer[species]
+        if (data != null) {
+            producerItemField?.text = data.itemId
+            producerCount = data.count
+        } else {
+            producerItemField?.text = ""
+            producerCount = 1
+        }
+        updateProducerVisibility()
+    }
+
+    private fun updateProducerVisibility() {
+        producerEnabled = skillEdits.any { it.skillId == "cobblebase:producer" && it.assigned }
+        producerItemField?.visible = producerEnabled
     }
 
     // Track the last cached skills reference to detect when lazy-loaded data arrives
     private var lastCachedSkillsRef: List<SkillEntry>? = null
+    private var lastCachedProducerRef: AdminDataCache.ProducerData? = null
 
     /** Called from render() — rebuilds if cache was updated since last render */
     private fun refreshIfCacheUpdated() {
@@ -88,6 +151,12 @@ class AdminSkillEditorPanel(
         if (current !== lastCachedSkillsRef) {
             lastCachedSkillsRef = current
             rebuildSkillEdits()
+        }
+        // Also refresh producer when data arrives
+        val currentProducer = AdminDataCache.speciesProducer[species]
+        if (currentProducer !== lastCachedProducerRef) {
+            lastCachedProducerRef = currentProducer
+            loadProducerData()
         }
     }
 
@@ -112,6 +181,7 @@ class AdminSkillEditorPanel(
                 existing?.proficiency ?: 3
             ))
         }
+        updateProducerVisibility()
     }
 
     private fun saveChanges() {
@@ -119,20 +189,37 @@ class AdminSkillEditorPanel(
         val assignedSkills = skillEdits.filter { it.assigned }.map {
             SkillEntry(it.skillId, it.proficiency)
         }
-        ClientPlayNetworking.send(AdminSpeciesUpdateC2SPacket(species, assignedSkills, false))
+
+        // Producer data
+        val producerItem = if (producerEnabled && !producerItemField?.text.isNullOrBlank())
+            producerItemField!!.text else null
+        val pCount = if (producerEnabled) producerCount else 0
+
+        ClientPlayNetworking.send(AdminSpeciesUpdateC2SPacket(
+            species, assignedSkills, false,
+            producerItem, pCount, false
+        ))
 
         // Update local cache
         AdminDataCache.updateLocalSkills(species, assignedSkills)
+        if (producerItem != null) {
+            val displayName = producerItem.substringAfterLast(":")
+                .replace("_", " ")
+                .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+            AdminDataCache.setSpeciesProducer(species, AdminDataCache.ProducerData(producerItem, pCount, displayName))
+        } else if (producerEnabled) {
+            AdminDataCache.setSpeciesProducer(species, null)
+        }
+
         dirty = false
         onSaved()
     }
 
     private fun resetToDefault() {
         val species = selectedSpecies ?: return
-        ClientPlayNetworking.send(AdminSpeciesUpdateC2SPacket(species, emptyList(), true))
+        ClientPlayNetworking.send(AdminSpeciesUpdateC2SPacket(species, emptyList(), true, null, 0, true))
 
-        // Update local cache: remove override marker, revert to built-in would need server re-sync
-        // For now, re-request data
+        // Update local cache: re-request data
         ClientPlayNetworking.send(notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket())
         dirty = false
     }
@@ -177,11 +264,14 @@ class AdminSkillEditorPanel(
             delta
         )
 
+        // Calculate producer section height
+        val producerSectionH = if (producerEnabled) 40 else 0
+
         // 3-column grid layout per category
         val COLS = 3
         val colW = (w - PADDING * 2) / COLS
         val listY = y + PADDING + 14
-        val listH = h - PADDING * 2 - 32
+        val listH = h - PADDING * 2 - 32 - producerSectionH
         val scale = 0.75f
 
         // Build grid rows: category header (full width) + skill rows (3 per row)
@@ -287,15 +377,138 @@ class AdminSkillEditorPanel(
             context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
+
+        // --- Producer Section ---
+        if (producerEnabled) {
+            val psY = listY + listH + 2
+            // Divider
+            context.fill(x + PADDING, psY, x + w - PADDING, psY + 1, 0xFF444444.toInt())
+
+            // "Producer:" label
+            context.matrices.push()
+            context.matrices.translate((x + PADDING).toFloat(), (psY + 4).toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            context.drawTextWithShadow(textRenderer, "\u00A7eProducer Item:", 0, 0, 0xFFFF00)
+            context.matrices.pop()
+
+            // Position the text field (it renders itself via Minecraft widget system)
+            producerItemField?.let { field ->
+                field.x = x + PADDING + 70
+                field.y = psY + 2
+                field.width = w - PADDING * 2 - 120
+            }
+
+            // Count display with +/- buttons
+            val countX = x + w - PADDING - 44
+            val countY = psY + 3
+            context.matrices.push()
+            context.matrices.translate(countX.toFloat(), countY.toFloat(), 0f)
+            context.matrices.scale(scale, scale, 1f)
+            // [-] button
+            val minusHover = mouseX >= countX && mouseX < countX + 8 && mouseY >= countY && mouseY < countY + 10
+            context.drawTextWithShadow(textRenderer, "-", 0, 0, if (minusHover) 0xFF5555 else 0xAAAAAA)
+            // Count value
+            context.drawTextWithShadow(textRenderer, "x$producerCount", 12, 0, 0xFFFFFF)
+            // [+] button
+            val plusHover = mouseX >= countX + 34 && mouseX < countX + 44 && mouseY >= countY && mouseY < countY + 10
+            context.drawTextWithShadow(textRenderer, "+", 38, 0, if (plusHover) 0x55FF55 else 0xAAAAAA)
+            context.matrices.pop()
+
+            // Current produce info (below field)
+            val infoY = psY + 16
+            val currentText = producerItemField?.text ?: ""
+            if (currentText.isNotBlank()) {
+                context.matrices.push()
+                context.matrices.translate((x + PADDING).toFloat(), (infoY + 2).toFloat(), 0f)
+                context.matrices.scale(0.6f, 0.6f, 1f)
+                val validItem = allItemIds?.contains(currentText) ?: false
+                val statusColor = if (validItem) 0xFF55FF55.toInt() else 0xFFFF5555.toInt()
+                val statusText = if (validItem) "Valid item" else "Unknown item ID"
+                context.drawTextWithShadow(textRenderer, statusText, 0, 0, statusColor)
+                context.matrices.pop()
+            }
+
+            // Suggestions dropdown (rendered above everything else)
+            if (showSuggestions && itemSuggestions.isNotEmpty()) {
+                val field = producerItemField ?: return
+                val dropX = field.x
+                val dropY = field.y + field.height + 1
+                val dropW = field.width
+                val itemH = 10
+
+                // Background
+                context.fill(dropX, dropY, dropX + dropW, dropY + itemSuggestions.size * itemH, 0xEE1E1E2E.toInt())
+                context.fill(dropX, dropY, dropX + dropW, dropY + itemSuggestions.size * itemH, 0x44FFFFFF)
+
+                for ((idx, suggestion) in itemSuggestions.withIndex()) {
+                    val sy = dropY + idx * itemH
+                    val isHovered = mouseX >= dropX && mouseX <= dropX + dropW && mouseY >= sy && mouseY < sy + itemH
+                    if (isHovered || idx == selectedSuggestionIdx) {
+                        context.fill(dropX, sy, dropX + dropW, sy + itemH, 0x44FFD700)
+                    }
+                    context.matrices.push()
+                    context.matrices.translate((dropX + 2).toFloat(), (sy + 1).toFloat(), 0f)
+                    context.matrices.scale(0.7f, 0.7f, 1f)
+                    context.drawTextWithShadow(textRenderer, suggestion, 0, 0, 0xCCCCCC)
+                    context.matrices.pop()
+                }
+            }
+        }
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         val species = selectedSpecies ?: return false
 
+        // --- Producer suggestion clicks ---
+        if (showSuggestions && producerEnabled && itemSuggestions.isNotEmpty()) {
+            val field = producerItemField ?: return false
+            val dropX = field.x
+            val dropY = field.y + field.height + 1
+            val dropW = field.width
+            val itemH = 10
+
+            if (mouseX >= dropX && mouseX <= dropX + dropW) {
+                for ((idx, suggestion) in itemSuggestions.withIndex()) {
+                    val sy = dropY + idx * itemH
+                    if (mouseY >= sy && mouseY < sy + itemH) {
+                        producerItemField?.text = suggestion
+                        showSuggestions = false
+                        dirty = true
+                        return true
+                    }
+                }
+            }
+            // Click outside suggestions -> close
+            showSuggestions = false
+        }
+
+        // --- Producer count +/- buttons ---
+        if (producerEnabled) {
+            val producerSectionH = 40
+            val listH = h - PADDING * 2 - 32 - producerSectionH
+            val psY = y + PADDING + 14 + listH + 2
+            val countX = x + w - PADDING - 44
+            val countY = psY + 3
+            // Scale is 0.75, but click detection uses screen coords
+            if (mouseY >= countY && mouseY < countY + 10) {
+                if (mouseX >= countX && mouseX < countX + 10) {
+                    producerCount = (producerCount - 1).coerceAtLeast(1)
+                    dirty = true
+                    return true
+                }
+                if (mouseX >= countX + 28 && mouseX < countX + 44) {
+                    producerCount = (producerCount + 1).coerceAtMost(64)
+                    dirty = true
+                    return true
+                }
+            }
+        }
+
         val COLS = 3
         val colW = (w - PADDING * 2) / COLS
+        val producerSectionH = if (producerEnabled) 40 else 0
         val listY = y + PADDING + 14
-        val listH = h - PADDING * 2 - 32
+        val listH = h - PADDING * 2 - 32 - producerSectionH
 
         // Check scrollbar click (8px wide hitbox around the 2px scrollbar track)
         val trackX = x + w - 3
@@ -351,6 +564,7 @@ class AdminSkillEditorPanel(
                         if (mouseX >= cellX && mouseX <= cellX + 12) {
                             skill.assigned = !skill.assigned
                             dirty = true
+                            updateProducerVisibility()
                             return true
                         }
 
@@ -368,6 +582,7 @@ class AdminSkillEditorPanel(
                         // Clicking anywhere on the skill row toggles it
                         skill.assigned = !skill.assigned
                         dirty = true
+                        updateProducerVisibility()
                         return true
                     }
                 }
@@ -379,8 +594,9 @@ class AdminSkillEditorPanel(
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
         if (isDraggingScrollbar) {
             val COLS = 3
+            val producerSectionH = if (producerEnabled) 40 else 0
             val listY = y + PADDING + 14
-            val listH = h - PADDING * 2 - 32
+            val listH = h - PADDING * 2 - 32 - producerSectionH
             val maxVisible = listH / ROW_HEIGHT
 
             data class DgGridRow(val isHeader: Boolean, val skills: List<Int> = emptyList())
@@ -423,6 +639,35 @@ class AdminSkillEditorPanel(
             val maxScroll = (totalSkills - ((h - 40) / ROW_HEIGHT)).coerceAtLeast(0)
             scrollOffset = scrollOffset.coerceAtMost(maxScroll)
             return true
+        }
+        return false
+    }
+
+    /** Handle keyboard input for suggestion navigation */
+    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+        if (showSuggestions && itemSuggestions.isNotEmpty()) {
+            when (keyCode) {
+                264 -> { // DOWN
+                    selectedSuggestionIdx = ((selectedSuggestionIdx + 1) % itemSuggestions.size)
+                    return true
+                }
+                265 -> { // UP
+                    selectedSuggestionIdx = if (selectedSuggestionIdx <= 0) itemSuggestions.size - 1 else selectedSuggestionIdx - 1
+                    return true
+                }
+                257, 335 -> { // ENTER / KP_ENTER
+                    if (selectedSuggestionIdx in itemSuggestions.indices) {
+                        producerItemField?.text = itemSuggestions[selectedSuggestionIdx]
+                        showSuggestions = false
+                        dirty = true
+                        return true
+                    }
+                }
+                256 -> { // ESCAPE
+                    showSuggestions = false
+                    return true
+                }
+            }
         }
         return false
     }

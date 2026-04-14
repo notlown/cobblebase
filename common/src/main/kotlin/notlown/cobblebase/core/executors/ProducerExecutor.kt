@@ -10,6 +10,7 @@ import net.minecraft.world.World
 import notlown.cobblebase.core.BaseManager
 import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.LogManager
+import notlown.cobblebase.core.ProducerOverrides
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillExecutor
@@ -354,7 +355,7 @@ object ProducerExecutor : SkillExecutor {
         if (now % 20L != 0L) return
 
         val speciesName = BaseManager.resolveSpeciesName(pokemonEntity.pokemon)
-        val entry = produceMap[speciesName] ?: return
+        val entry = ProducerOverrides.getOverride(speciesName) ?: produceMap[speciesName] ?: return
 
         val pokemonId = pokemonEntity.pokemon.uuid
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
@@ -392,4 +393,11 @@ object ProducerExecutor : SkillExecutor {
             LogManager.Rarity.COMMON
         )
     }
+
+    /** Returns the effective produce entry (override > hardcoded) for admin GUI display. */
+    fun getProduceEntry(species: String): ProduceEntry? =
+        ProducerOverrides.getOverride(species) ?: produceMap[species]
+
+    /** Returns true if this species has a hardcoded entry (for "Reset" logic). */
+    fun hasHardcodedEntry(species: String): Boolean = produceMap.containsKey(species)
 }

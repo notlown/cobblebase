@@ -112,6 +112,12 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             addDrawableChild(widget)
         }
 
+        // Init producer item field
+        skillEditorPanel.initProducerField { widget ->
+            speciesWidgets.add(widget)
+            addDrawableChild(widget)
+        }
+
         // Init jobs panel buttons
         jobsPanel.init { widget: ButtonWidget ->
             jobsWidgets.add(widget)
@@ -337,6 +343,9 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+        if (activeTab == "species") {
+            if (skillEditorPanel.keyPressed(keyCode, scanCode, modifiers)) return true
+        }
         if (activeTab == "jobs") {
             if (jobsPanel.keyPressed(keyCode, scanCode, modifiers)) return true
         }

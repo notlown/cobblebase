@@ -150,7 +150,11 @@ object CobblebaseFabric : ModInitializer {
                 val player = context.player()
                 if (!player.hasPermissionLevel(2)) return@execute
                 val skills = SpeciesSkillRegistry.getSkills(packet.species)?.skills ?: emptyList()
-                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket(packet.species, skills))
+                val produce = notlown.cobblebase.core.executors.ProducerExecutor.getProduceEntry(packet.species)
+                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket(
+                    packet.species, skills,
+                    produce?.itemId, produce?.count ?: 0, produce?.displayName
+                ))
             }
         }
 
@@ -278,6 +282,7 @@ object CobblebaseFabric : ModInitializer {
             DiscoveryRegistry.load(world)
             SpeciesSkillOverrides.load(world)
             JobConfigOverrides.load(world)
+            notlown.cobblebase.core.ProducerOverrides.load(world)
             notlown.cobblebase.core.GeneralSettings.load(world)
             notlown.cobblebase.core.LootOverrides.load(world)
             // Load spawn buckets from Cobblemon's actual spawn pool
@@ -292,6 +297,7 @@ object CobblebaseFabric : ModInitializer {
             DiscoveryRegistry.save(world)
             SpeciesSkillOverrides.save(world)
             JobConfigOverrides.save(world)
+            notlown.cobblebase.core.ProducerOverrides.save(world)
             notlown.cobblebase.core.GeneralSettings.save(world)
             notlown.cobblebase.core.LootOverrides.save(world)
         }

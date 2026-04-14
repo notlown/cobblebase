@@ -1,8 +1,10 @@
 package notlown.cobblebase.core.net
 
 import notlown.cobblebase.core.Cobblebase
+import notlown.cobblebase.core.ProducerOverrides
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SpeciesSkillOverrides
+import notlown.cobblebase.core.executors.ProducerExecutor
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.codec.PacketCodec
 import net.minecraft.network.packet.CustomPayload
@@ -11,12 +13,16 @@ import net.minecraft.util.Identifier
 
 /**
  * Client -> Server: update skill assignments for a species.
+ * Optionally includes producer item override.
  * Requires OP permission level 2.
  */
 data class AdminSpeciesUpdateC2SPacket(
     val species: String,
     val skills: List<SkillEntry>,
-    val resetToDefault: Boolean
+    val resetToDefault: Boolean,
+    val producerItemId: String? = null,
+    val producerCount: Int = 0,
+    val producerResetToDefault: Boolean = false
 ) : CustomPayload {
 
     companion object {
@@ -34,7 +40,20 @@ data class AdminSpeciesUpdateC2SPacket(
                         proficiency = buf.readVarInt()
                     ))
                 }
-                return AdminSpeciesUpdateC2SPacket(species, skills, resetToDefault)
+                val hasProducerUpdate = buf.readBoolean()
+                val producerItemId: String?
+                val producerCount: Int
+                val producerResetToDefault: Boolean
+                if (hasProducerUpdate) {
+                    producerResetToDefault = buf.readBoolean()
+                    producerItemId = if (!producerResetToDefault) buf.readString() else null
+                    producerCount = if (!producerResetToDefault) buf.readVarInt() else 0
+                } else {
+                    producerItemId = null
+                    producerCount = 0
+                    producerResetToDefault = false
+                }
+                return AdminSpeciesUpdateC2SPacket(species, skills, resetToDefault, producerItemId, producerCount, producerResetToDefault)
             }
 
             override fun encode(buf: PacketByteBuf, packet: AdminSpeciesUpdateC2SPacket) {
@@ -45,6 +64,15 @@ data class AdminSpeciesUpdateC2SPacket(
                     buf.writeString(skill.skillId)
                     buf.writeVarInt(skill.proficiency)
                 }
+                val hasProducerUpdate = packet.producerItemId != null || packet.producerResetToDefault
+                buf.writeBoolean(hasProducerUpdate)
+                if (hasProducerUpdate) {
+                    buf.writeBoolean(packet.producerResetToDefault)
+                    if (!packet.producerResetToDefault && packet.producerItemId != null) {
+                        buf.writeString(packet.producerItemId)
+                        buf.writeVarInt(packet.producerCount)
+                    }
+                }
             }
         }
     }
@@ -52,7 +80,6 @@ data class AdminSpeciesUpdateC2SPacket(
     override fun getId(): CustomPayload.Id<AdminSpeciesUpdateC2SPacket> = ID
 
     fun handle(player: ServerPlayerEntity) {
-        // Require OP permission level 2
         if (!player.hasPermissionLevel(2)) {
             Cobblebase.LOGGER.warn("[Cobblebase] Player ${player.name.string} tried to update species skills without OP permission")
             return
@@ -60,10 +87,25 @@ data class AdminSpeciesUpdateC2SPacket(
 
         val world = player.serverWorld
 
+        // Handle skill overrides
         if (resetToDefault) {
             SpeciesSkillOverrides.removeOverride(species, world)
         } else {
             SpeciesSkillOverrides.setOverride(species, skills, world)
+        }
+
+        // Handle producer overrides
+        if (producerResetToDefault) {
+            ProducerOverrides.removeOverride(species, world)
+        } else if (producerItemId != null) {
+            val displayName = producerItemId.substringAfterLast(":")
+                .replace("_", " ")
+                .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+            ProducerOverrides.setOverride(
+                species,
+                ProducerExecutor.ProduceEntry(producerItemId, producerCount.coerceIn(1, 64), displayName),
+                world
+            )
         }
     }
 }

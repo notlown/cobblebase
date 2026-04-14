@@ -115,6 +115,13 @@ object CobblebaseFabricClient : ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket.ID) { packet, context ->
             context.client().execute {
                 AdminDataCache.setSpeciesSkills(packet.species, packet.skills)
+                val pItemId = packet.producerItemId
+                if (pItemId != null) {
+                    AdminDataCache.setSpeciesProducer(packet.species,
+                        AdminDataCache.ProducerData(pItemId, packet.producerCount, packet.producerDisplayName ?: ""))
+                } else {
+                    AdminDataCache.setSpeciesProducer(packet.species, null)
+                }
             }
         }
 

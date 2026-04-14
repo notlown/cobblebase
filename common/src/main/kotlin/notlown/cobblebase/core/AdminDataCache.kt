@@ -18,6 +18,10 @@ object AdminDataCache {
     var overriddenSpecies: Set<String> = emptySet()
         private set
 
+    /** Producer data per species (lazy-loaded alongside skills) */
+    data class ProducerData(val itemId: String, val count: Int, val displayName: String)
+    val speciesProducer: MutableMap<String, ProducerData?> = mutableMapOf()
+
     /** Species currently being requested from server (avoid duplicate requests) */
     private val pendingRequests = mutableSetOf<String>()
 
@@ -48,10 +52,15 @@ object AdminDataCache {
         overriddenSpecies = newOverridden
     }
 
+    fun setSpeciesProducer(species: String, data: ProducerData?) {
+        speciesProducer[species] = data
+    }
+
     fun clear() {
         allSpecies = emptyList()
         speciesSkills = mutableMapOf()
         overriddenSpecies = emptySet()
+        speciesProducer.clear()
         pendingRequests.clear()
     }
 }

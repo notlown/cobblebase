@@ -1,19 +1,15 @@
 {
   "id": "cobblebase:diving",
   "entries": [
-    { "item": "cobblemon:relic_coin", "weight": 30, "min": 1, "max": 3 },
-    { "item": "cobblemon:water_gem", "weight": 15, "min": 1, "max": 1 },
-    { "item": "cobblemon:dark_gem", "weight": 8, "min": 1, "max": 1 },
-    { "item": "cobblemon:dragon_gem", "weight": 5, "min": 1, "max": 1 },
-    { "item": "cobblemon:water_stone", "weight": 5, "min": 1, "max": 1 },
-    { "item": "cobblemon:net_ball", "weight": 12, "min": 1, "max": 1 },
-    { "item": "cobblemon:dive_ball", "weight": 10, "min": 1, "max": 1 },
-    { "item": "cobblemon:lure_ball", "weight": 5, "min": 1, "max": 1 },
-    { "item": "minecraft:prismarine_shard", "weight": 15, "min": 1, "max": 2 },
-    { "item": "minecraft:prismarine_crystals", "weight": 10, "min": 1, "max": 1 },
-    { "item": "minecraft:emerald", "weight": 5, "min": 1, "max": 1 },
-    { "item": "minecraft:gold_ingot", "weight": 5, "min": 1, "max": 1 },
-    { "item": "minecraft:nautilus_shell", "weight": 2, "min": 1, "max": 1 },
-    { "item": "minecraft:heart_of_the_sea", "weight": 1, "min": 1, "max": 1 }
+    { "item": "minecraft:prismarine_shard", "weight": 25, "min": 1, "max": 3 },
+    { "item": "minecraft:prismarine_crystals", "weight": 15, "min": 1, "max": 2 },
+    { "item": "minecraft:gold_ingot", "weight": 10, "min": 1, "max": 1 },
+    { "item": "minecraft:emerald", "weight": 8, "min": 1, "max": 1 },
+    { "item": "minecraft:iron_ingot", "weight": 12, "min": 1, "max": 2 },
+    { "item": "minecraft:lapis_lazuli", "weight": 10, "min": 1, "max": 3 },
+    { "item": "minecraft:clay_ball", "weight": 15, "min": 1, "max": 4 },
+    { "item": "minecraft:nautilus_shell", "weight": 3, "min": 1, "max": 1 },
+    { "item": "minecraft:heart_of_the_sea", "weight": 1, "min": 1, "max": 1 },
+    { "item": "minecraft:diamond", "weight": 2, "min": 1, "max": 1 }
   ]
 }

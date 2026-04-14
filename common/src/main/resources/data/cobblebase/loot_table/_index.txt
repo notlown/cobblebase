@@ -50,3 +50,4 @@ mining_common.json
 mining_rare.json
 mining_ultra_rare.json
 mining_uncommon.json
+diving.json

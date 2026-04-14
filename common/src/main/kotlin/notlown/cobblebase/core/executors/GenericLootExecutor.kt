@@ -62,8 +62,10 @@ object GenericLootExecutor : SkillExecutor {
             lootTableId, world, pokemonEntity.blockPos, pokemonEntity
         )
 
+        // Always reset cooldown even if no drops (random chance can produce empty rolls)
+        lastLootTime[pokemonId] = now
+
         if (drops.isNotEmpty()) {
-            lastLootTime[pokemonId] = now
             heldItems[pokemonId] = drops
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
 

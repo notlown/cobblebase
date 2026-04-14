@@ -87,53 +87,18 @@ object GenericLootExecutor : SkillExecutor {
         }
     }
 
-    private val depositTarget = mutableMapOf<UUID, BlockPos>()
-
     private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
         val items = heldItems[pokemonId] ?: return
 
-        // Find chest if not already targeted
-        val target = depositTarget[pokemonId] ?: run {
-            val found = InventoryHelper.findBestContainer(world, origin, 15, items)
-            if (found != null) {
-                depositTarget[pokemonId] = found
-                found
-            } else {
-                // No chest found — drop near pasture block
-                InventoryHelper.dropItems(world, origin, items, origin)
-                heldItems.remove(pokemonId)
-                return
-            }
-        }
-
-        // Navigate NEAR chest (2 blocks away, not ON TOP of it)
-        val dist = kotlin.math.sqrt(pokemonEntity.squaredDistanceTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5))
-        if (dist > 3.0) {
-            // Walk toward chest but stop 2 blocks away
-            val dx = (target.x + 0.5 - pokemonEntity.x)
-            val dz = (target.z + 0.5 - pokemonEntity.z)
-            val len = kotlin.math.sqrt(dx * dx + dz * dz)
-            if (len > 0.1) {
-                val stopX = target.x + 0.5 - (dx / len) * 2.0
-                val stopZ = target.z + 0.5 - (dz / len) * 2.0
-                pokemonEntity.navigation.startMovingTo(stopX, target.y.toDouble(), stopZ, 0.4)
-            }
-            return
-        }
-
-        // Close enough — deposit items (no need to stand on chest)
-        val remaining = InventoryHelper.insertItems(world, target, items)
-        if (remaining.isEmpty()) {
-            heldItems.remove(pokemonId)
+        // Instant deposit into nearest matching chest (no walking needed)
+        val containerPos = InventoryHelper.findBestContainer(world, origin, 15, items)
+        if (containerPos != null) {
+            InventoryHelper.insertItems(world, containerPos, items)
         } else {
-            heldItems[pokemonId] = remaining
+            // No chest found — drop near pasture block (not at pokemon, may be underwater)
+            InventoryHelper.dropItems(world, origin, items, origin)
         }
-        depositTarget.remove(pokemonId)
-
-        // Move away from chest after depositing so we don't block it
-        val awayX = pokemonEntity.x + (pokemonEntity.x - target.x) * 0.5
-        val awayZ = pokemonEntity.z + (pokemonEntity.z - target.z) * 0.5
-        pokemonEntity.navigation.startMovingTo(awayX, pokemonEntity.y, awayZ, 0.4)
+        heldItems.remove(pokemonId)
     }
 
 

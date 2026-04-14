@@ -72,21 +72,21 @@ object BaseManager {
         }
 
         // Safety: prevent Pokemon from wandering too far from pasture (causes despawning)
+        val isWaterType = pokemonEntity.pokemon.types.any { it.name.equals("water", ignoreCase = true) }
         if (CobblebaseConfig.enableSafetyTeleport) {
             val distFromPasture = kotlin.math.sqrt(
                 pokemonEntity.squaredDistanceTo(
                     pastureOrigin.x + 0.5, pastureOrigin.y.toDouble(), pastureOrigin.z + 0.5
                 )
             )
-            if (distFromPasture > CobblebaseConfig.safetyTeleportDistance) {
+            // Water-type Pokemon get double the safety radius (they swim farther)
+            val maxDist = if (isWaterType) CobblebaseConfig.safetyTeleportDistance * 2.0 else CobblebaseConfig.safetyTeleportDistance.toDouble()
+            if (distFromPasture > maxDist) {
                 val (sx, sz) = getSpawnOffset(world)
                 pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
                 NavigationHelper.clearTargets(pokemonEntity)
             }
         }
-
-        // Safety: prevent drowning — but NOT for water-type Pokemon (they can swim!)
-        val isWaterType = pokemonEntity.pokemon.types.any { it.name.equals("water", ignoreCase = true) }
         if (!isWaterType && (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100)) {
             val (sx, sz) = getSpawnOffset(world)
             pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)

@@ -61,8 +61,9 @@ public class PokemonPastureBlockEntityMixin {
                     }
                 }
                 if (isWaterType) {
-                    // Always save position — prevents tether teleport regardless of water contact
+                    // Save position with BOTH UUIDs to ensure match in TAIL
                     waterPositions.put(entity.getUuid(), entity.getPos());
+                    waterPositions.put(pokemon.getUuid(), entity.getPos());
                 }
             } catch (Exception e) {
                 notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().debug("[Cobblebase] Tether check error: " + e.getMessage());
@@ -96,14 +97,14 @@ public class PokemonPastureBlockEntityMixin {
                 PokemonEntity entity = pokemon.getEntity();
                 if (entity == null) continue;
 
+                // Check both entity UUID and pokemon UUID as key
                 Vec3d savedPos = saved.get(entity.getUuid());
+                if (savedPos == null) {
+                    savedPos = saved.get(pokemon.getUuid());
+                }
                 if (savedPos != null) {
-                    Vec3d currentPos = entity.getPos();
-                    double moved = savedPos.distanceTo(currentPos);
-                    if (moved > 1.0) {
-                        // Was teleported — restore position
-                        entity.refreshPositionAndAngles(savedPos.x, savedPos.y, savedPos.z, entity.getYaw(), entity.getPitch());
-                    }
+                    // Always restore — water-type mons should never be tethered
+                    entity.refreshPositionAndAngles(savedPos.x, savedPos.y, savedPos.z, entity.getYaw(), entity.getPitch());
                 }
             } catch (Exception ignored) { }
         }

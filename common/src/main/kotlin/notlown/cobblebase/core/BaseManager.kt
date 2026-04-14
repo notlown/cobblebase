@@ -83,13 +83,13 @@ object BaseManager {
             val maxDist = if (isWaterType) CobblebaseConfig.safetyTeleportDistance * 2.0 else CobblebaseConfig.safetyTeleportDistance.toDouble()
             if (distFromPasture > maxDist) {
                 val (sx, sz) = getSpawnOffset(world)
-                pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
+                pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y.toDouble(), pastureOrigin.z + sz)
                 NavigationHelper.clearTargets(pokemonEntity)
             }
         }
         if (!isWaterType && (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100)) {
             val (sx, sz) = getSpawnOffset(world)
-            pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
+            pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y.toDouble(), pastureOrigin.z + sz)
             pokemonEntity.air = pokemonEntity.maxAir
             NavigationHelper.clearTargets(pokemonEntity)
         }

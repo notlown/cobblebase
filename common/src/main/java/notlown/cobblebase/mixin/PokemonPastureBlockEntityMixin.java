@@ -45,26 +45,34 @@ public class PokemonPastureBlockEntityMixin {
                 PokemonEntity entity = pokemon.getEntity();
                 if (entity == null) continue;
 
-                // Only protect mons that CAN swim — water-type or fishing job
+                // Only protect mons that CAN swim — water-type, diving job, or fishing job
                 if (entity.isTouchingWater()) {
                     boolean canSwim = false;
-                    for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
-                        if (t.getName().equalsIgnoreCase("water")) {
-                            canSwim = true;
-                            break;
+                    try {
+                        for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
+                            if (t.getName().equalsIgnoreCase("water")) {
+                                canSwim = true;
+                                break;
+                            }
                         }
+                    } catch (Exception e) {
+                        // Fallback: check species primary/secondary type name
+                        String specName = pokemon.getSpecies().getName().toLowerCase();
+                        String primary = pokemon.getSpecies().getPrimaryType().getName().toLowerCase();
+                        canSwim = primary.equals("water");
                     }
                     if (!canSwim) {
-                        // Check if on fishing job (fishing mons are expected to be in water)
+                        // Check if on fishing or diving job
                         String assignment = notlown.cobblebase.core.BaseManager.INSTANCE.getAssignment(pokemon.getUuid());
-                        canSwim = assignment != null && assignment.contains("fishing");
+                        canSwim = assignment != null && (assignment.contains("fishing") || assignment.contains("diving"));
                     }
                     if (canSwim) {
                         waterPositions.put(entity.getUuid(), entity.getPos());
                     }
-                    // Non-water mons touching water: let Cobblemon tether them back (they're drowning)
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception e) {
+                notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().debug("[Cobblebase] Tether check error: " + e.getMessage());
+            }
         }
 
         // Store for use in TAIL injection

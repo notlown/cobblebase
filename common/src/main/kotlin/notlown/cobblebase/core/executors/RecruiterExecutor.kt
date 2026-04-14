@@ -97,9 +97,12 @@ object RecruiterExecutor : SkillExecutor {
             if (recruiterTypes.isEmpty()) return
             chosenType = recruiterTypes[world.random.nextInt(recruiterTypes.size)]
             bucket = rollBucket(world, skillEntry.proficiency)
-            speciesName = pickSpecies(world, chosenType.name, bucket) ?: run {
+            val typeKey = chosenType.name
+            speciesName = pickSpecies(world, typeKey, bucket) ?: run {
                 // Don't reset cooldown on failed species pick — retry sooner
-                Cobblebase.log("[Recruiter] ${pokemonEntity.pokemon.species.name} failed to find ${bucket.name} ${chosenType.name} species")
+                val typeMap = getOrBuildTypeMap()
+                val availableForType = typeMap[typeKey.lowercase()]?.size ?: 0
+                Cobblebase.LOGGER.warn("[Recruiter] ${pokemonEntity.pokemon.species.name} (type=$typeKey) failed to find ${bucket.name} species. Available ${typeKey.lowercase()} species in map: $availableForType, total types: ${typeMap.size}")
                 return
             }
         }

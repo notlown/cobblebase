@@ -80,8 +80,6 @@ object RecruiterExecutor : SkillExecutor {
             return
         }
 
-        lastRecruitTime[pokemonId] = now
-
         val speciesName: String
         val bucket: SpawnData.Bucket
         val chosenType: com.cobblemon.mod.common.api.types.ElementalType
@@ -99,11 +97,22 @@ object RecruiterExecutor : SkillExecutor {
             if (recruiterTypes.isEmpty()) return
             chosenType = recruiterTypes[world.random.nextInt(recruiterTypes.size)]
             bucket = rollBucket(world, skillEntry.proficiency)
-            speciesName = pickSpecies(world, chosenType.name, bucket) ?: return
+            speciesName = pickSpecies(world, chosenType.name, bucket) ?: run {
+                // Don't reset cooldown on failed species pick — retry sooner
+                Cobblebase.log("[Recruiter] ${pokemonEntity.pokemon.species.name} failed to find ${bucket.name} ${chosenType.name} species")
+                return
+            }
         }
 
         // Spawn near the pasture block (works for both ground and flying mons)
-        val spawnPos = findSpawnPos(world, origin, 5) ?: return
+        val spawnPos = findSpawnPos(world, origin, 5) ?: run {
+            // Don't reset cooldown on failed spawn position — retry sooner
+            Cobblebase.log("[Recruiter] ${pokemonEntity.pokemon.species.name} failed to find spawn position near $origin")
+            return
+        }
+
+        // Only reset cooldown AFTER successful species pick + spawn position found
+        lastRecruitTime[pokemonId] = now
 
         try {
             val species = PokemonSpecies.getByName(speciesName) ?: return

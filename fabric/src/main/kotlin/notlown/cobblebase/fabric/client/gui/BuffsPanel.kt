@@ -190,6 +190,9 @@ class BuffsPanel(
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // Refresh entries each frame to pick up assignment/config changes
+        entries = buildBuffEntries()
+
         val contentTop = panelY + HEADER_HEIGHT
         val contentBottom = panelY + panelH - 18
 

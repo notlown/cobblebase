@@ -85,8 +85,9 @@ object BaseManager {
             }
         }
 
-        // Safety: prevent drowning — if Pokemon is submerged in water, teleport to pasture origin
-        if (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100) {
+        // Safety: prevent drowning — but NOT for water-type Pokemon (they can swim!)
+        val isWaterType = pokemonEntity.pokemon.types.any { it.name.equals("water", ignoreCase = true) }
+        if (!isWaterType && (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100)) {
             val (sx, sz) = getSpawnOffset(world)
             pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y + 1.0, pastureOrigin.z + sz)
             pokemonEntity.air = pokemonEntity.maxAir

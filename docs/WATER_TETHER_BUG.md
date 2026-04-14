@@ -31,7 +31,7 @@ Water-type Pokemon should stay in water, swim freely, perform water jobs (fishin
 - The tethering only occurs with Cobblebase installed
 
 ### Confirmed: It's OUR code
-Two systems in Cobblebase cause the problem:
+THREE systems in Cobblebase cause the problem:
 
 #### 1. `NavigationHelper.checkAndUnstick()` (NavigationHelper.kt:165-241)
 - Tracks Pokemon position every tick
@@ -41,7 +41,21 @@ Two systems in Cobblebase cause the problem:
 - After 21s+: applies velocity impulse to physically push it out
 - **This is the PRIMARY cause** — treats swimming as being stuck
 
-#### 2. `NavigationHelper.wanderNearOrigin()` (NavigationHelper.kt:368-391)
+#### 2. `BaseManager.tickPokemon()` DROWNING PREVENTION (BaseManager.kt:88-94)
+- **THE PRIMARY CAUSE** found on 2026-04-14
+- Code: `if (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100)` → teleport to pasture
+- NO type check — teleports ALL Pokemon including Water-type
+- This runs EVERY TICK for EVERY tethered Pokemon
+- Immediately teleports any submerged Pokemon to pasture block origin
+- Also resets air and clears navigation targets
+- This is why Basculegion gets teleported ON TOP of the pasture box
+
+#### 3. `BaseManager.tickPokemon()` SAFETY TELEPORT (BaseManager.kt:75-86)
+- Teleports Pokemon back to pasture if they wander beyond safetyTeleportDistance (30 blocks)
+- This is why Lapras gets teleported back when it swims too far
+- Should exempt water-type Pokemon or use a larger distance for them
+
+#### 4. `NavigationHelper.wanderNearOrigin()` (NavigationHelper.kt:368-391)
 - Called for idle working mons when navigation is idle
 - Picks random positions within radius of pasture block
 - Pasture block is on LAND → all wander targets are on land
@@ -73,6 +87,13 @@ Two systems in Cobblebase cause the problem:
 ### 4. isTouchingWater() check for tether protection
 - **What**: Only protect mons that are touching water
 - **Why it failed**: The teleport source isn't in checkPokemon
+
+### Additional problems reported 2026-04-14:
+- Water mons AVOID water entirely — never go in voluntarily
+- Mons need to be manually pushed into water by the player
+- With Cobbleworkers, water mons go into water by themselves
+- Mons should only be teleported 1-2 blocks BEHIND pasture box, not ON TOP
+- Cobblemon's Cobbleworkers navigates water mons TO water — Cobblebase does not
 
 ## Correct Fix (TODO)
 

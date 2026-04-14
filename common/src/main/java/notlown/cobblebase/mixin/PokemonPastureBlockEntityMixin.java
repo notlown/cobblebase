@@ -80,6 +80,9 @@ public class PokemonPastureBlockEntityMixin {
     @org.spongepowered.asm.mixin.Unique
     private Map<UUID, Vec3d> cobblebase$savedWaterPositions = new HashMap<>();
 
+    @org.spongepowered.asm.mixin.Unique
+    private static final Map<UUID, Vec3d> cobblebase$debugPositions = new HashMap<>();
+
     @Inject(at = @At("TAIL"), method = "checkPokemon", remap = false)
     private void cobblebase$afterCheckPokemon(CallbackInfo ci) {
         PokemonPastureBlockEntity self = (PokemonPastureBlockEntity)(Object)this;
@@ -116,11 +119,14 @@ public class PokemonPastureBlockEntityMixin {
     private static void cobblebase$tick(World world, BlockPos blockPos, BlockState blockState, PokemonPastureBlockEntity pastureBlock, CallbackInfo ci) {
         if (world.isClient) return;
 
-        // Keep entities alive: force Cobblemon to re-check entity spawning frequently
-        // This ensures Pokemon entities stay spawned when their owner is offline
-        // but another player is nearby loading the chunks
+        // Keep entities alive: periodically force Cobblemon to re-check entity spawning
+        // Only reset every 5 seconds (100 ticks) instead of every tick to avoid
+        // triggering Cobblemon's aggressive position correction (makeSuitableY/isSafeFloor)
+        // which was tethering water-type Pokemon out of water every tick
         if (notlown.cobblebase.core.CobblebaseConfig.INSTANCE.getKeepEntitiesAlive()) {
-            pastureBlock.setTicksUntilCheck(0);
+            if (pastureBlock.getTicksUntilCheck() > 100) {
+                pastureBlock.setTicksUntilCheck(100);
+            }
         }
 
         // Update pasture-area leaf tracking (for PastureLeafCollisionMixin)
@@ -158,6 +164,33 @@ public class PokemonPastureBlockEntityMixin {
                 continue;
             }
 
+            // DEBUG: Track water-type Pokemon position changes to find tether source
+            if (world.getTime() % 20 == 0) { // Every second
+                boolean isWater = false;
+                for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
+                    if (t.getName().equalsIgnoreCase("water")) { isWater = true; break; }
+                }
+                if (isWater) {
+                    Vec3d pos = pokemonEntity.getPos();
+                    UUID pid = pokemon.getUuid();
+                    Vec3d lastPos = cobblebase$debugPositions.get(pid);
+                    if (lastPos != null) {
+                        double dist = lastPos.distanceTo(pos);
+                        if (dist > 3.0) {
+                            notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().warn(
+                                "[Cobblebase] TETHER DEBUG: {} jumped {:.1f} blocks! From ({:.0f},{:.0f},{:.0f}) to ({:.0f},{:.0f},{:.0f}). Touching water: {}, Pasture at: {}",
+                                pokemon.getSpecies().getName(), dist,
+                                lastPos.x, lastPos.y, lastPos.z,
+                                pos.x, pos.y, pos.z,
+                                pokemonEntity.isTouchingWater(), blockPos
+                            );
+                            // Print stack trace to find WHO moved this entity
+                            new Exception("[Cobblebase] TETHER TRACE for " + pokemon.getSpecies().getName()).printStackTrace();
+                        }
+                    }
+                    cobblebase$debugPositions.put(pid, pos);
+                }
+            }
 
             // Passive XP for all pastured Pokemon (even sleeping)
             try {

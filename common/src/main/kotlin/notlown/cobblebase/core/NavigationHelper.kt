@@ -385,10 +385,22 @@ object NavigationHelper {
         if (now - last < WANDER_INTERVAL_TICKS) return
         lastWanderTick[id] = now
 
-        // Water-type Pokemon in water: don't wander toward land, let them swim freely
         val isWaterType = pokemonEntity.pokemon.types.any { it.name.equals("water", ignoreCase = true) }
-        if (isWaterType && (pokemonEntity.isTouchingWater || pokemonEntity.isSubmergedInWater)) {
-            return // Already in water — no need to wander toward pasture block on land
+
+        if (isWaterType) {
+            if (pokemonEntity.isTouchingWater || pokemonEntity.isSubmergedInWater) {
+                // Already in water — swim freely, no need to navigate
+                return
+            }
+            // On land: navigate toward nearest water block so they can swim
+            val waterPos = findNearbyWater(pokemonEntity.world, origin, radius)
+            if (waterPos != null) {
+                pokemonEntity.navigation.startMovingTo(
+                    waterPos.x + 0.5, waterPos.y.toDouble(), waterPos.z + 0.5, 0.4
+                )
+                return
+            }
+            // No water found — just wander normally
         }
 
         // Pick a random position near the origin (use thread-safe Random to avoid C2ME crash)
@@ -405,5 +417,29 @@ object NavigationHelper {
             targetZ + 0.5,
             0.3  // slow stroll speed for idle wandering
         )
+    }
+
+    /**
+     * Finds the nearest water block within radius of the origin.
+     * Used to navigate water-type Pokemon toward water.
+     */
+    fun findNearbyWater(world: net.minecraft.world.World, origin: BlockPos, radius: Int): BlockPos? {
+        var closest: BlockPos? = null
+        var closestDist = Double.MAX_VALUE
+        for (x in -radius..radius step 2) {
+            for (z in -radius..radius step 2) {
+                for (y in -3..3) {
+                    val pos = origin.add(x, y, z)
+                    if (world.getBlockState(pos).fluidState.isStill) {
+                        val dist = origin.getSquaredDistance(pos)
+                        if (dist < closestDist) {
+                            closestDist = dist
+                            closest = pos
+                        }
+                    }
+                }
+            }
+        }
+        return closest
     }
 }

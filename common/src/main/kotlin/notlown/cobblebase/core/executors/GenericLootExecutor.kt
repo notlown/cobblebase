@@ -110,15 +110,22 @@ object GenericLootExecutor : SkillExecutor {
             }
         }
 
-        // Navigate to chest visually
-        val dist = pokemonEntity.squaredDistanceTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5)
-        if (dist > 4.0) {
-            // Still walking to chest
-            NavigationHelper.navigateTo(pokemonEntity, target)
+        // Navigate NEAR chest (2 blocks away, not ON TOP of it)
+        val dist = kotlin.math.sqrt(pokemonEntity.squaredDistanceTo(target.x + 0.5, target.y.toDouble(), target.z + 0.5))
+        if (dist > 3.0) {
+            // Walk toward chest but stop 2 blocks away
+            val dx = (target.x + 0.5 - pokemonEntity.x)
+            val dz = (target.z + 0.5 - pokemonEntity.z)
+            val len = kotlin.math.sqrt(dx * dx + dz * dz)
+            if (len > 0.1) {
+                val stopX = target.x + 0.5 - (dx / len) * 2.0
+                val stopZ = target.z + 0.5 - (dz / len) * 2.0
+                pokemonEntity.navigation.startMovingTo(stopX, target.y.toDouble(), stopZ, 0.4)
+            }
             return
         }
 
-        // At chest — deposit items
+        // Close enough — deposit items (no need to stand on chest)
         val remaining = InventoryHelper.insertItems(world, target, items)
         if (remaining.isEmpty()) {
             heldItems.remove(pokemonId)
@@ -126,7 +133,6 @@ object GenericLootExecutor : SkillExecutor {
             heldItems[pokemonId] = remaining
         }
         depositTarget.remove(pokemonId)
-        NavigationHelper.clearTargets(pokemonEntity)
     }
 
 

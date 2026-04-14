@@ -293,7 +293,8 @@ object RecruiterExecutor : SkillExecutor {
                     skipped++
                     continue
                 }
-                val name = species.name.lowercase()
+                // Use resourceIdentifier name (no spaces, underscore-separated) for reliable lookups
+                val name = species.resourceIdentifier.path.lowercase()
                 for (type in species.types) {
                     map.getOrPut(type.name.lowercase()) { mutableListOf() }.add(name)
                 }

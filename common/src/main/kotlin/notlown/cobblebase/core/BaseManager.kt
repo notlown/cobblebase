@@ -39,7 +39,10 @@ object BaseManager {
      * Falls back to just the species name if no form-specific skills are registered.
      */
     fun resolveSpeciesName(pokemon: com.cobblemon.mod.common.pokemon.Pokemon): String {
-        return SpeciesSkillRegistry.resolveFormName(pokemon.species.name, pokemon.aspects)
+        // Use resourceIdentifier path (no spaces) for reliable lookups
+        // species.name can have spaces ("Iron Valiant") but JSON files use "ironvaliant"
+        val baseName = pokemon.species.resourceIdentifier.path
+        return SpeciesSkillRegistry.resolveFormName(baseName, pokemon.aspects)
     }
 
     fun tickPokemon(world: World, pastureOrigin: BlockPos, pokemonEntity: PokemonEntity) {

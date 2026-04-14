@@ -45,9 +45,24 @@ public class PokemonPastureBlockEntityMixin {
                 PokemonEntity entity = pokemon.getEntity();
                 if (entity == null) continue;
 
-                // Save position of mons that can swim and are in/near water
+                // Only protect mons that CAN swim — water-type or fishing job
                 if (entity.isTouchingWater()) {
-                    waterPositions.put(entity.getUuid(), entity.getPos());
+                    boolean canSwim = false;
+                    for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
+                        if (t.getName().equalsIgnoreCase("water")) {
+                            canSwim = true;
+                            break;
+                        }
+                    }
+                    if (!canSwim) {
+                        // Check if on fishing job (fishing mons are expected to be in water)
+                        String assignment = notlown.cobblebase.core.BaseManager.INSTANCE.getAssignment(pokemon.getUuid());
+                        canSwim = assignment != null && assignment.contains("fishing");
+                    }
+                    if (canSwim) {
+                        waterPositions.put(entity.getUuid(), entity.getPos());
+                    }
+                    // Non-water mons touching water: let Cobblemon tether them back (they're drowning)
                 }
             } catch (Exception ignored) { }
         }

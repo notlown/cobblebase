@@ -45,7 +45,7 @@ object GenericLootExecutor : SkillExecutor {
 
         // If holding items, go deposit
         if (!items.isNullOrEmpty()) {
-            depositItems(world, origin, pokemonEntity, pokemonId)
+            depositItems(world, origin, pokemonEntity, pokemonId, skill)
             return
         }
 
@@ -87,11 +87,11 @@ object GenericLootExecutor : SkillExecutor {
         }
     }
 
-    private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
+    private fun depositItems(world: World, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID, skill: SkillDef) {
         val items = heldItems[pokemonId] ?: return
 
         // Instant deposit into nearest matching chest (no walking needed)
-        val containerPos = InventoryHelper.findBestContainer(world, origin, 15, items)
+        val containerPos = InventoryHelper.findBestContainer(world, origin, skill.searchRadius, items)
         if (containerPos != null) {
             InventoryHelper.insertItems(world, containerPos, items)
         } else {

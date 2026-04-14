@@ -197,6 +197,22 @@ public class PokemonPastureBlockEntityMixin {
                 PassiveXp.INSTANCE.tick(world, pokemonEntity, blockPos);
             } catch (Exception ignored) { }
 
+            // Water-type Pokemon on land: navigate toward water FIRST before any job logic
+            boolean isWaterMon = false;
+            for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
+                if (t.getName().equalsIgnoreCase("water")) { isWaterMon = true; break; }
+            }
+            if (isWaterMon && !pokemonEntity.isTouchingWater() && !pokemonEntity.isSubmergedInWater()) {
+                if (pokemonEntity.getNavigation().isIdle()) {
+                    net.minecraft.util.math.BlockPos waterPos = NavigationHelper.INSTANCE.findNearbyWater(world, blockPos, 15);
+                    if (waterPos != null) {
+                        pokemonEntity.getNavigation().startMovingTo(
+                            waterPos.getX() + 0.5, waterPos.getY(), waterPos.getZ() + 0.5, 0.5
+                        );
+                    }
+                }
+            }
+
             // Check if this mon is explicitly set to Idle (no job assigned in GUI)
             String assignment = BaseManager.INSTANCE.getAssignment(pokemonEntity.getPokemon().getUuid());
             boolean isExplicitlyIdle = (assignment == null);

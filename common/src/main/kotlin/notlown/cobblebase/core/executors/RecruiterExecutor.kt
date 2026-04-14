@@ -271,8 +271,14 @@ object RecruiterExecutor : SkillExecutor {
         return list
     }
 
+    private var typeMapBuiltAt: Long = 0L
+
     private fun getOrBuildTypeMap(): Map<String, List<String>> {
-        speciesByType?.let { return it }
+        // Rebuild every 5 minutes to pick up late-loaded species from addon mods
+        val now = System.currentTimeMillis()
+        if (speciesByType != null && now - typeMapBuiltAt < 300_000L) {
+            return speciesByType!!
+        }
 
         val map = mutableMapOf<String, MutableList<String>>()
         var skipped = 0
@@ -294,6 +300,9 @@ object RecruiterExecutor : SkillExecutor {
         }
 
         speciesByType = map
+        typeMapBuiltAt = now
+        // Also rebuild legendary list
+        legendarySpecies = null
         Cobblebase.log("[Recruiter] Type map: ${map.size} types, ${map.values.sumOf { it.size }} entries (excluded $skipped legendary/mythical/ultra beast)")
         return map
     }

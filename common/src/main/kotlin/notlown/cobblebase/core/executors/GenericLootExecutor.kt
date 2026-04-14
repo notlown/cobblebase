@@ -133,6 +133,11 @@ object GenericLootExecutor : SkillExecutor {
             heldItems[pokemonId] = remaining
         }
         depositTarget.remove(pokemonId)
+
+        // Move away from chest after depositing so we don't block it
+        val awayX = pokemonEntity.x + (pokemonEntity.x - target.x) * 0.5
+        val awayZ = pokemonEntity.z + (pokemonEntity.z - target.z) * 0.5
+        pokemonEntity.navigation.startMovingTo(awayX, pokemonEntity.y, awayZ, 0.4)
     }
 
 

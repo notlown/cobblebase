@@ -205,12 +205,13 @@ public class PokemonPastureBlockEntityMixin {
                 if (t.getName().equalsIgnoreCase("water")) { isWaterMon = true; break; }
             }
             if (isWaterMon && !pokemonEntity.isTouchingWater() && !pokemonEntity.isSubmergedInWater()) {
-                if (pokemonEntity.getNavigation().isIdle()) {
-                    net.minecraft.util.math.BlockPos waterPos = NavigationHelper.INSTANCE.findNearbyWater(world, blockPos, 15);
-                    if (waterPos != null) {
-                        // Navigate to block ABOVE water (water edge) — same approach as Cobbleworkers
-                        NavigationHelper.INSTANCE.navigateTo(pokemonEntity, waterPos.up(), -1.0);
-                    }
+                // Water mon is on land — navigate to water
+                net.minecraft.util.math.BlockPos waterPos = NavigationHelper.INSTANCE.findNearbyWater(world, blockPos, 20);
+                if (waterPos != null) {
+                    // Navigate to the water block directly — Cobblemon's OmniPathNavigation can handle water
+                    pokemonEntity.getNavigation().startMovingTo(
+                        waterPos.getX() + 0.5, waterPos.getY() + 0.5, waterPos.getZ() + 0.5, 0.5
+                    );
                 }
             }
 

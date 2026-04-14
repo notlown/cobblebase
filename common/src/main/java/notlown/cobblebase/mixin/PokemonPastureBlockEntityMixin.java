@@ -198,6 +198,8 @@ public class PokemonPastureBlockEntityMixin {
             } catch (Exception ignored) { }
 
             // Water-type Pokemon on land: navigate toward water FIRST before any job logic
+            // Navigate to the block ABOVE water (like Cobbleworkers does) — the mon walks to the
+            // water edge and Cobblemon's OmniPathNavigation handles entering the water
             boolean isWaterMon = false;
             for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
                 if (t.getName().equalsIgnoreCase("water")) { isWaterMon = true; break; }
@@ -206,9 +208,8 @@ public class PokemonPastureBlockEntityMixin {
                 if (pokemonEntity.getNavigation().isIdle()) {
                     net.minecraft.util.math.BlockPos waterPos = NavigationHelper.INSTANCE.findNearbyWater(world, blockPos, 15);
                     if (waterPos != null) {
-                        pokemonEntity.getNavigation().startMovingTo(
-                            waterPos.getX() + 0.5, waterPos.getY(), waterPos.getZ() + 0.5, 0.5
-                        );
+                        // Navigate to block ABOVE water (water edge) — same approach as Cobbleworkers
+                        NavigationHelper.INSTANCE.navigateTo(pokemonEntity, waterPos.up(), -1.0);
                     }
                 }
             }

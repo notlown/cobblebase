@@ -192,11 +192,11 @@ class WorkshopPanel(
         context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
-        // Phase progress bar in header
-        val hBarX = panelX + PADDING
-        val hBarW = panelX + panelW / 2 - hBarX
-        val hBarY = y + 28
-        context.fill(hBarX, hBarY, hBarX + hBarW, hBarY + 4, 0xFF222222.toInt())
+        // Phase progress bar in header (thin, under status text)
+        val hBarX = panelX + PADDING + 28
+        val hBarW = (panelW * 0.35f).toInt()
+        val hBarY = y + 24
+        context.fill(hBarX, hBarY, hBarX + hBarW, hBarY + 2, 0xFF222222.toInt())
         // Calculate progress based on phase
         var headerProgress = 0f
         var headerBarColor = 0xFFFF9800.toInt()
@@ -216,7 +216,7 @@ class WorkshopPanel(
             headerBarColor = 0xFF4CAF50.toInt() // green
         }
         val hFillW = (hBarW * headerProgress).toInt()
-        if (hFillW > 0) context.fill(hBarX, hBarY, hBarX + hFillW, hBarY + 4, headerBarColor)
+        if (hFillW > 0) context.fill(hBarX, hBarY, hBarX + hFillW, hBarY + 2, headerBarColor)
 
         // Craftsman sprite (RIGHT side, 3x scale = 48px, no type box)
         renderScaledSprite(context, pokemonData.species.path, panelX + panelW - PADDING - 50, y - 2, 3.0f)
@@ -352,7 +352,12 @@ class WorkshopPanel(
 
             val currentAssignment = AssignmentCache.getAssignment(mon.pokemonId)
             val isSupplier = currentAssignment?.startsWith("craftsman_supply:") == true
-            val activeSkillId = if (isSupplier) currentAssignment!!.removePrefix("craftsman_supply:") else null
+            // Parse "craftsman_supply:namespace:skillpath:namespace:itempath"
+            val activeSkillId = if (isSupplier) {
+                val afterPrefix = currentAssignment!!.removePrefix("craftsman_supply:")
+                val parts = afterPrefix.split(":")
+                if (parts.size >= 2) "${parts[0]}:${parts[1]}" else afterPrefix
+            } else null
 
             // Alternating row background (like Skills tab)
             val rowIdx = shownMons.size - 1

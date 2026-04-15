@@ -153,7 +153,8 @@ object CobblebaseFabric : ModInitializer {
                 val produce = notlown.cobblebase.core.executors.ProducerExecutor.getProduceEntry(packet.species)
                 ServerPlayNetworking.send(player, notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket(
                     packet.species, skills,
-                    produce?.itemId, produce?.count ?: 0, produce?.displayName
+                    produce?.itemId, produce?.count ?: 0, produce?.displayName,
+                    produce?.cooldownSeconds ?: 0
                 ))
             }
         }

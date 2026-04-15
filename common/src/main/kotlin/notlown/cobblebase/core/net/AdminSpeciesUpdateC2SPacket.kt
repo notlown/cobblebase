@@ -22,6 +22,7 @@ data class AdminSpeciesUpdateC2SPacket(
     val resetToDefault: Boolean,
     val producerItemId: String? = null,
     val producerCount: Int = 0,
+    val producerCooldown: Long = 0,
     val producerResetToDefault: Boolean = false
 ) : CustomPayload {
 
@@ -43,17 +44,20 @@ data class AdminSpeciesUpdateC2SPacket(
                 val hasProducerUpdate = buf.readBoolean()
                 val producerItemId: String?
                 val producerCount: Int
+                val producerCooldown: Long
                 val producerResetToDefault: Boolean
                 if (hasProducerUpdate) {
                     producerResetToDefault = buf.readBoolean()
                     producerItemId = if (!producerResetToDefault) buf.readString() else null
                     producerCount = if (!producerResetToDefault) buf.readVarInt() else 0
+                    producerCooldown = if (!producerResetToDefault) buf.readLong() else 0L
                 } else {
                     producerItemId = null
                     producerCount = 0
+                    producerCooldown = 0L
                     producerResetToDefault = false
                 }
-                return AdminSpeciesUpdateC2SPacket(species, skills, resetToDefault, producerItemId, producerCount, producerResetToDefault)
+                return AdminSpeciesUpdateC2SPacket(species, skills, resetToDefault, producerItemId, producerCount, producerCooldown, producerResetToDefault)
             }
 
             override fun encode(buf: PacketByteBuf, packet: AdminSpeciesUpdateC2SPacket) {
@@ -71,6 +75,7 @@ data class AdminSpeciesUpdateC2SPacket(
                     if (!packet.producerResetToDefault && packet.producerItemId != null) {
                         buf.writeString(packet.producerItemId)
                         buf.writeVarInt(packet.producerCount)
+                        buf.writeLong(packet.producerCooldown)
                     }
                 }
             }
@@ -101,9 +106,10 @@ data class AdminSpeciesUpdateC2SPacket(
             val displayName = producerItemId.substringAfterLast(":")
                 .replace("_", " ")
                 .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+            val cooldown = if (producerCooldown > 0) producerCooldown else null
             ProducerOverrides.setOverride(
                 species,
-                ProducerExecutor.ProduceEntry(producerItemId, producerCount.coerceIn(1, 64), displayName),
+                ProducerExecutor.ProduceEntry(producerItemId, producerCount.coerceIn(1, 64), displayName, cooldown),
                 world
             )
         }

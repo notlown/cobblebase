@@ -118,7 +118,7 @@ object CobblebaseFabricClient : ClientModInitializer {
                 val pItemId = packet.producerItemId
                 if (pItemId != null) {
                     AdminDataCache.setSpeciesProducer(packet.species,
-                        AdminDataCache.ProducerData(pItemId, packet.producerCount, packet.producerDisplayName ?: ""))
+                        AdminDataCache.ProducerData(pItemId, packet.producerCount, packet.producerDisplayName ?: "", packet.producerCooldown))
                 } else {
                     AdminDataCache.setSpeciesProducer(packet.species, null)
                 }

@@ -19,7 +19,7 @@ object AdminDataCache {
         private set
 
     /** Producer data per species (lazy-loaded alongside skills) */
-    data class ProducerData(val itemId: String, val count: Int, val displayName: String)
+    data class ProducerData(val itemId: String, val count: Int, val displayName: String, val cooldownSeconds: Long = 0)
     val speciesProducer: MutableMap<String, ProducerData?> = mutableMapOf()
 
     /** Species currently being requested from server (avoid duplicate requests) */

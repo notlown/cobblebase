@@ -16,7 +16,8 @@ data class AdminSpeciesSkillsResponseS2CPacket(
     val skills: List<SkillEntry>,
     val producerItemId: String? = null,
     val producerCount: Int = 0,
-    val producerDisplayName: String? = null
+    val producerDisplayName: String? = null,
+    val producerCooldown: Long = 0
 ) : CustomPayload {
 
     companion object {
@@ -37,16 +38,19 @@ data class AdminSpeciesSkillsResponseS2CPacket(
                 val producerItemId: String?
                 val producerCount: Int
                 val producerDisplayName: String?
+                val producerCooldown: Long
                 if (hasProducer) {
                     producerItemId = buf.readString()
                     producerCount = buf.readVarInt()
                     producerDisplayName = buf.readString()
+                    producerCooldown = buf.readLong()
                 } else {
                     producerItemId = null
                     producerCount = 0
                     producerDisplayName = null
+                    producerCooldown = 0
                 }
-                return AdminSpeciesSkillsResponseS2CPacket(species, skills, producerItemId, producerCount, producerDisplayName)
+                return AdminSpeciesSkillsResponseS2CPacket(species, skills, producerItemId, producerCount, producerDisplayName, producerCooldown)
             }
 
             override fun encode(buf: PacketByteBuf, packet: AdminSpeciesSkillsResponseS2CPacket) {
@@ -62,6 +66,7 @@ data class AdminSpeciesSkillsResponseS2CPacket(
                     buf.writeString(packet.producerItemId!!)
                     buf.writeVarInt(packet.producerCount)
                     buf.writeString(packet.producerDisplayName ?: "")
+                    buf.writeLong(packet.producerCooldown)
                 }
             }
         }

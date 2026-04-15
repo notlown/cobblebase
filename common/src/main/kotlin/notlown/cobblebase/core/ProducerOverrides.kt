@@ -42,11 +42,13 @@ object ProducerOverrides {
         try {
             val file = getSaveFile(world)
             val data = overrides.mapValues { (_, entry) ->
-                mapOf(
+                val map = mutableMapOf<String, Any>(
                     "itemId" to entry.itemId,
                     "count" to entry.count,
                     "displayName" to entry.displayName
                 )
+                if (entry.cooldownSeconds != null) map["cooldownSeconds"] = entry.cooldownSeconds
+                map
             }
             file.writeText(gson.toJson(data))
         } catch (e: Exception) {
@@ -65,7 +67,8 @@ object ProducerOverrides {
                 val itemId = fields["itemId"] as? String ?: continue
                 val count = (fields["count"] as? Double)?.toInt() ?: 1
                 val displayName = fields["displayName"] as? String ?: itemId
-                overrides[species.lowercase()] = ProducerExecutor.ProduceEntry(itemId, count, displayName)
+                val cooldown = (fields["cooldownSeconds"] as? Double)?.toLong()
+                overrides[species.lowercase()] = ProducerExecutor.ProduceEntry(itemId, count, displayName, cooldown)
             }
             Cobblebase.LOGGER.info("[Cobblebase] Loaded ${overrides.size} producer overrides")
         } catch (e: Exception) {

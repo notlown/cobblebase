@@ -29,7 +29,8 @@ object ProducerExecutor : SkillExecutor {
     data class ProduceEntry(
         val itemId: String,
         val count: Int,
-        val displayName: String
+        val displayName: String,
+        val cooldownSeconds: Long? = null  // null = use default from skill def
     )
 
     private val produceMap: Map<String, ProduceEntry> = mapOf(
@@ -358,7 +359,8 @@ object ProducerExecutor : SkillExecutor {
         val entry = ProducerOverrides.getOverride(speciesName) ?: produceMap[speciesName] ?: return
 
         val pokemonId = pokemonEntity.pokemon.uuid
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val baseCooldown = entry.cooldownSeconds ?: skill.cooldownSeconds
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency)
 
         // Cooldown check
         val lastTime = lastProduceTime[pokemonId] ?: 0L

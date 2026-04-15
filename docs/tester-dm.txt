@@ -1,0 +1,3 @@
+Hey, I saw your bug reports in the Cobbleworkers thread and they were really solid. I've been building a similar mod called Cobblebase that takes the concept further — proper GUI, hand-crafted per-species skills, proficiency system, admin panel, the whole thing.
+
+I'm looking for testers who actually know how to spot and report issues properly, so you came to mind. If you'd be interested I can send you more details and the download

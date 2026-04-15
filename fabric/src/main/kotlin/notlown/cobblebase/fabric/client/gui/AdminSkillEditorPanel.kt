@@ -6,7 +6,10 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.registry.Registries
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import notlown.cobblebase.core.AdminDataCache
 import notlown.cobblebase.core.SkillEntry
 import notlown.cobblebase.core.SkillRegistry
@@ -58,6 +61,7 @@ class AdminSkillEditorPanel(
     // Producer state
     private var producerItemField: TextFieldWidget? = null
     private var producerCount = 1
+    private var producerCooldown = 300L       // seconds, 0 = use default
     private var producerEnabled = false       // Producer skill is assigned
     private var producerJobActive = true      // Toggle: job active or paused (item stays configured)
     private var itemSuggestions: List<String> = emptyList()
@@ -97,9 +101,24 @@ class AdminSkillEditorPanel(
             allItemIds = Registries.ITEM.ids.map { it.toString() }.sorted()
         }
         val query = text.lowercase()
+        // Auto-close if exact match
+        if (allItemIds!!.contains(query)) {
+            itemSuggestions = emptyList()
+            showSuggestions = false
+            return
+        }
         itemSuggestions = allItemIds!!.filter { it.contains(query) }.take(8)
         showSuggestions = itemSuggestions.isNotEmpty()
         selectedSuggestionIdx = -1
+    }
+
+    private fun makeStack(itemId: String): ItemStack {
+        return try {
+            val parts = itemId.split(":", limit = 2)
+            val id = if (parts.size == 2) Identifier.of(parts[0], parts[1]) else Identifier.of("minecraft", itemId)
+            val item = Registries.ITEM.get(id)
+            if (item == Items.AIR) ItemStack.EMPTY else ItemStack(item)
+        } catch (_: Exception) { ItemStack.EMPTY }
     }
 
     fun setSpecies(species: String) {
@@ -121,10 +140,12 @@ class AdminSkillEditorPanel(
         if (data != null) {
             producerItemField?.text = data.itemId
             producerCount = data.count
+            producerCooldown = if (data.cooldownSeconds > 0) data.cooldownSeconds else 300L
             producerJobActive = true
         } else {
             producerItemField?.text = ""
             producerCount = 1
+            producerCooldown = 300L
             producerJobActive = true
         }
         updateProducerVisibility()
@@ -185,13 +206,12 @@ class AdminSkillEditorPanel(
         val producerItem = if (producerEnabled && producerJobActive && !producerItemField?.text.isNullOrBlank())
             producerItemField!!.text else null
         val pCount = if (producerEnabled && producerJobActive) producerCount else 0
-        // If producer is enabled but job is paused, send a reset to remove the override
-        // (the skill stays assigned, but no item is produced)
+        val pCooldown = if (producerEnabled && producerJobActive) producerCooldown else 0L
         val pReset = producerEnabled && !producerJobActive
 
         ClientPlayNetworking.send(AdminSpeciesUpdateC2SPacket(
             species, assignedSkills, false,
-            producerItem, pCount, pReset
+            producerItem, pCount, pCooldown, pReset
         ))
 
         AdminDataCache.updateLocalSkills(species, assignedSkills)
@@ -199,7 +219,7 @@ class AdminSkillEditorPanel(
             val displayName = producerItem.substringAfterLast(":")
                 .replace("_", " ")
                 .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-            AdminDataCache.setSpeciesProducer(species, AdminDataCache.ProducerData(producerItem, pCount, displayName))
+            AdminDataCache.setSpeciesProducer(species, AdminDataCache.ProducerData(producerItem, pCount, displayName, pCooldown))
         } else {
             AdminDataCache.setSpeciesProducer(species, null)
         }
@@ -210,7 +230,7 @@ class AdminSkillEditorPanel(
 
     private fun resetToDefault() {
         val species = selectedSpecies ?: return
-        ClientPlayNetworking.send(AdminSpeciesUpdateC2SPacket(species, emptyList(), true, null, 0, true))
+        ClientPlayNetworking.send(AdminSpeciesUpdateC2SPacket(species, emptyList(), true, null, 0, 0L, true))
         ClientPlayNetworking.send(notlown.cobblebase.core.net.AdminSpeciesRequestC2SPacket())
         dirty = false
     }
@@ -368,68 +388,81 @@ class AdminSkillEditorPanel(
         // Background bar
         val bgColor = if (producerJobActive) 0x33FF9800 else 0x22555555
         context.fill(x + 2, psY, x + w - 2, psY + psH, bgColor)
-        // Top accent line
         val accentColor = if (producerJobActive) 0xFFFF9800.toInt() else 0xFF666666.toInt()
         context.fill(x + 2, psY, x + w - 2, psY + 1, accentColor)
 
-        // Enable/Disable toggle button (left side)
+        // Enable/Disable toggle (left)
         val toggleX = x + PADDING
         val toggleY = psY + 4
-        val toggleW = 8
-        val toggleH = 8
         val toggleColor = if (producerJobActive) CHECKBOX_ON else 0xFFFF5555.toInt()
-        context.fill(toggleX, toggleY, toggleX + toggleW, toggleY + toggleH, toggleColor)
+        context.fill(toggleX, toggleY, toggleX + 8, toggleY + 8, toggleColor)
         context.matrices.push()
         context.matrices.translate((toggleX + 1).toFloat(), toggleY.toFloat(), 0f)
         context.matrices.scale(scale, scale, 1f)
         context.drawTextWithShadow(textRenderer, if (producerJobActive) "\u2713" else "\u2717", 0, 0, 0xFFFFFF)
         context.matrices.pop()
 
-        // "Produces:" label
-        val labelX = toggleX + toggleW + 4
-        context.matrices.push()
-        context.matrices.translate(labelX.toFloat(), (psY + 5).toFloat(), 0f)
-        context.matrices.scale(scale, scale, 1f)
-        val labelColor = if (producerJobActive) 0xFFFF9800.toInt() else 0xFF888888.toInt()
-        context.drawTextWithShadow(textRenderer, "\u00A7lProduces:", 0, 0, labelColor)
-        context.matrices.pop()
+        // Item icon preview (next to toggle)
+        val iconX = toggleX + 11
+        val currentText = producerItemField?.text ?: ""
+        val stack = if (currentText.isNotBlank()) makeStack(currentText) else ItemStack.EMPTY
+        if (!stack.isEmpty) {
+            val iconScale = 8f / 16f
+            context.matrices.push()
+            context.matrices.translate(iconX.toFloat(), (psY + 3).toFloat(), 0f)
+            context.matrices.scale(iconScale, iconScale, 1f)
+            context.drawItem(stack, 0, 0)
+            context.matrices.pop()
+        }
 
-        // Position text field (rendered by widget system)
+        // Position text field (after icon)
+        val fieldX = iconX + 12
         producerItemField?.let { field ->
-            field.x = x + PADDING + 56
+            field.x = fieldX
             field.y = psY + 3
-            field.width = w - PADDING * 2 - 110
+            field.width = w - (fieldX - x) - PADDING - 100
             field.active = producerJobActive
         }
 
-        // Count: [-] x1 [+] (right side)
-        val countX = x + w - PADDING - 44
-        val countY = psY + 5
+        // Right side: Count [-] x1 [+] | Cooldown
+        val rightAreaX = x + w - PADDING - 94
+        val rowY1 = psY + 4
+
+        // Count controls
         context.matrices.push()
-        context.matrices.translate(countX.toFloat(), countY.toFloat(), 0f)
+        context.matrices.translate(rightAreaX.toFloat(), (rowY1 + 1).toFloat(), 0f)
         context.matrices.scale(scale, scale, 1f)
-        val countColor = if (producerJobActive) 0xFFFFFF else 0x666666
-        val minusHover = producerJobActive && mouseX >= countX && mouseX < countX + 8 && mouseY >= countY - 1 && mouseY < countY + 10
-        context.drawTextWithShadow(textRenderer, "-", 0, 0, if (minusHover) 0xFF5555 else if (producerJobActive) 0xAAAAAA else 0x555555)
-        context.drawTextWithShadow(textRenderer, "x$producerCount", 12, 0, countColor)
-        val plusHover = producerJobActive && mouseX >= countX + 34 && mouseX < countX + 44 && mouseY >= countY - 1 && mouseY < countY + 10
-        context.drawTextWithShadow(textRenderer, "+", 38, 0, if (plusHover) 0x55FF55 else if (producerJobActive) 0xAAAAAA else 0x555555)
+        val cActive = producerJobActive
+        val minusHover = cActive && mouseX >= rightAreaX && mouseX < rightAreaX + 8 && mouseY >= rowY1 && mouseY < rowY1 + 10
+        context.drawTextWithShadow(textRenderer, "-", 0, 0, if (minusHover) 0xFF5555 else if (cActive) 0xAAAAAA else 0x555555)
+        context.drawTextWithShadow(textRenderer, "x$producerCount", 10, 0, if (cActive) 0xFFFFFF else 0x666666)
+        val plusHover = cActive && mouseX >= rightAreaX + 30 && mouseX < rightAreaX + 40 && mouseY >= rowY1 && mouseY < rowY1 + 10
+        context.drawTextWithShadow(textRenderer, "+", 32, 0, if (plusHover) 0x55FF55 else if (cActive) 0xAAAAAA else 0x555555)
         context.matrices.pop()
 
-        // Status text row
-        val statusY = psY + 17
+        // Cooldown controls
+        val cdX = rightAreaX + 40
         context.matrices.push()
-        context.matrices.translate((x + PADDING + 12).toFloat(), (statusY).toFloat(), 0f)
+        context.matrices.translate(cdX.toFloat(), (rowY1 + 1).toFloat(), 0f)
+        context.matrices.scale(scale, scale, 1f)
+        val cdMinusHover = cActive && mouseX >= cdX && mouseX < cdX + 8 && mouseY >= rowY1 && mouseY < rowY1 + 10
+        context.drawTextWithShadow(textRenderer, "-", 0, 0, if (cdMinusHover) 0xFF5555 else if (cActive) 0xAAAAAA else 0x555555)
+        context.drawTextWithShadow(textRenderer, "${producerCooldown}s", 10, 0, if (cActive) 0xFF9800 else 0x666666)
+        val cdPlusHover = cActive && mouseX >= cdX + 46 && mouseX < cdX + 56 && mouseY >= rowY1 && mouseY < rowY1 + 10
+        context.drawTextWithShadow(textRenderer, "+", 48, 0, if (cdPlusHover) 0x55FF55 else if (cActive) 0xAAAAAA else 0x555555)
+        context.matrices.pop()
+
+        // Status row
+        val statusY = psY + 18
+        context.matrices.push()
+        context.matrices.translate((x + PADDING + 12).toFloat(), statusY.toFloat(), 0f)
         context.matrices.scale(0.6f, 0.6f, 1f)
         if (!producerJobActive) {
             context.drawTextWithShadow(textRenderer, "Producer paused (item saved)", 0, 0, 0xFF8888)
-        } else {
-            val currentText = producerItemField?.text ?: ""
-            if (currentText.isNotBlank()) {
-                val validItem = allItemIds?.contains(currentText) ?: false
-                val statusColor = if (validItem) 0xFF55FF55.toInt() else 0xFFFF5555.toInt()
-                context.drawTextWithShadow(textRenderer, if (validItem) "Valid item" else "Unknown item ID", 0, 0, statusColor)
-            }
+        } else if (currentText.isNotBlank()) {
+            val validItem = allItemIds?.contains(currentText) ?: false
+            val color = if (validItem) 0xFF55FF55.toInt() else 0xFFFF5555.toInt()
+            context.drawTextWithShadow(textRenderer, if (validItem) "Valid item" else "Unknown item ID", 0, 0, color)
         }
         context.matrices.pop()
     }
@@ -473,20 +506,31 @@ class AdminSkillEditorPanel(
                 return true
             }
 
-            // Count +/- (only when active)
+            // Count and cooldown +/- (only when active)
             if (producerJobActive) {
-                val countX = x + w - PADDING - 44
-                val countY = psY + 5
-                if (mouseY >= countY - 1 && mouseY < countY + 10) {
-                    if (mouseX >= countX && mouseX < countX + 10) {
+                val rightAreaX = x + w - PADDING - 94
+                val rowY1 = psY + 4
+                if (mouseY >= rowY1 && mouseY < rowY1 + 10) {
+                    // Count [-]
+                    if (mouseX >= rightAreaX && mouseX < rightAreaX + 10) {
                         producerCount = (producerCount - 1).coerceAtLeast(1)
-                        dirty = true
-                        return true
+                        dirty = true; return true
                     }
-                    if (mouseX >= countX + 28 && mouseX < countX + 44) {
+                    // Count [+]
+                    if (mouseX >= rightAreaX + 24 && mouseX < rightAreaX + 40) {
                         producerCount = (producerCount + 1).coerceAtMost(64)
-                        dirty = true
-                        return true
+                        dirty = true; return true
+                    }
+                    // Cooldown [-]
+                    val cdX = rightAreaX + 40
+                    if (mouseX >= cdX && mouseX < cdX + 10) {
+                        producerCooldown = (producerCooldown - 30).coerceAtLeast(30)
+                        dirty = true; return true
+                    }
+                    // Cooldown [+]
+                    if (mouseX >= cdX + 40 && mouseX < cdX + 56) {
+                        producerCooldown = (producerCooldown + 30).coerceAtMost(3600)
+                        dirty = true; return true
                     }
                 }
             }

@@ -194,15 +194,15 @@ class WorkshopPanel(
 
         // Craftsman sprite (RIGHT side, 3x scale = 48px, no type box)
         renderScaledSprite(context, pokemonData.species.path, panelX + panelW - PADDING - 50, y - 2, 3.0f)
-        // "Craftsman" label + Mon name left of sprite
-        val spriteLeft = panelX + panelW - PADDING - 56
+        // "Craftsman" label + Mon name well left of sprite
+        val spriteLeft = panelX + panelW - PADDING - 100
         context.matrices.push()
-        context.matrices.translate(spriteLeft.toFloat(), (y + 24).toFloat(), 0f)
+        context.matrices.translate(spriteLeft.toFloat(), (y + 22).toFloat(), 0f)
         context.matrices.scale(0.5f, 0.5f, 1f)
         context.drawTextWithShadow(textRenderer, "\u00A76Craftsman", 0, 0, 0xFFAA00)
         context.matrices.pop()
         context.matrices.push()
-        context.matrices.translate(spriteLeft.toFloat(), (y + 30).toFloat(), 0f)
+        context.matrices.translate(spriteLeft.toFloat(), (y + 28).toFloat(), 0f)
         context.matrices.scale(0.5f, 0.5f, 1f)
         context.drawTextWithShadow(textRenderer, pokemonData.displayName.string, 0, 0, 0xCCCCCC)
         context.matrices.pop()

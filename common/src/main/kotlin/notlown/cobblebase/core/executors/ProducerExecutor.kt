@@ -394,9 +394,13 @@ object ProducerExecutor : SkillExecutor {
         )
     }
 
-    /** Returns the effective produce entry (override > hardcoded) for admin GUI display. */
-    fun getProduceEntry(species: String): ProduceEntry? =
-        ProducerOverrides.getOverride(species) ?: produceMap[species]
+    /** Returns the effective produce entry (override > hardcoded) for admin GUI display.
+     *  Normalizes item IDs to include namespace (e.g. "lead" -> "minecraft:lead"). */
+    fun getProduceEntry(species: String): ProduceEntry? {
+        val entry = ProducerOverrides.getOverride(species) ?: produceMap[species] ?: return null
+        val normalizedId = if (entry.itemId.contains(":")) entry.itemId else "minecraft:${entry.itemId}"
+        return if (normalizedId != entry.itemId) ProduceEntry(normalizedId, entry.count, entry.displayName) else entry
+    }
 
     /** Returns true if this species has a hardcoded entry (for "Reset" logic). */
     fun hasHardcodedEntry(species: String): Boolean = produceMap.containsKey(species)

@@ -157,7 +157,7 @@ class WorkshopPanel(
         var y = startY
 
         // --- Project Header Card ---
-        context.fill(panelX + 2, y, panelX + panelW - 2, y + 34, 0x33FF5722)
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 36, 0x33FF5722)
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF5722.toInt())
 
         // Output item icon + name (LEFT side)
@@ -192,6 +192,32 @@ class WorkshopPanel(
         context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
+        // Phase progress bar in header
+        val hBarX = panelX + PADDING
+        val hBarW = panelX + panelW / 2 - hBarX
+        val hBarY = y + 28
+        context.fill(hBarX, hBarY, hBarX + hBarW, hBarY + 4, 0xFF222222.toInt())
+        // Calculate progress based on phase
+        var headerProgress = 0f
+        var headerBarColor = 0xFFFF9800.toInt()
+        if (project.phase == "GATHERING") {
+            var totalN = 0; var totalG = 0
+            for ((itemId2, n) in project.requiredItems) {
+                totalN += n; totalG += (project.gatheredItems[itemId2] ?: 0).coerceAtMost(n)
+            }
+            headerProgress = if (totalN > 0) totalG.toFloat() / totalN else 0f
+            headerBarColor = 0xFFFF9800.toInt() // orange
+        } else if (project.phase == "CRAFTING") {
+            // Animate crafting progress using time
+            headerProgress = ((System.currentTimeMillis() % 5000L).toFloat() / 5000f)
+            headerBarColor = 0xFFFF5722.toInt() // deep orange
+        } else if (project.phase == "DEPOSITING") {
+            headerProgress = 1f
+            headerBarColor = 0xFF4CAF50.toInt() // green
+        }
+        val hFillW = (hBarW * headerProgress).toInt()
+        if (hFillW > 0) context.fill(hBarX, hBarY, hBarX + hFillW, hBarY + 4, headerBarColor)
+
         // Craftsman sprite (RIGHT side, 3x scale = 48px, no type box)
         renderScaledSprite(context, pokemonData.species.path, panelX + panelW - PADDING - 50, y - 2, 3.0f)
         // "Craftsman" label + prof stars + Mon name, centered vertically left of sprite
@@ -219,7 +245,7 @@ class WorkshopPanel(
         context.drawTextWithShadow(textRenderer, pokemonData.displayName.string, 0, 0, 0xCCCCCC)
         context.matrices.pop()
 
-        y += 36
+        y += 38
 
         // --- Material progress ---
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())

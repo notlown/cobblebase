@@ -209,16 +209,19 @@ object InventoryHelper {
 
         return findAllContainers(world, origin, radius)
             .filter { pos ->
-                // Use platform helper for modded containers (Sophisticated Storage etc.)
+                // Check if container CONTAINS the item (any amount, no stack space requirement)
+                val blockEntity = world.getBlockEntity(pos)
+                if (blockEntity is Inventory) {
+                    return@filter (0 until blockEntity.size()).any { i ->
+                        val s = blockEntity.getStack(i)
+                        !s.isEmpty && s.item == targetItem
+                    }
+                }
+                // Platform helper fallback — hasItem checks for room, so also try extraction test
                 if (helper != null) {
                     return@filter helper.hasItem(world, pos, matchStack)
                 }
-                // Fallback: vanilla Inventory
-                val inv = world.getBlockEntity(pos) as? Inventory ?: return@filter false
-                (0 until inv.size()).any { i ->
-                    val s = inv.getStack(i)
-                    !s.isEmpty && s.item == targetItem
-                }
+                false
             }
             .minByOrNull { it.getSquaredDistance(origin) }
     }

@@ -85,22 +85,23 @@ object SupplierExecutor {
         if (!assignment.startsWith(BaseManager.SUPPLIER_PREFIX)) return null
         val skillId = assignment.removePrefix(BaseManager.SUPPLIER_PREFIX)
 
-        // Check all active Craftsman projects
+        // Check all active Craftsman projects — prioritize unfulfilled items, but keep producing for stockpile
+        var stockpileItem: String? = null
         for ((_, project) in WorkshopManager.getAllProjects()) {
-            if (project.phase != WorkshopManager.Phase.GATHERING) continue
+            if (project.phase != WorkshopManager.Phase.GATHERING && project.phase != WorkshopManager.Phase.CRAFTING) continue
             for ((itemId, required) in project.requiredItems) {
-                val gathered = project.gatheredItems[itemId] ?: 0
-                if (gathered >= required) continue
-
-                // Check if this supplier's skill can produce this item
                 val suppliers = SupplierHelper.getSupplierJobs(itemId)
-                if (suppliers.any { it.skillId == skillId }) {
-                    // Also check variant items — if the recipe needs acacia_planks
-                    // but the supplier is an Architect, return the needed item directly
-                    return itemId
+                if (!suppliers.any { it.skillId == skillId }) continue
+
+                val gathered = project.gatheredItems[itemId] ?: 0
+                if (gathered < required) {
+                    return itemId // Priority: unfulfilled items
+                }
+                if (stockpileItem == null) {
+                    stockpileItem = itemId // Keep producing for next cycle
                 }
             }
         }
-        return null
+        return stockpileItem
     }
 }

@@ -144,11 +144,14 @@ class WorkshopPanel(
         val recipe = WorkshopCache.recipes.find { it.recipeId == project.recipeId }
         var y = startY
 
-        // --- Project Status ---
+        // --- Project Header Card ---
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 22, 0x33FF5722)
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF5722.toInt())
+
         // Craftsman sprite + name
-        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, pokemonData.species.path, panelX + PADDING, y, 0f)
+        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, pokemonData.species.path, panelX + PADDING, y + 2, 0f)
         context.matrices.push()
-        context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 2).toFloat(), 0f)
+        context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 4).toFloat(), 0f)
         context.matrices.scale(SCALE, SCALE, 1f)
         context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l${pokemonData.displayName.string}", 0, 0, 0xFFFFFF)
         context.matrices.pop()
@@ -163,33 +166,39 @@ class WorkshopPanel(
         val craftCount = project.craftCount
         val countText = if (craftCount > 0) " \u00A78| \u00A7a${craftCount} crafted" else ""
         context.matrices.push()
-        context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 11).toFloat(), 0f)
+        context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 13).toFloat(), 0f)
         context.matrices.scale(0.6f, 0.6f, 1f)
         context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
-        // Output icon + name (right side)
+        // Output icon + name (right side of header card)
         if (recipe != null) {
             val outputStack = makeStack(recipe.outputItemId)
             if (!outputStack.isEmpty) {
                 context.matrices.push()
-                context.matrices.translate((panelX + panelW - PADDING - 60).toFloat(), y.toFloat(), 0f)
+                context.matrices.translate((panelX + panelW - PADDING - 60).toFloat(), (y + 3).toFloat(), 0f)
                 context.matrices.scale(ICON_SCALE, ICON_SCALE, 1f)
                 context.drawItem(outputStack, 0, 0)
                 context.matrices.pop()
             }
             context.matrices.push()
-            context.matrices.translate((panelX + panelW - PADDING - 46).toFloat(), (y + 3).toFloat(), 0f)
+            context.matrices.translate((panelX + panelW - PADDING - 46).toFloat(), (y + 5).toFloat(), 0f)
             context.matrices.scale(0.65f, 0.65f, 1f)
             context.drawTextWithShadow(textRenderer, "\u00A7fBuilding: \u00A7l${recipe.outputDisplayName}", 0, 0, 0xFFFFFF)
             context.matrices.pop()
         }
 
-        y += 22
+        y += 24
 
         // --- Material progress ---
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())
-        y += 4
+        y += 3
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+        context.matrices.scale(0.65f, 0.65f, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A78\u00A7lMATERIALS", 0, 0, 0x888888)
+        context.matrices.pop()
+        y += 10
 
         var totalNeeded = 0; var totalGathered = 0
         for ((itemId, needed) in project.requiredItems) {
@@ -306,17 +315,25 @@ class WorkshopPanel(
                 context.drawTextWithShadow(textRenderer, mon.displayName.string, 0, 0, if (isActive) 0xFFFFFF else 0xCCCCCC)
                 context.matrices.pop()
 
-                // Job type
+                // Job type + cooldown estimate
+                val speciesName = SpeciesSkillRegistry.resolveFormName(mon.species.path, mon.aspects)
+                val monSkills = SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
+                val skillEntry = monSkills.find { it.skillId == suggestion.skillId }
+                val skillDef = if (skillEntry != null) notlown.cobblebase.core.SkillRegistry.get(skillEntry.skillId) else null
+                val cooldownText = if (isActive && skillDef != null && skillEntry != null) {
+                    val cd = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(skillDef.cooldownSeconds, skillEntry.proficiency) / 20
+                    " \u00A78| \u00A7e~${cd}s per item"
+                } else ""
+
                 context.matrices.push()
                 context.matrices.translate((panelX + PADDING + 18).toFloat(), (y + 10).toFloat(), 0f)
                 context.matrices.scale(0.5f, 0.5f, 1f)
-                context.drawTextWithShadow(textRenderer, "\u00A78${suggestion.skillName} — ${suggestion.description}", 0, 0, 0x888888)
+                context.drawTextWithShadow(textRenderer, "\u00A78${suggestion.skillName} — ${suggestion.description}$cooldownText", 0, 0, 0x888888)
                 context.matrices.pop()
 
                 // Status / Assign or Remove button (right side)
                 val btnX = panelX + panelW - PADDING - 38
                 if (isActive) {
-                    // [Remove] button to free the supplier
                     val removeHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 16
                     context.fill(btnX, y + 2, btnX + 36, y + 14, if (removeHover) 0xFFFF5555.toInt() else 0xFF5A3A3A.toInt())
                     context.matrices.push()
@@ -324,7 +341,6 @@ class WorkshopPanel(
                     context.matrices.scale(0.6f, 0.6f, 1f)
                     context.drawTextWithShadow(textRenderer, "Remove", 0, 0, 0xFFFFFF)
                     context.matrices.pop()
-                    // Use negative skillId to signal removal
                     rows.add(SupplierRow(y, mon.pokemonId, "REMOVE"))
                 } else {
                     val btnHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 16

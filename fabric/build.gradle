@@ -67,7 +67,7 @@ remapJar {
 tasks.register('copyToMods', Copy) {
     dependsOn remapJar
     from(remapJar.archiveFile)
-    into("/Users/umut/Library/Application Support/minecraft/versions/Cobblemon Official Modpack [Fabric] Cobblemon Modpack [Fabric] 1.7.3/mods")
+    into("/Users/umut/Library/Application Support/minecraft/versions/Cobbleverse 1.7.31/mods")
 }
 
 build.finalizedBy copyToMods

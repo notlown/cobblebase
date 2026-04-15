@@ -11,6 +11,12 @@ object CraftsmanSpecialization {
         WEAPONS("Weapons", setOf("Weapons")),
         ARMOR("Armor", setOf("Armor")),
         TOOLS("Tools", setOf("Tools")),
+        BREWER("Brewer", setOf("Brewing")),
+        COOK("Cook", setOf("Food")),
+        REDSTONE("Engineer", setOf("Redstone")),
+        MASON("Mason", setOf("Masonry")),
+        DYER("Dyer", setOf("Dyed")),
+        JEWELER("Jeweler", setOf("Jewelry")),
         ALL("All Crafts", setOf()) // empty = no filter, show everything
     }
 
@@ -60,7 +66,65 @@ object CraftsmanSpecialization {
         "meltan" to Spec.TOOLS,
         "magnezone" to Spec.TOOLS,
         "magneton" to Spec.TOOLS,
-        "magnemite" to Spec.TOOLS
+        "magnemite" to Spec.TOOLS,
+
+        // Brewers
+        "toxtricity" to Spec.BREWER,
+        "weezing" to Spec.BREWER,
+        "weezing_galarian" to Spec.BREWER,
+        "roserade" to Spec.BREWER,
+        "salazzle" to Spec.BREWER,
+        "nihilego" to Spec.BREWER,
+        "koffing" to Spec.BREWER,
+        "roselia" to Spec.BREWER,
+        "budew" to Spec.BREWER,
+
+        // Cooks
+        "alcremie" to Spec.COOK,
+        "slurpuff" to Spec.COOK,
+        "swirlix" to Spec.COOK,
+        "munchlax" to Spec.COOK,
+        "snorlax" to Spec.COOK,
+        "fidough" to Spec.COOK,
+        "dachsbun" to Spec.COOK,
+        "appletun" to Spec.COOK,
+        "milcery" to Spec.COOK,
+
+        // Redstone Engineers
+        "rotom" to Spec.REDSTONE,
+        "electrode" to Spec.REDSTONE,
+        "electrode_hisuian" to Spec.REDSTONE,
+        "porygon" to Spec.REDSTONE,
+        "porygon2" to Spec.REDSTONE,
+        "porygonz" to Spec.REDSTONE,
+        "voltorb" to Spec.REDSTONE,
+        "voltorb_hisuian" to Spec.REDSTONE,
+
+        // Masons
+        "golem" to Spec.MASON,
+        "graveler" to Spec.MASON,
+        "geodude" to Spec.MASON,
+        "rhyperior" to Spec.MASON,
+        "rhydon" to Spec.MASON,
+        "rhyhorn" to Spec.MASON,
+        "onix" to Spec.MASON,
+        "steelix" to Spec.MASON,
+        "stonjourner" to Spec.MASON,
+        "stakataka" to Spec.MASON,
+
+        // Dyers
+        "kecleon" to Spec.DYER,
+        "oricorio" to Spec.DYER,
+        "minior" to Spec.DYER,
+        "vivillon" to Spec.DYER,
+        "spinda" to Spec.DYER,
+
+        // Jewelers
+        "sableye" to Spec.JEWELER,
+        "carbink" to Spec.JEWELER,
+        "diancie" to Spec.JEWELER,
+        "starmie" to Spec.JEWELER,
+        "staryu" to Spec.JEWELER
     )
 
     fun getSpecialization(speciesName: String): Spec {

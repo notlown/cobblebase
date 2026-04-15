@@ -260,10 +260,51 @@ object RecipeHelper {
         // Tools
         if (id.contains("pickaxe") || id.contains("_axe") || id.contains("shovel") ||
             id.contains("_hoe") || id.contains("shears") || id.contains("fishing_rod") ||
-            id.contains("compass") || id.contains("clock") || id.contains("spyglass")) return "Tools"
+            id.contains("compass") || id.contains("clock") || id.contains("spyglass") ||
+            id.contains("bucket") || id.contains("lead")) return "Tools"
 
-        // Exclude everything else: stairs, slabs, walls, fences, trapdoors, carpets,
-        // glass panes, iron bars, torches, simple blocks, food, redstone
+        // Food/Cooking
+        if (id.contains("bread") || id.contains("cake") || id.contains("cookie") ||
+            id.contains("pie") || id.contains("stew") || id.contains("soup") ||
+            id.contains("sugar") || id.contains("dried_kelp") ||
+            id.contains("cooked_") || id.contains("golden_apple") ||
+            id.contains("golden_carrot") || id.contains("mushroom_") ||
+            id.contains("rabbit_") || id.contains("beetroot_")) return "Food"
+
+        // Brewing
+        if (id.contains("brewing_stand") || id.contains("cauldron") ||
+            id.contains("glass_bottle") || id.contains("fermented_") ||
+            id.contains("blaze_powder") || id.contains("magma_cream") ||
+            id.contains("glistering_melon")) return "Brewing"
+
+        // Redstone
+        if (id.contains("piston") || id.contains("hopper") || id.contains("dropper") ||
+            id.contains("dispenser") || id.contains("repeater") || id.contains("comparator") ||
+            id.contains("observer") || id.contains("target") || id.contains("daylight") ||
+            id.contains("lever") || id.contains("button") || id.contains("pressure_plate") ||
+            id.contains("tripwire") || id.contains("rail") || id.contains("tnt") ||
+            id.contains("redstone_lamp") || id.contains("redstone_torch")) return "Redstone"
+
+        // Masonry (decorative stone)
+        if (id.contains("chiseled_") || id.contains("polished_") || id.contains("pillar") ||
+            id.contains("cut_copper") || id.contains("waxed_") || id.contains("smooth_") ||
+            id.contains("mossy_") || id.contains("cracked_")) return "Masonry"
+
+        // Dyed items
+        if (id.contains("_dye") || id.contains("dyed_") ||
+            (id.contains("concrete") && !id.contains("powder")) ||
+            id.contains("_wool") || id.contains("_carpet") ||
+            id.contains("_candle") || id.contains("_bed") ||
+            id.contains("stained_glass") || id.contains("_terracotta") ||
+            id.contains("_banner")) return "Dyed"
+
+        // Jewelry/Valuables
+        if (id.contains("amethyst_block") || id.contains("tinted_glass") ||
+            id.contains("lodestone") || id.contains("end_crystal") ||
+            id.contains("ender_eye") || id.contains("ender_chest") ||
+            id.contains("beacon") || id.contains("conduit")) return "Jewelry"
+
+        // Exclude everything else
         return null
     }
 }

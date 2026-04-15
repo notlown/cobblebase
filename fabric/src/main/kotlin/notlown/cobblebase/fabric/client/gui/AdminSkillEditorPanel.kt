@@ -140,6 +140,11 @@ class AdminSkillEditorPanel(
         producerItemField?.visible = producerEnabled
     }
 
+    /** Called by AdminScreen after updateWidgetVisibility to ensure producer field respects its own logic */
+    fun refreshProducerVisibility() {
+        producerItemField?.visible = producerEnabled
+    }
+
     // Track the last cached skills reference to detect when lazy-loaded data arrives
     private var lastCachedSkillsRef: List<SkillEntry>? = null
     private var lastCachedProducerRef: AdminDataCache.ProducerData? = null
@@ -381,14 +386,15 @@ class AdminSkillEditorPanel(
         // --- Producer Section ---
         if (producerEnabled) {
             val psY = listY + listH + 2
-            // Divider
-            context.fill(x + PADDING, psY, x + w - PADDING, psY + 1, 0xFF444444.toInt())
+            // Background + border
+            context.fill(x + PADDING, psY, x + w - PADDING, psY + 36, 0x44FF9800)
+            context.fill(x + PADDING, psY, x + w - PADDING, psY + 1, 0xFFFF9800.toInt())
 
             // "Producer:" label
             context.matrices.push()
-            context.matrices.translate((x + PADDING).toFloat(), (psY + 4).toFloat(), 0f)
+            context.matrices.translate((x + PADDING + 2).toFloat(), (psY + 4).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, "\u00A7eProducer Item:", 0, 0, 0xFFFF00)
+            context.drawTextWithShadow(textRenderer, "\u00A76\u00A7lProduces:", 0, 0, 0xFF9800)
             context.matrices.pop()
 
             // Position the text field (it renders itself via Minecraft widget system)

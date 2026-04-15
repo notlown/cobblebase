@@ -151,6 +151,10 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         for (w in lootWidgets) w.visible = (activeTab == "loot")
         for (w in generalWidgets) w.visible = (activeTab == "general")
         for (w in wikiWidgets) w.visible = (activeTab == "wiki")
+        // Producer field has its own visibility logic — let the panel control it
+        if (activeTab == "species") {
+            skillEditorPanel.refreshProducerVisibility()
+        }
     }
 
     private fun getTabBarY(): Int = panelY + 22

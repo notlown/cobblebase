@@ -194,11 +194,11 @@ class WorkshopPanel(
 
         // Craftsman sprite (RIGHT side, 3x scale = 48px, no type box)
         renderScaledSprite(context, pokemonData.species.path, panelX + panelW - PADDING - 50, y - 2, 3.0f)
-        // "Craftsman" label + prof stars + Mon name, left of sprite
+        // "Craftsman" label + prof stars + Mon name, centered vertically left of sprite
         val spriteLeft = panelX + panelW - PADDING - 100
         context.matrices.push()
-        context.matrices.translate(spriteLeft.toFloat(), (y + 18).toFloat(), 0f)
-        context.matrices.scale(0.5f, 0.5f, 1f)
+        context.matrices.translate(spriteLeft.toFloat(), (y + 6).toFloat(), 0f)
+        context.matrices.scale(0.55f, 0.55f, 1f)
         context.drawTextWithShadow(textRenderer, "\u00A76Craftsman", 0, 0, 0xFFAA00)
         context.matrices.pop()
         // Prof stars
@@ -207,15 +207,15 @@ class WorkshopPanel(
         )?.skills?.find { it.skillId == "cobblebase:craftsman" }
         val prof = craftsmanSkillEntry?.proficiency ?: 3
         context.matrices.push()
-        context.matrices.translate(spriteLeft.toFloat(), (y + 24).toFloat(), 0f)
-        context.matrices.scale(0.5f, 0.5f, 1f)
+        context.matrices.translate(spriteLeft.toFloat(), (y + 13).toFloat(), 0f)
+        context.matrices.scale(0.55f, 0.55f, 1f)
         val stars = (1..5).joinToString("") { if (it <= prof) "\u2605" else "\u2606" }
         context.drawTextWithShadow(textRenderer, "\u00A7e$stars", 0, 0, 0xFFD700)
         context.matrices.pop()
         // Mon name
         context.matrices.push()
-        context.matrices.translate(spriteLeft.toFloat(), (y + 30).toFloat(), 0f)
-        context.matrices.scale(0.5f, 0.5f, 1f)
+        context.matrices.translate(spriteLeft.toFloat(), (y + 20).toFloat(), 0f)
+        context.matrices.scale(0.55f, 0.55f, 1f)
         context.drawTextWithShadow(textRenderer, pokemonData.displayName.string, 0, 0, 0xCCCCCC)
         context.matrices.pop()
 
@@ -350,78 +350,69 @@ class WorkshopPanel(
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${mon.level}", 0, 0, 0xAAAAAA)
             context.matrices.pop()
 
-            // Item buttons (horizontal row, same line as name, right side)
+            // [Stop] button first (like Relax in Skills tab) — frees the Mon
             val btnStartX = panelX + PADDING + 20 + NAME_COL_W
-            if (isSupplier) {
-                // Active supplier: show assigned item as selected button + [Remove]
-                val producingItem = notlown.cobblebase.core.executors.SupplierExecutor.findNeededItemPublic(mon.pokemonId)
-                val itemLabel = producingItem?.substringAfterLast(":")?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "?"
-                val supStack = if (producingItem != null) makeStack(producingItem) else ItemStack.EMPTY
+            val stopW = 28
+            val stopHover = mouseX >= btnStartX && mouseX < btnStartX + stopW && mouseY >= y + 4 && mouseY < y + 18
+            val stopBg = if (isSupplier) (if (stopHover) 0xFFFF5555.toInt() else 0xFF5A3A3A.toInt()) else (if (stopHover) 0xFF4A4A6A.toInt() else 0xFF2A2A3E.toInt())
+            context.fill(btnStartX, y + 4, btnStartX + stopW, y + 18, stopBg)
+            context.matrices.push()
+            context.matrices.translate((btnStartX + 4).toFloat(), (y + 7).toFloat(), 0f)
+            context.matrices.scale(0.55f, 0.55f, 1f)
+            context.drawTextWithShadow(textRenderer, "Stop", 0, 0, if (isSupplier) 0xFFFFFF else 0x888888)
+            context.matrices.pop()
+            if (isSupplier) rows.add(SupplierRow(btnStartX, y + 4, stopW, 14, mon.pokemonId, "REMOVE"))
 
-                // Active item button (green)
+            // All item buttons — always visible, active one highlighted green
+            var bx = btnStartX + stopW + 2
+            for ((supItemId, supSkillId) in canSupply) {
+                val supStack = makeStack(supItemId)
+                val itemLabel = supItemId.substringAfterLast(":").replace("_", " ").replaceFirstChar { it.uppercase() }
                 val btnW = (textRenderer.getWidth(itemLabel) * 0.6f).toInt() + 16
-                context.fill(btnStartX, y + 4, btnStartX + btnW, y + 18, 0xFF4CAF50.toInt())
+                // Check if this specific item is the active one
+                val activeTargetItem = if (isSupplier && currentAssignment != null) {
+                    val parts = currentAssignment.removePrefix("craftsman_supply:").split(":")
+                    if (parts.size >= 4) "${parts[2]}:${parts[3]}" else null
+                } else null
+                val isActiveItem = isSupplier && (activeTargetItem == supItemId || (activeTargetItem == null && activeSkillId == supSkillId))
+                val btnHover = mouseX >= bx && mouseX < bx + btnW && mouseY >= y + 4 && mouseY < y + 18
+                val bg = when {
+                    isActiveItem -> 0xFF4CAF50.toInt()
+                    btnHover -> 0xFF4A4A6A.toInt()
+                    else -> 0xFF2A2A3E.toInt()
+                }
+                context.fill(bx, y + 4, bx + btnW, y + 18, bg)
+
                 if (!supStack.isEmpty) {
                     context.matrices.push()
-                    context.matrices.translate((btnStartX + 2).toFloat(), (y + 5).toFloat(), 0f)
+                    context.matrices.translate((bx + 2).toFloat(), (y + 5).toFloat(), 0f)
                     context.matrices.scale(0.5f, 0.5f, 1f)
                     context.drawItem(supStack, 0, 0)
                     context.matrices.pop()
                 }
                 context.matrices.push()
-                context.matrices.translate((btnStartX + 11).toFloat(), (y + 7).toFloat(), 0f)
+                context.matrices.translate((bx + 11).toFloat(), (y + 7).toFloat(), 0f)
                 context.matrices.scale(0.6f, 0.6f, 1f)
-                context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, 0xFFFFFF)
+                context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, if (isActiveItem || btnHover) 0xFFFFFF else 0xCCCCCC)
                 context.matrices.pop()
 
-                // Cooldown bar under active button
-                val activeEntry = monSkills.find { it.skillId == activeSkillId }
-                val activeDef = if (activeEntry != null) notlown.cobblebase.core.SkillRegistry.get(activeEntry.skillId) else null
-                if (activeDef != null && activeEntry != null) {
-                    val cdTicks = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(activeDef.cooldownSeconds, activeEntry.proficiency)
-                    val cdMs = cdTicks * 50L
-                    val prog = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
-                    context.fill(btnStartX, y + 19, btnStartX + btnW, y + 21, 0xFF222222.toInt())
-                    context.fill(btnStartX, y + 19, btnStartX + (btnW * prog).toInt(), y + 21, 0xFF4CAF50.toInt())
-                }
-
-                // [Remove] button (right edge)
-                val rmX = panelX + panelW - PADDING - 38
-                val rmHover = mouseX >= rmX && mouseX < rmX + 36 && mouseY >= y && mouseY < y + ROW_H
-                context.fill(rmX, y + 4, rmX + 36, y + 18, if (rmHover) 0xFFFF5555.toInt() else 0xFF5A3A3A.toInt())
-                context.matrices.push()
-                context.matrices.translate((rmX + 3).toFloat(), (y + 7).toFloat(), 0f)
-                context.matrices.scale(0.6f, 0.6f, 1f)
-                context.drawTextWithShadow(textRenderer, "Remove", 0, 0, 0xFFFFFF)
-                context.matrices.pop()
-                rows.add(SupplierRow(rmX, y + 4, 36, 14, mon.pokemonId, "REMOVE"))
-            } else {
-                // Item buttons in a row (like skill buttons in Skills tab)
-                var bx = btnStartX
-                for ((supItemId, supSkillId) in canSupply) {
-                    val supStack = makeStack(supItemId)
-                    val itemLabel = supItemId.substringAfterLast(":").replace("_", " ").replaceFirstChar { it.uppercase() }
-                    val btnW = (textRenderer.getWidth(itemLabel) * 0.6f).toInt() + 16
-                    val btnHover = mouseX >= bx && mouseX < bx + btnW && mouseY >= y + 4 && mouseY < y + 18
-                    context.fill(bx, y + 4, bx + btnW, y + 18, if (btnHover) 0xFF4CAF50.toInt() else 0xFF2A2A3E.toInt())
-
-                    if (!supStack.isEmpty) {
-                        context.matrices.push()
-                        context.matrices.translate((bx + 2).toFloat(), (y + 5).toFloat(), 0f)
-                        context.matrices.scale(0.5f, 0.5f, 1f)
-                        context.drawItem(supStack, 0, 0)
-                        context.matrices.pop()
+                // Cooldown bar under active item
+                if (isActiveItem) {
+                    val activeEntry = monSkills.find { it.skillId == activeSkillId }
+                    val activeDef = if (activeEntry != null) notlown.cobblebase.core.SkillRegistry.get(activeEntry.skillId) else null
+                    if (activeDef != null && activeEntry != null) {
+                        val cdTicks = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(activeDef.cooldownSeconds, activeEntry.proficiency)
+                        val cdMs = cdTicks * 50L
+                        val prog = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
+                        context.fill(bx, y + 19, bx + btnW, y + 21, 0xFF222222.toInt())
+                        context.fill(bx, y + 19, bx + (btnW * prog).toInt(), y + 21, 0xFF4CAF50.toInt())
                     }
-                    context.matrices.push()
-                    context.matrices.translate((bx + 11).toFloat(), (y + 7).toFloat(), 0f)
-                    context.matrices.scale(0.6f, 0.6f, 1f)
-                    context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, if (btnHover) 0xFFFFFF else 0xCCCCCC)
-                    context.matrices.pop()
-
-                    rows.add(SupplierRow(bx, y + 4, btnW, 14, mon.pokemonId, supSkillId))
-                    bx += btnW + 2
-                    if (bx > panelX + panelW - PADDING - 10) break
                 }
+
+                // Encode both skillId and target itemId so the executor knows exactly what to produce
+                rows.add(SupplierRow(bx, y + 4, btnW, 14, mon.pokemonId, "$supSkillId|$supItemId"))
+                bx += btnW + 2
+                if (bx > panelX + panelW - PADDING - 10) break
             }
 
             y += ROW_H + 1
@@ -740,7 +731,11 @@ class WorkshopPanel(
                         PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, ""))
                         AssignmentCache.setAssignment(row.pokemonId, null)
                     } else {
-                        val supplyAssignment = "craftsman_supply:${row.skillId}"
+                        // Format: "skillId|itemId" — encode target item in assignment
+                        val parts = row.skillId.split("|", limit = 2)
+                        val skillId = parts[0]
+                        val targetItem = if (parts.size > 1) parts[1] else ""
+                        val supplyAssignment = "craftsman_supply:$skillId:$targetItem"
                         PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, supplyAssignment))
                         AssignmentCache.setAssignment(row.pokemonId, supplyAssignment)
                     }

@@ -103,9 +103,14 @@ object BaseManager {
         val rawAssignment: String? = assignments[pokemonId]
 
         // Craftsman supplier mode: run dedicated supplier executor
+        // Format: "craftsman_supply:skillId" or "craftsman_supply:skillId:targetItemId"
         if (rawAssignment != null && rawAssignment.startsWith(SUPPLIER_PREFIX)) {
             AmbientBehavior.clearState(pokemonId)
-            val supplierSkillId = rawAssignment.removePrefix(SUPPLIER_PREFIX)
+            val afterPrefix = rawAssignment.removePrefix(SUPPLIER_PREFIX)
+            val supplierSkillId = afterPrefix.split(":").let {
+                // Reconstruct namespace:path (e.g. "cobblebase:finder_bui")
+                if (it.size >= 2) "${it[0]}:${it[1]}" else it[0]
+            }
             val entry = speciesData.skills.find { it.skillId == supplierSkillId }
             if (entry != null) {
                 notlown.cobblebase.core.executors.SupplierExecutor.tick(

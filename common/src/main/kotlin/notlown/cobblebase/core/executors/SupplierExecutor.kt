@@ -83,7 +83,15 @@ object SupplierExecutor {
     private fun findNeededItem(supplierId: UUID): String? {
         val assignment = BaseManager.getAssignment(supplierId) ?: return null
         if (!assignment.startsWith(BaseManager.SUPPLIER_PREFIX)) return null
-        val skillId = assignment.removePrefix(BaseManager.SUPPLIER_PREFIX)
+        val afterPrefix = assignment.removePrefix(BaseManager.SUPPLIER_PREFIX)
+        // Parse "skillId:targetItemId" — e.g. "cobblebase:finder_bui:minecraft:acacia_planks"
+        val parts = afterPrefix.split(":")
+        val skillId = if (parts.size >= 2) "${parts[0]}:${parts[1]}" else parts[0]
+        // If a specific target item is encoded, return it directly
+        if (parts.size >= 4) {
+            val targetItem = "${parts[2]}:${parts[3]}"
+            return targetItem
+        }
 
         // Check all active Craftsman projects — prioritize unfulfilled items, but keep producing for stockpile
         var stockpileItem: String? = null

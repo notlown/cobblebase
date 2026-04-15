@@ -152,7 +152,7 @@ class AdminSkillEditorPanel(
     }
 
     private fun updateProducerVisibility() {
-        producerEnabled = skillEdits.any { it.skillId == "cobblebase:producer" && it.assigned }
+        producerEnabled = selectedSpecies != null
         producerItemField?.visible = producerEnabled
     }
 
@@ -199,11 +199,21 @@ class AdminSkillEditorPanel(
 
     private fun saveChanges() {
         val species = selectedSpecies ?: return
+
+        // If producer item is configured and active, auto-assign the Producer skill
+        val hasProducerConfig = producerJobActive && !producerItemField?.text.isNullOrBlank()
+        if (hasProducerConfig) {
+            val producerSkill = skillEdits.find { it.skillId == "cobblebase:producer" }
+            if (producerSkill != null && !producerSkill.assigned) {
+                producerSkill.assigned = true
+            }
+        }
+
         val assignedSkills = skillEdits.filter { it.assigned }.map {
             SkillEntry(it.skillId, it.proficiency)
         }
 
-        val producerItem = if (producerEnabled && producerJobActive && !producerItemField?.text.isNullOrBlank())
+        val producerItem = if (producerJobActive && !producerItemField?.text.isNullOrBlank())
             producerItemField!!.text else null
         val pCount = if (producerEnabled && producerJobActive) producerCount else 0
         val pCooldown = if (producerEnabled && producerJobActive) producerCooldown else 0L

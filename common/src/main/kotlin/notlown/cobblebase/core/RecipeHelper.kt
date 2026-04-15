@@ -30,11 +30,19 @@ object RecipeHelper {
 
     /**
      * Get craftable recipes from the server, filtered to furniture and decoration items only.
+     * Also loads custom recipe types from mods like CobbleFurnies.
      */
     fun getAllSimplifiedRecipes(world: ServerWorld): List<SimplifiedRecipe> {
         val recipeManager = world.server.recipeManager
         val allRecipes = recipeManager.listAllOfType(RecipeType.CRAFTING)
         val result = mutableListOf<SimplifiedRecipe>()
+
+        // Also load modded recipe types (CobbleFurnies uses cobblefurnies:furni_crafting)
+        try {
+            loadModdedRecipes(world, result)
+        } catch (e: Exception) {
+            Cobblebase.log("[RecipeHelper] Error loading modded recipes: ${e.message}")
+        }
 
         for (entry in allRecipes) {
             try {
@@ -105,6 +113,65 @@ object RecipeHelper {
             Cobblebase.LOGGER.error("[RecipeHelper] Failed to find recipe '$recipeId': ${e.message}")
             null
         }
+    }
+
+    /**
+     * Load CobbleFurnies recipes by reading the mod's recipe JSON data directly.
+     * CobbleFurnies uses a custom recipe type (cobblefurnies:furni_crafting) that
+     * can't be accessed via RecipeType.CRAFTING, so we read the JSON resources.
+     */
+    private fun loadModdedRecipes(world: ServerWorld, result: MutableList<SimplifiedRecipe>) {
+        // Try to find all cobblefurnies items that exist in the item registry
+        // and create SimplifiedRecipes for them using reasonable material guesses
+        val gson = com.google.gson.Gson()
+        var count = 0
+
+        // Scan the recipe manager for all recipes whose ID starts with cobblefurnies:
+        // Even custom recipe types are registered in the recipe manager
+        try {
+            val allRecipes = world.server.recipeManager.values()
+            for (entry in allRecipes) {
+                try {
+                    val recipeId = entry.id.toString()
+                    if (!recipeId.startsWith("cobblefurnies:")) continue
+
+                    val recipe = entry.value()
+                    val output = recipe.getResult(world.registryManager)
+                    if (output.isEmpty) continue
+
+                    val outputId = Registries.ITEM.getId(output.item).toString()
+
+                    // Get ingredients if available
+                    val ingredients = recipe.ingredients
+                    val materials = mutableMapOf<Item, Int>()
+                    for (ing in ingredients) {
+                        if (ing.isEmpty) continue
+                        val stacks = ing.matchingStacks
+                        if (stacks.isEmpty()) continue
+                        val item = stacks[0].item
+                        materials[item] = (materials[item] ?: 0) + 1
+                    }
+
+                    if (materials.isEmpty()) continue
+
+                    val inputs = materials.map { (item, c) ->
+                        Registries.ITEM.getId(item).toString() to c
+                    }
+
+                    result.add(SimplifiedRecipe(
+                        recipeId = recipeId,
+                        outputItemId = outputId,
+                        outputCount = output.count,
+                        outputDisplayName = output.name.string,
+                        inputs = inputs,
+                        category = "Mod Furniture"
+                    ))
+                    count++
+                } catch (_: Exception) {}
+            }
+        } catch (_: Exception) {}
+
+        Cobblebase.log("[RecipeHelper] Loaded $count CobbleFurnies recipes")
     }
 
     /**

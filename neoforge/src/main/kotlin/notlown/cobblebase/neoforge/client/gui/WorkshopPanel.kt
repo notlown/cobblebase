@@ -51,7 +51,7 @@ class WorkshopPanel(
     private val categories = mutableListOf("All")
 
     // Supplier row click targets
-    private data class SupplierRow(val y: Int, val pokemonId: UUID, val skillId: String)
+    private data class SupplierRow(val x: Int, val y: Int, val w: Int, val h: Int, val pokemonId: UUID, val skillId: String)
     private var supplierRows = listOf<SupplierRow>()
 
     // Scrollbar drag state
@@ -394,7 +394,7 @@ class WorkshopPanel(
                 context.matrices.scale(0.6f, 0.6f, 1f)
                 context.drawTextWithShadow(textRenderer, "Remove", 0, 0, 0xFFFFFF)
                 context.matrices.pop()
-                rows.add(SupplierRow(y, mon.pokemonId, "REMOVE"))
+                rows.add(SupplierRow(rmX, y + 4, 36, 14, mon.pokemonId, "REMOVE"))
             } else {
                 // Item buttons in a row (like skill buttons in Skills tab)
                 var bx = btnStartX
@@ -418,7 +418,7 @@ class WorkshopPanel(
                     context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, if (btnHover) 0xFFFFFF else 0xCCCCCC)
                     context.matrices.pop()
 
-                    rows.add(SupplierRow(y + 4, mon.pokemonId, supSkillId))
+                    rows.add(SupplierRow(bx, y + 4, btnW, 14, mon.pokemonId, supSkillId))
                     bx += btnW + 2
                     if (bx > panelX + panelW - PADDING - 10) break
                 }
@@ -735,14 +735,11 @@ class WorkshopPanel(
         // Supplier assign/remove clicks (overview tab)
         if (activeSubTab == SubTab.OVERVIEW) {
             for (row in supplierRows) {
-                val btnX = panelX + panelW - PADDING - 38
-                if (mouseY >= row.y && mouseY < row.y + 16 && mouseX >= btnX && mouseX < btnX + 36) {
+                if (mouseX >= row.x && mouseX < row.x + row.w && mouseY >= row.y && mouseY < row.y + row.h) {
                     if (row.skillId == "REMOVE") {
-                        // Remove supplier — set to idle (empty assignment)
                         PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, ""))
                         AssignmentCache.setAssignment(row.pokemonId, null)
                     } else {
-                        // Assign as supplier
                         val supplyAssignment = "craftsman_supply:${row.skillId}"
                         PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, supplyAssignment))
                         AssignmentCache.setAssignment(row.pokemonId, supplyAssignment)

@@ -36,8 +36,9 @@ class WorkshopPanel(
     private val SCALE = 0.75f
     private val ICON_SCALE = 16f / 16f  // full size item icons
 
-    private enum class SubTab { OVERVIEW, RECIPES }
+    private enum class SubTab { OVERVIEW, RECIPES, PREVIEW }
     private var activeSubTab = SubTab.OVERVIEW
+    private var previewRecipe: RecipeListSyncS2CPacket.RecipeDTO? = null
 
     private var searchField: TextFieldWidget? = null
     private var searchText = ""
@@ -98,6 +99,9 @@ class WorkshopPanel(
         val tabH = 14
         renderSubTab(context, mouseX, mouseY, "Overview", SubTab.OVERVIEW, panelX + PADDING, tabY, 52, tabH)
         renderSubTab(context, mouseX, mouseY, "Recipes", SubTab.RECIPES, panelX + PADDING + 56, tabY, 46, tabH)
+        if (activeSubTab == SubTab.PREVIEW) {
+            renderSubTab(context, mouseX, mouseY, "Preview", SubTab.PREVIEW, panelX + PADDING + 106, tabY, 46, tabH)
+        }
 
         searchField?.visible = activeSubTab == SubTab.RECIPES
         val contentY = tabY + tabH + 4
@@ -105,6 +109,7 @@ class WorkshopPanel(
         when (activeSubTab) {
             SubTab.OVERVIEW -> renderOverview(context, mouseX, mouseY, contentY)
             SubTab.RECIPES -> renderRecipeBrowser(context, mouseX, mouseY, contentY)
+            SubTab.PREVIEW -> renderPreview(context, mouseX, mouseY, contentY)
         }
     }
 
@@ -152,11 +157,11 @@ class WorkshopPanel(
         var y = startY
 
         // --- Project Header Card ---
-        context.fill(panelX + 2, y, panelX + panelW - 2, y + 24, 0x33FF5722)
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 26, 0x33FF5722)
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF5722.toInt())
 
-        // Craftsman sprite + name (full 16px sprite)
-        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, pokemonData.species.path, panelX + PADDING, y + 3, 0f)
+        // Craftsman sprite (1.5x scale = 24px)
+        renderScaledSprite(context, pokemonData.species.path, panelX + PADDING, y + 1, 1.5f)
         context.matrices.push()
         context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 4).toFloat(), 0f)
         context.matrices.scale(SCALE, SCALE, 1f)
@@ -278,7 +283,7 @@ class WorkshopPanel(
 
         y += 12
 
-        // --- Suppliers Section ---
+        // --- Suppliers Section (per Mon, not per skill) ---
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF5722.toInt())
         y += 4
         context.matrices.push()
@@ -288,125 +293,254 @@ class WorkshopPanel(
         context.matrices.pop()
         y += 12
 
-        val neededJobs = notlown.cobblebase.core.SupplierHelper.getNeededSuppliers(project.requiredItems)
         val rows = mutableListOf<SupplierRow>()
         val nonCraftsmen = pokemonList.filter { AssignmentCache.getAssignment(it.pokemonId) != "cobblebase:craftsman" }
+        val shownMons = mutableSetOf<UUID>() // prevent duplicates
 
-        for (suggestion in neededJobs) {
-            val matchingMons = nonCraftsmen.filter { p ->
-                val speciesName = SpeciesSkillRegistry.resolveFormName(p.species.path, p.aspects)
-                val skills = SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
-                skills.any { it.skillId == suggestion.skillId }
-            }
+        for (mon in nonCraftsmen) {
+            if (mon.pokemonId in shownMons) continue
+            val speciesName = SpeciesSkillRegistry.resolveFormName(mon.species.path, mon.aspects)
+            val monSkills = SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
 
-            if (matchingMons.isEmpty()) {
-                // No matching mon
-                context.fill(panelX + PADDING, y, panelX + panelW - PADDING, y + 16, 0x22FF5555)
-                context.matrices.push()
-                context.matrices.translate((panelX + PADDING + 4).toFloat(), (y + 4).toFloat(), 0f)
-                context.matrices.scale(0.65f, 0.65f, 1f)
-                context.drawTextWithShadow(textRenderer, "\u00A7c${suggestion.skillName}\u00A78 — no Pokemon available", 0, 0, 0x888888)
-                context.matrices.pop()
-                y += 18
-                continue
-            }
-
-            for (mon in matchingMons) {
-                val currentAssignment = AssignmentCache.getAssignment(mon.pokemonId)
-                val isActive = currentAssignment == "craftsman_supply:${suggestion.skillId}" || currentAssignment == suggestion.skillId
-
-                // Row background
-                val rowBg = if (isActive) 0x224CAF50 else 0x22444444
-                context.fill(panelX + PADDING, y, panelX + panelW - PADDING, y + 16, rowBg)
-                if (isActive) context.fill(panelX + PADDING, y, panelX + PADDING + 2, y + 16, 0xFF4CAF50.toInt())
-
-                // Pokemon sprite
-                PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, mon.species.path, panelX + PADDING + 4, y + 1, 0f)
-
-                // Mon name
-                context.matrices.push()
-                context.matrices.translate((panelX + PADDING + 18).toFloat(), (y + 2).toFloat(), 0f)
-                context.matrices.scale(0.7f, 0.7f, 1f)
-                context.drawTextWithShadow(textRenderer, mon.displayName.string, 0, 0, if (isActive) 0xFFFFFF else 0xCCCCCC)
-                context.matrices.pop()
-
-                // Job type + cooldown estimate
-                val speciesName = SpeciesSkillRegistry.resolveFormName(mon.species.path, mon.aspects)
-                val monSkills = SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
-                val skillEntry = monSkills.find { it.skillId == suggestion.skillId }
-                val skillDef = if (skillEntry != null) notlown.cobblebase.core.SkillRegistry.get(skillEntry.skillId) else null
-                val cooldownText = if (isActive && skillDef != null && skillEntry != null) {
-                    val cd = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(skillDef.cooldownSeconds, skillEntry.proficiency) / 20
-                    " \u00A78| \u00A7e~${cd}s per item"
-                } else ""
-
-                // What item this supplier is searching for
-                val searchingFor = if (isActive) {
-                    val matchingMaterials = project.requiredItems.keys.filter { itemId ->
-                        val jobs = notlown.cobblebase.core.SupplierHelper.getSupplierJobs(itemId)
-                        jobs.any { it.skillId == suggestion.skillId }
+            // Find which items this Mon can supply for the current project
+            val canSupply = mutableListOf<Pair<String, String>>() // itemId -> skillId
+            for ((itemId, _) in project.requiredItems) {
+                val suppliers = notlown.cobblebase.core.SupplierHelper.getSupplierJobs(itemId)
+                for (s in suppliers) {
+                    if (monSkills.any { it.skillId == s.skillId } && canSupply.none { it.first == itemId }) {
+                        canSupply.add(itemId to s.skillId)
                     }
-                    if (matchingMaterials.isNotEmpty()) {
-                        val names = matchingMaterials.map { it.substringAfterLast(":").replace("_", " ").replaceFirstChar { c -> c.uppercase() } }
-                        " \u00A77\u2794 \u00A7f${names.joinToString(", ")}"
-                    } else ""
+                }
+            }
+            if (canSupply.isEmpty()) continue
+            shownMons.add(mon.pokemonId)
+
+            val currentAssignment = AssignmentCache.getAssignment(mon.pokemonId)
+            val isSupplier = currentAssignment?.startsWith("craftsman_supply:") == true
+            val activeSkillId = if (isSupplier) currentAssignment!!.removePrefix("craftsman_supply:") else null
+
+            // Row background
+            val rowBg = if (isSupplier) 0x224CAF50 else 0x22444444
+            context.fill(panelX + PADDING, y, panelX + panelW - PADDING, y + 20, rowBg)
+            if (isSupplier) context.fill(panelX + PADDING, y, panelX + PADDING + 2, y + 20, 0xFF4CAF50.toInt())
+
+            // Pokemon sprite (1.25x scale = 20px)
+            renderScaledSprite(context, mon.species.path, panelX + PADDING + 4, y + 1, 1.25f)
+
+            // Mon name
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 22).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.scale(0.7f, 0.7f, 1f)
+            context.drawTextWithShadow(textRenderer, mon.displayName.string, 0, 0, if (isSupplier) 0xFFFFFF else 0xCCCCCC)
+            context.matrices.pop()
+
+            if (isSupplier) {
+                // Show what it's producing + cooldown
+                val activeEntry = monSkills.find { it.skillId == activeSkillId }
+                val activeDef = if (activeEntry != null) notlown.cobblebase.core.SkillRegistry.get(activeEntry.skillId) else null
+                val producingItem = notlown.cobblebase.core.executors.SupplierExecutor.findNeededItemPublic(mon.pokemonId)
+                val itemLabel = producingItem?.substringAfterLast(":")?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "?"
+                val cdText = if (activeDef != null && activeEntry != null) {
+                    val cd = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(activeDef.cooldownSeconds, activeEntry.proficiency) / 20
+                    "~${cd}s"
                 } else ""
 
                 context.matrices.push()
-                context.matrices.translate((panelX + PADDING + 18).toFloat(), (y + 10).toFloat(), 0f)
+                context.matrices.translate((panelX + PADDING + 22).toFloat(), (y + 12).toFloat(), 0f)
                 context.matrices.scale(0.5f, 0.5f, 1f)
-                context.drawTextWithShadow(textRenderer, "\u00A78${suggestion.skillName}$searchingFor$cooldownText", 0, 0, 0x888888)
+                context.drawTextWithShadow(textRenderer, "\u00A7a\u2794 $itemLabel \u00A78| $cdText", 0, 0, 0x55FF55)
                 context.matrices.pop()
 
-                // Live cooldown progress bar for active suppliers
-                if (isActive && skillDef != null && skillEntry != null) {
-                    val cdTicks = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(skillDef.cooldownSeconds, skillEntry.proficiency)
-                    val cdMs = cdTicks * 50L // ticks to ms
-                    val cycleProgress = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
-                    val cdBarX = panelX + PADDING + 18
-                    val cdBarW = panelX + panelW - PADDING - 42 - cdBarX
-                    val cdBarY = y + 14
-                    context.fill(cdBarX, cdBarY, cdBarX + cdBarW, cdBarY + 2, 0xFF222222.toInt())
-                    val cdFillW = (cdBarW * cycleProgress).toInt()
-                    context.fill(cdBarX, cdBarY, cdBarX + cdFillW, cdBarY + 2, 0xFF4CAF50.toInt())
+                // Cooldown bar
+                if (activeDef != null && activeEntry != null) {
+                    val cdTicks = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(activeDef.cooldownSeconds, activeEntry.proficiency)
+                    val cdMs = cdTicks * 50L
+                    val progress2 = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
+                    val bx = panelX + PADDING + 22; val bw = panelX + panelW - PADDING - 44 - bx
+                    context.fill(bx, y + 17, bx + bw, y + 19, 0xFF222222.toInt())
+                    context.fill(bx, y + 17, bx + (bw * progress2).toInt(), y + 19, 0xFF4CAF50.toInt())
                 }
 
-                // Status / Assign or Remove button (right side)
+                // [Remove] button
                 val btnX = panelX + panelW - PADDING - 38
-                if (isActive) {
-                    val removeHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 16
-                    context.fill(btnX, y + 2, btnX + 36, y + 14, if (removeHover) 0xFFFF5555.toInt() else 0xFF5A3A3A.toInt())
-                    context.matrices.push()
-                    context.matrices.translate((btnX + 3).toFloat(), (y + 4).toFloat(), 0f)
-                    context.matrices.scale(0.6f, 0.6f, 1f)
-                    context.drawTextWithShadow(textRenderer, "Remove", 0, 0, 0xFFFFFF)
-                    context.matrices.pop()
-                    rows.add(SupplierRow(y, mon.pokemonId, "REMOVE"))
-                } else {
-                    val btnHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 16
-                    context.fill(btnX, y + 2, btnX + 36, y + 14, if (btnHover) 0xFF4CAF50.toInt() else 0xFF3A6A3A.toInt())
-                    context.matrices.push()
-                    context.matrices.translate((btnX + 6).toFloat(), (y + 4).toFloat(), 0f)
-                    context.matrices.scale(0.6f, 0.6f, 1f)
-                    context.drawTextWithShadow(textRenderer, "Assign", 0, 0, 0xFFFFFF)
-                    context.matrices.pop()
-                    rows.add(SupplierRow(y, mon.pokemonId, suggestion.skillId))
-                }
+                val removeHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 20
+                context.fill(btnX, y + 3, btnX + 36, y + 17, if (removeHover) 0xFFFF5555.toInt() else 0xFF5A3A3A.toInt())
+                context.matrices.push()
+                context.matrices.translate((btnX + 3).toFloat(), (y + 6).toFloat(), 0f)
+                context.matrices.scale(0.6f, 0.6f, 1f)
+                context.drawTextWithShadow(textRenderer, "Remove", 0, 0, 0xFFFFFF)
+                context.matrices.pop()
+                rows.add(SupplierRow(y, mon.pokemonId, "REMOVE"))
+            } else {
+                // Show assignable items as small buttons
+                context.matrices.push()
+                context.matrices.translate((panelX + PADDING + 22).toFloat(), (y + 12).toFloat(), 0f)
+                context.matrices.scale(0.5f, 0.5f, 1f)
+                val itemNames = canSupply.map { it.first.substringAfterLast(":").replace("_", " ").replaceFirstChar { c -> c.uppercase() } }
+                context.drawTextWithShadow(textRenderer, "\u00A78Can supply: ${itemNames.joinToString(", ")}", 0, 0, 0x888888)
+                context.matrices.pop()
 
-                y += if (isActive) 20 else 18
+                // [Assign] button — uses the first matching skill
+                val btnX = panelX + panelW - PADDING - 38
+                val assignHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 20
+                context.fill(btnX, y + 3, btnX + 36, y + 17, if (assignHover) 0xFF4CAF50.toInt() else 0xFF3A6A3A.toInt())
+                context.matrices.push()
+                context.matrices.translate((btnX + 6).toFloat(), (y + 6).toFloat(), 0f)
+                context.matrices.scale(0.6f, 0.6f, 1f)
+                context.drawTextWithShadow(textRenderer, "Assign", 0, 0, 0xFFFFFF)
+                context.matrices.pop()
+                rows.add(SupplierRow(y, mon.pokemonId, canSupply.first().second))
             }
+
+            y += 22
         }
 
         supplierRows = rows
 
-        // Hint
-        if (project.phase == "GATHERING" && totalGathered == 0 && neededJobs.isEmpty()) {
+        if (totalGathered == 0 && rows.isEmpty()) {
             context.matrices.push()
             context.matrices.translate((panelX + PADDING).toFloat(), (y + 4).toFloat(), 0f)
             context.matrices.scale(0.5f, 0.5f, 1f)
-            context.drawTextWithShadow(textRenderer, "Place materials in a nearby chest", 0, 0, 0xFF8888)
+            context.drawTextWithShadow(textRenderer, "No compatible Mons in pasture. Place materials in a nearby chest.", 0, 0, 0xFF8888)
             context.matrices.pop()
         }
+    }
+
+    // ========== PREVIEW TAB ==========
+
+    private var previewBtnY = 0
+
+    private fun renderPreview(context: DrawContext, mouseX: Int, mouseY: Int, startY: Int) {
+        val recipe = previewRecipe ?: run {
+            activeSubTab = SubTab.RECIPES
+            return
+        }
+        var y = startY
+
+        // Header: output icon + name (big)
+        val outputStack = makeStack(recipe.outputItemId)
+        if (!outputStack.isEmpty) {
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+            context.matrices.scale(1.5f, 1.5f, 1f)
+            context.drawItem(outputStack, 0, 0)
+            context.matrices.pop()
+        }
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING + 28).toFloat(), (y + 4).toFloat(), 0f)
+        context.matrices.scale(SCALE, SCALE, 1f)
+        val countSuffix = if (recipe.outputCount > 1) " x${recipe.outputCount}" else ""
+        context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l${recipe.outputDisplayName}$countSuffix", 0, 0, 0xFFFFFF)
+        context.matrices.pop()
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING + 28).toFloat(), (y + 14).toFloat(), 0f)
+        context.matrices.scale(0.6f, 0.6f, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A78${recipe.category}", 0, 0, 0x888888)
+        context.matrices.pop()
+        y += 28
+
+        // Materials needed
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())
+        y += 4
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+        context.matrices.scale(0.65f, 0.65f, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A78\u00A7lMATERIALS NEEDED", 0, 0, 0x888888)
+        context.matrices.pop()
+        y += 10
+
+        for ((inputId, count) in recipe.inputs) {
+            val stack = makeStack(inputId)
+            if (!stack.isEmpty) {
+                context.matrices.push()
+                context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+                context.matrices.scale(ICON_SCALE, ICON_SCALE, 1f)
+                context.drawItem(stack, 0, 0)
+                context.matrices.pop()
+            }
+            val itemName = inputId.substringAfterLast(":").replace("_", " ").split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 4).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
+            context.drawTextWithShadow(textRenderer, "${count}x $itemName", 0, 0, 0xFFFFFF)
+            // Skill suggestion
+            val suppliers = notlown.cobblebase.core.SupplierHelper.getSupplierJobs(inputId)
+            val skillNames = suppliers.filter { it.skillId != "manual" }.joinToString("/") { it.skillName }
+            if (skillNames.isNotEmpty()) {
+                val offset = textRenderer.getWidth("${count}x $itemName") + 6
+                context.drawTextWithShadow(textRenderer, "\u00A78($skillNames)", offset, 0, 0x666666)
+            }
+            context.matrices.pop()
+            y += 18
+        }
+
+        // Available suppliers in pasture
+        y += 4
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())
+        y += 4
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+        context.matrices.scale(0.65f, 0.65f, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A78\u00A7lAVAILABLE SUPPLIERS", 0, 0, 0x888888)
+        context.matrices.pop()
+        y += 10
+
+        val nonCraftsmen = pokemonList.filter { AssignmentCache.getAssignment(it.pokemonId) != "cobblebase:craftsman" }
+        var hasAny = false
+        for (mon in nonCraftsmen) {
+            val speciesName = SpeciesSkillRegistry.resolveFormName(mon.species.path, mon.aspects)
+            val monSkills = SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
+            val canSupply = recipe.inputs.any { (itemId, _) ->
+                val suppliers = notlown.cobblebase.core.SupplierHelper.getSupplierJobs(itemId)
+                suppliers.any { s -> monSkills.any { it.skillId == s.skillId } }
+            }
+            if (!canSupply) continue
+            hasAny = true
+            renderScaledSprite(context, mon.species.path, panelX + PADDING + 4, y, 1.0f)
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 22).toFloat(), (y + 4).toFloat(), 0f)
+            context.matrices.scale(0.65f, 0.65f, 1f)
+            context.drawTextWithShadow(textRenderer, mon.displayName.string, 0, 0, 0xCCCCCC)
+            context.matrices.pop()
+            y += 18
+        }
+        if (!hasAny) {
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+            context.matrices.scale(0.55f, 0.55f, 1f)
+            context.drawTextWithShadow(textRenderer, "No compatible Pokemon in pasture — you can still place materials manually", 0, 0, 0xFF8888)
+            context.matrices.pop()
+            y += 10
+        }
+
+        // [Start Project] button
+        y += 8
+        previewBtnY = y
+        val craftsmen = getCraftsmanPokemon()
+        if (craftsmen.isNotEmpty()) {
+            val btnW = 100
+            val btnX = panelX + (panelW - btnW) / 2
+            val btnHover = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= y && mouseY < y + 16
+            context.fill(btnX, y, btnX + btnW, y + 16, if (btnHover) 0xFF4CAF50.toInt() else 0xFF3A6A3A.toInt())
+            context.matrices.push()
+            context.matrices.translate((btnX + 10).toFloat(), (y + 4).toFloat(), 0f)
+            context.matrices.scale(0.7f, 0.7f, 1f)
+            context.drawTextWithShadow(textRenderer, "Start Project", 0, 0, 0xFFFFFF)
+            context.matrices.pop()
+        } else {
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+            context.matrices.scale(0.55f, 0.55f, 1f)
+            context.drawTextWithShadow(textRenderer, "Assign a Craftsman first to start this project", 0, 0, 0xFF8888)
+            context.matrices.pop()
+        }
+
+        // [Back] button
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING).toFloat(), (panelY + panelH - 14).toFloat(), 0f)
+        context.matrices.scale(0.6f, 0.6f, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A78< Back to Recipes", 0, 0, 0x888888)
+        context.matrices.pop()
     }
 
     // ========== RECIPES TAB ==========
@@ -534,7 +668,35 @@ class WorkshopPanel(
                 activeSubTab = SubTab.OVERVIEW; return true
             }
             if (mouseX >= panelX + PADDING + 56 && mouseX < panelX + PADDING + 102) {
-                activeSubTab = SubTab.RECIPES; scrollOffset = 0; return true
+                activeSubTab = SubTab.RECIPES; scrollOffset = 0; previewRecipe = null; return true
+            }
+            if (activeSubTab == SubTab.PREVIEW && mouseX >= panelX + PADDING + 106 && mouseX < panelX + PADDING + 152) {
+                return true // already on preview
+            }
+        }
+
+        // Preview tab clicks
+        if (activeSubTab == SubTab.PREVIEW && previewRecipe != null) {
+            // [Back] link
+            if (mouseY >= panelY + panelH - 14 && mouseY < panelY + panelH && mouseX >= panelX + PADDING && mouseX < panelX + 100) {
+                activeSubTab = SubTab.RECIPES
+                previewRecipe = null
+                return true
+            }
+            // [Start Project] button
+            val craftsmen = getCraftsmanPokemon()
+            if (craftsmen.isNotEmpty()) {
+                val btnW = 100
+                val btnX = panelX + (panelW - btnW) / 2
+                if (mouseX >= btnX && mouseX < btnX + btnW && mouseY >= previewBtnY && mouseY < previewBtnY + 16) {
+                    val target = craftsmen.firstOrNull { !WorkshopCache.projects.containsKey(it.pokemonId) } ?: craftsmen.first()
+                    resetStaleSuppliers(previewRecipe!!.recipeId)
+                    ClientPlayNetworking.send(WorkshopSelectC2SPacket(target.pokemonId, previewRecipe!!.recipeId))
+                    activeSubTab = SubTab.OVERVIEW
+                    previewRecipe = null
+                    ClientPlayNetworking.send(WorkshopRequestC2SPacket())
+                    return true
+                }
             }
         }
 
@@ -594,13 +756,8 @@ class WorkshopPanel(
                 if (idx >= filtered.size) break
                 val rowY = listY + i * ROW_HEIGHT
                 if (mouseY >= rowY && mouseY < rowY + ROW_HEIGHT && mouseX >= panelX && mouseX <= panelX + panelW) {
-                    val recipe = filtered[idx]
-                    val target = craftsmen.firstOrNull { !WorkshopCache.projects.containsKey(it.pokemonId) } ?: craftsmen.first()
-                    // Reset old suppliers that don't match the new recipe
-                    resetStaleSuppliers(recipe.recipeId)
-                    ClientPlayNetworking.send(WorkshopSelectC2SPacket(target.pokemonId, recipe.recipeId))
-                    activeSubTab = SubTab.OVERVIEW
-                    ClientPlayNetworking.send(WorkshopRequestC2SPacket())
+                    previewRecipe = filtered[idx]
+                    activeSubTab = SubTab.PREVIEW
                     return true
                 }
             }
@@ -671,6 +828,15 @@ class WorkshopPanel(
 
     private fun getCraftsmanPokemon(): List<PasturePokemonDataDTO> {
         return pokemonList.filter { AssignmentCache.getAssignment(it.pokemonId) == "cobblebase:craftsman" }
+    }
+
+    /** Render a Pokemon sprite at a custom scale (default 16px, scale 1.5 = 24px) */
+    private fun renderScaledSprite(context: DrawContext, species: String, x: Int, y: Int, scale: Float) {
+        context.matrices.push()
+        context.matrices.translate(x.toFloat(), y.toFloat(), 0f)
+        context.matrices.scale(scale, scale, 1f)
+        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, species, 0, 0, 0f)
+        context.matrices.pop()
     }
 
     private fun makeStack(itemId: String): ItemStack {

@@ -138,10 +138,6 @@ object InventoryHelper {
      * Works with vanilla and most modded containers (Sophisticated Storage implements Inventory).
      */
     fun extractItem(world: World, containerPos: BlockPos, itemId: String, maxCount: Int): ItemStack {
-        val blockEntity = world.getBlockEntity(containerPos) ?: return ItemStack.EMPTY
-        // Most modded containers implement vanilla Inventory interface
-        val inventory = blockEntity as? Inventory ?: return ItemStack.EMPTY
-
         val targetId = net.minecraft.util.Identifier.of(
             if (itemId.contains(":")) itemId.substringBefore(":") else "minecraft",
             if (itemId.contains(":")) itemId.substringAfter(":") else itemId
@@ -149,6 +145,15 @@ object InventoryHelper {
         val targetItem = net.minecraft.registry.Registries.ITEM.get(targetId)
         if (targetItem == net.minecraft.item.Items.AIR) return ItemStack.EMPTY
 
+        // Use platform helper (Fabric Transfer API / NeoForge Capabilities) for modded containers
+        val helper = ContainerHelperRegistry.instance
+        if (helper != null) {
+            return helper.extractItem(world, containerPos, ItemStack(targetItem), maxCount)
+        }
+
+        // Fallback: vanilla Inventory
+        val blockEntity = world.getBlockEntity(containerPos) ?: return ItemStack.EMPTY
+        val inventory = blockEntity as? Inventory ?: return ItemStack.EMPTY
         var remaining = maxCount
         for (i in 0 until inventory.size()) {
             val slot = inventory.getStack(i)

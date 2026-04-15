@@ -74,6 +74,9 @@ object SupplierExecutor {
         Cobblebase.log("[Supplier] ${pokemonEntity.pokemon.species.name} produced 1x $neededItem for Craftsman")
     }
 
+    /** Public accessor for the GUI to show what a supplier is producing. */
+    fun findNeededItemPublic(supplierId: UUID): String? = findNeededItem(supplierId)
+
     /**
      * Find which item the Craftsman currently needs that this supplier's skill can provide.
      */

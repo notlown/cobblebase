@@ -23,6 +23,25 @@ interface ContainerHelper {
 
     /** Returns true if the container at [pos] already holds an item matching [itemToMatch] with room for more. */
     fun hasItem(world: World, pos: BlockPos, itemToMatch: ItemStack): Boolean
+
+    /** Extracts up to [maxCount] of [itemToExtract] from the container. Returns what was actually extracted. */
+    fun extractItem(world: World, pos: BlockPos, itemToExtract: ItemStack, maxCount: Int): ItemStack {
+        // Default implementation uses vanilla Inventory — platforms can override
+        val blockEntity = world.getBlockEntity(pos)
+        val inventory = blockEntity as? net.minecraft.inventory.Inventory ?: return ItemStack.EMPTY
+        var remaining = maxCount
+        for (i in 0 until inventory.size()) {
+            val slot = inventory.getStack(i)
+            if (slot.isEmpty || slot.item != itemToExtract.item) continue
+            val take = minOf(remaining, slot.count)
+            slot.decrement(take)
+            remaining -= take
+            if (remaining <= 0) break
+        }
+        blockEntity.markDirty()
+        val taken = maxCount - remaining
+        return if (taken > 0) ItemStack(itemToExtract.item, taken) else ItemStack.EMPTY
+    }
 }
 
 object ContainerHelperRegistry {

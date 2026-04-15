@@ -122,6 +122,39 @@ class FabricContainerHelper : ContainerHelper {
         return false
     }
 
+    override fun extractItem(world: World, pos: BlockPos, itemToExtract: ItemStack, maxCount: Int): ItemStack {
+        val blockEntity = world.getBlockEntity(pos)
+
+        // Vanilla path
+        if (blockEntity is Inventory) {
+            var remaining = maxCount
+            for (i in 0 until blockEntity.size()) {
+                val slot = blockEntity.getStack(i)
+                if (slot.isEmpty || slot.item != itemToExtract.item) continue
+                val take = minOf(remaining, slot.count)
+                slot.decrement(take)
+                remaining -= take
+                if (remaining <= 0) break
+            }
+            (blockEntity as? net.minecraft.block.entity.BlockEntity)?.markDirty()
+            val taken = maxCount - remaining
+            return if (taken > 0) ItemStack(itemToExtract.item, taken) else ItemStack.EMPTY
+        }
+
+        // Fabric Transfer API path
+        val storage = ItemStorage.SIDED.find(world, pos, null) ?: return ItemStack.EMPTY
+        val variant = ItemVariant.of(itemToExtract)
+        Transaction.openOuter().use { transaction ->
+            val extracted = storage.extract(variant, maxCount.toLong(), transaction)
+            if (extracted > 0) {
+                transaction.commit()
+                blockEntity?.markDirty()
+                return ItemStack(itemToExtract.item, extracted.toInt())
+            }
+        }
+        return ItemStack.EMPTY
+    }
+
     /**
      * Inserts items into a vanilla Inventory. Mirrors the logic from InventoryHelper.insertStack
      * but strips origin tags first.

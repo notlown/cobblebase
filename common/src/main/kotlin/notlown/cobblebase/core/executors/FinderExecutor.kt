@@ -89,10 +89,7 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
             )
 
             if (drops.isNotEmpty()) {
-                // Filter drops for Craftsman suppliers — only keep items the Craftsman needs
-                val filteredDrops = notlown.cobblebase.core.CraftsmanSupplyFilter.filterDrops(pokemonId, drops)
-                heldItems[pokemonId] = filteredDrops
-                if (filteredDrops.isEmpty()) return // Nothing useful, try again next cycle
+                heldItems[pokemonId] = drops
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
                 Cobblebase.log("$logTag ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) found: ${drops.map { "${it.name.string}x${it.count}" }}")
 

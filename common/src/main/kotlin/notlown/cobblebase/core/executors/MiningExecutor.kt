@@ -153,9 +153,7 @@ object MiningExecutor : SkillExecutor {
             )
 
             if (drops.isNotEmpty()) {
-                val filteredDrops = notlown.cobblebase.core.CraftsmanSupplyFilter.filterDrops(pokemonId, drops)
-                if (filteredDrops.isEmpty()) { digTarget.remove(pokemonId); digStartTime.remove(pokemonId); return false }
-                heldItems[pokemonId] = filteredDrops
+                heldItems[pokemonId] = drops
                 SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
 
                 // Log to activity log

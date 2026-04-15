@@ -20,22 +20,11 @@ object CraftsmanSupplyFilter {
         val assignment = BaseManager.getAssignment(pokemonId) ?: return items
         if (!assignment.startsWith(BaseManager.SUPPLIER_PREFIX)) return items
 
-        // Find which Craftsman this supplier is helping
-        // Look for any active Craftsman project that needs materials
-        val neededItems = getNeededItemIds()
-        if (neededItems.isEmpty()) return items // No active projects, keep everything
-
-        val filtered = items.filter { stack ->
-            if (stack.isEmpty) return@filter false
-            val itemId = Registries.ITEM.getId(stack.item).toString()
-            neededItems.contains(itemId)
-        }
-        // Log when items are filtered out so we can debug mismatches
-        if (filtered.isEmpty() && items.isNotEmpty()) {
-            val droppedIds = items.map { Registries.ITEM.getId(it.item).toString() }
-            Cobblebase.log("[SupplyFilter] Discarded ${items.size} items (${droppedIds}) — needed: $neededItems")
-        }
-        return filtered
+        // Supplier Mons drop ALL items normally — the Craftsman picks up
+        // only what it needs from chests. No filtering needed.
+        // Previous approach of filtering drops caused items to be silently
+        // discarded when item IDs didn't match recipe requirements exactly.
+        return items
     }
 
     /**

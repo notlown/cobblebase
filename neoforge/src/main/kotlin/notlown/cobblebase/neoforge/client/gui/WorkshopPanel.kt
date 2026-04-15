@@ -192,11 +192,17 @@ class WorkshopPanel(
         context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
-        // Craftsman sprite (RIGHT side, 3x scale = 48px)
-        renderScaledSprite(context, pokemonData.species.path, panelX + panelW - PADDING - 48, y + 1, 3.0f)
-        // Mon name under sprite
+        // Craftsman sprite (RIGHT side, 3x scale = 48px, no type box)
+        renderScaledSprite(context, pokemonData.species.path, panelX + panelW - PADDING - 50, y - 2, 3.0f)
+        // "Craftsman" label + Mon name left of sprite
+        val spriteLeft = panelX + panelW - PADDING - 56
         context.matrices.push()
-        context.matrices.translate((panelX + panelW - PADDING - 48).toFloat(), (y + 26).toFloat(), 0f)
+        context.matrices.translate(spriteLeft.toFloat(), (y + 24).toFloat(), 0f)
+        context.matrices.scale(0.5f, 0.5f, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A76Craftsman", 0, 0, 0xFFAA00)
+        context.matrices.pop()
+        context.matrices.push()
+        context.matrices.translate(spriteLeft.toFloat(), (y + 30).toFloat(), 0f)
         context.matrices.scale(0.5f, 0.5f, 1f)
         context.drawTextWithShadow(textRenderer, pokemonData.displayName.string, 0, 0, 0xCCCCCC)
         context.matrices.pop()
@@ -830,12 +836,13 @@ class WorkshopPanel(
         return pokemonList.filter { AssignmentCache.getAssignment(it.pokemonId) == "cobblebase:craftsman" }
     }
 
-    /** Render a Pokemon sprite at a custom scale (default 16px, scale 1.5 = 24px) */
+    /** Render a Pokemon sprite at a custom scale without type-color background */
     private fun renderScaledSprite(context: DrawContext, species: String, x: Int, y: Int, scale: Float) {
         context.matrices.push()
         context.matrices.translate(x.toFloat(), y.toFloat(), 0f)
         context.matrices.scale(scale, scale, 1f)
-        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, species, 0, 0, 0f)
+        // Render just the portrait without the colored box
+        PokemonSpriteHelper.renderPortraitOnly(context, textRenderer, species, 0, 0, 0f)
         context.matrices.pop()
     }
 

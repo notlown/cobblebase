@@ -282,6 +282,45 @@ object PokemonSpriteHelper {
         }
     }
 
+    /**
+     * Renders just the 3D Pokemon portrait without the type-colored background box.
+     * Used in Workshop tab where the background box doesn't fit the design.
+     */
+    fun renderPortraitOnly(
+        context: DrawContext,
+        textRenderer: TextRenderer,
+        pokemonName: String,
+        x: Int,
+        y: Int,
+        delta: Float = 0f
+    ) {
+        val speciesId = resolveSpeciesFromName(pokemonName) ?: return
+        try {
+            val cacheKey = "${speciesId}_"
+            val state = getOrCreateState(cacheKey, emptySet())
+            context.matrices.push()
+            context.matrices.translate(
+                (x + ICON_SIZE / 2.0),
+                (y.toDouble() + 1.0),
+                0.0
+            )
+            context.matrices.scale(1.5F, 1.5F, 1F)
+            drawProfilePokemon(
+                species = speciesId,
+                matrixStack = context.matrices,
+                rotation = org.joml.Quaternionf().fromEulerXYZDegrees(org.joml.Vector3f(13F, 35F, 0F)),
+                state = state,
+                partialTicks = delta,
+                scale = 4.5F
+            )
+            context.matrices.pop()
+        } catch (_: Exception) {
+            // Fallback: just draw initials without background
+            val initials = getInitials(pokemonName)
+            context.drawTextWithShadow(textRenderer, initials, x + 2, y + 4, 0xFFFFFF)
+        }
+    }
+
     fun renderSmallIconByName(
         context: DrawContext,
         textRenderer: TextRenderer,

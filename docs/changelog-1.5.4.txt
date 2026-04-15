@@ -1,0 +1,36 @@
+## Cobblebase v1.5.4
+
+### New Features
+
+#### Producer Job — Admin GUI Configuration
+- **New Producer section in Species Tab** — Configure what any Pokemon produces directly in the admin GUI. Appears for every species at the top of the skill editor.
+- **Item ID with autocomplete** — Type an item ID and get suggestions from Minecraft's item registry. Dropdown auto-closes when a valid item is entered.
+- **Item icon preview** — Shows a live preview of the configured item next to the input field.
+- **Per-species cooldown** — Set a custom cooldown per species (30s–3600s in 30s steps). No longer tied to the global Producer cooldown in the Jobs tab.
+- **Enable/Disable toggle** — Pause production without losing the item configuration. Toggle back on anytime.
+- **Auto-assign Producer skill** — When you configure an item and save, the Producer skill is automatically assigned if it wasn't already.
+- **Buffs tab shows produced item** — Instead of "Producing species-specific items", the Buffs tab now shows the actual item name and count (e.g. "Producing White Wool x1 · every 300s").
+
+#### Diving Job
+- **25 non-diving Pokemon removed** — Water/Flying types (Pelipper, Wingull, etc.), surface dwellers (Surskit, Araquanid), and land-based water types (Suicune, Slowpoke, etc.) no longer have Diving. 168 species remain.
+- **Full loot table documentation** — New diving detail page on the wiki with all 18 items, drop chances, and proficiency scaling.
+
+### Changes
+
+#### Friend Recruiter
+- **Prof 5 no longer summons legendaries** — Prof 5 now works like all other proficiency levels: recruits same-type Pokemon with better rarity odds. Higher proficiency = more Rare/Ultra Rare spawns, fewer Common.
+- **Cooldown scales normally** — Prof 5 cooldown now scales with proficiency like every other level, instead of the old fixed 30-minute cooldown.
+
+### Bug Fixes
+
+- **Producer instant drop exploit** — Producer now waits the full cooldown before the first drop. Switching jobs to skip cooldown no longer works.
+- **GenericLootExecutor search radius** — Diving, Archeology, and Pickup jobs now use the admin-configured search radius instead of a hardcoded value of 15.
+- **Producer item namespace** — Items like "lead" in the hardcoded map now display correctly as "minecraft:lead" in the admin GUI instead of showing "Unknown item ID".
+- **Producer cooldown mismatch** — Buffs tab now uses the per-species cooldown instead of always using the global default, fixing the mismatch between Species tab and Buffs tab values.
+- **Deploy target** — Build system now deploys to the correct modpack folder (Cobbleverse 1.7.31).
+
+### Wiki / Species Database
+- Diving skill added to 168 species in the online Species Database.
+- FAQ updated: Diving reintroduced in v1.8 (no longer marked as "removed").
+- Full diving loot table page added to wiki with all items, weights, and proficiency scaling.
+- Diving added to sidebar navigation on all job detail pages.

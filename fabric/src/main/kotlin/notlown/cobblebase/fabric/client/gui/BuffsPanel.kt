@@ -96,7 +96,7 @@ class BuffsPanel(
                         skillName = skillDef.name,
                         category = skillDef.category,
                         proficiency = entry.proficiency,
-                        description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds),
+                        description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds, speciesName),
                         isPassiveBuff = true
                     ))
                 }
@@ -116,7 +116,7 @@ class BuffsPanel(
                             skillName = skillDef.name,
                             category = skillDef.category,
                             proficiency = entry.proficiency,
-                            description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds)
+                            description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds, speciesName)
                         ))
                     }
                 }
@@ -126,7 +126,7 @@ class BuffsPanel(
         return result
     }
 
-    private fun generateDescription(skillName: String, executor: String, proficiency: Int, cooldownSeconds: Long): String {
+    private fun generateDescription(skillName: String, executor: String, proficiency: Int, cooldownSeconds: Long, speciesName: String = ""): String {
         val prof = proficiency.coerceIn(1, 5)
         val effectiveCooldown = if (CobblebaseConfig.devMode) 5L
             else cooldownSeconds * (6 - prof) / 3
@@ -171,7 +171,11 @@ class BuffsPanel(
             "recruiter" -> "Attracting wild Pokemon$cooldownLabel"
             "cauldron_fill" -> "Filling cauldrons$cooldownLabel"
             "furnace_fuel", "brew_fuel" -> "Fueling furnaces/brewers$cooldownLabel"
-            "producer" -> "Producing species-specific items$cooldownLabel"
+            "producer" -> {
+                val produce = notlown.cobblebase.core.executors.ProducerExecutor.getProduceEntry(speciesName)
+                if (produce != null) "Producing ${produce.displayName} x${produce.count}$cooldownLabel"
+                else "Producing items$cooldownLabel"
+            }
             // Passive buffs — no cooldown shown (always active)
             "speed_boost" -> "Speed II for nearby players"
             "strength_boost" -> "Strength for nearby players"

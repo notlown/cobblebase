@@ -108,17 +108,24 @@ object CraftsmanExecutor : SkillExecutor {
         }
 
         // Try to take the next needed item from any nearby chest
+        // Also check variant items (e.g. any plank type for a plank recipe)
         for ((itemId, _) in needed) {
-            val chestPos = InventoryHelper.findContainerWithItem(world, origin, skill.searchRadius, itemId)
-            if (chestPos != null) {
-                NavigationHelper.navigateTo(pokemonEntity, chestPos, getSpeedForProficiency(skillEntry.proficiency))
-                val extracted = InventoryHelper.extractItem(world, chestPos, itemId, 1)
-                if (!extracted.isEmpty) {
-                    WorkshopManager.addGatheredItem(pokemonId, itemId, extracted.count)
-                    lastGatherTick[pokemonId] = now
-                    SkillEffects.playWorking(world, pokemonEntity, "harvest")
-                    Cobblebase.log("[Craftsman] ${pokemonEntity.pokemon.species.name} gathered 1x $itemId (${(project.gatheredItems[itemId] ?: 0)}/${project.requiredItems[itemId] ?: 0})")
-                    return
+            val searchIds = mutableListOf(itemId)
+            searchIds.addAll(CraftsmanSupplyFilter.getRelatedItems(itemId))
+
+            for (searchId in searchIds) {
+                val chestPos = InventoryHelper.findContainerWithItem(world, origin, skill.searchRadius, searchId)
+                if (chestPos != null) {
+                    NavigationHelper.navigateTo(pokemonEntity, chestPos, getSpeedForProficiency(skillEntry.proficiency))
+                    val extracted = InventoryHelper.extractItem(world, chestPos, searchId, 1)
+                    if (!extracted.isEmpty) {
+                        // Count toward the original required item ID
+                        WorkshopManager.addGatheredItem(pokemonId, itemId, extracted.count)
+                        lastGatherTick[pokemonId] = now
+                        SkillEffects.playWorking(world, pokemonEntity, "harvest")
+                        Cobblebase.log("[Craftsman] ${pokemonEntity.pokemon.species.name} gathered 1x $searchId (counts as $itemId: ${(project.gatheredItems[itemId] ?: 0)}/${project.requiredItems[itemId] ?: 0})")
+                        return
+                    }
                 }
             }
         }

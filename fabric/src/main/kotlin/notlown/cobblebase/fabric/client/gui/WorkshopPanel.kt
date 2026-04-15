@@ -178,23 +178,28 @@ class WorkshopPanel(
         context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
-        // Output icon + name (right side of header card, clamped to panel bounds)
+        // Output icon + name (right side, scissored to panel)
         if (recipe != null) {
-            val buildLabel = "Building: ${recipe.outputDisplayName}"
-            val labelW = (textRenderer.getWidth(buildLabel) * 0.65f).toInt()
-            val outputX = (panelX + panelW - PADDING - labelW - 16).coerceAtLeast(panelX + panelW / 2)
             val outputStack = makeStack(recipe.outputItemId)
+            val nameStartX = panelX + panelW / 2
             if (!outputStack.isEmpty) {
                 context.matrices.push()
-                context.matrices.translate(outputX.toFloat(), (y + 3).toFloat(), 0f)
+                context.matrices.translate(nameStartX.toFloat(), (y + 4).toFloat(), 0f)
                 context.matrices.scale(ICON_SCALE, ICON_SCALE, 1f)
                 context.drawItem(outputStack, 0, 0)
                 context.matrices.pop()
             }
+            // Truncate name if too long
+            val maxNameW = ((panelX + panelW - PADDING - nameStartX - 16) / 0.6f).toInt()
+            var displayName = recipe.outputDisplayName
+            while (textRenderer.getWidth("Building: $displayName") > maxNameW && displayName.length > 10) {
+                displayName = displayName.dropLast(1)
+            }
+            if (displayName != recipe.outputDisplayName) displayName += ".."
             context.matrices.push()
-            context.matrices.translate((outputX + 14).toFloat(), (y + 5).toFloat(), 0f)
-            context.matrices.scale(0.65f, 0.65f, 1f)
-            context.drawTextWithShadow(textRenderer, "\u00A7fBuilding: \u00A7l${recipe.outputDisplayName}", 0, 0, 0xFFFFFF)
+            context.matrices.translate((nameStartX + 14).toFloat(), (y + 6).toFloat(), 0f)
+            context.matrices.scale(0.6f, 0.6f, 1f)
+            context.drawTextWithShadow(textRenderer, "\u00A77Building: \u00A7f\u00A7l$displayName", 0, 0, 0xFFFFFF)
             context.matrices.pop()
         }
 
@@ -335,10 +340,22 @@ class WorkshopPanel(
                     " \u00A78| \u00A7e~${cd}s per item"
                 } else ""
 
+                // What item this supplier is searching for
+                val searchingFor = if (isActive) {
+                    val matchingMaterials = project.requiredItems.keys.filter { itemId ->
+                        val jobs = notlown.cobblebase.core.SupplierHelper.getSupplierJobs(itemId)
+                        jobs.any { it.skillId == suggestion.skillId }
+                    }
+                    if (matchingMaterials.isNotEmpty()) {
+                        val names = matchingMaterials.map { it.substringAfterLast(":").replace("_", " ").replaceFirstChar { c -> c.uppercase() } }
+                        " \u00A77\u2794 \u00A7f${names.joinToString(", ")}"
+                    } else ""
+                } else ""
+
                 context.matrices.push()
                 context.matrices.translate((panelX + PADDING + 18).toFloat(), (y + 10).toFloat(), 0f)
                 context.matrices.scale(0.5f, 0.5f, 1f)
-                context.drawTextWithShadow(textRenderer, "\u00A78${suggestion.skillName} — ${suggestion.description}$cooldownText", 0, 0, 0x888888)
+                context.drawTextWithShadow(textRenderer, "\u00A78${suggestion.skillName}$searchingFor$cooldownText", 0, 0, 0x888888)
                 context.matrices.pop()
 
                 // Live cooldown progress bar for active suppliers

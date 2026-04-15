@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:mining",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:craftsman",
+      "proficiency": 3
     }
   ]
 }

@@ -245,12 +245,25 @@ object RecipeHelper {
         if (id.contains("_bed")) return "Furniture"
         if (id.contains("bookshelf") || id.contains("chiseled_bookshelf")) return "Furniture"
 
-        // Doors & gates (useful for building)
+        // Doors & gates
         if (id.contains("_door") && !id.contains("trapdoor")) return "Doors"
         if (id.contains("fence_gate")) return "Doors"
 
+        // Weapons
+        if (id.contains("sword") || id.contains("bow") && !id.contains("bowl") ||
+            id.contains("crossbow") || id.contains("arrow") || id.contains("trident")) return "Weapons"
+
+        // Armor
+        if (id.contains("helmet") || id.contains("chestplate") || id.contains("leggings") ||
+            id.contains("boots") || id.contains("shield")) return "Armor"
+
+        // Tools
+        if (id.contains("pickaxe") || id.contains("_axe") || id.contains("shovel") ||
+            id.contains("_hoe") || id.contains("shears") || id.contains("fishing_rod") ||
+            id.contains("compass") || id.contains("clock") || id.contains("spyglass")) return "Tools"
+
         // Exclude everything else: stairs, slabs, walls, fences, trapdoors, carpets,
-        // glass panes, iron bars, torches, simple blocks, tools, weapons, armor, food, redstone
+        // glass panes, iron bars, torches, simple blocks, food, redstone
         return null
     }
 }

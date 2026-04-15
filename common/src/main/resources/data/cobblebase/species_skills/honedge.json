@@ -28,6 +28,10 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:craftsman",
+      "proficiency": 3
     }
   ]
 }

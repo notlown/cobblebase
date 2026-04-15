@@ -24,6 +24,10 @@
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:craftsman",
+      "proficiency": 3
     }
   ]
 }

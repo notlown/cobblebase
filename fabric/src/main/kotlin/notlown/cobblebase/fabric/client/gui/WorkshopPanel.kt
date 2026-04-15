@@ -44,6 +44,7 @@ class WorkshopPanel(
     private var searchText = ""
     private var selectedCategory = "All"
     private var selectedSubCategory = "All"
+    private var selectedCraftsmanIdx = 0  // which craftsman is selected in sidebar
     private var scrollOffset = 0
     private var scrollAccumulator = 0.0
     private var dataRequested = false
@@ -95,16 +96,33 @@ class WorkshopPanel(
             categories.clear(); categories.add("All"); categories.addAll(cats)
         }
 
+        // --- Sidebar for multiple craftsmen ---
+        val craftsmen = getCraftsmanPokemon()
+        val hasSidebar = craftsmen.size >= 2
+        val sidebarW = if (hasSidebar) 50 else 0
+        val mainX = panelX + sidebarW
+        val mainW = panelW - sidebarW
+
+        if (hasSidebar) {
+            renderCraftsmanSidebar(context, mouseX, mouseY, craftsmen)
+        }
+
+        // Clamp selected index
+        if (selectedCraftsmanIdx >= craftsmen.size) selectedCraftsmanIdx = 0
+
         // --- Sub-tab bar ---
         val tabY = panelY + 2
         val tabH = 14
-        renderSubTab(context, mouseX, mouseY, "Overview", SubTab.OVERVIEW, panelX + PADDING, tabY, 52, tabH)
-        renderSubTab(context, mouseX, mouseY, "Recipes", SubTab.RECIPES, panelX + PADDING + 56, tabY, 46, tabH)
+        renderSubTab(context, mouseX, mouseY, "Overview", SubTab.OVERVIEW, mainX + PADDING, tabY, 52, tabH)
+        renderSubTab(context, mouseX, mouseY, "Recipes", SubTab.RECIPES, mainX + PADDING + 56, tabY, 46, tabH)
         if (activeSubTab == SubTab.PREVIEW) {
-            renderSubTab(context, mouseX, mouseY, "Preview", SubTab.PREVIEW, panelX + PADDING + 106, tabY, 46, tabH)
+            renderSubTab(context, mouseX, mouseY, "Preview", SubTab.PREVIEW, mainX + PADDING + 106, tabY, 46, tabH)
         }
 
         searchField?.visible = activeSubTab == SubTab.RECIPES
+        if (searchField != null && hasSidebar) {
+            searchField!!.x = mainX + PADDING
+        }
         val contentY = tabY + tabH + 4
 
         when (activeSubTab) {
@@ -463,6 +481,50 @@ class WorkshopPanel(
         }
     }
 
+    // ========== CRAFTSMAN SIDEBAR ==========
+
+    private fun renderCraftsmanSidebar(context: DrawContext, mouseX: Int, mouseY: Int, craftsmen: List<PasturePokemonDataDTO>) {
+        val sideX = panelX
+        val sideW = 50
+        // Sidebar background
+        context.fill(sideX, panelY, sideX + sideW, panelY + panelH, 0xCC161622.toInt())
+        context.fill(sideX + sideW - 1, panelY, sideX + sideW, panelY + panelH, 0xFF3A3A5C.toInt())
+
+        var y = panelY + 4
+        for ((idx, mon) in craftsmen.withIndex()) {
+            val isSelected = idx == selectedCraftsmanIdx
+            val isHovered = mouseX >= sideX && mouseX < sideX + sideW && mouseY >= y && mouseY < y + 40
+            val bg = when {
+                isSelected -> 0x44FF5722
+                isHovered -> 0x22FFFFFF
+                else -> 0x00000000
+            }
+            context.fill(sideX + 1, y, sideX + sideW - 1, y + 40, bg)
+            if (isSelected) context.fill(sideX + sideW - 2, y, sideX + sideW - 1, y + 40, 0xFFFF5722.toInt())
+
+            // Pokemon sprite (1.5x = 24px)
+            renderScaledSprite(context, mon.species.path, sideX + 13, y + 2, 1.5f)
+
+            // Specialization label
+            val speciesName = notlown.cobblebase.core.SpeciesSkillRegistry.resolveFormName(mon.species.path, mon.aspects)
+            val specLabel = notlown.cobblebase.core.CraftsmanSpecialization.getDisplayName(speciesName)
+            context.matrices.push()
+            context.matrices.translate((sideX + 4).toFloat(), (y + 28).toFloat(), 0f)
+            context.matrices.scale(0.45f, 0.45f, 1f)
+            context.drawTextWithShadow(textRenderer, specLabel, 0, 0, if (isSelected) 0xFFAA00 else 0x999999)
+            context.matrices.pop()
+
+            // Mon name
+            context.matrices.push()
+            context.matrices.translate((sideX + 4).toFloat(), (y + 34).toFloat(), 0f)
+            context.matrices.scale(0.4f, 0.4f, 1f)
+            context.drawTextWithShadow(textRenderer, mon.displayName.string, 0, 0, 0x888888)
+            context.matrices.pop()
+
+            y += 42
+        }
+    }
+
     // ========== PREVIEW TAB ==========
 
     private var previewBtnY = 0
@@ -725,6 +787,23 @@ class WorkshopPanel(
     // ========== CLICK HANDLING ==========
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Sidebar clicks
+        val craftsmen2 = getCraftsmanPokemon()
+        if (craftsmen2.size >= 2) {
+            val sideX = panelX
+            var sy = panelY + 4
+            for ((idx, _) in craftsmen2.withIndex()) {
+                if (mouseX >= sideX && mouseX < sideX + 50 && mouseY >= sy && mouseY < sy + 40) {
+                    selectedCraftsmanIdx = idx
+                    selectedCategory = "All"
+                    selectedSubCategory = "All"
+                    scrollOffset = 0
+                    return true
+                }
+                sy += 42
+            }
+        }
+
         // Sub-tab clicks
         val tabY = panelY + 2
         if (mouseY >= tabY && mouseY < tabY + 14) {
@@ -900,7 +979,15 @@ class WorkshopPanel(
     // ========== HELPERS ==========
 
     private fun getFilteredRecipes(): List<RecipeListSyncS2CPacket.RecipeDTO> {
+        // Get the selected craftsman's specialization
+        val craftsmen = getCraftsmanPokemon()
+        val selectedMon = if (craftsmen.isNotEmpty() && selectedCraftsmanIdx < craftsmen.size) craftsmen[selectedCraftsmanIdx] else null
+        val speciesName = if (selectedMon != null) notlown.cobblebase.core.SpeciesSkillRegistry.resolveFormName(selectedMon.species.path, selectedMon.aspects) else ""
+
         return WorkshopCache.recipes.filter { recipe ->
+            // Filter by craftsman specialization
+            val specAllowed = speciesName.isEmpty() || notlown.cobblebase.core.CraftsmanSpecialization.isRecipeAllowed(speciesName, recipe.category)
+            specAllowed &&
             (selectedCategory == "All" || recipe.category == selectedCategory) &&
             (selectedSubCategory == "All" || recipe.subCategory == selectedSubCategory) &&
             (searchText.isBlank() || recipe.outputDisplayName.lowercase().contains(searchText.lowercase()))

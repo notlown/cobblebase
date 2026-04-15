@@ -137,7 +137,7 @@ object CobblebaseFabricClient : ClientModInitializer {
             context.client().execute {
                 val states = packet.projects.mapValues { (_, dto) ->
                     notlown.cobblebase.core.WorkshopCache.ProjectState(
-                        dto.recipeId, dto.gatheredItems, dto.phase, dto.requiredItems
+                        dto.recipeId, dto.gatheredItems, dto.phase, dto.requiredItems, dto.craftCount
                     )
                 }
                 notlown.cobblebase.core.WorkshopCache.updateProjects(states)

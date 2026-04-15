@@ -17,7 +17,8 @@ object WorkshopCache {
         val recipeId: String,
         val gatheredItems: Map<String, Int>,
         val phase: String,
-        val requiredItems: Map<String, Int>
+        val requiredItems: Map<String, Int>,
+        val craftCount: Int = 0
     )
 
     var projects: Map<UUID, ProjectState> = emptyMap()

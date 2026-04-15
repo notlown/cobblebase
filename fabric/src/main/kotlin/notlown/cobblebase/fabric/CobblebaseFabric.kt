@@ -275,7 +275,9 @@ object CobblebaseFabric : ModInitializer {
                 ServerPlayNetworking.send(player, notlown.cobblebase.core.net.RecipeListSyncS2CPacket(recipeDTOs))
                 // Send workshop state
                 val projects = notlown.cobblebase.core.WorkshopManager.getAllProjects()
-                val projectDTOs = projects.mapValues { (_, proj) ->
+                val projectDTOs = projects.mapValues { entry ->
+                    val pokemonId = entry.key
+                    val proj = entry.value
                     val recipe = notlown.cobblebase.core.RecipeHelper.getRecipeById(world, proj.recipeId)
                     val required = if (recipe != null) {
                         notlown.cobblebase.core.RecipeHelper.getRequiredMaterials(recipe)
@@ -283,7 +285,8 @@ object CobblebaseFabric : ModInitializer {
                             .toMap()
                     } else emptyMap()
                     notlown.cobblebase.core.net.WorkshopSyncS2CPacket.ProjectDTO(
-                        proj.recipeId, proj.gatheredItems, proj.phase.name, required
+                        proj.recipeId, proj.gatheredItems, proj.phase.name, required,
+                        notlown.cobblebase.core.WorkshopManager.getCraftCount(pokemonId)
                     )
                 }
                 ServerPlayNetworking.send(player, notlown.cobblebase.core.net.WorkshopSyncS2CPacket(projectDTOs))

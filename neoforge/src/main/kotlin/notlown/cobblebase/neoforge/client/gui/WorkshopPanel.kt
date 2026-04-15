@@ -153,17 +153,19 @@ class WorkshopPanel(
         context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l${pokemonData.displayName.string}", 0, 0, 0xFFFFFF)
         context.matrices.pop()
 
-        // Phase
+        // Phase + craft count
         val phaseText = when (project.phase) {
             "GATHERING" -> "\u00A7eGathering materials..."
             "CRAFTING" -> "\u00A76Crafting..."
             "DEPOSITING" -> "\u00A7aDone! Depositing..."
             else -> "\u00A77Waiting..."
         }
+        val craftCount = project.craftCount
+        val countText = if (craftCount > 0) " \u00A78| \u00A7a${craftCount} crafted" else ""
         context.matrices.push()
         context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 11).toFloat(), 0f)
         context.matrices.scale(0.6f, 0.6f, 1f)
-        context.drawTextWithShadow(textRenderer, phaseText, 0, 0, 0xAAAAAA)
+        context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
         // Output icon + name (right side)
@@ -219,9 +221,18 @@ class WorkshopPanel(
             if (fillW > 0) context.fill(barX, y + 2, barX + fillW, y + 8, if (done) 0xFF4CAF50.toInt() else 0xFFFF9800.toInt())
 
             context.matrices.push()
-            context.matrices.translate((barX + barW + 4).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.translate((barX + barW + 4).toFloat(), (y + 1).toFloat(), 0f)
             context.matrices.scale(SCALE, SCALE, 1f)
             context.drawTextWithShadow(textRenderer, "$gathered / $needed", 0, 0, if (done) 0x55FF55 else 0xFFAA00)
+            // Skill suggestion for this material
+            if (!done) {
+                val suppliers = notlown.cobblebase.core.SupplierHelper.getSupplierJobs(itemId)
+                val skillNames = suppliers.filter { it.skillId != "manual" }.joinToString("/") { it.skillName }
+                if (skillNames.isNotEmpty()) {
+                    val countTextW = textRenderer.getWidth("$gathered / $needed") + 4
+                    context.drawTextWithShadow(textRenderer, "\u00A78($skillNames)", countTextW, 0, 0x666666)
+                }
+            }
             context.matrices.pop()
 
             y += 13
@@ -302,14 +313,19 @@ class WorkshopPanel(
                 context.drawTextWithShadow(textRenderer, "\u00A78${suggestion.skillName} — ${suggestion.description}", 0, 0, 0x888888)
                 context.matrices.pop()
 
-                // Status / Assign button (right side)
+                // Status / Assign or Remove button (right side)
                 val btnX = panelX + panelW - PADDING - 38
                 if (isActive) {
+                    // [Remove] button to free the supplier
+                    val removeHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 16
+                    context.fill(btnX, y + 2, btnX + 36, y + 14, if (removeHover) 0xFFFF5555.toInt() else 0xFF5A3A3A.toInt())
                     context.matrices.push()
-                    context.matrices.translate(btnX.toFloat(), (y + 4).toFloat(), 0f)
+                    context.matrices.translate((btnX + 3).toFloat(), (y + 4).toFloat(), 0f)
                     context.matrices.scale(0.6f, 0.6f, 1f)
-                    context.drawTextWithShadow(textRenderer, "\u00A7aActive", 0, 0, 0x55FF55)
+                    context.drawTextWithShadow(textRenderer, "Remove", 0, 0, 0xFFFFFF)
                     context.matrices.pop()
+                    // Use negative skillId to signal removal
+                    rows.add(SupplierRow(y, mon.pokemonId, "REMOVE"))
                 } else {
                     val btnHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 16
                     context.fill(btnX, y + 2, btnX + 36, y + 14, if (btnHover) 0xFF4CAF50.toInt() else 0xFF3A6A3A.toInt())
@@ -462,14 +478,21 @@ class WorkshopPanel(
             }
         }
 
-        // Supplier assign clicks (overview tab)
+        // Supplier assign/remove clicks (overview tab)
         if (activeSubTab == SubTab.OVERVIEW) {
             for (row in supplierRows) {
                 val btnX = panelX + panelW - PADDING - 38
                 if (mouseY >= row.y && mouseY < row.y + 16 && mouseX >= btnX && mouseX < btnX + 36) {
-                    val supplyAssignment = "craftsman_supply:${row.skillId}"
-                    PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, supplyAssignment))
-                    AssignmentCache.setAssignment(row.pokemonId, supplyAssignment)
+                    if (row.skillId == "REMOVE") {
+                        // Remove supplier — set to idle (empty assignment)
+                        PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, ""))
+                        AssignmentCache.setAssignment(row.pokemonId, null)
+                    } else {
+                        // Assign as supplier
+                        val supplyAssignment = "craftsman_supply:${row.skillId}"
+                        PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, supplyAssignment))
+                        AssignmentCache.setAssignment(row.pokemonId, supplyAssignment)
+                    }
                     PacketDistributor.sendToServer(WorkshopRequestC2SPacket())
                     return true
                 }

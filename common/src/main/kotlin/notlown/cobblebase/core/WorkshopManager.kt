@@ -26,6 +26,8 @@ object WorkshopManager {
 
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
     private val projects = mutableMapOf<UUID, WorkshopProject>()
+    /** Total items crafted per Pokemon (persisted for display) */
+    private val craftCounts = mutableMapOf<UUID, Int>()
     private var dirty = false
 
     fun getProject(pokemonId: UUID): WorkshopProject? = projects[pokemonId]
@@ -64,6 +66,14 @@ object WorkshopManager {
     }
 
     fun getAllProjects(): Map<UUID, WorkshopProject> = projects.toMap()
+
+    fun incrementCraftCount(pokemonId: UUID) {
+        craftCounts[pokemonId] = (craftCounts[pokemonId] ?: 0) + 1
+        dirty = true
+    }
+
+    fun getCraftCount(pokemonId: UUID): Int = craftCounts[pokemonId] ?: 0
+    fun getAllCraftCounts(): Map<UUID, Int> = craftCounts.toMap()
 
     private fun getSaveFile(world: ServerWorld): File {
         val saveDir = world.server.getSavePath(WorldSavePath.ROOT).toFile()

@@ -395,7 +395,9 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
                     notlown.cobblebase.core.net.RecipeListSyncS2CPacket(recipeDTOs))
                 val projects = notlown.cobblebase.core.WorkshopManager.getAllProjects()
-                val projectDTOs = projects.mapValues { (_, proj) ->
+                val projectDTOs = projects.mapValues { entry ->
+                    val pokemonId = entry.key
+                    val proj = entry.value
                     val recipe = notlown.cobblebase.core.RecipeHelper.getRecipeById(world, proj.recipeId)
                     val required = if (recipe != null) {
                         notlown.cobblebase.core.RecipeHelper.getRequiredMaterials(recipe)
@@ -403,7 +405,8 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                             .toMap()
                     } else emptyMap()
                     notlown.cobblebase.core.net.WorkshopSyncS2CPacket.ProjectDTO(
-                        proj.recipeId, proj.gatheredItems, proj.phase.name, required
+                        proj.recipeId, proj.gatheredItems, proj.phase.name, required,
+                        notlown.cobblebase.core.WorkshopManager.getCraftCount(pokemonId)
                     )
                 }
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
@@ -429,7 +432,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             context.enqueueWork {
                 val states = packet.projects.mapValues { (_, dto) ->
                     notlown.cobblebase.core.WorkshopCache.ProjectState(
-                        dto.recipeId, dto.gatheredItems, dto.phase, dto.requiredItems
+                        dto.recipeId, dto.gatheredItems, dto.phase, dto.requiredItems, dto.craftCount
                     )
                 }
                 notlown.cobblebase.core.WorkshopCache.updateProjects(states)

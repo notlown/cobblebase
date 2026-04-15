@@ -135,9 +135,11 @@ object InventoryHelper {
     /**
      * Extracts up to [maxCount] of the specified item from a container.
      * Returns the actual extracted ItemStack (may be empty if item not found).
+     * Works with vanilla and most modded containers (Sophisticated Storage implements Inventory).
      */
     fun extractItem(world: World, containerPos: BlockPos, itemId: String, maxCount: Int): ItemStack {
-        val blockEntity = world.getBlockEntity(containerPos)
+        val blockEntity = world.getBlockEntity(containerPos) ?: return ItemStack.EMPTY
+        // Most modded containers implement vanilla Inventory interface
         val inventory = blockEntity as? Inventory ?: return ItemStack.EMPTY
 
         val targetId = net.minecraft.util.Identifier.of(
@@ -187,6 +189,7 @@ object InventoryHelper {
 
     /**
      * Finds the nearest container that has a specific item.
+     * Uses platform ContainerHelper for modded container detection.
      */
     fun findContainerWithItem(world: World, origin: BlockPos, radius: Int, itemId: String): BlockPos? {
         val targetId = net.minecraft.util.Identifier.of(
@@ -196,8 +199,16 @@ object InventoryHelper {
         val targetItem = net.minecraft.registry.Registries.ITEM.get(targetId)
         if (targetItem == net.minecraft.item.Items.AIR) return null
 
+        val matchStack = ItemStack(targetItem)
+        val helper = ContainerHelperRegistry.instance
+
         return findAllContainers(world, origin, radius)
             .filter { pos ->
+                // Use platform helper for modded containers (Sophisticated Storage etc.)
+                if (helper != null) {
+                    return@filter helper.hasItem(world, pos, matchStack)
+                }
+                // Fallback: vanilla Inventory
                 val inv = world.getBlockEntity(pos) as? Inventory ?: return@filter false
                 (0 until inv.size()).any { i ->
                     val s = inv.getStack(i)

@@ -18,7 +18,8 @@ data class WorkshopSyncS2CPacket(
         val recipeId: String,
         val gatheredItems: Map<String, Int>,
         val phase: String,
-        val requiredItems: Map<String, Int>
+        val requiredItems: Map<String, Int>,
+        val craftCount: Int = 0
     )
 
     companion object {
@@ -38,7 +39,8 @@ data class WorkshopSyncS2CPacket(
                     val reqCount = buf.readVarInt()
                     val required = mutableMapOf<String, Int>()
                     repeat(reqCount) { required[buf.readString()] = buf.readVarInt() }
-                    projects[uuid] = ProjectDTO(recipeId, gathered, phase, required)
+                    val craftCount = buf.readVarInt()
+                    projects[uuid] = ProjectDTO(recipeId, gathered, phase, required, craftCount)
                 }
                 return WorkshopSyncS2CPacket(projects)
             }
@@ -59,6 +61,7 @@ data class WorkshopSyncS2CPacket(
                         buf.writeString(itemId)
                         buf.writeVarInt(count)
                     }
+                    buf.writeVarInt(proj.craftCount)
                 }
             }
         }

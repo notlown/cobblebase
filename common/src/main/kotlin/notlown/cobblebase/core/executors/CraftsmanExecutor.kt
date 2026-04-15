@@ -159,6 +159,7 @@ object CraftsmanExecutor : SkillExecutor {
         // Store output for depositing
         craftedOutput[pokemonId] = output.copy()
         WorkshopManager.resetGathered(pokemonId)
+        WorkshopManager.incrementCraftCount(pokemonId)
         WorkshopManager.setPhase(pokemonId, WorkshopManager.Phase.DEPOSITING, now)
         SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
 

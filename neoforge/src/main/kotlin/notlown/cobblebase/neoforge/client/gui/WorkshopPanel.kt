@@ -32,9 +32,9 @@ class WorkshopPanel(
     private val textRenderer: TextRenderer
 ) {
     private val PADDING = 6
-    private val ROW_HEIGHT = 18
+    private val ROW_HEIGHT = 20
     private val SCALE = 0.75f
-    private val ICON_SCALE = 10f / 16f
+    private val ICON_SCALE = 16f / 16f  // full size item icons
 
     private enum class SubTab { OVERVIEW, RECIPES }
     private var activeSubTab = SubTab.OVERVIEW
@@ -152,13 +152,13 @@ class WorkshopPanel(
         var y = startY
 
         // --- Project Header Card ---
-        context.fill(panelX + 2, y, panelX + panelW - 2, y + 22, 0x33FF5722)
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 24, 0x33FF5722)
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF5722.toInt())
 
-        // Craftsman sprite + name
-        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, pokemonData.species.path, panelX + PADDING, y + 2, 0f)
+        // Craftsman sprite + name (full 16px sprite)
+        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, pokemonData.species.path, panelX + PADDING, y + 3, 0f)
         context.matrices.push()
-        context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 4).toFloat(), 0f)
+        context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 4).toFloat(), 0f)
         context.matrices.scale(SCALE, SCALE, 1f)
         context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l${pokemonData.displayName.string}", 0, 0, 0xFFFFFF)
         context.matrices.pop()
@@ -173,12 +173,12 @@ class WorkshopPanel(
         val craftCount = project.craftCount
         val countText = if (craftCount > 0) " \u00A78| \u00A7a${craftCount} crafted" else ""
         context.matrices.push()
-        context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 13).toFloat(), 0f)
+        context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 14).toFloat(), 0f)
         context.matrices.scale(0.6f, 0.6f, 1f)
         context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
-        // Output icon + name (right side, scissored to panel)
+        // Output icon + name (right side)
         if (recipe != null) {
             val outputStack = makeStack(recipe.outputItemId)
             val nameStartX = panelX + panelW / 2
@@ -203,7 +203,7 @@ class WorkshopPanel(
             context.matrices.pop()
         }
 
-        y += 24
+        y += 26
 
         // --- Material progress ---
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())
@@ -232,20 +232,20 @@ class WorkshopPanel(
 
             val itemName = itemId.substringAfterLast(":").replace("_", " ").split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
             context.matrices.push()
-            context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 4).toFloat(), 0f)
             context.matrices.scale(SCALE, SCALE, 1f)
             context.drawTextWithShadow(textRenderer, itemName, 0, 0, if (done) 0x55FF55 else 0xFFFFFF)
             context.matrices.pop()
 
             // Progress bar
-            val barX = panelX + PADDING + 14 + (panelW * 0.3f).toInt()
-            val barW = (panelW * 0.35f).toInt()
-            context.fill(barX, y + 2, barX + barW, y + 8, 0xFF333333.toInt())
+            val barX = panelX + PADDING + 20 + (panelW * 0.3f).toInt()
+            val barW = (panelW * 0.3f).toInt()
+            context.fill(barX, y + 5, barX + barW, y + 11, 0xFF333333.toInt())
             val fillW = if (needed > 0) (barW * gathered.toFloat() / needed).toInt() else 0
-            if (fillW > 0) context.fill(barX, y + 2, barX + fillW, y + 8, if (done) 0xFF4CAF50.toInt() else 0xFFFF9800.toInt())
+            if (fillW > 0) context.fill(barX, y + 5, barX + fillW, y + 11, if (done) 0xFF4CAF50.toInt() else 0xFFFF9800.toInt())
 
             context.matrices.push()
-            context.matrices.translate((barX + barW + 4).toFloat(), (y + 1).toFloat(), 0f)
+            context.matrices.translate((barX + barW + 4).toFloat(), (y + 4).toFloat(), 0f)
             context.matrices.scale(SCALE, SCALE, 1f)
             context.drawTextWithShadow(textRenderer, "$gathered / $needed", 0, 0, if (done) 0x55FF55 else 0xFFAA00)
             // Skill suggestion for this material
@@ -259,7 +259,7 @@ class WorkshopPanel(
             }
             context.matrices.pop()
 
-            y += 13
+            y += 18
         }
 
         // Overall progress bar

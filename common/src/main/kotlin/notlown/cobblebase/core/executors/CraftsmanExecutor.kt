@@ -70,17 +70,18 @@ object CraftsmanExecutor : SkillExecutor {
     ) {
         val recipe = RecipeHelper.getRecipeById(world, project.recipeId)
         if (recipe == null) {
-            // Recipe no longer exists — clear project
+            if (now % 100 == 0L) Cobblebase.log("[Craftsman] Recipe '${project.recipeId}' not found — clearing project")
             WorkshopManager.clearProject(pokemonId)
             return
         }
 
         val required = RecipeHelper.getRequiredMaterials(recipe)
-        // Populate requiredItems on the project (for CraftsmanSupplyFilter)
+        // Populate requiredItems on the project (for CraftsmanSupplyFilter + GUI)
         if (project.requiredItems.isEmpty()) {
             for ((item, count) in required) {
                 project.requiredItems[Registries.ITEM.getId(item).toString()] = count
             }
+            Cobblebase.log("[Craftsman] ${pokemonEntity.pokemon.species.name} project requires: ${project.requiredItems}")
         }
         val needed = mutableMapOf<String, Int>()
         for ((item, count) in required) {
@@ -94,6 +95,7 @@ object CraftsmanExecutor : SkillExecutor {
         if (needed.isEmpty()) {
             WorkshopManager.setPhase(pokemonId, WorkshopManager.Phase.CRAFTING, now)
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            Cobblebase.log("[Craftsman] ${pokemonEntity.pokemon.species.name} gathered all materials, starting craft")
             return
         }
 
@@ -101,7 +103,7 @@ object CraftsmanExecutor : SkillExecutor {
         val gatherCooldown = getGatherCooldownTicks(skillEntry.proficiency)
         val lastGather = lastGatherTick[pokemonId] ?: 0L
         if (now - lastGather < gatherCooldown) {
-            SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            if (now % 100 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
             return
         }
 
@@ -109,22 +111,23 @@ object CraftsmanExecutor : SkillExecutor {
         for ((itemId, _) in needed) {
             val chestPos = InventoryHelper.findContainerWithItem(world, origin, skill.searchRadius, itemId)
             if (chestPos != null) {
-                // Navigate toward the chest
                 NavigationHelper.navigateTo(pokemonEntity, chestPos, getSpeedForProficiency(skillEntry.proficiency))
-
-                // Extract one item
                 val extracted = InventoryHelper.extractItem(world, chestPos, itemId, 1)
                 if (!extracted.isEmpty) {
                     WorkshopManager.addGatheredItem(pokemonId, itemId, extracted.count)
                     lastGatherTick[pokemonId] = now
                     SkillEffects.playWorking(world, pokemonEntity, "harvest")
+                    Cobblebase.log("[Craftsman] ${pokemonEntity.pokemon.species.name} gathered 1x $itemId (${(project.gatheredItems[itemId] ?: 0)}/${project.requiredItems[itemId] ?: 0})")
                     return
                 }
             }
         }
 
-        // No chests have what we need — keep waiting, re-scan next cycle
-        if (now % 100 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+        // No chests have what we need — log periodically
+        if (now % 200 == 0L) {
+            SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            Cobblebase.log("[Craftsman] ${pokemonEntity.pokemon.species.name} waiting for materials: $needed")
+        }
     }
 
     private fun tickCrafting(

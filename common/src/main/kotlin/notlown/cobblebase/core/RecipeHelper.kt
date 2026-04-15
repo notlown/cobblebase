@@ -93,14 +93,18 @@ object RecipeHelper {
     }
 
     /**
-     * Look up a recipe by ID.
+     * Look up a recipe by ID. Iterates all crafting recipes to find the match,
+     * since RecipeManager.get(Identifier) may not resolve correctly in all MC versions.
      */
     fun getRecipeById(world: ServerWorld, recipeId: String): CraftingRecipe? {
         return try {
-            val id = Identifier.of(recipeId)
-            val entry = world.server.recipeManager.get(id)
-            entry?.orElse(null)?.value() as? CraftingRecipe
-        } catch (_: Exception) { null }
+            val allRecipes = world.server.recipeManager.listAllOfType(RecipeType.CRAFTING)
+            val entry = allRecipes.find { it.id.toString() == recipeId }
+            entry?.value()
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.error("[RecipeHelper] Failed to find recipe '$recipeId': ${e.message}")
+            null
+        }
     }
 
     /**

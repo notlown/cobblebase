@@ -29,7 +29,7 @@ object RecipeHelper {
     )
 
     /**
-     * Get all crafting recipes from the server, simplified for the Workshop GUI.
+     * Get craftable recipes from the server, filtered to furniture and decoration items only.
      */
     fun getAllSimplifiedRecipes(world: ServerWorld): List<SimplifiedRecipe> {
         val recipeManager = world.server.recipeManager
@@ -46,11 +46,13 @@ object RecipeHelper {
                 if (materials.isEmpty()) continue
 
                 val outputId = Registries.ITEM.getId(output.item).toString()
+
+                // Only include furniture, decoration, and building items
+                val category = categorizeRecipe(outputId, output) ?: continue
+
                 val inputs = materials.map { (item, count) ->
                     Registries.ITEM.getId(item).toString() to count
                 }
-
-                val category = categorizeRecipe(outputId, output)
 
                 result.add(SimplifiedRecipe(
                     recipeId = entry.id.toString(),
@@ -103,57 +105,39 @@ object RecipeHelper {
 
     /**
      * Categorize a recipe output for the Workshop GUI browser.
+     * Returns null for items that shouldn't be craftable (weapons, tools, armor, food, etc.)
+     * Only allows furniture, decoration, and building items.
      */
-    private fun categorizeRecipe(outputId: String, output: ItemStack): String {
+    private fun categorizeRecipe(outputId: String, output: ItemStack): String? {
         val id = outputId.lowercase()
-        return when {
-            id.contains("stairs") -> "Building"
-            id.contains("slab") -> "Building"
-            id.contains("wall") && !id.contains("banner") -> "Building"
-            id.contains("fence") -> "Building"
-            id.contains("door") -> "Building"
-            id.contains("trapdoor") -> "Building"
-            id.contains("planks") -> "Building"
-            id.contains("bricks") -> "Building"
-            id.contains("_block") && !id.contains("command") -> "Building"
-            id.contains("glass") -> "Building"
-            id.contains("concrete") -> "Building"
-            id.contains("wool") -> "Building"
-            id.contains("carpet") -> "Building"
 
-            id.contains("sword") -> "Weapons"
-            id.contains("bow") && !id.contains("bowl") -> "Weapons"
-            id.contains("crossbow") -> "Weapons"
-            id.contains("arrow") -> "Weapons"
+        // Always include Cobble Furniture and Cobblemon mod items
+        if (id.startsWith("cobblefurniture:")) return "Furniture"
+        if (id.startsWith("cobblemon:") && (id.contains("table") || id.contains("chair") || id.contains("shelf")
+                    || id.contains("desk") || id.contains("counter") || id.contains("bench")
+                    || id.contains("cabinet") || id.contains("lamp"))) return "Cobblemon"
 
-            id.contains("pickaxe") || id.contains("axe") || id.contains("shovel") || id.contains("hoe") -> "Tools"
-            id.contains("shears") -> "Tools"
-            id.contains("bucket") -> "Tools"
-            id.contains("compass") -> "Tools"
-            id.contains("clock") -> "Tools"
-            id.contains("fishing_rod") -> "Tools"
-            id.contains("lead") -> "Tools"
+        // Vanilla decoration items
+        if (id.contains("lantern") || id.contains("candle") || id.contains("torch")) return "Lighting"
+        if (id.contains("flower_pot") || id.contains("painting") || id.contains("item_frame")) return "Decoration"
+        if (id.contains("banner")) return "Decoration"
+        if (id.contains("sign") && !id.contains("design")) return "Decoration"
+        if (id.contains("chain") || id.contains("ladder")) return "Decoration"
+        if (id.contains("_bed")) return "Furniture"
+        if (id.contains("carpet")) return "Furniture"
+        if (id.contains("bookshelf") || id.contains("chiseled_bookshelf")) return "Furniture"
 
-            id.contains("helmet") || id.contains("chestplate") || id.contains("leggings") || id.contains("boots") -> "Armor"
-            id.contains("shield") -> "Armor"
+        // Building blocks (stairs, slabs, fences, doors)
+        if (id.contains("stairs")) return "Building"
+        if (id.contains("slab")) return "Building"
+        if (id.contains("wall") && !id.contains("banner")) return "Building"
+        if (id.contains("fence")) return "Building"
+        if (id.contains("door")) return "Building"
+        if (id.contains("trapdoor")) return "Building"
+        if (id.contains("glass_pane") || id.contains("stained_glass")) return "Building"
+        if (id.contains("iron_bars")) return "Building"
 
-            id.contains("piston") || id.contains("hopper") || id.contains("dropper") || id.contains("dispenser") -> "Redstone"
-            id.contains("repeater") || id.contains("comparator") || id.contains("observer") -> "Redstone"
-            id.contains("redstone") && !id.contains("ore") -> "Redstone"
-            id.contains("lever") || id.contains("button") || id.contains("pressure_plate") -> "Redstone"
-            id.contains("rail") -> "Redstone"
-
-            id.contains("lantern") || id.contains("candle") || id.contains("torch") -> "Decoration"
-            id.contains("flower_pot") || id.contains("painting") || id.contains("item_frame") -> "Decoration"
-            id.contains("banner") || id.contains("sign") || id.contains("bed") -> "Decoration"
-            id.contains("chain") || id.contains("ladder") -> "Decoration"
-
-            id.contains("bread") || id.contains("cake") || id.contains("cookie") || id.contains("pie") -> "Food"
-            id.contains("stew") || id.contains("soup") || id.contains("sugar") -> "Food"
-
-            id.contains("cobblemon:") -> "Cobblemon"
-
-            else -> "Miscellaneous"
-        }
+        // Everything else is excluded (tools, weapons, armor, food, redstone, etc.)
+        return null
     }
 }

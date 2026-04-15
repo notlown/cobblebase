@@ -224,65 +224,119 @@ class WorkshopPanel(
         activeProjects: List<PasturePokemonDataDTO>
     ): Int {
         var y = startY
-        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF9800.toInt())
-        y += 2
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF5722.toInt())
+        y += 3
 
         for (pokemonData in activeProjects) {
             val project = WorkshopCache.projects[pokemonData.pokemonId] ?: continue
             val recipe = WorkshopCache.recipes.find { it.recipeId == project.recipeId }
             val displayName = pokemonData.displayName.string
 
-            // Background
-            context.fill(panelX + 2, y, panelX + panelW - 2, y + 22, 0x22FF9800)
+            // Background card
+            val cardH = if (recipe != null) 44 else 20
+            context.fill(panelX + 2, y, panelX + panelW - 2, y + cardH, 0x33FF5722)
 
-            // Pokemon name + status
+            // Row 1: Pokemon name + phase + output icon
             context.matrices.push()
-            context.matrices.translate((panelX + PADDING).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.translate((panelX + PADDING).toFloat(), (y + 3).toFloat(), 0f)
             context.matrices.scale(SCALE, SCALE, 1f)
             val phaseLabel = when (project.phase) {
-                "GATHERING" -> "\u00A7eGathering"
-                "CRAFTING" -> "\u00A76Crafting"
-                "DEPOSITING" -> "\u00A7aDepositing"
-                else -> "\u00A77Idle"
+                "GATHERING" -> "\u00A7e\u00A7lGathering materials..."
+                "CRAFTING" -> "\u00A76\u00A7lCrafting..."
+                "DEPOSITING" -> "\u00A7a\u00A7lDepositing!"
+                else -> "\u00A77Idle — select a recipe below"
             }
-            context.drawTextWithShadow(textRenderer, "\u00A7f$displayName \u00A77— $phaseLabel", 0, 0, 0xFFFFFF)
+            context.drawTextWithShadow(textRenderer, "\u00A7f$displayName \u00A78| $phaseLabel", 0, 0, 0xFFFFFF)
             context.matrices.pop()
 
-            // Output icon + name
             if (recipe != null) {
+                // Output icon + name (row 1, right side)
                 val outputStack = makeStack(recipe.outputItemId)
                 if (!outputStack.isEmpty) {
                     context.matrices.push()
-                    context.matrices.translate((panelX + PADDING).toFloat(), (y + 12).toFloat(), 0f)
-                    context.matrices.scale(ICON_SCALE * 0.7f, ICON_SCALE * 0.7f, 1f)
+                    context.matrices.translate((panelX + panelW - PADDING - 50).toFloat(), (y + 1).toFloat(), 0f)
+                    context.matrices.scale(ICON_SCALE, ICON_SCALE, 1f)
                     context.drawItem(outputStack, 0, 0)
                     context.matrices.pop()
                 }
-                // Material progress
-                var mx = panelX + PADDING + 14
+                context.matrices.push()
+                context.matrices.translate((panelX + panelW - PADDING - 38).toFloat(), (y + 4).toFloat(), 0f)
+                context.matrices.scale(0.6f, 0.6f, 1f)
+                context.drawTextWithShadow(textRenderer, recipe.outputDisplayName, 0, 0, 0xFFFFFF)
+                context.matrices.pop()
+
+                // Row 2: Material progress with icons
+                val matY = y + 14
+                context.matrices.push()
+                context.matrices.translate((panelX + PADDING).toFloat(), (matY).toFloat(), 0f)
+                context.matrices.scale(0.6f, 0.6f, 1f)
+                context.drawTextWithShadow(textRenderer, "Materials:", 0, 0, 0x888888)
+                context.matrices.pop()
+
+                var mx = panelX + PADDING + 36
+                var totalNeeded = 0
+                var totalGathered = 0
                 for ((itemId, needed) in project.requiredItems) {
                     val gathered = project.gatheredItems[itemId] ?: 0
                     val done = gathered >= needed
+                    totalNeeded += needed
+                    totalGathered += gathered.coerceAtMost(needed)
+
+                    // Item icon
                     val inputStack = makeStack(itemId)
                     if (!inputStack.isEmpty) {
                         context.matrices.push()
-                        context.matrices.translate(mx.toFloat(), (y + 11).toFloat(), 0f)
-                        context.matrices.scale(ICON_SCALE * 0.6f, ICON_SCALE * 0.6f, 1f)
+                        context.matrices.translate(mx.toFloat(), (matY - 1).toFloat(), 0f)
+                        context.matrices.scale(ICON_SCALE * 0.8f, ICON_SCALE * 0.8f, 1f)
                         context.drawItem(inputStack, 0, 0)
                         context.matrices.pop()
                     }
+                    // Count text
                     context.matrices.push()
-                    context.matrices.translate((mx + 7).toFloat(), (y + 13).toFloat(), 0f)
-                    context.matrices.scale(0.5f, 0.5f, 1f)
+                    context.matrices.translate((mx + 9).toFloat(), (matY + 1).toFloat(), 0f)
+                    context.matrices.scale(0.6f, 0.6f, 1f)
                     val color = if (done) 0xFF55FF55.toInt() else 0xFFFFAA00.toInt()
                     context.drawTextWithShadow(textRenderer, "$gathered/$needed", 0, 0, color)
                     context.matrices.pop()
-                    mx += 30
-                    if (mx > panelX + panelW - 40) break
+                    mx += 36
+                    if (mx > panelX + panelW - 20) break
+                }
+
+                // Row 3: Progress bar
+                val barY = matY + 12
+                val barX = panelX + PADDING
+                val barW = panelW - PADDING * 2
+                val barH = 4
+                val progress = if (totalNeeded > 0) totalGathered.toFloat() / totalNeeded else 0f
+                context.fill(barX, barY, barX + barW, barY + barH, 0xFF333333.toInt())
+                val fillW = (barW * progress).toInt()
+                val barColor = when (project.phase) {
+                    "GATHERING" -> 0xFFFFAA00.toInt()
+                    "CRAFTING" -> 0xFFFF5722.toInt()
+                    "DEPOSITING" -> 0xFF4CAF50.toInt()
+                    else -> 0xFF666666.toInt()
+                }
+                if (fillW > 0) context.fill(barX, barY, barX + fillW, barY + barH, barColor)
+
+                // Progress percentage
+                context.matrices.push()
+                context.matrices.translate((barX + barW + 3).toFloat(), (barY - 1).toFloat(), 0f)
+                context.matrices.scale(0.5f, 0.5f, 1f)
+                context.drawTextWithShadow(textRenderer, "${(progress * 100).toInt()}%", 0, 0, 0xAAAAAA)
+                context.matrices.pop()
+
+                // Hint if gathering and nothing found
+                if (project.phase == "GATHERING" && totalGathered == 0) {
+                    val hintY = barY + 6
+                    context.matrices.push()
+                    context.matrices.translate((panelX + PADDING).toFloat(), hintY.toFloat(), 0f)
+                    context.matrices.scale(0.5f, 0.5f, 1f)
+                    context.drawTextWithShadow(textRenderer, "Place required materials in a nearby chest — the Craftsman will collect them", 0, 0, 0xFF8888)
+                    context.matrices.pop()
                 }
             }
 
-            y += 24
+            y += cardH + 2
         }
 
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())

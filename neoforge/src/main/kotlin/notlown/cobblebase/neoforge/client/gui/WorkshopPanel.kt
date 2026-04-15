@@ -405,7 +405,7 @@ class WorkshopPanel(
                         val cdMs = cdTicks * 50L
                         val prog = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
                         context.fill(bx, y + 19, bx + btnW, y + 21, 0xFF222222.toInt())
-                        context.fill(bx, y + 19, bx + (btnW * prog).toInt(), y + 21, 0xFF4CAF50.toInt())
+                        context.fill(bx, y + 19, bx + (btnW * prog).toInt(), y + 21, 0xFFFFD700.toInt()) // gold/yellow for visibility
                     }
                 }
 

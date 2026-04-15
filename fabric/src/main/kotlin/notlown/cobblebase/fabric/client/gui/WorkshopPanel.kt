@@ -396,7 +396,7 @@ class WorkshopPanel(
                 context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, if (isActiveItem || btnHover) 0xFFFFFF else 0xCCCCCC)
                 context.matrices.pop()
 
-                // Cooldown bar under active item
+                // Cooldown bar INSIDE the active button (bottom 3px)
                 if (isActiveItem) {
                     val activeEntry = monSkills.find { it.skillId == activeSkillId }
                     val activeDef = if (activeEntry != null) notlown.cobblebase.core.SkillRegistry.get(activeEntry.skillId) else null
@@ -404,8 +404,10 @@ class WorkshopPanel(
                         val cdTicks = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(activeDef.cooldownSeconds, activeEntry.proficiency)
                         val cdMs = cdTicks * 50L
                         val prog = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
-                        context.fill(bx, y + 19, bx + btnW, y + 21, 0xFF222222.toInt())
-                        context.fill(bx, y + 19, bx + (btnW * prog).toInt(), y + 21, 0xFFFFD700.toInt()) // gold/yellow for visibility
+                        // Dark track inside button bottom
+                        context.fill(bx, y + 15, bx + btnW, y + 18, 0xFF1A3A1A.toInt())
+                        // Gold fill
+                        context.fill(bx, y + 15, bx + (btnW * prog).toInt(), y + 18, 0xFFFFD700.toInt())
                     }
                 }
 

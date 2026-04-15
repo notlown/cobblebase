@@ -224,27 +224,14 @@ class SkillsPanel(
             }
         }
 
-        // "Helps your Craftsman" overlay for supplier Mons
-        pokemonList.forEachIndexed { index, pokemonData ->
-            if (AssignmentCache.isCraftsmanSupplier(pokemonData.pokemonId)) {
-                val rowH = rowHeights[index]
-                val ry = contentY + rowOffsets[index] + scrollY
-                if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) return@forEachIndexed
+        // Collect supplier Pokemon IDs for skipping their buttons
+        val supplierPokemonIds = pokemonList
+            .filter { AssignmentCache.isCraftsmanSupplier(it.pokemonId) }
+            .map { it.pokemonId }.toSet()
 
-                // Semi-transparent overlay over the skill buttons area
-                val overlayX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
-                context.fill(overlayX, ry, panelX + panelW - 2, ry + rowH - 1, 0xAA1E1E2E.toInt())
-
-                // "Helps your Craftsman" label centered in the overlay
-                val label = "\u00A76\u00A7lHelps your Craftsman"
-                val labelW = textRenderer.getWidth(label)
-                val centerX = overlayX + (panelX + panelW - 2 - overlayX - labelW) / 2
-                context.drawTextWithShadow(textRenderer, label, centerX, ry + rowH / 2 - 4, 0xFFAA00)
-            }
-        }
-
-        // Skill buttons
+        // Skill buttons — skip entirely for supplier Mons
         for (btn in allButtons) {
+            if (btn.pokemonId in supplierPokemonIds) continue // Don't render buttons for suppliers
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
             val isAutoBtn = btn.skillId == null
@@ -298,6 +285,26 @@ class SkillsPanel(
                 context.matrices.scale(scale, scale, 1f)
                 context.drawText(textRenderer, stars, 0, 0, starColor, false)
                 context.matrices.pop()
+            }
+        }
+
+        // "Helps your Craftsman" label for supplier Mons (rendered where buttons would be)
+        pokemonList.forEachIndexed { index, pokemonData ->
+            if (pokemonData.pokemonId in supplierPokemonIds) {
+                val rowH = rowHeights[index]
+                val ry = contentY + rowOffsets[index] + scrollY
+                if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) return@forEachIndexed
+
+                val overlayX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
+                // Solid background to fully hide where buttons would be
+                context.fill(overlayX, ry, panelX + panelW - 2, ry + rowH - 1, 0xFF1E1E2E.toInt())
+                // Orange accent bar
+                context.fill(overlayX, ry, overlayX + 2, ry + rowH - 1, 0xFFFF9800.toInt())
+
+                val label = "\u00A76Helps your Craftsman"
+                val labelW = textRenderer.getWidth(label)
+                val centerX = overlayX + (panelX + panelW - 2 - overlayX - labelW) / 2
+                context.drawTextWithShadow(textRenderer, label, centerX, ry + rowH / 2 - 4, 0xFFAA00)
             }
         }
 

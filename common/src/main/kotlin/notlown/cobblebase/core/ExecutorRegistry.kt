@@ -21,6 +21,7 @@ import notlown.cobblebase.core.executors.ExtinguisherExecutor
 import notlown.cobblebase.core.executors.AuraBoostExecutor
 import notlown.cobblebase.core.executors.GrowthAuraExecutor
 import notlown.cobblebase.core.executors.ProducerExecutor
+import notlown.cobblebase.core.executors.CraftsmanExecutor
 
 /**
  * Maps executor names (from Skill JSON) to executor implementations.
@@ -42,6 +43,7 @@ object ExecutorRegistry {
 
         // -- Production --
         register("producer", ProducerExecutor)   // Species-specific passive item production
+        register("craftsman", CraftsmanExecutor) // Crafts items from nearby chest materials
 
         // -- Generation --
         register("cauldron_fill", CauldronFillExecutor)

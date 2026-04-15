@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:craftsman",
+  "name": "Craftsman",
+  "description": "Crafts items using materials from nearby chests",
+  "category": "utility",
+  "cooldownSeconds": 120,
+  "searchRadius": 10,
+  "executor": "craftsman",
+  "effectType": "harvest"
+}

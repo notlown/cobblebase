@@ -284,6 +284,7 @@ object CobblebaseFabric : ModInitializer {
             SpeciesSkillOverrides.load(world)
             JobConfigOverrides.load(world)
             notlown.cobblebase.core.ProducerOverrides.load(world)
+            notlown.cobblebase.core.WorkshopManager.load(world)
             notlown.cobblebase.core.GeneralSettings.load(world)
             notlown.cobblebase.core.LootOverrides.load(world)
             // Load spawn buckets from Cobblemon's actual spawn pool
@@ -299,6 +300,7 @@ object CobblebaseFabric : ModInitializer {
             SpeciesSkillOverrides.save(world)
             JobConfigOverrides.save(world)
             notlown.cobblebase.core.ProducerOverrides.save(world)
+            notlown.cobblebase.core.WorkshopManager.save(world)
             notlown.cobblebase.core.GeneralSettings.save(world)
             notlown.cobblebase.core.LootOverrides.save(world)
         }

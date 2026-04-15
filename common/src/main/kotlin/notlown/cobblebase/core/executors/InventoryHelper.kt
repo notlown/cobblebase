@@ -132,6 +132,84 @@ object InventoryHelper {
         }
     }
 
+    /**
+     * Extracts up to [maxCount] of the specified item from a container.
+     * Returns the actual extracted ItemStack (may be empty if item not found).
+     */
+    fun extractItem(world: World, containerPos: BlockPos, itemId: String, maxCount: Int): ItemStack {
+        val blockEntity = world.getBlockEntity(containerPos)
+        val inventory = blockEntity as? Inventory ?: return ItemStack.EMPTY
+
+        val targetId = net.minecraft.util.Identifier.of(
+            if (itemId.contains(":")) itemId.substringBefore(":") else "minecraft",
+            if (itemId.contains(":")) itemId.substringAfter(":") else itemId
+        )
+        val targetItem = net.minecraft.registry.Registries.ITEM.get(targetId)
+        if (targetItem == net.minecraft.item.Items.AIR) return ItemStack.EMPTY
+
+        var remaining = maxCount
+        for (i in 0 until inventory.size()) {
+            val slot = inventory.getStack(i)
+            if (slot.isEmpty || slot.item != targetItem) continue
+            val take = minOf(remaining, slot.count)
+            slot.decrement(take)
+            remaining -= take
+            if (remaining <= 0) break
+        }
+        val taken = maxCount - remaining
+        blockEntity.markDirty()
+        return if (taken > 0) ItemStack(targetItem, taken) else ItemStack.EMPTY
+    }
+
+    /**
+     * Counts how many of a specific item exist across all containers in radius.
+     */
+    fun countItemInContainers(world: World, origin: BlockPos, radius: Int, itemId: String): Int {
+        val targetId = net.minecraft.util.Identifier.of(
+            if (itemId.contains(":")) itemId.substringBefore(":") else "minecraft",
+            if (itemId.contains(":")) itemId.substringAfter(":") else itemId
+        )
+        val targetItem = net.minecraft.registry.Registries.ITEM.get(targetId)
+        if (targetItem == net.minecraft.item.Items.AIR) return 0
+
+        var total = 0
+        for (pos in findAllContainers(world, origin, radius)) {
+            val inv = world.getBlockEntity(pos) as? Inventory ?: continue
+            for (i in 0 until inv.size()) {
+                val slot = inv.getStack(i)
+                if (!slot.isEmpty && slot.item == targetItem) {
+                    total += slot.count
+                }
+            }
+        }
+        return total
+    }
+
+    /**
+     * Finds the nearest container that has a specific item.
+     */
+    fun findContainerWithItem(world: World, origin: BlockPos, radius: Int, itemId: String): BlockPos? {
+        val targetId = net.minecraft.util.Identifier.of(
+            if (itemId.contains(":")) itemId.substringBefore(":") else "minecraft",
+            if (itemId.contains(":")) itemId.substringAfter(":") else itemId
+        )
+        val targetItem = net.minecraft.registry.Registries.ITEM.get(targetId)
+        if (targetItem == net.minecraft.item.Items.AIR) return null
+
+        return findAllContainers(world, origin, radius)
+            .filter { pos ->
+                val inv = world.getBlockEntity(pos) as? Inventory ?: return@filter false
+                (0 until inv.size()).any { i ->
+                    val s = inv.getStack(i)
+                    !s.isEmpty && s.item == targetItem
+                }
+            }
+            .minByOrNull { it.getSquaredDistance(origin) }
+    }
+
+    fun findAllContainersPublic(world: World, origin: BlockPos, radius: Int): List<BlockPos> =
+        findAllContainers(world, origin, radius)
+
     private fun findAllContainers(world: World, origin: BlockPos, radius: Int): List<BlockPos> {
         val helper = ContainerHelperRegistry.instance
         val result = mutableListOf<BlockPos>()

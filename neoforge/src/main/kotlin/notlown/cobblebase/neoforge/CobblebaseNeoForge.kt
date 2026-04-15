@@ -415,6 +415,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         SpeciesSkillOverrides.load(world)
         JobConfigOverrides.load(world)
         notlown.cobblebase.core.ProducerOverrides.load(world)
+        notlown.cobblebase.core.WorkshopManager.load(world)
         notlown.cobblebase.core.GeneralSettings.load(world)
         notlown.cobblebase.core.LootOverrides.load(world)
         notlown.cobblebase.core.SpawnData.loadFromCobblemonSpawnPool()
@@ -428,6 +429,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         SpeciesSkillOverrides.save(world)
         JobConfigOverrides.save(world)
         notlown.cobblebase.core.ProducerOverrides.save(world)
+        notlown.cobblebase.core.WorkshopManager.save(world)
         notlown.cobblebase.core.GeneralSettings.save(world)
         notlown.cobblebase.core.LootOverrides.save(world)
     }

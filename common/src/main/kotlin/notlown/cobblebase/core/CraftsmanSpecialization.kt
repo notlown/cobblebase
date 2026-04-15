@@ -12,7 +12,7 @@ object CraftsmanSpecialization {
         ARMOR("Armor", setOf("Armor")),
         TOOLS("Tools", setOf("Tools")),
         BREWER("Brewer", setOf("Brewing")),
-        COOK("Cook", setOf("Food")),
+        COOK("Cook", setOf("Food", "Cobblecuisine")),
         REDSTONE("Engineer", setOf("Redstone")),
         MASON("Mason", setOf("Masonry")),
         DYER("Dyer", setOf("Dyed")),

@@ -221,6 +221,9 @@ object RecipeHelper {
         // CobbleFurnies mod — own tab
         if (id.startsWith("cobblefurnies:")) return "Cobblefurnies"
 
+        // CobbleCuisine mod — own tab (uses vanilla crafting recipes)
+        if (id.startsWith("cobblecuisine:")) return "Cobblecuisine"
+
         // Other non-vanilla mods — fallback tab
         if (!id.startsWith("minecraft:") && !id.startsWith("cobblemon:")) return "Mod Furniture"
 

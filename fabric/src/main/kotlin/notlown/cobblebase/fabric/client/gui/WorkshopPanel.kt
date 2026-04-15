@@ -53,6 +53,13 @@ class WorkshopPanel(
     private data class SupplierRow(val y: Int, val pokemonId: UUID, val skillId: String)
     private var supplierRows = listOf<SupplierRow>()
 
+    // Scrollbar drag state
+    private var isDraggingScrollbar = false
+    private var scrollTrackX = 0
+    private var scrollTrackY = 0
+    private var scrollTrackH = 0
+    private var scrollMaxScroll = 0
+
     fun init(addWidget: (net.minecraft.client.gui.widget.ClickableWidget) -> Unit) {
         scrollOffset = 0
         if (!dataRequested) {
@@ -171,18 +178,21 @@ class WorkshopPanel(
         context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
-        // Output icon + name (right side of header card)
+        // Output icon + name (right side of header card, clamped to panel bounds)
         if (recipe != null) {
+            val buildLabel = "Building: ${recipe.outputDisplayName}"
+            val labelW = (textRenderer.getWidth(buildLabel) * 0.65f).toInt()
+            val outputX = (panelX + panelW - PADDING - labelW - 16).coerceAtLeast(panelX + panelW / 2)
             val outputStack = makeStack(recipe.outputItemId)
             if (!outputStack.isEmpty) {
                 context.matrices.push()
-                context.matrices.translate((panelX + panelW - PADDING - 60).toFloat(), (y + 3).toFloat(), 0f)
+                context.matrices.translate(outputX.toFloat(), (y + 3).toFloat(), 0f)
                 context.matrices.scale(ICON_SCALE, ICON_SCALE, 1f)
                 context.drawItem(outputStack, 0, 0)
                 context.matrices.pop()
             }
             context.matrices.push()
-            context.matrices.translate((panelX + panelW - PADDING - 46).toFloat(), (y + 5).toFloat(), 0f)
+            context.matrices.translate((outputX + 14).toFloat(), (y + 5).toFloat(), 0f)
             context.matrices.scale(0.65f, 0.65f, 1f)
             context.drawTextWithShadow(textRenderer, "\u00A7fBuilding: \u00A7l${recipe.outputDisplayName}", 0, 0, 0xFFFFFF)
             context.matrices.pop()
@@ -331,6 +341,19 @@ class WorkshopPanel(
                 context.drawTextWithShadow(textRenderer, "\u00A78${suggestion.skillName} — ${suggestion.description}$cooldownText", 0, 0, 0x888888)
                 context.matrices.pop()
 
+                // Live cooldown progress bar for active suppliers
+                if (isActive && skillDef != null && skillEntry != null) {
+                    val cdTicks = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(skillDef.cooldownSeconds, skillEntry.proficiency)
+                    val cdMs = cdTicks * 50L // ticks to ms
+                    val cycleProgress = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
+                    val cdBarX = panelX + PADDING + 18
+                    val cdBarW = panelX + panelW - PADDING - 42 - cdBarX
+                    val cdBarY = y + 14
+                    context.fill(cdBarX, cdBarY, cdBarX + cdBarW, cdBarY + 2, 0xFF222222.toInt())
+                    val cdFillW = (cdBarW * cycleProgress).toInt()
+                    context.fill(cdBarX, cdBarY, cdBarX + cdFillW, cdBarY + 2, 0xFF4CAF50.toInt())
+                }
+
                 // Status / Assign or Remove button (right side)
                 val btnX = panelX + panelW - PADDING - 38
                 if (isActive) {
@@ -353,7 +376,7 @@ class WorkshopPanel(
                     rows.add(SupplierRow(y, mon.pokemonId, suggestion.skillId))
                 }
 
-                y += 18
+                y += if (isActive) 20 else 18
             }
         }
 
@@ -444,12 +467,16 @@ class WorkshopPanel(
 
         context.disableScissor()
 
-        if (filtered.size > maxVisible) {
-            val trackX = panelX + panelW - 3
-            val thumbH = ((maxVisible.toFloat() / filtered.size) * listH).toInt().coerceAtLeast(10)
+        // Scrollbar (wider, 6px)
+        scrollTrackX = panelX + panelW - 8
+        scrollTrackY = listY
+        scrollTrackH = listH
+        scrollMaxScroll = maxScroll
+        if (filtered.size > maxVisible && maxScroll > 0) {
+            val thumbH = ((maxVisible.toFloat() / filtered.size) * listH).toInt().coerceAtLeast(14)
             val thumbY = listY + ((scrollOffset.toFloat() / maxScroll) * (listH - thumbH)).toInt()
-            context.fill(trackX, listY, trackX + 2, listY + listH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
+            context.fill(scrollTrackX, listY, scrollTrackX + 6, listY + listH, 0x33FFFFFF)
+            context.fill(scrollTrackX, thumbY, scrollTrackX + 6, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
 
         if (getCraftsmanPokemon().isEmpty()) {
@@ -529,6 +556,15 @@ class WorkshopPanel(
                 if (cx > panelX + panelW - PADDING) break
             }
 
+            // Scrollbar click
+            if (scrollMaxScroll > 0 && mouseX >= scrollTrackX - 2 && mouseX <= scrollTrackX + 8 &&
+                mouseY >= scrollTrackY && mouseY <= scrollTrackY + scrollTrackH) {
+                isDraggingScrollbar = true
+                val relY = ((mouseY - scrollTrackY) / scrollTrackH.toDouble()).coerceIn(0.0, 1.0)
+                scrollOffset = (relY * scrollMaxScroll).toInt()
+                return true
+            }
+
             // Recipe row clicks
             val craftsmen = getCraftsmanPokemon()
             if (craftsmen.isEmpty()) return false
@@ -543,6 +579,8 @@ class WorkshopPanel(
                 if (mouseY >= rowY && mouseY < rowY + ROW_HEIGHT && mouseX >= panelX && mouseX <= panelX + panelW) {
                     val recipe = filtered[idx]
                     val target = craftsmen.firstOrNull { !WorkshopCache.projects.containsKey(it.pokemonId) } ?: craftsmen.first()
+                    // Reset old suppliers that don't match the new recipe
+                    resetStaleSuppliers(recipe.recipeId)
                     ClientPlayNetworking.send(WorkshopSelectC2SPacket(target.pokemonId, recipe.recipeId))
                     activeSubTab = SubTab.OVERVIEW
                     ClientPlayNetworking.send(WorkshopRequestC2SPacket())
@@ -554,8 +592,19 @@ class WorkshopPanel(
         return false
     }
 
-    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean = false
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = false
+    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        if (isDraggingScrollbar && scrollMaxScroll > 0) {
+            val relY = ((mouseY - scrollTrackY) / scrollTrackH.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (relY * scrollMaxScroll).toInt()
+            return true
+        }
+        return false
+    }
+
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (isDraggingScrollbar) { isDraggingScrollbar = false; return true }
+        return false
+    }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (activeSubTab == SubTab.RECIPES && mouseX >= panelX && mouseX <= panelX + panelW && mouseY >= panelY && mouseY <= panelY + panelH) {
@@ -570,6 +619,28 @@ class WorkshopPanel(
             return true
         }
         return false
+    }
+
+    /**
+     * When switching recipes, free suppliers whose skills don't match the new recipe's needs.
+     */
+    private fun resetStaleSuppliers(newRecipeId: String) {
+        val newRecipe = WorkshopCache.recipes.find { it.recipeId == newRecipeId } ?: return
+        val newNeededItems = newRecipe.inputs.map { it.first }.toSet()
+        val neededSkills = newNeededItems.flatMap { itemId ->
+            notlown.cobblebase.core.SupplierHelper.getSupplierJobs(itemId).map { it.skillId }
+        }.toSet()
+
+        // Find all current suppliers and free those whose skill doesn't match
+        for (mon in pokemonList) {
+            val assignment = AssignmentCache.getAssignment(mon.pokemonId) ?: continue
+            if (!assignment.startsWith("craftsman_supply:")) continue
+            val supplierSkill = assignment.removePrefix("craftsman_supply:")
+            if (supplierSkill !in neededSkills) {
+                ClientPlayNetworking.send(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(mon.pokemonId, ""))
+                AssignmentCache.setAssignment(mon.pokemonId, null)
+            }
+        }
     }
 
     // ========== HELPERS ==========

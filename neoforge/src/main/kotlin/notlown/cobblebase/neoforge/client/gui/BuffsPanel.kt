@@ -16,6 +16,8 @@ import java.util.function.Function
 
 /**
  * Buffs tab content - shows all currently active jobs/effects for this Pasture.
+ * Each active Pokemon shows: Pokemon Name | Job Name | Effect Description
+ * Color-coded by skill category.
  */
 class BuffsPanel(
     private val parent: CobblebaseScreen,
@@ -37,6 +39,7 @@ class BuffsPanel(
     private var scrollY = 0
     private var isDraggingScrollbar = false
 
+    // Scrollbar track dimensions (updated each render)
     private var trackX = 0
     private var trackTop = 0
     private var trackHeight = 0
@@ -93,7 +96,7 @@ class BuffsPanel(
                         skillName = skillDef.name,
                         category = skillDef.category,
                         proficiency = entry.proficiency,
-                        description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds),
+                        description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds, speciesName),
                         isPassiveBuff = true
                     ))
                 }
@@ -113,7 +116,7 @@ class BuffsPanel(
                             skillName = skillDef.name,
                             category = skillDef.category,
                             proficiency = entry.proficiency,
-                            description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds)
+                            description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds, speciesName)
                         ))
                     }
                 }
@@ -123,11 +126,10 @@ class BuffsPanel(
         return result
     }
 
-    private fun generateDescription(skillName: String, executor: String, proficiency: Int, cooldownSeconds: Long): String {
+    private fun generateDescription(skillName: String, executor: String, proficiency: Int, cooldownSeconds: Long, speciesName: String = ""): String {
         val prof = proficiency.coerceIn(1, 5)
         val effectiveCooldown = if (CobblebaseConfig.devMode) 5L
             else cooldownSeconds * (6 - prof) / 3
-
         val cooldownLabel = if (effectiveCooldown > 0) " · every ${effectiveCooldown}s" else ""
 
         return when (executor) {
@@ -169,7 +171,16 @@ class BuffsPanel(
             "recruiter" -> "Attracting wild Pokemon$cooldownLabel"
             "cauldron_fill" -> "Filling cauldrons$cooldownLabel"
             "furnace_fuel", "brew_fuel" -> "Fueling furnaces/brewers$cooldownLabel"
-            "producer" -> "Producing species-specific items$cooldownLabel"
+            "producer" -> {
+                val produce = notlown.cobblebase.core.executors.ProducerExecutor.getProduceEntry(speciesName)
+                // Use per-species cooldown if set, otherwise fall back to global
+                val producerCooldown = produce?.cooldownSeconds ?: cooldownSeconds
+                val effectiveProducerCd = if (CobblebaseConfig.devMode) 5L
+                    else producerCooldown * (6 - prof) / 3
+                val producerCdLabel = if (effectiveProducerCd > 0) " · every ${effectiveProducerCd}s" else ""
+                if (produce != null) "Producing ${produce.displayName} x${produce.count}$producerCdLabel"
+                else "Producing items$producerCdLabel"
+            }
             // Passive buffs — no cooldown shown (always active)
             "speed_boost" -> "Speed II for nearby players"
             "strength_boost" -> "Strength for nearby players"
@@ -201,7 +212,8 @@ class BuffsPanel(
             return
         }
 
-        val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4
+        // Column headers (offset for sprite icon)
+        val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
         val colPokemon = panelX + PADDING
         val colSkill = panelX + PADDING + 80 + ICON_OFFSET
         val colDesc = panelX + PADDING + 150 + ICON_OFFSET
@@ -209,15 +221,18 @@ class BuffsPanel(
         context.drawTextWithShadow(textRenderer, "\u00A7eJob", colSkill, contentTop, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eEffect", colDesc, contentTop, 0xFFFF55)
 
+        // Scrollable content
         context.enableScissor(panelX, contentTop + 12, panelX + panelW, contentBottom)
 
         for ((index, entry) in entries.withIndex()) {
             val ry = contentTop + 14 + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
 
+            // Row background
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
+            // Category color bar on the left (green for passive buffs)
             val catColor = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
                 else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
             context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, catColor)
@@ -230,7 +245,7 @@ class BuffsPanel(
                 colPokemon + 4, ry + 4, delta
             )
 
-            // Pokemon name + level (scaled 0.75x)
+            // Pokemon name + level (shifted right for icon, scaled 0.75x)
             val nameX = (colPokemon + 4 + ICON_OFFSET).toFloat()
             context.matrices.push()
             context.matrices.translate(nameX, (ry + 4).toFloat(), 0f)
@@ -244,7 +259,7 @@ class BuffsPanel(
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", 0, 0, 0xAAAAAA)
             context.matrices.pop()
 
-            // Skill name (scaled 0.75x)
+            // Skill name with category color + PASSIVE tag for buff skills (scaled 0.75x)
             context.matrices.push()
             context.matrices.translate(colSkill.toFloat(), (ry + 4).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
@@ -281,24 +296,30 @@ class BuffsPanel(
 
         context.disableScissor()
 
+        // Scrollbar
         totalContentHeight = entries.size * ROW_HEIGHT
         visibleHeight = contentBottom - contentTop - 14
         if (totalContentHeight > visibleHeight) {
             trackX = panelX + panelW - 8
             trackTop = contentTop + 14
             trackHeight = visibleHeight
+            // Track background
             context.fill(trackX, trackTop, trackX + 6, trackTop + trackHeight, 0x44FFFFFF.toInt())
+            // Thumb
             thumbHeight = (visibleHeight.toFloat() / totalContentHeight * trackHeight).toInt().coerceAtLeast(16)
             val scrollRange = totalContentHeight - visibleHeight
             val scrollProgress = (-scrollY).toFloat() / scrollRange.coerceAtLeast(1)
             thumbY = trackTop + ((trackHeight - thumbHeight) * scrollProgress).toInt()
+            // Highlight when hovering or dragging
             val isHovered = mouseX in trackX..(trackX + 6) && mouseY in thumbY..(thumbY + thumbHeight)
             val thumbColor = if (isDraggingScrollbar || isHovered) 0xFFDDDDDD.toInt() else 0xFFAAAAAA.toInt()
             context.fill(trackX, thumbY, trackX + 6, thumbY + thumbHeight, thumbColor)
         }
 
+        // Footer line
         context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
 
+        // Entry count
         context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} active", panelX + PADDING, panelY + panelH - 14, 0x666666)
     }
 

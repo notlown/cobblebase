@@ -43,6 +43,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     private lateinit var generalPanel: AdminGeneralPanel
     private lateinit var wikiPanel: AdminWikiPanel
 
+    // Track widgets per tab for visibility toggling
     private val speciesWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
     private val jobsWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
     private val lootWidgets = mutableListOf<net.minecraft.client.gui.widget.ClickableWidget>()
@@ -72,7 +73,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         skillEditorPanel = AdminSkillEditorPanel(
             panelX + leftW + 2, contentY, rightW, panelH - 22 - TAB_HEIGHT, textRenderer
         ) {
-            // onSaved callback
+            // onSaved callback — could refresh list
         }
 
         jobsPanel = AdminJobsPanel(
@@ -111,6 +112,12 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             addDrawableChild(widget)
         }
 
+        // Init producer item field
+        skillEditorPanel.initProducerField { widget ->
+            speciesWidgets.add(widget)
+            addDrawableChild(widget)
+        }
+
         // Init jobs panel buttons
         jobsPanel.init { widget: ButtonWidget ->
             jobsWidgets.add(widget)
@@ -144,6 +151,10 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         for (w in lootWidgets) w.visible = (activeTab == "loot")
         for (w in generalWidgets) w.visible = (activeTab == "general")
         for (w in wikiWidgets) w.visible = (activeTab == "wiki")
+        // Producer field has its own visibility logic — let the panel control it
+        if (activeTab == "species") {
+            skillEditorPanel.refreshProducerVisibility()
+        }
     }
 
     private fun getTabBarY(): Int = panelY + 22
@@ -163,7 +174,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         context.fill(panelX, tabBarY, panelX + panelW, tabBarY + TAB_HEIGHT, 0xCC1A1A30.toInt())
         context.fill(panelX, tabBarY + TAB_HEIGHT - 1, panelX + panelW, tabBarY + TAB_HEIGHT, PANEL_BORDER)
 
-        // Tab bar
+        // Tab bar — General tab is hidden until a later release.
         val tabW = 64
         val speciesTabX = panelX + 4
         val jobsTabX = speciesTabX + tabW + 4
@@ -171,7 +182,6 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         val wikiTabX = lootTabX + tabW + 4
         val scale = 0.75f
 
-        // General tab is hidden until a later release.
         renderTab(context, "Species", speciesTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
             activeTab == "species", mouseX, mouseY, scale)
         renderTab(context, "Jobs", jobsTabX, tabBarY + 2, tabW, TAB_HEIGHT - 3,
@@ -184,8 +194,10 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         // Render active tab content
         when (activeTab) {
             "species" -> {
+                // Separator between panes
                 val leftW = (panelW * 0.25).toInt()
                 context.fill(panelX + leftW, tabBarY + TAB_HEIGHT, panelX + leftW + 1, panelY + panelH, PANEL_BORDER)
+
                 speciesListPanel.render(context, mouseX, mouseY, delta)
                 skillEditorPanel.render(context, mouseX, mouseY, delta)
             }
@@ -201,6 +213,7 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
             }
         }
 
+        // Tooltips render on top of everything
         if (activeTab == "jobs" && jobsPanel.pendingTooltip.isNotEmpty()) {
             val lines = jobsPanel.pendingTooltip.map { Text.literal(it) }
             context.drawTooltip(textRenderer, lines, jobsPanel.tooltipX, jobsPanel.tooltipY)
@@ -239,18 +252,26 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Check tab clicks — General tab is hidden until a later release.
         val tabBarY = getTabBarY()
         val tabW = 64
         val speciesTabX = panelX + 4
         val jobsTabX = speciesTabX + tabW + 4
         val lootTabX = jobsTabX + tabW + 4
         val wikiTabX = lootTabX + tabW + 4
-        // General tab is hidden until a later release.
         if (mouseY >= tabBarY + 2 && mouseY <= tabBarY + TAB_HEIGHT - 1) {
-            if (mouseX >= speciesTabX && mouseX <= speciesTabX + tabW) { activeTab = "species"; updateWidgetVisibility(); return true }
-            if (mouseX >= jobsTabX && mouseX <= jobsTabX + tabW) { activeTab = "jobs"; updateWidgetVisibility(); return true }
-            if (mouseX >= lootTabX && mouseX <= lootTabX + tabW) { activeTab = "loot"; updateWidgetVisibility(); return true }
-            if (mouseX >= wikiTabX && mouseX <= wikiTabX + tabW) { activeTab = "wiki"; updateWidgetVisibility(); return true }
+            if (mouseX >= speciesTabX && mouseX <= speciesTabX + tabW) {
+                activeTab = "species"; updateWidgetVisibility(); return true
+            }
+            if (mouseX >= jobsTabX && mouseX <= jobsTabX + tabW) {
+                activeTab = "jobs"; updateWidgetVisibility(); return true
+            }
+            if (mouseX >= lootTabX && mouseX <= lootTabX + tabW) {
+                activeTab = "loot"; updateWidgetVisibility(); return true
+            }
+            if (mouseX >= wikiTabX && mouseX <= wikiTabX + tabW) {
+                activeTab = "wiki"; updateWidgetVisibility(); return true
+            }
         }
 
         when (activeTab) {
@@ -281,8 +302,9 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
                 if (speciesListPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
                 if (skillEditorPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
             }
+            "jobs" -> if (jobsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
+            "loot" -> if (lootPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
             "wiki" -> if (wikiPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
-            else -> if (jobsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
     }
@@ -293,8 +315,9 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
                 if (speciesListPanel.mouseReleased(mouseX, mouseY, button)) return true
                 if (skillEditorPanel.mouseReleased(mouseX, mouseY, button)) return true
             }
+            "jobs" -> if (jobsPanel.mouseReleased(mouseX, mouseY, button)) return true
+            "loot" -> if (lootPanel.mouseReleased(mouseX, mouseY, button)) return true
             "wiki" -> if (wikiPanel.mouseReleased(mouseX, mouseY, button)) return true
-            else -> if (jobsPanel.mouseReleased(mouseX, mouseY, button)) return true
         }
         return super.mouseReleased(mouseX, mouseY, button)
     }
@@ -319,10 +342,14 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         if (activeTab == "loot") {
             if (lootPanel.charTyped(chr, modifiers)) return true
         }
+        // "species" and "general" rely on super to route to the focused TextFieldWidget
         return super.charTyped(chr, modifiers)
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+        if (activeTab == "species") {
+            if (skillEditorPanel.keyPressed(keyCode, scanCode, modifiers)) return true
+        }
         if (activeTab == "jobs") {
             if (jobsPanel.keyPressed(keyCode, scanCode, modifiers)) return true
         }

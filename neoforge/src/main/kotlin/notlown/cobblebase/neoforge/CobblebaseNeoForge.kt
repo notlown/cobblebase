@@ -182,7 +182,12 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
                 if (!player.hasPermissionLevel(2)) return@enqueueWork
                 val skills = SpeciesSkillRegistry.getSkills(packet.species)?.skills ?: emptyList()
-                context.reply(notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket(packet.species, skills))
+                val produce = notlown.cobblebase.core.executors.ProducerExecutor.getProduceEntry(packet.species)
+                context.reply(notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket(
+                    packet.species, skills,
+                    produce?.itemId, produce?.count ?: 0, produce?.displayName,
+                    produce?.cooldownSeconds ?: 0
+                ))
             }
         }
 
@@ -193,6 +198,13 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         ) { packet, context ->
             context.enqueueWork {
                 notlown.cobblebase.core.AdminDataCache.setSpeciesSkills(packet.species, packet.skills)
+                val pItemId = packet.producerItemId
+                if (pItemId != null) {
+                    notlown.cobblebase.core.AdminDataCache.setSpeciesProducer(packet.species,
+                        notlown.cobblebase.core.AdminDataCache.ProducerData(pItemId, packet.producerCount, packet.producerDisplayName ?: "", packet.producerCooldown))
+                } else {
+                    notlown.cobblebase.core.AdminDataCache.setSpeciesProducer(packet.species, null)
+                }
             }
         }
 
@@ -402,6 +414,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         DiscoveryRegistry.load(world)
         SpeciesSkillOverrides.load(world)
         JobConfigOverrides.load(world)
+        notlown.cobblebase.core.ProducerOverrides.load(world)
         notlown.cobblebase.core.GeneralSettings.load(world)
         notlown.cobblebase.core.LootOverrides.load(world)
         notlown.cobblebase.core.SpawnData.loadFromCobblemonSpawnPool()
@@ -414,6 +427,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         DiscoveryRegistry.save(world)
         SpeciesSkillOverrides.save(world)
         JobConfigOverrides.save(world)
+        notlown.cobblebase.core.ProducerOverrides.save(world)
         notlown.cobblebase.core.GeneralSettings.save(world)
         notlown.cobblebase.core.LootOverrides.save(world)
     }

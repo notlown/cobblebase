@@ -31,6 +31,7 @@
 - **GenericLootExecutor search radius** — Diving, Archeology, and Pickup jobs now use the admin-configured search radius instead of a hardcoded value of 15.
 - **Producer item namespace** — Items like "lead" in the hardcoded map now display correctly as "minecraft:lead" in the admin GUI instead of showing "Unknown item ID".
 - **Producer cooldown mismatch** — Buffs tab now uses the per-species cooldown instead of always using the global default, fixing the mismatch between Species tab and Buffs tab values.
+- **Water-type Pokemon tethering** — Water-type Pokemon are no longer teleported out of water by the pasture tether system. They now swim freely and are placed directly in nearby water when on land.
 - **Deploy target** — Build system now deploys to the correct modpack folder (Cobbleverse 1.7.31).
 
 ### Wiki / Species Database

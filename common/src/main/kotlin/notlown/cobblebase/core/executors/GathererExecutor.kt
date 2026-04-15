@@ -333,8 +333,18 @@ object GathererExecutor : SkillExecutor {
         val timedOut = elapsed >= DEPOSIT_TIMEOUT_TICKS
 
         if (atChest) {
-            // Actually reached the chest — insert items
-            InventoryHelper.insertItems(world, chestPos, items)
+            // Actually reached the chest — insert items, keep leftovers
+            val leftovers = InventoryHelper.insertItems(world, chestPos, items)
+            val nonEmpty = leftovers.filter { !it.isEmpty }
+            if (nonEmpty.isNotEmpty()) {
+                // Chest was full — try another chest or drop leftovers
+                val altChest = InventoryHelper.findBestContainer(world, origin, 10, nonEmpty)
+                if (altChest != null && altChest != chestPos) {
+                    InventoryHelper.insertItems(world, altChest, nonEmpty)
+                } else {
+                    InventoryHelper.dropItems(world, pokemonEntity.blockPos, nonEmpty, origin)
+                }
+            }
             heldItems.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
             depositFails.remove(pokemonId)  // reset failure counter on success

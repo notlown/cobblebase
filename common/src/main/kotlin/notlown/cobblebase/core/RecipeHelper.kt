@@ -115,15 +115,11 @@ object RecipeHelper {
     private fun categorizeRecipe(outputId: String, output: ItemStack): String? {
         val id = outputId.lowercase()
 
-        // Always include Cobble Furniture and Cobblemon mod items
-        // Check multiple possible mod IDs for cobble furniture
-        if (id.startsWith("cobblefurniture:") || id.startsWith("cobble_furniture:") ||
-            id.startsWith("cobblemon_furniture:") || id.startsWith("cobblemon:furniture_")) return "Cobblefurniture"
-        // Any non-minecraft/cobblemon mod item that looks like furniture
-        if (!id.startsWith("minecraft:") && !id.startsWith("cobblemon:") &&
-            (id.contains("chair") || id.contains("table") || id.contains("shelf") || id.contains("desk") ||
-             id.contains("counter") || id.contains("bench") || id.contains("cabinet") || id.contains("lamp") ||
-             id.contains("couch") || id.contains("sofa") || id.contains("stool") || id.contains("drawer"))) return "Cobblefurniture"
+        // Cobble Furniture mod — any non-vanilla, non-cobblemon mod items
+        // These are modded furniture items from cobblefurniture, MrCrayfish, etc.
+        if (!id.startsWith("minecraft:") && !id.startsWith("cobblemon:")) return "Mod Furniture"
+
+        // Cobblemon-specific furniture/decoration
         if (id.startsWith("cobblemon:") && (id.contains("table") || id.contains("chair") || id.contains("shelf")
                     || id.contains("desk") || id.contains("counter") || id.contains("bench")
                     || id.contains("cabinet") || id.contains("lamp"))) return "Cobblemon"

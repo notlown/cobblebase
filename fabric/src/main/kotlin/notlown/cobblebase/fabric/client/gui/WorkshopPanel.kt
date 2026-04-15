@@ -43,6 +43,7 @@ class WorkshopPanel(
     private var searchField: TextFieldWidget? = null
     private var searchText = ""
     private var selectedCategory = "All"
+    private var selectedSubCategory = "All"
     private var scrollOffset = 0
     private var scrollAccumulator = 0.0
     private var dataRequested = false
@@ -608,7 +609,14 @@ class WorkshopPanel(
         val catY = startY + 14
         renderCategoryBar(context, mouseX, mouseY, catY)
 
-        val listY = catY + 14
+        // Sub-category bar (if current category has sub-categories)
+        val subCats = getSubCategories()
+        val subCatY = if (subCats.size > 1) catY + 12 else catY
+        if (subCats.size > 1) {
+            renderSubCategoryBar(context, mouseX, mouseY, catY + 12, subCats)
+        }
+
+        val listY = subCatY + 14
         val listH = panelH - (listY - panelY) - PADDING
         val filtered = getFilteredRecipes()
         val maxVisible = listH / ROW_HEIGHT
@@ -786,10 +794,25 @@ class WorkshopPanel(
             for (cat in categories) {
                 val catW = (textRenderer.getWidth(cat) * 0.6f).toInt() + 8
                 if (mouseX >= cx && mouseX < cx + catW && mouseY >= catY && mouseY < catY + 11) {
-                    selectedCategory = cat; scrollOffset = 0; return true
+                    selectedCategory = cat; selectedSubCategory = "All"; scrollOffset = 0; return true
                 }
                 cx += catW + 2
                 if (cx > panelX + panelW - PADDING) break
+            }
+
+            // Sub-category clicks
+            val subCats = getSubCategories()
+            if (subCats.size > 1) {
+                val subCatY = catY + 12
+                var sx = panelX + PADDING
+                for (sub in subCats) {
+                    val subW = (textRenderer.getWidth(sub) * 0.55f).toInt() + 6
+                    if (mouseX >= sx && mouseX < sx + subW && mouseY >= subCatY && mouseY < subCatY + 10) {
+                        selectedSubCategory = sub; scrollOffset = 0; return true
+                    }
+                    sx += subW + 1
+                    if (sx > panelX + panelW - PADDING) break
+                }
             }
 
             // Scrollbar click
@@ -879,7 +902,37 @@ class WorkshopPanel(
     private fun getFilteredRecipes(): List<RecipeListSyncS2CPacket.RecipeDTO> {
         return WorkshopCache.recipes.filter { recipe ->
             (selectedCategory == "All" || recipe.category == selectedCategory) &&
+            (selectedSubCategory == "All" || recipe.subCategory == selectedSubCategory) &&
             (searchText.isBlank() || recipe.outputDisplayName.lowercase().contains(searchText.lowercase()))
+        }
+    }
+
+    private fun getSubCategories(): List<String> {
+        if (selectedCategory == "All") return listOf("All")
+        val subs = WorkshopCache.recipes
+            .filter { it.category == selectedCategory }
+            .map { it.subCategory }
+            .filter { it.isNotBlank() }
+            .distinct().sorted()
+        return if (subs.size > 1) listOf("All") + subs else listOf("All")
+    }
+
+    private fun renderSubCategoryBar(context: DrawContext, mouseX: Int, mouseY: Int, subY: Int, subCats: List<String>) {
+        var sx = panelX + PADDING
+        for (sub in subCats) {
+            val subW = (textRenderer.getWidth(sub) * 0.55f).toInt() + 6
+            val isActive = selectedSubCategory == sub
+            val isHovered = mouseX >= sx && mouseX < sx + subW && mouseY >= subY && mouseY < subY + 10
+            val bg = when { isActive -> 0xFF3A5A3E.toInt(); isHovered -> 0xFF2A4A2E.toInt(); else -> 0xFF1A2A1E.toInt() }
+            context.fill(sx, subY, sx + subW, subY + 10, bg)
+            if (isActive) context.fill(sx, subY + 9, sx + subW, subY + 10, 0xFF4CAF50.toInt())
+            context.matrices.push()
+            context.matrices.translate((sx + 3).toFloat(), (subY + 1).toFloat(), 0f)
+            context.matrices.scale(0.55f, 0.55f, 1f)
+            context.drawTextWithShadow(textRenderer, sub, 0, 0, if (isActive) 0xFFFFFF else 0x999999)
+            context.matrices.pop()
+            sx += subW + 1
+            if (sx > panelX + panelW - PADDING) break
         }
     }
 

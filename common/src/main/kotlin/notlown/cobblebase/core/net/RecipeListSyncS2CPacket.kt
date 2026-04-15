@@ -20,7 +20,8 @@ data class RecipeListSyncS2CPacket(
         val outputCount: Int,
         val outputDisplayName: String,
         val inputs: List<Pair<String, Int>>,
-        val category: String
+        val category: String,
+        val subCategory: String = ""
     )
 
     companion object {
@@ -41,7 +42,8 @@ data class RecipeListSyncS2CPacket(
                         inputs.add(buf.readString() to buf.readVarInt())
                     }
                     val category = buf.readString()
-                    recipes.add(RecipeDTO(recipeId, outputItemId, outputCount, outputDisplayName, inputs, category))
+                    val subCategory = buf.readString()
+                    recipes.add(RecipeDTO(recipeId, outputItemId, outputCount, outputDisplayName, inputs, category, subCategory))
                 }
                 return RecipeListSyncS2CPacket(recipes)
             }
@@ -59,6 +61,7 @@ data class RecipeListSyncS2CPacket(
                         buf.writeVarInt(count)
                     }
                     buf.writeString(recipe.category)
+                    buf.writeString(recipe.subCategory)
                 }
             }
         }

@@ -25,7 +25,8 @@ object RecipeHelper {
         val outputCount: Int,
         val outputDisplayName: String,
         val inputs: List<Pair<String, Int>>,  // itemId -> count
-        val category: String
+        val category: String,
+        val subCategory: String = ""
     )
 
     /**
@@ -57,6 +58,7 @@ object RecipeHelper {
 
                 // Only include furniture, decoration, and building items
                 val category = categorizeRecipe(outputId, output) ?: continue
+                val subCategory = deriveSubCategory(outputId)
 
                 val inputs = materials.map { (item, count) ->
                     Registries.ITEM.getId(item).toString() to count
@@ -68,7 +70,8 @@ object RecipeHelper {
                     outputCount = output.count,
                     outputDisplayName = output.name.string,
                     inputs = inputs,
-                    category = category
+                    category = category,
+                    subCategory = subCategory
                 ))
             } catch (_: Exception) { /* skip unparseable recipes */ }
         }
@@ -164,7 +167,8 @@ object RecipeHelper {
                         outputCount = output.count,
                         outputDisplayName = output.name.string,
                         inputs = inputs,
-                        category = "Cobblefurnies"
+                        category = "Cobblefurnies",
+                        subCategory = deriveSubCategory(outputId)
                     ))
                     count++
                 } catch (_: Exception) {}
@@ -172,6 +176,38 @@ object RecipeHelper {
         } catch (_: Exception) {}
 
         Cobblebase.log("[RecipeHelper] Loaded $count CobbleFurnies recipes")
+    }
+
+    /**
+     * Derive a sub-category from an item ID for filtering within a category.
+     */
+    private fun deriveSubCategory(outputId: String): String {
+        val name = outputId.substringAfterLast(":").lowercase()
+        return when {
+            name.endsWith("_chair") || name.endsWith("_dark_chair") -> "Chairs"
+            name.endsWith("_table") || name.endsWith("_dark_table") -> "Tables"
+            name.endsWith("_sofa") -> "Sofas"
+            name.endsWith("_armchair") -> "Armchairs"
+            name.endsWith("_stool") || name.endsWith("_dark_stool") -> "Stools"
+            name.endsWith("_cabinet") || name.endsWith("_cabinetry") -> "Cabinets"
+            name.endsWith("_nightstand") -> "Nightstands"
+            name.endsWith("_drawer") -> "Drawers"
+            name.endsWith("_lamp") -> "Lamps"
+            name.endsWith("_curtain") -> "Curtains"
+            name.endsWith("_sink") -> "Sinks"
+            name.endsWith("_stove") -> "Stoves"
+            name.endsWith("_wall_support") -> "Wall Decor"
+            name.endsWith("_bed") -> "Beds"
+            name.endsWith("_door") -> "Doors"
+            name.endsWith("_carpet") || name.contains("poke_wool") -> "Carpets"
+            name.contains("mosaic") || name.contains("floor") || name.contains("planks") -> "Flooring"
+            name.contains("fridge") -> "Kitchen"
+            name.contains("toilet") -> "Bathroom"
+            name.contains("lantern") || name.contains("candle") -> "Lighting"
+            name.contains("banner") || name.contains("painting") || name.contains("sign") -> "Decoration"
+            name.contains("bookshelf") -> "Shelves"
+            else -> "Other"
+        }
     }
 
     /**

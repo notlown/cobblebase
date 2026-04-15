@@ -157,18 +157,27 @@ class WorkshopPanel(
         var y = startY
 
         // --- Project Header Card ---
-        context.fill(panelX + 2, y, panelX + panelW - 2, y + 26, 0x33FF5722)
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 34, 0x33FF5722)
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF5722.toInt())
 
-        // Craftsman sprite (1.5x scale = 24px)
-        renderScaledSprite(context, pokemonData.species.path, panelX + PADDING, y + 1, 1.5f)
-        context.matrices.push()
-        context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 4).toFloat(), 0f)
-        context.matrices.scale(SCALE, SCALE, 1f)
-        context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l${pokemonData.displayName.string}", 0, 0, 0xFFFFFF)
-        context.matrices.pop()
+        // Output item icon + name (LEFT side)
+        if (recipe != null) {
+            val outputStack = makeStack(recipe.outputItemId)
+            if (!outputStack.isEmpty) {
+                context.matrices.push()
+                context.matrices.translate((panelX + PADDING).toFloat(), (y + 4).toFloat(), 0f)
+                context.matrices.scale(1.5f, 1.5f, 1f)
+                context.drawItem(outputStack, 0, 0)
+                context.matrices.pop()
+            }
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 28).toFloat(), (y + 5).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
+            context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l${recipe.outputDisplayName}", 0, 0, 0xFFFFFF)
+            context.matrices.pop()
+        }
 
-        // Phase + craft count
+        // Phase + craft count (below item name)
         val phaseText = when (project.phase) {
             "GATHERING" -> "\u00A7eGathering materials..."
             "CRAFTING" -> "\u00A76Crafting..."
@@ -178,37 +187,21 @@ class WorkshopPanel(
         val craftCount = project.craftCount
         val countText = if (craftCount > 0) " \u00A78| \u00A7a${craftCount} crafted" else ""
         context.matrices.push()
-        context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 14).toFloat(), 0f)
+        context.matrices.translate((panelX + PADDING + 28).toFloat(), (y + 16).toFloat(), 0f)
         context.matrices.scale(0.6f, 0.6f, 1f)
         context.drawTextWithShadow(textRenderer, "$phaseText$countText", 0, 0, 0xAAAAAA)
         context.matrices.pop()
 
-        // Output icon + name (right side)
-        if (recipe != null) {
-            val outputStack = makeStack(recipe.outputItemId)
-            val nameStartX = panelX + panelW / 2
-            if (!outputStack.isEmpty) {
-                context.matrices.push()
-                context.matrices.translate(nameStartX.toFloat(), (y + 4).toFloat(), 0f)
-                context.matrices.scale(ICON_SCALE, ICON_SCALE, 1f)
-                context.drawItem(outputStack, 0, 0)
-                context.matrices.pop()
-            }
-            // Truncate name if too long
-            val maxNameW = ((panelX + panelW - PADDING - nameStartX - 16) / 0.6f).toInt()
-            var displayName = recipe.outputDisplayName
-            while (textRenderer.getWidth("Building: $displayName") > maxNameW && displayName.length > 10) {
-                displayName = displayName.dropLast(1)
-            }
-            if (displayName != recipe.outputDisplayName) displayName += ".."
-            context.matrices.push()
-            context.matrices.translate((nameStartX + 14).toFloat(), (y + 6).toFloat(), 0f)
-            context.matrices.scale(0.6f, 0.6f, 1f)
-            context.drawTextWithShadow(textRenderer, "\u00A77Building: \u00A7f\u00A7l$displayName", 0, 0, 0xFFFFFF)
-            context.matrices.pop()
-        }
+        // Craftsman sprite (RIGHT side, 3x scale = 48px)
+        renderScaledSprite(context, pokemonData.species.path, panelX + panelW - PADDING - 48, y + 1, 3.0f)
+        // Mon name under sprite
+        context.matrices.push()
+        context.matrices.translate((panelX + panelW - PADDING - 48).toFloat(), (y + 26).toFloat(), 0f)
+        context.matrices.scale(0.5f, 0.5f, 1f)
+        context.drawTextWithShadow(textRenderer, pokemonData.displayName.string, 0, 0, 0xCCCCCC)
+        context.matrices.pop()
 
-        y += 26
+        y += 36
 
         // --- Material progress ---
         context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())

@@ -76,9 +76,9 @@ object SupplierHelper {
             suggestions.add(SupplierSuggestion("cobblebase:harvester", "Harvester", "harvests crops and plants"))
         }
 
-        // Player can always supply manually
+        // Fallback: Architect as universal gatherer for anything unmatched
         if (suggestions.isEmpty()) {
-            suggestions.add(SupplierSuggestion("manual", "Manual", "place in a nearby chest"))
+            suggestions.add(SupplierSuggestion("cobblebase:finder_bui", "Architect", "gathers materials"))
         }
 
         return suggestions.distinctBy { it.skillId }

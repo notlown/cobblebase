@@ -224,6 +224,25 @@ class SkillsPanel(
             }
         }
 
+        // "Helps your Craftsman" overlay for supplier Mons
+        pokemonList.forEachIndexed { index, pokemonData ->
+            if (AssignmentCache.isCraftsmanSupplier(pokemonData.pokemonId)) {
+                val rowH = rowHeights[index]
+                val ry = contentY + rowOffsets[index] + scrollY
+                if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) return@forEachIndexed
+
+                // Semi-transparent overlay over the skill buttons area
+                val overlayX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
+                context.fill(overlayX, ry, panelX + panelW - 2, ry + rowH - 1, 0xAA1E1E2E.toInt())
+
+                // "Helps your Craftsman" label centered in the overlay
+                val label = "\u00A76\u00A7lHelps your Craftsman"
+                val labelW = textRenderer.getWidth(label)
+                val centerX = overlayX + (panelX + panelW - 2 - overlayX - labelW) / 2
+                context.drawTextWithShadow(textRenderer, label, centerX, ry + rowH / 2 - 4, 0xFFAA00)
+            }
+        }
+
         // Skill buttons
         for (btn in allButtons) {
             val rx = btn.baseX + scrollX
@@ -321,6 +340,9 @@ class SkillsPanel(
 
         val contentBottom = panelY + panelH - 18
         for (btn in allButtons) {
+            // Skip clicks on supplier Mons — they're locked to Craftsman
+            if (AssignmentCache.isCraftsmanSupplier(btn.pokemonId)) continue
+
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
             val bw = if (btn.skillId == null) AUTO_BTN_WIDTH else BTN_WIDTH

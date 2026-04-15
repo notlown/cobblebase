@@ -17,6 +17,11 @@ object AssignmentCache {
 
     fun getAssignment(pokemonId: UUID): String? = assignments[pokemonId]
 
+    fun isCraftsmanSupplier(pokemonId: UUID): Boolean {
+        val assignment = assignments[pokemonId] ?: return false
+        return assignment.startsWith("craftsman_supply:")
+    }
+
     fun setAssignment(pokemonId: UUID, skillId: String?) {
         if (skillId == null) assignments.remove(pokemonId) else assignments[pokemonId] = skillId
     }

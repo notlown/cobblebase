@@ -8,16 +8,17 @@ import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillRegistry
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
 import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket.PasturePokemonDataDTO
+import net.neoforged.neoforge.network.PacketDistributor
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.text.Text
-import net.neoforged.neoforge.network.PacketDistributor
 import java.util.UUID
 import java.util.function.Function
 
 /**
- * Skills tab content - shows Pokemon list with skill assignment buttons and proficiency stars.
+ * Skills tab content - refactored from the original SkillAssignmentScreen.
+ * Shows Pokemon list with skill assignment buttons and proficiency stars.
  */
 class SkillsPanel(
     private val parent: CobblebaseScreen,
@@ -33,7 +34,7 @@ class SkillsPanel(
     private val ROW_HEIGHT_LARGE = 42
     private val HEADER_HEIGHT = 14
     private val PANEL_PADDING = 8
-    private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4
+    private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
     private val NAME_WIDTH = 50 + ICON_OFFSET
     private val AURA_ICON_WIDTH = 15
     private val AUTO_BTN_WIDTH = 36
@@ -50,9 +51,11 @@ class SkillsPanel(
     private var contentY = 0
     private var isDraggingScrollbar = false
 
+    // Per-pokemon layout: cumulative Y offset and row height
     private val rowOffsets = mutableListOf<Int>()
     private val rowHeights = mutableListOf<Int>()
 
+    // Scrollbar track dimensions (updated each render)
     private var trackX = 0
     private var trackTop = 0
     private var trackHeight = 0
@@ -69,7 +72,8 @@ class SkillsPanel(
         scrollY = 0
         contentY = panelY + HEADER_HEIGHT + PANEL_PADDING
 
-        // Bottom bar: Discord icon (if enabled) | Mute toggle | Done button
+        // Bottom bar: Discord icon | Mute toggle | Done button
+        // Discord icon button (bottom-left) — only if enabled via GeneralSettings
         val discordEnabled = notlown.cobblebase.core.GeneralSettingsCache.discordEnabled
         val muteBtnX = if (discordEnabled) {
             addWidget.apply(ButtonWidget.builder(Text.literal("\u00A79\u2689")) {
@@ -81,6 +85,7 @@ class SkillsPanel(
             panelX + 4
         }
 
+        // Mute toggle button (next to Discord, or leftmost if Discord disabled)
         val muteBtn = ButtonWidget.builder(Text.literal(getMuteIcon())) { btn ->
             val config = me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).config
             config.cry.cryEnabled = !config.cry.cryEnabled
@@ -89,7 +94,7 @@ class SkillsPanel(
         }.dimensions(muteBtnX, panelY + panelH - 16, 14, 12).build()
         addWidget.apply(muteBtn)
 
-        // Admin button (only if OP)
+        // Admin button (only if OP) — bottom-right, before Done
         val client = net.minecraft.client.MinecraftClient.getInstance()
         if (client.player?.hasPermissionLevel(2) == true) {
             addWidget.apply(ButtonWidget.builder(Text.literal("\u00A76Admin")) {
@@ -98,6 +103,7 @@ class SkillsPanel(
             }.dimensions(panelX + panelW - 98, panelY + panelH - 16, 36, 12).build())
         }
 
+        // Done button (bottom-right)
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
             .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
 
@@ -110,11 +116,13 @@ class SkillsPanel(
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
 
+            // Count assignable (non-buff, enabled) skills (without Auto)
             val skillCount = availableSkills.count { entry ->
                 val skillDef = SkillRegistry.get(entry.skillId)
                 skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor) && JobConfigOverrides.isEnabled(entry.skillId)
             }
 
+            // Auto button has its own column, skills start after it
             val autoX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
             val skillStartX = autoX + AUTO_BTN_WIDTH + BTN_GAP
             val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
@@ -127,8 +135,10 @@ class SkillsPanel(
 
             val rowY = contentY + cumulativeY
 
+            // Auto button in its own column
             allButtons.add(SkillButtonData(pokemonId, null, "Relax", 0, "", autoX, rowY, currentAssignment == null))
 
+            // Skill buttons start after Auto column
             var btnX = skillStartX
             var btnY = rowY
 
@@ -152,13 +162,16 @@ class SkillsPanel(
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // Column headers
         val headerY = contentY - 12
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", panelX + PANEL_PADDING, headerY, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eSkills", panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH, headerY, 0xFFFF55)
 
+        // Content area with scissor
         val contentBottom = panelY + panelH - 18
         context.enableScissor(panelX, contentY - 2, panelX + panelW, contentBottom)
 
+        // Row backgrounds + Pokemon names with sprite icons
         pokemonList.forEachIndexed { index, pokemonData ->
             val rowH = rowHeights[index]
             val ry = contentY + rowOffsets[index] + scrollY
@@ -167,22 +180,24 @@ class SkillsPanel(
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + rowH - 1, rowColor)
 
+            // Pokemon portrait icon
             val name = pokemonData.displayName.string
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, pokemonData.species, name, pokemonData.aspects,
                 panelX + PANEL_PADDING, ry + 4, delta
             )
 
-            val nameX = (panelX + PANEL_PADDING + ICON_OFFSET).toFloat()
+            // Pokemon name + level (shifted right for icon, scaled 0.75x)
+            val nameX = panelX + PANEL_PADDING + ICON_OFFSET
             val nameScale = 0.75f
             context.matrices.push()
-            context.matrices.translate(nameX, (ry + 4).toFloat(), 0f)
+            context.matrices.translate(nameX.toFloat(), (ry + 4).toFloat(), 0f)
             context.matrices.scale(nameScale, nameScale, 1f)
             context.drawTextWithShadow(textRenderer, name, 0, 0, 0xFFFFFF)
             context.matrices.pop()
 
             context.matrices.push()
-            context.matrices.translate(nameX, (ry + 14).toFloat(), 0f)
+            context.matrices.translate(nameX.toFloat(), (ry + 14).toFloat(), 0f)
             context.matrices.scale(nameScale, nameScale, 1f)
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", 0, 0, 0xAAAAAA)
             context.matrices.pop()
@@ -209,15 +224,35 @@ class SkillsPanel(
             }
         }
 
+        // "Helps your Craftsman" overlay for supplier Mons
+        pokemonList.forEachIndexed { index, pokemonData ->
+            if (AssignmentCache.isCraftsmanSupplier(pokemonData.pokemonId)) {
+                val rowH = rowHeights[index]
+                val ry = contentY + rowOffsets[index] + scrollY
+                if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) return@forEachIndexed
+
+                // Semi-transparent overlay over the skill buttons area
+                val overlayX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
+                context.fill(overlayX, ry, panelX + panelW - 2, ry + rowH - 1, 0xAA1E1E2E.toInt())
+
+                // "Helps your Craftsman" label centered in the overlay
+                val label = "\u00A76\u00A7lHelps your Craftsman"
+                val labelW = textRenderer.getWidth(label)
+                val centerX = overlayX + (panelX + panelW - 2 - overlayX - labelW) / 2
+                context.drawTextWithShadow(textRenderer, label, centerX, ry + rowH / 2 - 4, 0xFFAA00)
+            }
+        }
+
+        // Skill buttons
         for (btn in allButtons) {
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
-
-            if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) continue
-            if (rx + BTN_WIDTH < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
-
             val isAutoBtn = btn.skillId == null
             val bw = if (isAutoBtn) AUTO_BTN_WIDTH else BTN_WIDTH
+
+            if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) continue
+            if (rx + bw < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
+
             val hovered = mouseX in rx..(rx + bw) && mouseY in ry..(ry + BTN_HEIGHT)
 
             val categoryColor = CobblebaseScreen.CATEGORY_COLORS[btn.category] ?: 0xFF666666.toInt()
@@ -236,6 +271,8 @@ class SkillsPanel(
 
             val textColor = if (btn.selected) 0xFFFFFF else 0xBBBBBB
             val nameText = btn.displayName
+
+            // Scale text to 0.75x for better readability in small buttons
             val scale = 0.75f
             val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
             val textX = rx + (bw - nameWidth) / 2
@@ -249,12 +286,10 @@ class SkillsPanel(
 
             if (btn.proficiency > 0) {
                 val stars = "\u2605".repeat(btn.proficiency) + "\u2606".repeat(5 - btn.proficiency)
-                val starColor = when {
-                    btn.proficiency >= 5 -> 0xFFD700
-                    btn.proficiency >= 4 -> 0xFFA500
-                    btn.proficiency >= 3 -> 0x88CC88
-                    else -> 0x888888
-                }
+                val starColor = if (btn.proficiency >= 5) 0xFFD700
+                    else if (btn.proficiency >= 4) 0xFFA500
+                    else if (btn.proficiency >= 3) 0x88CC88
+                    else 0x888888
                 val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
                 val starX = rx + (bw - starWidth) / 2
 
@@ -268,26 +303,32 @@ class SkillsPanel(
 
         context.disableScissor()
 
+        // Scrollbar
         totalContentHeight = if (rowOffsets.isEmpty()) 0 else rowOffsets.last() + rowHeights.last()
         visibleHeight = contentBottom - contentY
         if (totalContentHeight > visibleHeight) {
             trackX = panelX + panelW - 8
             trackTop = contentY
             trackHeight = visibleHeight
+            // Track background
             context.fill(trackX, trackTop, trackX + 6, trackTop + trackHeight, 0x44FFFFFF.toInt())
+            // Thumb
             thumbHeight = (visibleHeight.toFloat() / totalContentHeight * trackHeight).toInt().coerceAtLeast(16)
             val scrollRange = totalContentHeight - visibleHeight
             val scrollProgress = (-scrollY).toFloat() / scrollRange.coerceAtLeast(1)
             thumbY = trackTop + ((trackHeight - thumbHeight) * scrollProgress).toInt()
+            // Highlight when hovering or dragging
             val isHovered = mouseX in trackX..(trackX + 6) && mouseY in thumbY..(thumbY + thumbHeight)
             val thumbColor = if (isDraggingScrollbar || isHovered) 0xFFDDDDDD.toInt() else 0xFFAAAAAA.toInt()
             context.fill(trackX, thumbY, trackX + 6, thumbY + thumbHeight, thumbColor)
         }
 
+        // Footer line
         context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Check scrollbar click first
         if (totalContentHeight > visibleHeight &&
             mouseX >= trackX && mouseX <= trackX + 6 &&
             mouseY >= trackTop && mouseY <= trackTop + trackHeight
@@ -299,6 +340,9 @@ class SkillsPanel(
 
         val contentBottom = panelY + panelH - 18
         for (btn in allButtons) {
+            // Skip clicks on supplier Mons — they're locked to Craftsman
+            if (AssignmentCache.isCraftsmanSupplier(btn.pokemonId)) continue
+
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
             val bw = if (btn.skillId == null) AUTO_BTN_WIDTH else BTN_WIDTH

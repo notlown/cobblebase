@@ -385,8 +385,9 @@ class WorkshopPanel(
         // Supplier assign clicks
         for (row in supplierRows) {
             if (mouseY >= row.y && mouseY < row.y + 12 && mouseX >= panelX + panelW - 50 && mouseX <= panelX + panelW) {
-                PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, row.skillId))
-                AssignmentCache.setAssignment(row.pokemonId, row.skillId)
+                val supplyAssignment = "craftsman_supply:${row.skillId}"
+                PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, supplyAssignment))
+                AssignmentCache.setAssignment(row.pokemonId, supplyAssignment)
                 // Refresh workshop state
                 PacketDistributor.sendToServer(WorkshopRequestC2SPacket())
                 return true
@@ -491,7 +492,7 @@ class WorkshopPanel(
             val currentAssignment = if (matchingMons.isNotEmpty()) {
                 AssignmentCache.getAssignment(matchingMons.first().pokemonId)
             } else null
-            val isAssigned = currentAssignment == suggestion.skillId
+            val isAssigned = currentAssignment == "craftsman_supply:${suggestion.skillId}" || currentAssignment == suggestion.skillId
 
             // Row: [Job Name] - [Mon name or "No mon available"] - [Assign/Assigned button]
             val rowBg = if (isAssigned) 0x224CAF50 else 0x22FF9800

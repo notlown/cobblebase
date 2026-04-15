@@ -100,7 +100,11 @@ object BaseManager {
             return
         }
 
-        val assignedSkillId: String? = assignments[pokemonId]
+        val rawAssignment: String? = assignments[pokemonId]
+        // Craftsman supplier mode: "craftsman_supply:cobblebase:mining" → execute "cobblebase:mining"
+        val assignedSkillId: String? = if (rawAssignment != null && rawAssignment.startsWith("craftsman_supply:")) {
+            rawAssignment.removePrefix("craftsman_supply:")
+        } else rawAssignment
 
         if (assignedSkillId != null) {
             // Check if the assigned skill is still enabled by admin
@@ -182,6 +186,14 @@ object BaseManager {
     }
 
     fun getAssignment(pokemonId: UUID): String? = assignments[pokemonId]
+
+    /** Check if a Pokemon is assigned as a Craftsman supplier. */
+    fun isCraftsmanSupplier(pokemonId: UUID): Boolean {
+        val assignment = assignments[pokemonId] ?: return false
+        return assignment.startsWith("craftsman_supply:")
+    }
+
+    const val SUPPLIER_PREFIX = "craftsman_supply:"
 
     /**
      * Returns a snapshot of all current assignments for sync packets.

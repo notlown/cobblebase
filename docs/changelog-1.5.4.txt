@@ -21,6 +21,10 @@
 - **Prof 5 no longer summons legendaries** — Prof 5 now works like all other proficiency levels: recruits same-type Pokemon with better rarity odds. Higher proficiency = more Rare/Ultra Rare spawns, fewer Common.
 - **Cooldown scales normally** — Prof 5 cooldown now scales with proficiency like every other level, instead of the old fixed 30-minute cooldown.
 
+### Compatibility
+
+- **Chiselmon PC mod** — Cobblebase is now fully compatible with Chiselmon. The Cobblebase button in the Pasture GUI no longer causes crashes when Chiselmon is installed.
+
 ### Bug Fixes
 
 - **Producer instant drop exploit** — Producer now waits the full cooldown before the first drop. Switching jobs to skip cooldown no longer works.

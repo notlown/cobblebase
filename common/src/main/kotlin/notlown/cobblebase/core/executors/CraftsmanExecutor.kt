@@ -7,6 +7,8 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import notlown.cobblebase.core.*
 import notlown.cobblebase.core.effects.SkillEffects
 import java.util.UUID
@@ -150,6 +152,23 @@ object CraftsmanExecutor : SkillExecutor {
         WorkshopManager.resetGathered(pokemonId)
         WorkshopManager.setPhase(pokemonId, WorkshopManager.Phase.DEPOSITING, now)
         SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+
+        // Notify owner
+        val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()
+        if (ownerUuid != null) {
+            val message = Text.literal("")
+                .append(Text.literal("[Workshop] ").formatted(Formatting.GOLD))
+                .append(Text.literal("${pokemonEntity.pokemon.species.name}").formatted(Formatting.YELLOW))
+                .append(Text.literal(" crafted ").formatted(Formatting.GRAY))
+                .append(Text.literal("${output.name.string} x${output.count}").formatted(Formatting.WHITE, Formatting.BOLD))
+                .append(Text.literal("!").formatted(Formatting.GRAY))
+            for (player in world.players) {
+                if (player.uuid == ownerUuid) {
+                    player.sendMessage(message, false)
+                    player.playSound(net.minecraft.sound.SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f)
+                }
+            }
+        }
 
         // Log
         LogManager.log(

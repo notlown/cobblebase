@@ -41,6 +41,8 @@ class WorkshopPanel(
     private var scrollOffset = 0
     private var scrollAccumulator = 0.0
     private var dataRequested = false
+    private var lastRefreshTime = 0L
+    private val REFRESH_INTERVAL_MS = 3000L // refresh every 3 seconds
 
     // Categories derived from recipes
     private val categories = mutableListOf("All")
@@ -63,6 +65,13 @@ class WorkshopPanel(
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // Periodic refresh of workshop state (every 3 seconds)
+        val now = System.currentTimeMillis()
+        if (now - lastRefreshTime > REFRESH_INTERVAL_MS) {
+            lastRefreshTime = now
+            ClientPlayNetworking.send(WorkshopRequestC2SPacket())
+        }
+
         // Background
         context.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xCC1E1E2E.toInt())
 

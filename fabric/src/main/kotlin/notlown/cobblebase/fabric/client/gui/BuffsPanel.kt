@@ -173,8 +173,13 @@ class BuffsPanel(
             "furnace_fuel", "brew_fuel" -> "Fueling furnaces/brewers$cooldownLabel"
             "producer" -> {
                 val produce = notlown.cobblebase.core.executors.ProducerExecutor.getProduceEntry(speciesName)
-                if (produce != null) "Producing ${produce.displayName} x${produce.count}$cooldownLabel"
-                else "Producing items$cooldownLabel"
+                // Use per-species cooldown if set, otherwise fall back to global
+                val producerCooldown = produce?.cooldownSeconds ?: cooldownSeconds
+                val effectiveProducerCd = if (CobblebaseConfig.devMode) 5L
+                    else producerCooldown * (6 - prof) / 3
+                val producerCdLabel = if (effectiveProducerCd > 0) " · every ${effectiveProducerCd}s" else ""
+                if (produce != null) "Producing ${produce.displayName} x${produce.count}$producerCdLabel"
+                else "Producing items$producerCdLabel"
             }
             // Passive buffs — no cooldown shown (always active)
             "speed_boost" -> "Speed II for nearby players"

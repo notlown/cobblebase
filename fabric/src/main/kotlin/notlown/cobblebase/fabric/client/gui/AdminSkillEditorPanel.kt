@@ -31,7 +31,7 @@ class AdminSkillEditorPanel(
     private val ROW_HEIGHT = 16
     private val PADDING = 6
     private val STAR_SIZE = 8
-    private val PRODUCER_SECTION_H = 30
+    private val PRODUCER_SECTION_H = 34
 
     private val CHECKBOX_ON = 0xFF4CAF50.toInt()
     private val CHECKBOX_OFF = 0xFF555555.toInt()
@@ -401,78 +401,91 @@ class AdminSkillEditorPanel(
         val accentColor = if (producerJobActive) 0xFFFF9800.toInt() else 0xFF666666.toInt()
         context.fill(x + 2, psY, x + w - 2, psY + 1, accentColor)
 
-        // Enable/Disable toggle (left)
+        // Row 1: [Toggle] "Producer Job" [Icon] [Item Field] [-]x1[+] [-]300s[+]
+        val row1Y = psY + 3
+
+        // Enable/Disable toggle
         val toggleX = x + PADDING
-        val toggleY = psY + 4
         val toggleColor = if (producerJobActive) CHECKBOX_ON else 0xFFFF5555.toInt()
-        context.fill(toggleX, toggleY, toggleX + 8, toggleY + 8, toggleColor)
+        context.fill(toggleX, row1Y + 1, toggleX + 8, row1Y + 9, toggleColor)
         context.matrices.push()
-        context.matrices.translate((toggleX + 1).toFloat(), toggleY.toFloat(), 0f)
+        context.matrices.translate((toggleX + 1).toFloat(), (row1Y + 1).toFloat(), 0f)
         context.matrices.scale(scale, scale, 1f)
         context.drawTextWithShadow(textRenderer, if (producerJobActive) "\u2713" else "\u2717", 0, 0, 0xFFFFFF)
         context.matrices.pop()
 
-        // Item icon preview (next to toggle)
-        val iconX = toggleX + 11
+        // "Producer" label
+        val labelX = toggleX + 11
+        val labelColor = if (producerJobActive) 0xFFFF9800.toInt() else 0xFF888888.toInt()
+        context.matrices.push()
+        context.matrices.translate(labelX.toFloat(), (row1Y + 2).toFloat(), 0f)
+        context.matrices.scale(scale, scale, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A7lProducer", 0, 0, labelColor)
+        context.matrices.pop()
+
+        // Item icon preview
+        val iconX = labelX + 40
         val currentText = producerItemField?.text ?: ""
         val stack = if (currentText.isNotBlank()) makeStack(currentText) else ItemStack.EMPTY
         if (!stack.isEmpty) {
             val iconScale = 8f / 16f
             context.matrices.push()
-            context.matrices.translate(iconX.toFloat(), (psY + 3).toFloat(), 0f)
+            context.matrices.translate(iconX.toFloat(), row1Y.toFloat(), 0f)
             context.matrices.scale(iconScale, iconScale, 1f)
             context.drawItem(stack, 0, 0)
             context.matrices.pop()
         }
 
-        // Position text field (after icon)
+        // Position text field
         val fieldX = iconX + 12
         producerItemField?.let { field ->
             field.x = fieldX
-            field.y = psY + 3
+            field.y = row1Y
             field.width = w - (fieldX - x) - PADDING - 100
             field.active = producerJobActive
         }
 
-        // Right side: Count [-] x1 [+] | Cooldown
+        // Right side: Count [-] x1 [+] | Cooldown [-] 300s [+]
         val rightAreaX = x + w - PADDING - 94
-        val rowY1 = psY + 4
-
-        // Count controls
-        context.matrices.push()
-        context.matrices.translate(rightAreaX.toFloat(), (rowY1 + 1).toFloat(), 0f)
-        context.matrices.scale(scale, scale, 1f)
         val cActive = producerJobActive
-        val minusHover = cActive && mouseX >= rightAreaX && mouseX < rightAreaX + 8 && mouseY >= rowY1 && mouseY < rowY1 + 10
+
+        // Count
+        context.matrices.push()
+        context.matrices.translate(rightAreaX.toFloat(), (row1Y + 2).toFloat(), 0f)
+        context.matrices.scale(scale, scale, 1f)
+        val minusHover = cActive && mouseX >= rightAreaX && mouseX < rightAreaX + 8 && mouseY >= row1Y && mouseY < row1Y + 10
         context.drawTextWithShadow(textRenderer, "-", 0, 0, if (minusHover) 0xFF5555 else if (cActive) 0xAAAAAA else 0x555555)
         context.drawTextWithShadow(textRenderer, "x$producerCount", 10, 0, if (cActive) 0xFFFFFF else 0x666666)
-        val plusHover = cActive && mouseX >= rightAreaX + 30 && mouseX < rightAreaX + 40 && mouseY >= rowY1 && mouseY < rowY1 + 10
+        val plusHover = cActive && mouseX >= rightAreaX + 30 && mouseX < rightAreaX + 40 && mouseY >= row1Y && mouseY < row1Y + 10
         context.drawTextWithShadow(textRenderer, "+", 32, 0, if (plusHover) 0x55FF55 else if (cActive) 0xAAAAAA else 0x555555)
         context.matrices.pop()
 
-        // Cooldown controls
+        // Cooldown
         val cdX = rightAreaX + 40
         context.matrices.push()
-        context.matrices.translate(cdX.toFloat(), (rowY1 + 1).toFloat(), 0f)
+        context.matrices.translate(cdX.toFloat(), (row1Y + 2).toFloat(), 0f)
         context.matrices.scale(scale, scale, 1f)
-        val cdMinusHover = cActive && mouseX >= cdX && mouseX < cdX + 8 && mouseY >= rowY1 && mouseY < rowY1 + 10
+        val cdMinusHover = cActive && mouseX >= cdX && mouseX < cdX + 8 && mouseY >= row1Y && mouseY < row1Y + 10
         context.drawTextWithShadow(textRenderer, "-", 0, 0, if (cdMinusHover) 0xFF5555 else if (cActive) 0xAAAAAA else 0x555555)
         context.drawTextWithShadow(textRenderer, "${producerCooldown}s", 10, 0, if (cActive) 0xFF9800 else 0x666666)
-        val cdPlusHover = cActive && mouseX >= cdX + 46 && mouseX < cdX + 56 && mouseY >= rowY1 && mouseY < rowY1 + 10
+        val cdPlusHover = cActive && mouseX >= cdX + 46 && mouseX < cdX + 56 && mouseY >= row1Y && mouseY < row1Y + 10
         context.drawTextWithShadow(textRenderer, "+", 48, 0, if (cdPlusHover) 0x55FF55 else if (cActive) 0xAAAAAA else 0x555555)
         context.matrices.pop()
 
-        // Status row
-        val statusY = psY + 18
+        // Row 2: Status text
+        val row2Y = psY + 17
         context.matrices.push()
-        context.matrices.translate((x + PADDING + 12).toFloat(), statusY.toFloat(), 0f)
+        context.matrices.translate((x + PADDING + 12).toFloat(), row2Y.toFloat(), 0f)
         context.matrices.scale(0.6f, 0.6f, 1f)
         if (!producerJobActive) {
             context.drawTextWithShadow(textRenderer, "Producer paused (item saved)", 0, 0, 0xFF8888)
         } else if (currentText.isNotBlank()) {
             val validItem = allItemIds?.contains(currentText) ?: false
             val color = if (validItem) 0xFF55FF55.toInt() else 0xFFFF5555.toInt()
-            context.drawTextWithShadow(textRenderer, if (validItem) "Valid item" else "Unknown item ID", 0, 0, color)
+            val statusText = if (validItem) "Valid item · base cooldown ${producerCooldown}s (adjusted by proficiency)" else "Unknown item ID"
+            context.drawTextWithShadow(textRenderer, statusText, 0, 0, color)
+        } else {
+            context.drawTextWithShadow(textRenderer, "Enter an item ID to enable production", 0, 0, 0x888888)
         }
         context.matrices.pop()
     }
@@ -506,11 +519,11 @@ class AdminSkillEditorPanel(
         // --- Producer section clicks ---
         if (producerEnabled) {
             val psY = y + PADDING + 14
+            val row1Y = psY + 3
 
             // Toggle button
             val toggleX = x + PADDING
-            val toggleY = psY + 4
-            if (mouseX >= toggleX && mouseX < toggleX + 10 && mouseY >= toggleY - 1 && mouseY < toggleY + 10) {
+            if (mouseX >= toggleX && mouseX < toggleX + 10 && mouseY >= row1Y && mouseY < row1Y + 10) {
                 producerJobActive = !producerJobActive
                 dirty = true
                 return true
@@ -519,8 +532,7 @@ class AdminSkillEditorPanel(
             // Count and cooldown +/- (only when active)
             if (producerJobActive) {
                 val rightAreaX = x + w - PADDING - 94
-                val rowY1 = psY + 4
-                if (mouseY >= rowY1 && mouseY < rowY1 + 10) {
+                if (mouseY >= row1Y && mouseY < row1Y + 10) {
                     // Count [-]
                     if (mouseX >= rightAreaX && mouseX < rightAreaX + 10) {
                         producerCount = (producerCount - 1).coerceAtLeast(1)

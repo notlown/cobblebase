@@ -93,8 +93,18 @@ class WorkshopPanel(
             projectSectionH = renderActiveProjects(context, mouseX, mouseY, projY, activeProjects)
         }
 
+        // --- Supplier suggestions section ---
+        var supplierSectionH = 0
+        if (activeProjects.isNotEmpty()) {
+            val project = WorkshopCache.projects[activeProjects.first().pokemonId]
+            if (project != null) {
+                val suppY = catY + 14 + projectSectionH
+                supplierSectionH = renderSupplierSuggestions(context, mouseX, mouseY, suppY, project)
+            }
+        }
+
         // --- Recipe browser ---
-        val listY = catY + 14 + projectSectionH
+        val listY = catY + 14 + projectSectionH + supplierSectionH
         val listH = panelH - (listY - panelY) - PADDING
         val filtered = getFilteredRecipes()
 
@@ -233,7 +243,10 @@ class WorkshopPanel(
             val displayName = pokemonData.displayName.string
 
             // Background card
-            val cardH = if (recipe != null) 44 else 20
+            val neededSuppliers = if (recipe != null) {
+                notlown.cobblebase.core.SupplierHelper.getNeededSuppliers(project.requiredItems)
+            } else emptyList()
+            val cardH = if (recipe != null) 54 + (if (neededSuppliers.isNotEmpty()) 10 else 0) else 20
             context.fill(panelX + 2, y, panelX + panelW - 2, y + cardH, 0x33FF5722)
 
             // Row 1: Pokemon name + phase + output icon
@@ -325,13 +338,24 @@ class WorkshopPanel(
                 context.drawTextWithShadow(textRenderer, "${(progress * 100).toInt()}%", 0, 0, 0xAAAAAA)
                 context.matrices.pop()
 
+                // Supplier suggestions
+                val suppY = barY + 6
+                if (neededSuppliers.isNotEmpty()) {
+                    context.matrices.push()
+                    context.matrices.translate((panelX + PADDING).toFloat(), suppY.toFloat(), 0f)
+                    context.matrices.scale(0.5f, 0.5f, 1f)
+                    val suppText = "Needs: " + neededSuppliers.joinToString(", ") { "\u00A7e${it.skillName}\u00A77 (${it.description})" }
+                    context.drawTextWithShadow(textRenderer, "\u00A78$suppText", 0, 0, 0x888888)
+                    context.matrices.pop()
+                }
+
                 // Hint if gathering and nothing found
                 if (project.phase == "GATHERING" && totalGathered == 0) {
-                    val hintY = barY + 6
+                    val hintY = suppY + (if (neededSuppliers.isNotEmpty()) 7 else 0)
                     context.matrices.push()
                     context.matrices.translate((panelX + PADDING).toFloat(), hintY.toFloat(), 0f)
                     context.matrices.scale(0.5f, 0.5f, 1f)
-                    context.drawTextWithShadow(textRenderer, "Place required materials in a nearby chest — the Craftsman will collect them", 0, 0, 0xFF8888)
+                    context.drawTextWithShadow(textRenderer, "Assign supplier Mons or place materials in a nearby chest", 0, 0, 0xFF8888)
                     context.matrices.pop()
                 }
             }
@@ -356,6 +380,17 @@ class WorkshopPanel(
             }
             cx += catW + 2
             if (cx > panelX + panelW - PADDING) break
+        }
+
+        // Supplier assign clicks
+        for (row in supplierRows) {
+            if (mouseY >= row.y && mouseY < row.y + 12 && mouseX >= panelX + panelW - 50 && mouseX <= panelX + panelW) {
+                PacketDistributor.sendToServer(notlown.cobblebase.core.net.SkillAssignmentC2SPacket(row.pokemonId, row.skillId))
+                AssignmentCache.setAssignment(row.pokemonId, row.skillId)
+                // Refresh workshop state
+                PacketDistributor.sendToServer(WorkshopRequestC2SPacket())
+                return true
+            }
         }
 
         // Recipe row [Set] button clicks
@@ -411,6 +446,89 @@ class WorkshopPanel(
             return true
         }
         return false
+    }
+
+    // ========== SUPPLIER SUGGESTIONS ==========
+
+    /** Cached supplier row data for click handling */
+    private data class SupplierRow(val y: Int, val pokemonId: UUID, val skillId: String)
+    private var supplierRows = listOf<SupplierRow>()
+
+    private fun renderSupplierSuggestions(
+        context: DrawContext, mouseX: Int, mouseY: Int, startY: Int,
+        project: WorkshopCache.ProjectState
+    ): Int {
+        val neededJobs = notlown.cobblebase.core.SupplierHelper.getNeededSuppliers(project.requiredItems)
+        if (neededJobs.isEmpty()) return 0
+
+        var y = startY
+
+        // Header
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING).toFloat(), (y + 1).toFloat(), 0f)
+        context.matrices.scale(0.6f, 0.6f, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A76\u00A7lSuppliers needed:", 0, 0, 0xFFAA00)
+        context.matrices.pop()
+        y += 9
+
+        // Find Mons that could fill each needed role
+        val rows = mutableListOf<SupplierRow>()
+        val nonCraftsmanMons = pokemonList.filter { p ->
+            val assignment = AssignmentCache.getAssignment(p.pokemonId)
+            assignment != "cobblebase:craftsman"
+        }
+
+        for (suggestion in neededJobs) {
+            // Find Mons that have this skill
+            val matchingMons = nonCraftsmanMons.filter { p ->
+                val speciesName = notlown.cobblebase.core.SpeciesSkillRegistry.resolveFormName(
+                    p.species.path, p.aspects
+                )
+                val skills = notlown.cobblebase.core.SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
+                skills.any { it.skillId == suggestion.skillId }
+            }
+
+            val currentAssignment = if (matchingMons.isNotEmpty()) {
+                AssignmentCache.getAssignment(matchingMons.first().pokemonId)
+            } else null
+            val isAssigned = currentAssignment == suggestion.skillId
+
+            // Row: [Job Name] - [Mon name or "No mon available"] - [Assign/Assigned button]
+            val rowBg = if (isAssigned) 0x224CAF50 else 0x22FF9800
+            context.fill(panelX + PADDING, y, panelX + panelW - PADDING, y + 12, rowBg)
+
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 2).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.scale(0.6f, 0.6f, 1f)
+
+            if (matchingMons.isEmpty()) {
+                context.drawTextWithShadow(textRenderer, "\u00A7c${suggestion.skillName}\u00A77 — no Pokemon with this skill in pasture", 0, 0, 0xAAAAAA)
+            } else {
+                val mon = matchingMons.first()
+                val monName = mon.displayName.string
+                if (isAssigned) {
+                    context.drawTextWithShadow(textRenderer, "\u00A7a${suggestion.skillName}\u00A77 — $monName \u00A7a(active)", 0, 0, 0xAAAAAA)
+                } else {
+                    context.drawTextWithShadow(textRenderer, "\u00A7e${suggestion.skillName}\u00A77 — $monName", 0, 0, 0xAAAAAA)
+                }
+
+                // [Assign] button
+                if (!isAssigned) {
+                    rows.add(SupplierRow(y, mon.pokemonId, suggestion.skillId))
+                    val btnText = "Assign"
+                    val btnW = (textRenderer.getWidth(btnText) + 6)
+                    val btnX = ((panelX + panelW - PADDING - 4) / 0.6f).toInt() - btnW
+                    val btnHover = mouseX >= (btnX * 0.6f).toInt() + panelX / 3 && mouseY >= y && mouseY < y + 12
+                    context.drawTextWithShadow(textRenderer, "\u00A7a[$btnText]", btnX, 0, if (btnHover) 0x55FF55 else 0x4CAF50)
+                }
+            }
+
+            context.matrices.pop()
+            y += 13
+        }
+
+        supplierRows = rows
+        return y - startY + 2
     }
 
     // ========== HELPERS ==========

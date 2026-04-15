@@ -76,6 +76,12 @@ object CraftsmanExecutor : SkillExecutor {
         }
 
         val required = RecipeHelper.getRequiredMaterials(recipe)
+        // Populate requiredItems on the project (for CraftsmanSupplyFilter)
+        if (project.requiredItems.isEmpty()) {
+            for ((item, count) in required) {
+                project.requiredItems[Registries.ITEM.getId(item).toString()] = count
+            }
+        }
         val needed = mutableMapOf<String, Int>()
         for ((item, count) in required) {
             val itemId = Registries.ITEM.getId(item).toString()

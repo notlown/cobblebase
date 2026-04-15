@@ -70,7 +70,9 @@ object GenericLootExecutor : SkillExecutor {
         lastLootTime[pokemonId] = now
 
         if (drops.isNotEmpty()) {
-            heldItems[pokemonId] = drops
+            val filteredDrops = notlown.cobblebase.core.CraftsmanSupplyFilter.filterDrops(pokemonId, drops)
+            if (filteredDrops.isEmpty()) return
+            heldItems[pokemonId] = filteredDrops
             SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
 
             // Log loot

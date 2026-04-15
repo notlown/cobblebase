@@ -19,6 +19,7 @@ object WorkshopManager {
     data class WorkshopProject(
         val recipeId: String,
         val gatheredItems: MutableMap<String, Int> = mutableMapOf(),
+        val requiredItems: MutableMap<String, Int> = mutableMapOf(),
         var phase: Phase = Phase.GATHERING,
         var phaseStartTick: Long = 0L
     )
@@ -77,6 +78,7 @@ object WorkshopManager {
                 mapOf(
                     "recipeId" to proj.recipeId,
                     "gatheredItems" to proj.gatheredItems,
+                    "requiredItems" to proj.requiredItems,
                     "phase" to proj.phase.name,
                     "phaseStartTick" to proj.phaseStartTick
                 )
@@ -101,9 +103,12 @@ object WorkshopManager {
                 @Suppress("UNCHECKED_CAST")
                 val gathered = (fields["gatheredItems"] as? Map<String, Double>)
                     ?.mapValues { it.value.toInt() }?.toMutableMap() ?: mutableMapOf()
+                @Suppress("UNCHECKED_CAST")
+                val required = (fields["requiredItems"] as? Map<String, Double>)
+                    ?.mapValues { it.value.toInt() }?.toMutableMap() ?: mutableMapOf()
                 val phase = try { Phase.valueOf(fields["phase"] as? String ?: "GATHERING") } catch (_: Exception) { Phase.GATHERING }
                 val tick = (fields["phaseStartTick"] as? Double)?.toLong() ?: 0L
-                projects[uuid] = WorkshopProject(recipeId, gathered, phase, tick)
+                projects[uuid] = WorkshopProject(recipeId, gathered, required, phase, tick)
             }
             Cobblebase.LOGGER.info("[Workshop] Loaded ${projects.size} active projects")
         } catch (e: Exception) {

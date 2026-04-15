@@ -64,6 +64,8 @@ class WorkshopPanel(
         addWidget(searchField!!)
     }
 
+    private var showBrowser = false // toggle to show recipe browser even when project active
+
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // Periodic refresh of workshop state (every 3 seconds)
         val now = System.currentTimeMillis()
@@ -88,32 +90,26 @@ class WorkshopPanel(
             categories.addAll(cats)
         }
 
+        val craftsmen = getCraftsmanPokemon()
+        val activeProjects = craftsmen.filter { WorkshopCache.projects.containsKey(it.pokemonId) }
+        val hasActiveProject = activeProjects.isNotEmpty() && !showBrowser
+
+        if (hasActiveProject) {
+            // === PROJECT VIEW — big, clear, focused ===
+            searchField?.visible = false
+            renderProjectView(context, mouseX, mouseY, activeProjects)
+            return
+        }
+
+        // === BROWSER VIEW — recipe selection ===
+        searchField?.visible = true
+
         // --- Top bar: search + category buttons ---
         val catY = panelY + PADDING + 14
         renderCategoryBar(context, mouseX, mouseY, catY)
 
-        // --- Active projects section (if any Craftsman has a project) ---
-        val craftsmen = getCraftsmanPokemon()
-        val activeProjects = craftsmen.filter { WorkshopCache.projects.containsKey(it.pokemonId) }
-        var projectSectionH = 0
-
-        if (activeProjects.isNotEmpty()) {
-            val projY = catY + 14
-            projectSectionH = renderActiveProjects(context, mouseX, mouseY, projY, activeProjects)
-        }
-
-        // --- Supplier suggestions section ---
-        var supplierSectionH = 0
-        if (activeProjects.isNotEmpty()) {
-            val project = WorkshopCache.projects[activeProjects.first().pokemonId]
-            if (project != null) {
-                val suppY = catY + 14 + projectSectionH
-                supplierSectionH = renderSupplierSuggestions(context, mouseX, mouseY, suppY, project)
-            }
-        }
-
         // --- Recipe browser ---
-        val listY = catY + 14 + projectSectionH + supplierSectionH
+        val listY = catY + 14
         val listH = panelH - (listY - panelY) - PADDING
         val filtered = getFilteredRecipes()
 
@@ -377,6 +373,18 @@ class WorkshopPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // "Change Recipe" button in project view
+        val craftsmen = getCraftsmanPokemon()
+        val activeProjects = craftsmen.filter { WorkshopCache.projects.containsKey(it.pokemonId) }
+        if (activeProjects.isNotEmpty() && !showBrowser) {
+            val changeBtnX = panelX + panelW - PADDING - 60
+            val changeBtnY = panelY + PADDING
+            if (mouseX >= changeBtnX && mouseX <= changeBtnX + 58 && mouseY >= changeBtnY && mouseY < changeBtnY + 12) {
+                showBrowser = true
+                return true
+            }
+        }
+
         // Category bar clicks
         val catY = panelY + PADDING + 14
         var cx = panelX + PADDING + panelW / 3 + 8
@@ -404,10 +412,8 @@ class WorkshopPanel(
         }
 
         // Recipe row [Set] button clicks
-        val craftsmen = getCraftsmanPokemon()
         if (craftsmen.isEmpty()) return false
 
-        val activeProjects = craftsmen.filter { WorkshopCache.projects.containsKey(it.pokemonId) }
         val projectSectionH = if (activeProjects.isNotEmpty()) {
             activeProjects.size * 24 + 4
         } else 0
@@ -430,7 +436,7 @@ class WorkshopPanel(
                     val target = craftsmen.firstOrNull { !WorkshopCache.projects.containsKey(it.pokemonId) }
                         ?: craftsmen.first()
                     ClientPlayNetworking.send(WorkshopSelectC2SPacket(target.pokemonId, recipe.recipeId))
-                    // Refresh state
+                    showBrowser = false
                     ClientPlayNetworking.send(WorkshopRequestC2SPacket())
                     return true
                 }
@@ -456,6 +462,171 @@ class WorkshopPanel(
             return true
         }
         return false
+    }
+
+    // ========== PROJECT VIEW (replaces recipe browser when active) ==========
+
+    private fun renderProjectView(context: DrawContext, mouseX: Int, mouseY: Int, activeProjects: List<PasturePokemonDataDTO>) {
+        val pokemonData = activeProjects.first()
+        val project = WorkshopCache.projects[pokemonData.pokemonId] ?: return
+        val recipe = WorkshopCache.recipes.find { it.recipeId == project.recipeId }
+        val monName = pokemonData.displayName.string
+
+        var y = panelY + PADDING
+
+        // === Header: "Tinkaton's Workshop" ===
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+        context.matrices.scale(SCALE, SCALE, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A76\u00A7l${monName}'s Workshop", 0, 0, 0xFFAA00)
+        context.matrices.pop()
+
+        // [Change Recipe] button (top right)
+        val changeBtnX = panelX + panelW - PADDING - 60
+        val changeBtnY = y
+        val changeHover = mouseX >= changeBtnX && mouseX <= changeBtnX + 58 && mouseY >= changeBtnY && mouseY < changeBtnY + 12
+        context.fill(changeBtnX, changeBtnY, changeBtnX + 58, changeBtnY + 12, if (changeHover) 0xFF3A3A6E.toInt() else 0xFF2A2A4E.toInt())
+        context.matrices.push()
+        context.matrices.translate((changeBtnX + 4).toFloat(), (changeBtnY + 2).toFloat(), 0f)
+        context.matrices.scale(0.65f, 0.65f, 1f)
+        context.drawTextWithShadow(textRenderer, "Change Recipe", 0, 0, 0xCCCCCC)
+        context.matrices.pop()
+
+        y += 16
+
+        // === What we're building (big output icon + name) ===
+        if (recipe != null) {
+            // Output icon (large)
+            val outputStack = makeStack(recipe.outputItemId)
+            if (!outputStack.isEmpty) {
+                val bigIconScale = 16f / 16f // full size
+                context.matrices.push()
+                context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+                context.matrices.scale(bigIconScale, bigIconScale, 1f)
+                context.drawItem(outputStack, 0, 0)
+                context.matrices.pop()
+            }
+
+            // Output name + count
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
+            val countSuffix = if (recipe.outputCount > 1) " x${recipe.outputCount}" else ""
+            context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7l${recipe.outputDisplayName}$countSuffix", 0, 0, 0xFFFFFF)
+            context.matrices.pop()
+
+            // Phase label
+            val phaseText = when (project.phase) {
+                "GATHERING" -> "\u00A7eGathering materials..."
+                "CRAFTING" -> "\u00A76Crafting..."
+                "DEPOSITING" -> "\u00A7aDone! Depositing..."
+                else -> "\u00A77Idle"
+            }
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 12).toFloat(), 0f)
+            context.matrices.scale(0.65f, 0.65f, 1f)
+            context.drawTextWithShadow(textRenderer, phaseText, 0, 0, 0xAAAAAA)
+            context.matrices.pop()
+        }
+
+        y += 26
+
+        // === Materials needed (big, clear, one per row) ===
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())
+        y += 4
+
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+        context.matrices.scale(0.65f, 0.65f, 1f)
+        context.drawTextWithShadow(textRenderer, "\u00A78Materials:", 0, 0, 0x888888)
+        context.matrices.pop()
+        y += 10
+
+        var totalNeeded = 0
+        var totalGathered = 0
+        for ((itemId, needed) in project.requiredItems) {
+            val gathered = (project.gatheredItems[itemId] ?: 0).coerceAtMost(needed)
+            val done = gathered >= needed
+            totalNeeded += needed
+            totalGathered += gathered
+
+            // Item icon
+            val stack = makeStack(itemId)
+            if (!stack.isEmpty) {
+                context.matrices.push()
+                context.matrices.translate((panelX + PADDING).toFloat(), y.toFloat(), 0f)
+                context.matrices.scale(ICON_SCALE, ICON_SCALE, 1f)
+                context.drawItem(stack, 0, 0)
+                context.matrices.pop()
+            }
+
+            // Item name + progress
+            val itemName = itemId.substringAfterLast(":").replace("_", " ").split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 14).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
+            val color = if (done) 0xFF55FF55.toInt() else 0xFFFFFF
+            context.drawTextWithShadow(textRenderer, itemName, 0, 0, color)
+            context.matrices.pop()
+
+            // Progress bar for this item
+            val barX = panelX + PADDING + 14 + (panelW * 0.35f).toInt()
+            val barW = (panelW * 0.3f).toInt()
+            val barY2 = y + 3
+            val barH = 6
+            context.fill(barX, barY2, barX + barW, barY2 + barH, 0xFF333333.toInt())
+            val fillW = if (needed > 0) (barW * gathered.toFloat() / needed).toInt() else 0
+            val barColor = if (done) 0xFF4CAF50.toInt() else 0xFFFF9800.toInt()
+            if (fillW > 0) context.fill(barX, barY2, barX + fillW, barY2 + barH, barColor)
+
+            // Count text
+            context.matrices.push()
+            context.matrices.translate((barX + barW + 4).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
+            context.drawTextWithShadow(textRenderer, "$gathered / $needed", 0, 0, if (done) 0x55FF55 else 0xFFAA00)
+            context.matrices.pop()
+
+            y += 14
+        }
+
+        // === Overall progress bar ===
+        y += 4
+        val totalBarX = panelX + PADDING
+        val totalBarW = panelW - PADDING * 2
+        val totalBarH = 8
+        val progress = if (totalNeeded > 0) totalGathered.toFloat() / totalNeeded else 0f
+        context.fill(totalBarX, y, totalBarX + totalBarW, y + totalBarH, 0xFF222222.toInt())
+        val totalFillW = (totalBarW * progress).toInt()
+        val totalBarColor = when (project.phase) {
+            "GATHERING" -> 0xFFFF9800.toInt()
+            "CRAFTING" -> 0xFFFF5722.toInt()
+            "DEPOSITING" -> 0xFF4CAF50.toInt()
+            else -> 0xFF666666.toInt()
+        }
+        if (totalFillW > 0) context.fill(totalBarX, y, totalBarX + totalFillW, y + totalBarH, totalBarColor)
+        // Percentage
+        context.matrices.push()
+        context.matrices.translate((totalBarX + totalBarW / 2 - 8).toFloat(), (y + 1).toFloat(), 0f)
+        context.matrices.scale(0.6f, 0.6f, 1f)
+        context.drawTextWithShadow(textRenderer, "${(progress * 100).toInt()}%", 0, 0, 0xFFFFFF)
+        context.matrices.pop()
+
+        y += totalBarH + 8
+
+        // === Suppliers section ===
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())
+        y += 4
+        renderSupplierSuggestions(context, mouseX, mouseY, y, project)
+
+        // Hint at bottom
+        if (project.phase == "GATHERING" && totalGathered == 0) {
+            val hintY = panelY + panelH - 16
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING).toFloat(), hintY.toFloat(), 0f)
+            context.matrices.scale(0.55f, 0.55f, 1f)
+            context.drawTextWithShadow(textRenderer, "Assign supplier Mons above or place materials in a nearby chest", 0, 0, 0xFF8888)
+            context.matrices.pop()
+        }
     }
 
     // ========== SUPPLIER SUGGESTIONS ==========

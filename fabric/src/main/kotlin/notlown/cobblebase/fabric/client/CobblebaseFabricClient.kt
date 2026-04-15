@@ -125,6 +125,25 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Workshop: recipe list sync
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.RecipeListSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.core.WorkshopCache.updateRecipes(packet.recipes)
+            }
+        }
+
+        // Workshop: project state sync
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.WorkshopSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                val states = packet.projects.mapValues { (_, dto) ->
+                    notlown.cobblebase.core.WorkshopCache.ProjectState(
+                        dto.recipeId, dto.gatheredItems, dto.phase, dto.requiredItems
+                    )
+                }
+                notlown.cobblebase.core.WorkshopCache.updateProjects(states)
+            }
+        }
+
         // Register S2C admin jobs sync packet receiver
         ClientPlayNetworking.registerGlobalReceiver(AdminJobsSyncS2CPacket.ID) { packet, context ->
             context.client().execute {

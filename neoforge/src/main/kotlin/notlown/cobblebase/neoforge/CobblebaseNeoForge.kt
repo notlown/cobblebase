@@ -376,6 +376,75 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 }
             }
         }
+        // --- Workshop packets ---
+
+        // C2S: Request recipe list + workshop state
+        registrar.playToServer(
+            notlown.cobblebase.core.net.WorkshopRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.WorkshopRequestC2SPacket.CODEC
+        ) { _, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                val world = player.serverWorld
+                val recipes = notlown.cobblebase.core.RecipeHelper.getAllSimplifiedRecipes(world)
+                val recipeDTOs = recipes.map { r ->
+                    notlown.cobblebase.core.net.RecipeListSyncS2CPacket.RecipeDTO(
+                        r.recipeId, r.outputItemId, r.outputCount, r.outputDisplayName, r.inputs, r.category
+                    )
+                }
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                    notlown.cobblebase.core.net.RecipeListSyncS2CPacket(recipeDTOs))
+                val projects = notlown.cobblebase.core.WorkshopManager.getAllProjects()
+                val projectDTOs = projects.mapValues { (_, proj) ->
+                    val recipe = notlown.cobblebase.core.RecipeHelper.getRecipeById(world, proj.recipeId)
+                    val required = if (recipe != null) {
+                        notlown.cobblebase.core.RecipeHelper.getRequiredMaterials(recipe)
+                            .map { (item, count) -> net.minecraft.registry.Registries.ITEM.getId(item).toString() to count }
+                            .toMap()
+                    } else emptyMap()
+                    notlown.cobblebase.core.net.WorkshopSyncS2CPacket.ProjectDTO(
+                        proj.recipeId, proj.gatheredItems, proj.phase.name, required
+                    )
+                }
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                    notlown.cobblebase.core.net.WorkshopSyncS2CPacket(projectDTOs))
+            }
+        }
+
+        // S2C: Recipe list
+        registrar.playToClient(
+            notlown.cobblebase.core.net.RecipeListSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.RecipeListSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.WorkshopCache.updateRecipes(packet.recipes)
+            }
+        }
+
+        // S2C: Workshop state sync
+        registrar.playToClient(
+            notlown.cobblebase.core.net.WorkshopSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.WorkshopSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                val states = packet.projects.mapValues { (_, dto) ->
+                    notlown.cobblebase.core.WorkshopCache.ProjectState(
+                        dto.recipeId, dto.gatheredItems, dto.phase, dto.requiredItems
+                    )
+                }
+                notlown.cobblebase.core.WorkshopCache.updateProjects(states)
+            }
+        }
+
+        // C2S: Select project
+        registrar.playToServer(
+            notlown.cobblebase.core.net.WorkshopSelectC2SPacket.ID,
+            notlown.cobblebase.core.net.WorkshopSelectC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
+            }
+        }
     }
 
     private fun onPlayerLoggedIn(event: PlayerEvent.PlayerLoggedInEvent) {

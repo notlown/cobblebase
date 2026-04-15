@@ -254,6 +254,65 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // --- Workshop packets ---
+
+        // C2S: Request recipe list + workshop state
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.WorkshopRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.WorkshopRequestC2SPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.WorkshopRequestC2SPacket.ID) { _, context ->
+            context.server().execute {
+                val player = context.player()
+                val world = player.serverWorld
+                // Send recipe list
+                val recipes = notlown.cobblebase.core.RecipeHelper.getAllSimplifiedRecipes(world)
+                val recipeDTOs = recipes.map { r ->
+                    notlown.cobblebase.core.net.RecipeListSyncS2CPacket.RecipeDTO(
+                        r.recipeId, r.outputItemId, r.outputCount, r.outputDisplayName, r.inputs, r.category
+                    )
+                }
+                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.RecipeListSyncS2CPacket(recipeDTOs))
+                // Send workshop state
+                val projects = notlown.cobblebase.core.WorkshopManager.getAllProjects()
+                val projectDTOs = projects.mapValues { (_, proj) ->
+                    val recipe = notlown.cobblebase.core.RecipeHelper.getRecipeById(world, proj.recipeId)
+                    val required = if (recipe != null) {
+                        notlown.cobblebase.core.RecipeHelper.getRequiredMaterials(recipe)
+                            .map { (item, count) -> net.minecraft.registry.Registries.ITEM.getId(item).toString() to count }
+                            .toMap()
+                    } else emptyMap()
+                    notlown.cobblebase.core.net.WorkshopSyncS2CPacket.ProjectDTO(
+                        proj.recipeId, proj.gatheredItems, proj.phase.name, required
+                    )
+                }
+                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.WorkshopSyncS2CPacket(projectDTOs))
+            }
+        }
+
+        // S2C: Recipe list
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.RecipeListSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.RecipeListSyncS2CPacket.CODEC
+        )
+
+        // S2C: Workshop state sync
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.WorkshopSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.WorkshopSyncS2CPacket.CODEC
+        )
+
+        // C2S: Select project
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.WorkshopSelectC2SPacket.ID,
+            notlown.cobblebase.core.net.WorkshopSelectC2SPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.WorkshopSelectC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                packet.handle(context.player())
+            }
+        }
+
         // Send general settings to player on join
         ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
             val s = notlown.cobblebase.core.GeneralSettings.getSettings()

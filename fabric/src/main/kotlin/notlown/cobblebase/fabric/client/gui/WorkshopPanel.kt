@@ -1,0 +1,387 @@
+package notlown.cobblebase.fabric.client.gui
+
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.widget.ButtonWidget
+import net.minecraft.client.gui.widget.TextFieldWidget
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.registry.Registries
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
+import notlown.cobblebase.core.AssignmentCache
+import notlown.cobblebase.core.WorkshopCache
+import notlown.cobblebase.core.net.RecipeListSyncS2CPacket
+import notlown.cobblebase.core.net.WorkshopRequestC2SPacket
+import notlown.cobblebase.core.net.WorkshopSelectC2SPacket
+import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket.PasturePokemonDataDTO
+import java.util.UUID
+
+/**
+ * Workshop tab panel: recipe browser + active project status for Craftsman Pokemon.
+ */
+class WorkshopPanel(
+    private val parent: CobblebaseScreen,
+    private val pokemonList: List<PasturePokemonDataDTO>,
+    private val panelX: Int,
+    private val panelY: Int,
+    private val panelW: Int,
+    private val panelH: Int,
+    private val textRenderer: TextRenderer
+) {
+    private val PADDING = 6
+    private val ROW_HEIGHT = 18
+    private val SCALE = 0.75f
+    private val ICON_SCALE = 10f / 16f
+
+    private var searchField: TextFieldWidget? = null
+    private var searchText = ""
+    private var selectedCategory = "All"
+    private var scrollOffset = 0
+    private var scrollAccumulator = 0.0
+    private var dataRequested = false
+
+    // Categories derived from recipes
+    private val categories = mutableListOf("All")
+
+    fun init(addWidget: (net.minecraft.client.gui.widget.ClickableWidget) -> Unit) {
+        scrollOffset = 0
+
+        // Request data from server
+        if (!dataRequested) {
+            ClientPlayNetworking.send(WorkshopRequestC2SPacket())
+            dataRequested = true
+        }
+
+        // Search field
+        searchField = TextFieldWidget(textRenderer, panelX + PADDING, panelY + PADDING, panelW / 3, 12, Text.literal(""))
+        searchField!!.setMaxLength(64)
+        searchField!!.setPlaceholder(Text.literal("Search recipes..."))
+        searchField!!.setChangedListener { text -> searchText = text; scrollOffset = 0 }
+        addWidget(searchField!!)
+    }
+
+    fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // Background
+        context.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xCC1E1E2E.toInt())
+
+        if (!WorkshopCache.recipesLoaded) {
+            context.drawTextWithShadow(textRenderer, "Loading recipes...", panelX + PADDING, panelY + panelH / 2, 0x888888)
+            return
+        }
+
+        // Update categories
+        if (categories.size <= 1) {
+            val cats = WorkshopCache.recipes.map { it.category }.distinct().sorted()
+            categories.clear()
+            categories.add("All")
+            categories.addAll(cats)
+        }
+
+        // --- Top bar: search + category buttons ---
+        val catY = panelY + PADDING + 14
+        renderCategoryBar(context, mouseX, mouseY, catY)
+
+        // --- Active projects section (if any Craftsman has a project) ---
+        val craftsmen = getCraftsmanPokemon()
+        val activeProjects = craftsmen.filter { WorkshopCache.projects.containsKey(it.pokemonId) }
+        var projectSectionH = 0
+
+        if (activeProjects.isNotEmpty()) {
+            val projY = catY + 14
+            projectSectionH = renderActiveProjects(context, mouseX, mouseY, projY, activeProjects)
+        }
+
+        // --- Recipe browser ---
+        val listY = catY + 14 + projectSectionH
+        val listH = panelH - (listY - panelY) - PADDING
+        val filtered = getFilteredRecipes()
+
+        val maxVisible = listH / ROW_HEIGHT
+        val maxScroll = (filtered.size - maxVisible).coerceAtLeast(0)
+        scrollOffset = scrollOffset.coerceIn(0, maxScroll)
+
+        // Column headers
+        context.matrices.push()
+        context.matrices.translate((panelX + PADDING + 14).toFloat(), (listY - 1).toFloat(), 0f)
+        context.matrices.scale(0.6f, 0.6f, 1f)
+        context.drawTextWithShadow(textRenderer, "Item", 0, 0, 0x888888)
+        context.drawTextWithShadow(textRenderer, "Materials needed", ((panelW * 0.4f) / 0.6f).toInt(), 0, 0x888888)
+        context.matrices.pop()
+
+        context.enableScissor(panelX, listY + 6, panelX + panelW, listY + listH)
+
+        for (i in 0 until maxVisible) {
+            val idx = i + scrollOffset
+            if (idx >= filtered.size) break
+            val recipe = filtered[idx]
+            val rowY = listY + 6 + i * ROW_HEIGHT
+            val isHovered = mouseX >= panelX && mouseX <= panelX + panelW && mouseY >= rowY && mouseY < rowY + ROW_HEIGHT
+
+            if (isHovered) context.fill(panelX + 2, rowY, panelX + panelW - 2, rowY + ROW_HEIGHT, 0x22FFFFFF)
+
+            // Output item icon
+            val outputStack = makeStack(recipe.outputItemId)
+            if (!outputStack.isEmpty) {
+                context.matrices.push()
+                context.matrices.translate((panelX + PADDING).toFloat(), (rowY + 1).toFloat(), 0f)
+                context.matrices.scale(ICON_SCALE, ICON_SCALE, 1f)
+                context.drawItem(outputStack, 0, 0)
+                context.matrices.pop()
+            }
+
+            // Output name
+            val nameX = panelX + PADDING + 14
+            context.matrices.push()
+            context.matrices.translate(nameX.toFloat(), (rowY + 5).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
+            val countSuffix = if (recipe.outputCount > 1) " x${recipe.outputCount}" else ""
+            context.drawTextWithShadow(textRenderer, "${recipe.outputDisplayName}$countSuffix", 0, 0, 0xFFFFFF)
+            context.matrices.pop()
+
+            // Input materials with icons
+            val matX = panelX + (panelW * 0.4f).toInt()
+            var mx = matX
+            for ((inputId, count) in recipe.inputs) {
+                val inputStack = makeStack(inputId)
+                if (!inputStack.isEmpty) {
+                    context.matrices.push()
+                    context.matrices.translate(mx.toFloat(), (rowY + 2).toFloat(), 0f)
+                    context.matrices.scale(ICON_SCALE * 0.8f, ICON_SCALE * 0.8f, 1f)
+                    context.drawItem(inputStack, 0, 0)
+                    context.matrices.pop()
+                }
+                // Count label
+                context.matrices.push()
+                context.matrices.translate((mx + 8).toFloat(), (rowY + 6).toFloat(), 0f)
+                context.matrices.scale(0.6f, 0.6f, 1f)
+                context.drawTextWithShadow(textRenderer, "${count}x", 0, 0, 0xAAAAAA)
+                context.matrices.pop()
+                mx += 28
+                if (mx > panelX + panelW - 40) break
+            }
+
+            // [Set] button area (right side)
+            if (isHovered && craftsmen.isNotEmpty()) {
+                val btnX = panelX + panelW - PADDING - 22
+                val btnY = rowY + 2
+                context.fill(btnX, btnY, btnX + 20, btnY + ROW_HEIGHT - 4, 0xFF4CAF50.toInt())
+                context.matrices.push()
+                context.matrices.translate((btnX + 3).toFloat(), (btnY + 3).toFloat(), 0f)
+                context.matrices.scale(0.6f, 0.6f, 1f)
+                context.drawTextWithShadow(textRenderer, "Set", 0, 0, 0xFFFFFF)
+                context.matrices.pop()
+            }
+        }
+
+        context.disableScissor()
+
+        // Scrollbar
+        if (filtered.size > maxVisible) {
+            val trackX = panelX + panelW - 3
+            val thumbH = ((maxVisible.toFloat() / filtered.size) * listH).toInt().coerceAtLeast(10)
+            val thumbY = listY + 6 + ((scrollOffset.toFloat() / maxScroll) * (listH - thumbH)).toInt()
+            context.fill(trackX, listY + 6, trackX + 2, listY + listH, 0x33FFFFFF)
+            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
+        }
+
+        // No craftsman hint
+        if (craftsmen.isEmpty()) {
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING).toFloat(), (panelY + panelH - 14).toFloat(), 0f)
+            context.matrices.scale(0.6f, 0.6f, 1f)
+            context.drawTextWithShadow(textRenderer, "Assign a Pokemon the Craftsman job to use the Workshop", 0, 0, 0xFF8888)
+            context.matrices.pop()
+        }
+    }
+
+    private fun renderCategoryBar(context: DrawContext, mouseX: Int, mouseY: Int, catY: Int) {
+        var cx = panelX + PADDING + panelW / 3 + 8
+        for (cat in categories) {
+            val catW = (textRenderer.getWidth(cat) * 0.6f).toInt() + 8
+            val isActive = selectedCategory == cat
+            val isHovered = mouseX >= cx && mouseX < cx + catW && mouseY >= catY && mouseY < catY + 11
+            val bg = when {
+                isActive -> 0xFF3A3A6E.toInt()
+                isHovered -> 0xFF2A2A4E.toInt()
+                else -> 0xFF1A1A2E.toInt()
+            }
+            context.fill(cx, catY, cx + catW, catY + 11, bg)
+            if (isActive) context.fill(cx, catY + 10, cx + catW, catY + 11, 0xFFFF9800.toInt())
+            context.matrices.push()
+            context.matrices.translate((cx + 4).toFloat(), (catY + 2).toFloat(), 0f)
+            context.matrices.scale(0.6f, 0.6f, 1f)
+            context.drawTextWithShadow(textRenderer, cat, 0, 0, if (isActive) 0xFFFFFF else 0x999999)
+            context.matrices.pop()
+            cx += catW + 2
+            if (cx > panelX + panelW - PADDING) break
+        }
+    }
+
+    private fun renderActiveProjects(
+        context: DrawContext, mouseX: Int, mouseY: Int, startY: Int,
+        activeProjects: List<PasturePokemonDataDTO>
+    ): Int {
+        var y = startY
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFFFF9800.toInt())
+        y += 2
+
+        for (pokemonData in activeProjects) {
+            val project = WorkshopCache.projects[pokemonData.pokemonId] ?: continue
+            val recipe = WorkshopCache.recipes.find { it.recipeId == project.recipeId }
+            val displayName = pokemonData.displayName.string
+
+            // Background
+            context.fill(panelX + 2, y, panelX + panelW - 2, y + 22, 0x22FF9800)
+
+            // Pokemon name + status
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING).toFloat(), (y + 2).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
+            val phaseLabel = when (project.phase) {
+                "GATHERING" -> "\u00A7eGathering"
+                "CRAFTING" -> "\u00A76Crafting"
+                "DEPOSITING" -> "\u00A7aDepositing"
+                else -> "\u00A77Idle"
+            }
+            context.drawTextWithShadow(textRenderer, "\u00A7f$displayName \u00A77— $phaseLabel", 0, 0, 0xFFFFFF)
+            context.matrices.pop()
+
+            // Output icon + name
+            if (recipe != null) {
+                val outputStack = makeStack(recipe.outputItemId)
+                if (!outputStack.isEmpty) {
+                    context.matrices.push()
+                    context.matrices.translate((panelX + PADDING).toFloat(), (y + 12).toFloat(), 0f)
+                    context.matrices.scale(ICON_SCALE * 0.7f, ICON_SCALE * 0.7f, 1f)
+                    context.drawItem(outputStack, 0, 0)
+                    context.matrices.pop()
+                }
+                // Material progress
+                var mx = panelX + PADDING + 14
+                for ((itemId, needed) in project.requiredItems) {
+                    val gathered = project.gatheredItems[itemId] ?: 0
+                    val done = gathered >= needed
+                    val inputStack = makeStack(itemId)
+                    if (!inputStack.isEmpty) {
+                        context.matrices.push()
+                        context.matrices.translate(mx.toFloat(), (y + 11).toFloat(), 0f)
+                        context.matrices.scale(ICON_SCALE * 0.6f, ICON_SCALE * 0.6f, 1f)
+                        context.drawItem(inputStack, 0, 0)
+                        context.matrices.pop()
+                    }
+                    context.matrices.push()
+                    context.matrices.translate((mx + 7).toFloat(), (y + 13).toFloat(), 0f)
+                    context.matrices.scale(0.5f, 0.5f, 1f)
+                    val color = if (done) 0xFF55FF55.toInt() else 0xFFFFAA00.toInt()
+                    context.drawTextWithShadow(textRenderer, "$gathered/$needed", 0, 0, color)
+                    context.matrices.pop()
+                    mx += 30
+                    if (mx > panelX + panelW - 40) break
+                }
+            }
+
+            y += 24
+        }
+
+        context.fill(panelX + 2, y, panelX + panelW - 2, y + 1, 0xFF444444.toInt())
+        return y - startY + 2
+    }
+
+    fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Category bar clicks
+        val catY = panelY + PADDING + 14
+        var cx = panelX + PADDING + panelW / 3 + 8
+        for (cat in categories) {
+            val catW = (textRenderer.getWidth(cat) * 0.6f).toInt() + 8
+            if (mouseX >= cx && mouseX < cx + catW && mouseY >= catY && mouseY < catY + 11) {
+                selectedCategory = cat
+                scrollOffset = 0
+                return true
+            }
+            cx += catW + 2
+            if (cx > panelX + panelW - PADDING) break
+        }
+
+        // Recipe row [Set] button clicks
+        val craftsmen = getCraftsmanPokemon()
+        if (craftsmen.isEmpty()) return false
+
+        val activeProjects = craftsmen.filter { WorkshopCache.projects.containsKey(it.pokemonId) }
+        val projectSectionH = if (activeProjects.isNotEmpty()) {
+            activeProjects.size * 24 + 4
+        } else 0
+
+        val listY = catY + 14 + projectSectionH + 6
+        val listH = panelH - (listY - panelY) - PADDING
+        val filtered = getFilteredRecipes()
+        val maxVisible = listH / ROW_HEIGHT
+
+        for (i in 0 until maxVisible) {
+            val idx = i + scrollOffset
+            if (idx >= filtered.size) break
+            val rowY = listY + i * ROW_HEIGHT
+            if (mouseY >= rowY && mouseY < rowY + ROW_HEIGHT && mouseX >= panelX && mouseX <= panelX + panelW) {
+                // Click on [Set] area or anywhere on the row
+                val btnX = panelX + panelW - PADDING - 22
+                if (mouseX >= btnX || button == 0) {
+                    val recipe = filtered[idx]
+                    // Assign to the first Craftsman that doesn't have a project, or the first one
+                    val target = craftsmen.firstOrNull { !WorkshopCache.projects.containsKey(it.pokemonId) }
+                        ?: craftsmen.first()
+                    ClientPlayNetworking.send(WorkshopSelectC2SPacket(target.pokemonId, recipe.recipeId))
+                    // Refresh state
+                    ClientPlayNetworking.send(WorkshopRequestC2SPacket())
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean = false
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = false
+
+    fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
+        if (mouseX >= panelX && mouseX <= panelX + panelW && mouseY >= panelY && mouseY <= panelY + panelH) {
+            scrollAccumulator -= verticalAmount
+            val whole = scrollAccumulator.toInt()
+            scrollAccumulator -= whole.toDouble()
+            scrollOffset = (scrollOffset + whole).coerceAtLeast(0)
+            val filtered = getFilteredRecipes()
+            val listH = panelH - PADDING * 2 - 30
+            val maxScroll = (filtered.size - listH / ROW_HEIGHT).coerceAtLeast(0)
+            scrollOffset = scrollOffset.coerceAtMost(maxScroll)
+            return true
+        }
+        return false
+    }
+
+    // ========== HELPERS ==========
+
+    private fun getFilteredRecipes(): List<RecipeListSyncS2CPacket.RecipeDTO> {
+        return WorkshopCache.recipes.filter { recipe ->
+            val matchesCategory = selectedCategory == "All" || recipe.category == selectedCategory
+            val matchesSearch = searchText.isBlank() || recipe.outputDisplayName.lowercase().contains(searchText.lowercase())
+            matchesCategory && matchesSearch
+        }
+    }
+
+    private fun getCraftsmanPokemon(): List<PasturePokemonDataDTO> {
+        return pokemonList.filter { p ->
+            val assignment = AssignmentCache.getAssignment(p.pokemonId)
+            assignment == "cobblebase:craftsman"
+        }
+    }
+
+    private fun makeStack(itemId: String): ItemStack {
+        return try {
+            val parts = itemId.split(":", limit = 2)
+            val id = if (parts.size == 2) Identifier.of(parts[0], parts[1]) else Identifier.of("minecraft", itemId)
+            val item = Registries.ITEM.get(id)
+            if (item == Items.AIR) ItemStack.EMPTY else ItemStack(item)
+        } catch (_: Exception) { ItemStack.EMPTY }
+    }
+}

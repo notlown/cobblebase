@@ -194,15 +194,27 @@ class WorkshopPanel(
 
         // Craftsman sprite (RIGHT side, 3x scale = 48px, no type box)
         renderScaledSprite(context, pokemonData.species.path, panelX + panelW - PADDING - 50, y - 2, 3.0f)
-        // "Craftsman" label + Mon name well left of sprite
+        // "Craftsman" label + prof stars + Mon name, left of sprite
         val spriteLeft = panelX + panelW - PADDING - 100
         context.matrices.push()
-        context.matrices.translate(spriteLeft.toFloat(), (y + 22).toFloat(), 0f)
+        context.matrices.translate(spriteLeft.toFloat(), (y + 18).toFloat(), 0f)
         context.matrices.scale(0.5f, 0.5f, 1f)
         context.drawTextWithShadow(textRenderer, "\u00A76Craftsman", 0, 0, 0xFFAA00)
         context.matrices.pop()
+        // Prof stars
+        val craftsmanSkillEntry = SpeciesSkillRegistry.getSkills(
+            SpeciesSkillRegistry.resolveFormName(pokemonData.species.path, pokemonData.aspects)
+        )?.skills?.find { it.skillId == "cobblebase:craftsman" }
+        val prof = craftsmanSkillEntry?.proficiency ?: 3
         context.matrices.push()
-        context.matrices.translate(spriteLeft.toFloat(), (y + 28).toFloat(), 0f)
+        context.matrices.translate(spriteLeft.toFloat(), (y + 24).toFloat(), 0f)
+        context.matrices.scale(0.5f, 0.5f, 1f)
+        val stars = (1..5).joinToString("") { if (it <= prof) "\u2605" else "\u2606" }
+        context.drawTextWithShadow(textRenderer, "\u00A7e$stars", 0, 0, 0xFFD700)
+        context.matrices.pop()
+        // Mon name
+        context.matrices.push()
+        context.matrices.translate(spriteLeft.toFloat(), (y + 30).toFloat(), 0f)
         context.matrices.scale(0.5f, 0.5f, 1f)
         context.drawTextWithShadow(textRenderer, pokemonData.displayName.string, 0, 0, 0xCCCCCC)
         context.matrices.pop()
@@ -298,12 +310,13 @@ class WorkshopPanel(
         val nonCraftsmen = pokemonList.filter { AssignmentCache.getAssignment(it.pokemonId) != "cobblebase:craftsman" }
         val shownMons = mutableSetOf<UUID>() // prevent duplicates
 
+        val NAME_COL_W = 55
+        val ROW_H = 24
+
         for (mon in nonCraftsmen) {
             if (mon.pokemonId in shownMons) continue
             val speciesName = SpeciesSkillRegistry.resolveFormName(mon.species.path, mon.aspects)
             val monSkills = SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
-
-            // Find which items this Mon can supply, using per-species check for Producer
             val monSkillIds = monSkills.map { it.skillId }
             val canSupply = notlown.cobblebase.core.SupplierHelper.getSupplyableItems(
                 speciesName, monSkillIds, project.requiredItems
@@ -315,90 +328,103 @@ class WorkshopPanel(
             val isSupplier = currentAssignment?.startsWith("craftsman_supply:") == true
             val activeSkillId = if (isSupplier) currentAssignment!!.removePrefix("craftsman_supply:") else null
 
-            // Row background
-            val rowBg = if (isSupplier) 0x224CAF50 else 0x22444444
-            context.fill(panelX + PADDING, y, panelX + panelW - PADDING, y + 20, rowBg)
-            if (isSupplier) context.fill(panelX + PADDING, y, panelX + PADDING + 2, y + 20, 0xFF4CAF50.toInt())
+            // Alternating row background (like Skills tab)
+            val rowIdx = shownMons.size - 1
+            val rowBg = if (isSupplier) 0x224CAF50 else if (rowIdx % 2 == 0) 0x44FFFFFF.toInt() else 0x22FFFFFF.toInt()
+            context.fill(panelX + PADDING, y, panelX + panelW - PADDING, y + ROW_H, rowBg)
 
-            // Pokemon sprite (1.25x scale = 20px)
-            renderScaledSprite(context, mon.species.path, panelX + PADDING + 4, y + 1, 1.25f)
+            // Pokemon sprite (16px, with type box like Skills tab)
+            PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, mon.species.path, panelX + PADDING + 2, y + 4, 0f)
 
-            // Mon name
+            // Mon name (0.75x scale, same as Skills tab)
             context.matrices.push()
-            context.matrices.translate((panelX + PADDING + 22).toFloat(), (y + 2).toFloat(), 0f)
-            context.matrices.scale(0.7f, 0.7f, 1f)
+            context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 4).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
             context.drawTextWithShadow(textRenderer, mon.displayName.string, 0, 0, if (isSupplier) 0xFFFFFF else 0xCCCCCC)
             context.matrices.pop()
 
+            // Level
+            context.matrices.push()
+            context.matrices.translate((panelX + PADDING + 20).toFloat(), (y + 14).toFloat(), 0f)
+            context.matrices.scale(SCALE, SCALE, 1f)
+            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${mon.level}", 0, 0, 0xAAAAAA)
+            context.matrices.pop()
+
+            // Item buttons (horizontal row, same line as name, right side)
+            val btnStartX = panelX + PADDING + 20 + NAME_COL_W
             if (isSupplier) {
-                // Show what it's producing + cooldown
-                val activeEntry = monSkills.find { it.skillId == activeSkillId }
-                val activeDef = if (activeEntry != null) notlown.cobblebase.core.SkillRegistry.get(activeEntry.skillId) else null
+                // Active supplier: show assigned item as selected button + [Remove]
                 val producingItem = notlown.cobblebase.core.executors.SupplierExecutor.findNeededItemPublic(mon.pokemonId)
                 val itemLabel = producingItem?.substringAfterLast(":")?.replace("_", " ")?.replaceFirstChar { it.uppercase() } ?: "?"
-                val cdText = if (activeDef != null && activeEntry != null) {
-                    val cd = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(activeDef.cooldownSeconds, activeEntry.proficiency) / 20
-                    "~${cd}s"
-                } else ""
+                val supStack = if (producingItem != null) makeStack(producingItem) else ItemStack.EMPTY
 
+                // Active item button (green)
+                val btnW = (textRenderer.getWidth(itemLabel) * 0.6f).toInt() + 16
+                context.fill(btnStartX, y + 4, btnStartX + btnW, y + 18, 0xFF4CAF50.toInt())
+                if (!supStack.isEmpty) {
+                    context.matrices.push()
+                    context.matrices.translate((btnStartX + 2).toFloat(), (y + 5).toFloat(), 0f)
+                    context.matrices.scale(0.5f, 0.5f, 1f)
+                    context.drawItem(supStack, 0, 0)
+                    context.matrices.pop()
+                }
                 context.matrices.push()
-                context.matrices.translate((panelX + PADDING + 22).toFloat(), (y + 12).toFloat(), 0f)
-                context.matrices.scale(0.5f, 0.5f, 1f)
-                context.drawTextWithShadow(textRenderer, "\u00A7a\u2794 $itemLabel \u00A78| $cdText", 0, 0, 0x55FF55)
+                context.matrices.translate((btnStartX + 11).toFloat(), (y + 7).toFloat(), 0f)
+                context.matrices.scale(0.6f, 0.6f, 1f)
+                context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, 0xFFFFFF)
                 context.matrices.pop()
 
-                // Cooldown bar
+                // Cooldown bar under active button
+                val activeEntry = monSkills.find { it.skillId == activeSkillId }
+                val activeDef = if (activeEntry != null) notlown.cobblebase.core.SkillRegistry.get(activeEntry.skillId) else null
                 if (activeDef != null && activeEntry != null) {
                     val cdTicks = notlown.cobblebase.core.CobblebaseConfig.getEffectiveCooldownTicks(activeDef.cooldownSeconds, activeEntry.proficiency)
                     val cdMs = cdTicks * 50L
-                    val progress2 = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
-                    val bx = panelX + PADDING + 22; val bw = panelX + panelW - PADDING - 44 - bx
-                    context.fill(bx, y + 17, bx + bw, y + 19, 0xFF222222.toInt())
-                    context.fill(bx, y + 17, bx + (bw * progress2).toInt(), y + 19, 0xFF4CAF50.toInt())
+                    val prog = ((System.currentTimeMillis() % cdMs).toFloat() / cdMs)
+                    context.fill(btnStartX, y + 19, btnStartX + btnW, y + 21, 0xFF222222.toInt())
+                    context.fill(btnStartX, y + 19, btnStartX + (btnW * prog).toInt(), y + 21, 0xFF4CAF50.toInt())
                 }
 
-                // [Remove] button
-                val btnX = panelX + panelW - PADDING - 38
-                val removeHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 20
-                context.fill(btnX, y + 3, btnX + 36, y + 17, if (removeHover) 0xFFFF5555.toInt() else 0xFF5A3A3A.toInt())
+                // [Remove] button (right edge)
+                val rmX = panelX + panelW - PADDING - 38
+                val rmHover = mouseX >= rmX && mouseX < rmX + 36 && mouseY >= y && mouseY < y + ROW_H
+                context.fill(rmX, y + 4, rmX + 36, y + 18, if (rmHover) 0xFFFF5555.toInt() else 0xFF5A3A3A.toInt())
                 context.matrices.push()
-                context.matrices.translate((btnX + 3).toFloat(), (y + 6).toFloat(), 0f)
+                context.matrices.translate((rmX + 3).toFloat(), (y + 7).toFloat(), 0f)
                 context.matrices.scale(0.6f, 0.6f, 1f)
                 context.drawTextWithShadow(textRenderer, "Remove", 0, 0, 0xFFFFFF)
                 context.matrices.pop()
                 rows.add(SupplierRow(y, mon.pokemonId, "REMOVE"))
             } else {
-                // Show item buttons for each supplyable item
-                var bx = panelX + PADDING + 22
+                // Item buttons in a row (like skill buttons in Skills tab)
+                var bx = btnStartX
                 for ((supItemId, supSkillId) in canSupply) {
                     val supStack = makeStack(supItemId)
                     val itemLabel = supItemId.substringAfterLast(":").replace("_", " ").replaceFirstChar { it.uppercase() }
-                    val btnW = (textRenderer.getWidth(itemLabel) * 0.5f).toInt() + 18
-                    val btnHover = mouseX >= bx && mouseX < bx + btnW && mouseY >= y + 10 && mouseY < y + 20
-                    context.fill(bx, y + 10, bx + btnW, y + 20, if (btnHover) 0xFF4CAF50.toInt() else 0xFF2A4A2A.toInt())
+                    val btnW = (textRenderer.getWidth(itemLabel) * 0.6f).toInt() + 16
+                    val btnHover = mouseX >= bx && mouseX < bx + btnW && mouseY >= y + 4 && mouseY < y + 18
+                    context.fill(bx, y + 4, bx + btnW, y + 18, if (btnHover) 0xFF4CAF50.toInt() else 0xFF2A2A3E.toInt())
 
-                    // Item icon in button
                     if (!supStack.isEmpty) {
                         context.matrices.push()
-                        context.matrices.translate((bx + 1).toFloat(), (y + 11).toFloat(), 0f)
+                        context.matrices.translate((bx + 2).toFloat(), (y + 5).toFloat(), 0f)
                         context.matrices.scale(0.5f, 0.5f, 1f)
                         context.drawItem(supStack, 0, 0)
                         context.matrices.pop()
                     }
-                    // Item name in button
                     context.matrices.push()
-                    context.matrices.translate((bx + 10).toFloat(), (y + 12).toFloat(), 0f)
-                    context.matrices.scale(0.5f, 0.5f, 1f)
-                    context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, 0xFFFFFF)
+                    context.matrices.translate((bx + 11).toFloat(), (y + 7).toFloat(), 0f)
+                    context.matrices.scale(0.6f, 0.6f, 1f)
+                    context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, if (btnHover) 0xFFFFFF else 0xCCCCCC)
                     context.matrices.pop()
 
-                    rows.add(SupplierRow(y + 10, mon.pokemonId, supSkillId))
+                    rows.add(SupplierRow(y + 4, mon.pokemonId, supSkillId))
                     bx += btnW + 2
                     if (bx > panelX + panelW - PADDING - 10) break
                 }
             }
 
-            y += 22
+            y += ROW_H + 1
         }
 
         supplierRows = rows

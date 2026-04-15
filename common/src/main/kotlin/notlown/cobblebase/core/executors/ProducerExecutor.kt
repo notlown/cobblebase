@@ -362,8 +362,8 @@ object ProducerExecutor : SkillExecutor {
         val baseCooldown = entry.cooldownSeconds ?: skill.cooldownSeconds
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency)
 
-        // Cooldown check
-        val lastTime = lastProduceTime[pokemonId] ?: 0L
+        // Cooldown check — default to now so first assignment waits full cooldown
+        val lastTime = lastProduceTime.getOrPut(pokemonId) { now }
         if (now - lastTime < cooldownTicks) {
             if (world.time % 20 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
             return

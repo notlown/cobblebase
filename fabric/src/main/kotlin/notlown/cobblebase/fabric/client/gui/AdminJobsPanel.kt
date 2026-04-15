@@ -255,16 +255,20 @@ class AdminJobsPanel(
                 drawScaledText(context, "\u00A76\u00B7", colNameX + nameW, rowY + 3, 0xFF9800)
             }
 
-            // Cooldown field
+            // Cooldown field (Producer uses per-species cooldown from Species tab)
             val fieldY = rowY + 1
             val fieldH = ROW_H - 2
-            renderField(
-                context,
-                colCooldownX, fieldY, fieldW, fieldH,
-                if (activeFieldJob == jobIdx && activeFieldType == FieldType.COOLDOWN) fieldText else job.cooldownSeconds.toString(),
-                isActive = activeFieldJob == jobIdx && activeFieldType == FieldType.COOLDOWN,
-                isOverride = job.cooldownSeconds != job.defaultCooldown
-            )
+            if (job.skillId == "cobblebase:producer") {
+                drawScaledText(context, "\u00A78per-species", colCooldownX + 2, rowY + 3, 0x666666)
+            } else {
+                renderField(
+                    context,
+                    colCooldownX, fieldY, fieldW, fieldH,
+                    if (activeFieldJob == jobIdx && activeFieldType == FieldType.COOLDOWN) fieldText else job.cooldownSeconds.toString(),
+                    isActive = activeFieldJob == jobIdx && activeFieldType == FieldType.COOLDOWN,
+                    isOverride = job.cooldownSeconds != job.defaultCooldown
+                )
+            }
 
             // Radius field
             renderField(
@@ -383,7 +387,8 @@ class AdminJobsPanel(
                 val fieldY = listY + visRow * ROW_H + 1
                 val fieldH = ROW_H - 2
 
-                if (mouseX in colCooldownX.toDouble()..(colCooldownX + fieldW).toDouble() &&
+                if (job.skillId != "cobblebase:producer" &&
+                    mouseX in colCooldownX.toDouble()..(colCooldownX + fieldW).toDouble() &&
                     mouseY in fieldY.toDouble()..(fieldY + fieldH).toDouble()) {
                     activeFieldJob = jobIdx
                     activeFieldType = FieldType.COOLDOWN

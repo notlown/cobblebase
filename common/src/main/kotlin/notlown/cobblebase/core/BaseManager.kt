@@ -101,23 +101,30 @@ object BaseManager {
         }
 
         val rawAssignment: String? = assignments[pokemonId]
-        // Craftsman supplier mode: "craftsman_supply:cobblebase:mining" → execute "cobblebase:mining"
-        val assignedSkillId: String? = if (rawAssignment != null && rawAssignment.startsWith("craftsman_supply:")) {
-            rawAssignment.removePrefix("craftsman_supply:")
-        } else rawAssignment
 
-        if (assignedSkillId != null) {
-            // Check if the assigned skill is still enabled by admin
-            if (!JobConfigOverrides.isEnabled(assignedSkillId)) {
-                // Skill was disabled by admin — reset to Idle
-                assignments.remove(pokemonId)
-                dirty = true
-            } else if (!isBuffSkill(assignedSkillId)) {
-                // Clear ambient behavior when actively working
-                AmbientBehavior.clearState(pokemonId)
-                val entry: SkillEntry? = speciesData.skills.find { e -> e.skillId == assignedSkillId }
-                if (entry != null) {
-                    executeSkill(world, pastureOrigin, pokemonEntity, entry)
+        // Craftsman supplier mode: run dedicated supplier executor
+        if (rawAssignment != null && rawAssignment.startsWith(SUPPLIER_PREFIX)) {
+            AmbientBehavior.clearState(pokemonId)
+            val supplierSkillId = rawAssignment.removePrefix(SUPPLIER_PREFIX)
+            val entry = speciesData.skills.find { it.skillId == supplierSkillId }
+            if (entry != null) {
+                notlown.cobblebase.core.executors.SupplierExecutor.tick(
+                    world, pastureOrigin, pokemonEntity, entry
+                )
+            }
+        } else {
+            val assignedSkillId = rawAssignment
+
+            if (assignedSkillId != null) {
+                if (!JobConfigOverrides.isEnabled(assignedSkillId)) {
+                    assignments.remove(pokemonId)
+                    dirty = true
+                } else if (!isBuffSkill(assignedSkillId)) {
+                    AmbientBehavior.clearState(pokemonId)
+                    val entry: SkillEntry? = speciesData.skills.find { e -> e.skillId == assignedSkillId }
+                    if (entry != null) {
+                        executeSkill(world, pastureOrigin, pokemonEntity, entry)
+                    }
                 }
             }
         }

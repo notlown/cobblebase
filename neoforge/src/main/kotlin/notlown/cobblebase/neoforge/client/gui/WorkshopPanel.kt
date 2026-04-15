@@ -177,12 +177,12 @@ class WorkshopPanel(
             context.matrices.pop()
         }
 
-        // Phase + craft count (below item name)
+        // Status + craft count (below item name)
         val phaseText = when (project.phase) {
-            "GATHERING" -> "\u00A7eGathering materials..."
-            "CRAFTING" -> "\u00A76Crafting..."
-            "DEPOSITING" -> "\u00A7aDone! Depositing..."
-            else -> "\u00A77Waiting..."
+            "GATHERING" -> "\u00A7eWaiting for materials"
+            "CRAFTING" -> "\u00A76Crafting in progress..."
+            "DEPOSITING" -> "\u00A7aComplete! Depositing..."
+            else -> "\u00A77Select a recipe"
         }
         val craftCount = project.craftCount
         val countText = if (craftCount > 0) " \u00A78| \u00A7a${craftCount} crafted" else ""
@@ -250,9 +250,11 @@ class WorkshopPanel(
             if (!done) {
                 val suppliers = notlown.cobblebase.core.SupplierHelper.getSupplierJobs(itemId)
                 val skillNames = suppliers.filter { it.skillId != "manual" }.joinToString("/") { it.skillName }
+                val countTextW = textRenderer.getWidth("$gathered / $needed") + 4
                 if (skillNames.isNotEmpty()) {
-                    val countTextW = textRenderer.getWidth("$gathered / $needed") + 4
                     context.drawTextWithShadow(textRenderer, "\u00A78($skillNames)", countTextW, 0, 0x666666)
+                } else {
+                    context.drawTextWithShadow(textRenderer, "\u00A78(place in chest)", countTextW, 0, 0x555555)
                 }
             }
             context.matrices.pop()
@@ -295,16 +297,11 @@ class WorkshopPanel(
             val speciesName = SpeciesSkillRegistry.resolveFormName(mon.species.path, mon.aspects)
             val monSkills = SpeciesSkillRegistry.getSkills(speciesName)?.skills ?: emptyList()
 
-            // Find which items this Mon can supply for the current project
-            val canSupply = mutableListOf<Pair<String, String>>() // itemId -> skillId
-            for ((itemId, _) in project.requiredItems) {
-                val suppliers = notlown.cobblebase.core.SupplierHelper.getSupplierJobs(itemId)
-                for (s in suppliers) {
-                    if (monSkills.any { it.skillId == s.skillId } && canSupply.none { it.first == itemId }) {
-                        canSupply.add(itemId to s.skillId)
-                    }
-                }
-            }
+            // Find which items this Mon can supply, using per-species check for Producer
+            val monSkillIds = monSkills.map { it.skillId }
+            val canSupply = notlown.cobblebase.core.SupplierHelper.getSupplyableItems(
+                speciesName, monSkillIds, project.requiredItems
+            )
             if (canSupply.isEmpty()) continue
             shownMons.add(mon.pokemonId)
 
@@ -365,24 +362,34 @@ class WorkshopPanel(
                 context.matrices.pop()
                 rows.add(SupplierRow(y, mon.pokemonId, "REMOVE"))
             } else {
-                // Show assignable items as small buttons
-                context.matrices.push()
-                context.matrices.translate((panelX + PADDING + 22).toFloat(), (y + 12).toFloat(), 0f)
-                context.matrices.scale(0.5f, 0.5f, 1f)
-                val itemNames = canSupply.map { it.first.substringAfterLast(":").replace("_", " ").replaceFirstChar { c -> c.uppercase() } }
-                context.drawTextWithShadow(textRenderer, "\u00A78Can supply: ${itemNames.joinToString(", ")}", 0, 0, 0x888888)
-                context.matrices.pop()
+                // Show item buttons for each supplyable item
+                var bx = panelX + PADDING + 22
+                for ((supItemId, supSkillId) in canSupply) {
+                    val supStack = makeStack(supItemId)
+                    val itemLabel = supItemId.substringAfterLast(":").replace("_", " ").replaceFirstChar { it.uppercase() }
+                    val btnW = (textRenderer.getWidth(itemLabel) * 0.5f).toInt() + 18
+                    val btnHover = mouseX >= bx && mouseX < bx + btnW && mouseY >= y + 10 && mouseY < y + 20
+                    context.fill(bx, y + 10, bx + btnW, y + 20, if (btnHover) 0xFF4CAF50.toInt() else 0xFF2A4A2A.toInt())
 
-                // [Assign] button — uses the first matching skill
-                val btnX = panelX + panelW - PADDING - 38
-                val assignHover = mouseX >= btnX && mouseX < btnX + 36 && mouseY >= y && mouseY < y + 20
-                context.fill(btnX, y + 3, btnX + 36, y + 17, if (assignHover) 0xFF4CAF50.toInt() else 0xFF3A6A3A.toInt())
-                context.matrices.push()
-                context.matrices.translate((btnX + 6).toFloat(), (y + 6).toFloat(), 0f)
-                context.matrices.scale(0.6f, 0.6f, 1f)
-                context.drawTextWithShadow(textRenderer, "Assign", 0, 0, 0xFFFFFF)
-                context.matrices.pop()
-                rows.add(SupplierRow(y, mon.pokemonId, canSupply.first().second))
+                    // Item icon in button
+                    if (!supStack.isEmpty) {
+                        context.matrices.push()
+                        context.matrices.translate((bx + 1).toFloat(), (y + 11).toFloat(), 0f)
+                        context.matrices.scale(0.5f, 0.5f, 1f)
+                        context.drawItem(supStack, 0, 0)
+                        context.matrices.pop()
+                    }
+                    // Item name in button
+                    context.matrices.push()
+                    context.matrices.translate((bx + 10).toFloat(), (y + 12).toFloat(), 0f)
+                    context.matrices.scale(0.5f, 0.5f, 1f)
+                    context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, 0xFFFFFF)
+                    context.matrices.pop()
+
+                    rows.add(SupplierRow(y + 10, mon.pokemonId, supSkillId))
+                    bx += btnW + 2
+                    if (bx > panelX + panelW - PADDING - 10) break
+                }
             }
 
             y += 22

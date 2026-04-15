@@ -94,4 +94,40 @@ object SupplierHelper {
         }
         return allSuggestions.distinctBy { it.skillId }.filter { it.skillId != "manual" }
     }
+
+    /**
+     * Check if a specific Mon (by species name) can supply a specific item.
+     * For Producer skill, checks the species' actual produce entry.
+     * For other skills, uses the generic item-to-skill mapping.
+     */
+    fun canMonSupplyItem(speciesName: String, skillId: String, itemId: String): Boolean {
+        if (skillId == "cobblebase:producer") {
+            // Producer: check if this specific species produces this item
+            val produce = notlown.cobblebase.core.executors.ProducerExecutor.getProduceEntry(speciesName)
+            if (produce == null) return false
+            val produceId = produce.itemId.lowercase()
+            val targetId = itemId.lowercase()
+            return produceId == targetId || produceId.substringAfterLast(":") == targetId.substringAfterLast(":")
+        }
+        // Non-producer skills: check if the skill can produce this item type
+        val suppliers = getSupplierJobs(itemId)
+        return suppliers.any { it.skillId == skillId }
+    }
+
+    /**
+     * Get which items from the required list a specific Mon can supply.
+     */
+    fun getSupplyableItems(speciesName: String, monSkillIds: List<String>, requiredItems: Map<String, Int>): List<Pair<String, String>> {
+        val result = mutableListOf<Pair<String, String>>() // itemId to skillId
+        for ((itemId, _) in requiredItems) {
+            for (skillId in monSkillIds) {
+                if (canMonSupplyItem(speciesName, skillId, itemId)) {
+                    if (result.none { it.first == itemId }) {
+                        result.add(itemId to skillId)
+                    }
+                }
+            }
+        }
+        return result
+    }
 }

@@ -164,7 +164,7 @@ object RecipeHelper {
                         outputCount = output.count,
                         outputDisplayName = output.name.string,
                         inputs = inputs,
-                        category = "Mod Furniture"
+                        category = "Cobblefurnies"
                     ))
                     count++
                 } catch (_: Exception) {}
@@ -182,8 +182,10 @@ object RecipeHelper {
     private fun categorizeRecipe(outputId: String, output: ItemStack): String? {
         val id = outputId.lowercase()
 
-        // Cobble Furniture mod — any non-vanilla, non-cobblemon mod items
-        // These are modded furniture items from cobblefurniture, MrCrayfish, etc.
+        // CobbleFurnies mod — own tab
+        if (id.startsWith("cobblefurnies:")) return "Cobblefurnies"
+
+        // Other non-vanilla mods — fallback tab
         if (!id.startsWith("minecraft:") && !id.startsWith("cobblemon:")) return "Mod Furniture"
 
         // Cobblemon-specific furniture/decoration
@@ -191,27 +193,28 @@ object RecipeHelper {
                     || id.contains("desk") || id.contains("counter") || id.contains("bench")
                     || id.contains("cabinet") || id.contains("lamp"))) return "Cobblemon"
 
-        // Vanilla decoration items
-        if (id.contains("lantern") || id.contains("candle") || id.contains("torch")) return "Lighting"
+        // === Vanilla: only real furniture & decoration, NO slabs/stairs/simple blocks ===
+
+        // Lighting
+        if (id.contains("lantern") || id.contains("candle")) return "Lighting"
+
+        // Decoration items
         if (id.contains("flower_pot") || id.contains("painting") || id.contains("item_frame")) return "Decoration"
         if (id.contains("banner")) return "Decoration"
         if (id.contains("sign") && !id.contains("design")) return "Decoration"
         if (id.contains("chain") || id.contains("ladder")) return "Decoration"
+        if (id.contains("armor_stand")) return "Decoration"
+
+        // Real furniture
         if (id.contains("_bed")) return "Furniture"
-        if (id.contains("carpet")) return "Furniture"
         if (id.contains("bookshelf") || id.contains("chiseled_bookshelf")) return "Furniture"
 
-        // Building blocks (stairs, slabs, fences, doors)
-        if (id.contains("stairs")) return "Building"
-        if (id.contains("slab")) return "Building"
-        if (id.contains("wall") && !id.contains("banner")) return "Building"
-        if (id.contains("fence")) return "Building"
-        if (id.contains("door")) return "Building"
-        if (id.contains("trapdoor")) return "Building"
-        if (id.contains("glass_pane") || id.contains("stained_glass")) return "Building"
-        if (id.contains("iron_bars")) return "Building"
+        // Doors & gates (useful for building)
+        if (id.contains("_door") && !id.contains("trapdoor")) return "Doors"
+        if (id.contains("fence_gate")) return "Doors"
 
-        // Everything else is excluded (tools, weapons, armor, food, redstone, etc.)
+        // Exclude everything else: stairs, slabs, walls, fences, trapdoors, carpets,
+        // glass panes, iron bars, torches, simple blocks, tools, weapons, armor, food, redstone
         return null
     }
 }

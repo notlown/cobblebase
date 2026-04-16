@@ -30,6 +30,24 @@ object SupplierExecutor {
     private val lastProduceTime = mutableMapOf<UUID, Long>()
     private val APRICORNS_TAG = TagKey.of(RegistryKeys.BLOCK, Identifier.of("cobblemon", "apricorns"))
 
+    /** Check if an item requires real plants to harvest (shown in GUI). */
+    fun isHarvestable(itemId: String): Boolean {
+        val id = itemId.lowercase()
+        return HARVESTABLE_ITEMS.contains(id) ||
+            id.contains("apricorn") ||
+            id.contains("berry") ||
+            id.endsWith(":wheat") ||
+            id.endsWith(":carrot") ||
+            id.endsWith(":potato") ||
+            id.endsWith(":beetroot") ||
+            id.endsWith(":nether_wart")
+    }
+
+    /** Check if there are harvestable plants nearby for a supplier (for UI warnings). */
+    fun hasNearbyHarvestable(world: ServerWorld, origin: BlockPos, radius: Int, itemId: String): Boolean {
+        return findHarvestableFor(world, origin, radius, itemId) != null
+    }
+
     // Items that must come from real plants — can't be generated from nothing
     private val HARVESTABLE_ITEMS = setOf(
         // Apricorns

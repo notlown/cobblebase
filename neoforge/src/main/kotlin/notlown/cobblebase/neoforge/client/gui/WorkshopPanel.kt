@@ -417,8 +417,10 @@ class WorkshopPanel(
             var bx = btnStartX + stopW + 2
             for ((supItemId, supSkillId) in canSupply) {
                 val supStack = makeStack(supItemId)
+                val isHarvestableItem = notlown.cobblebase.core.executors.SupplierExecutor.isHarvestable(supItemId)
+                val harvestMark = if (isHarvestableItem) "\u00A72\u2663 " else ""
                 val itemLabel = supItemId.substringAfterLast(":").replace("_", " ").replaceFirstChar { it.uppercase() }
-                val btnW = (textRenderer.getWidth(itemLabel) * 0.6f).toInt() + 16
+                val btnW = (textRenderer.getWidth("$harvestMark$itemLabel") * 0.6f).toInt() + 16
                 // Check if this specific item is the active one
                 val activeTargetItem = if (isSupplier && currentAssignment != null) {
                     val parts = currentAssignment.removePrefix("craftsman_supply:").split(":")
@@ -443,8 +445,22 @@ class WorkshopPanel(
                 context.matrices.push()
                 context.matrices.translate((bx + 11).toFloat(), (y + 7).toFloat(), 0f)
                 context.matrices.scale(0.6f, 0.6f, 1f)
-                context.drawTextWithShadow(textRenderer, itemLabel, 0, 0, if (isActiveItem || btnHover) 0xFFFFFF else 0xCCCCCC)
+                context.drawTextWithShadow(textRenderer, "$harvestMark$itemLabel", 0, 0, if (isActiveItem || btnHover) 0xFFFFFF else 0xCCCCCC)
                 context.matrices.pop()
+
+                // Hover tooltip for harvestable items
+                if (btnHover && isHarvestableItem && !isActiveItem) {
+                    val hintText = "\u00A7aRequires real plants nearby"
+                    val hintW = (textRenderer.getWidth(hintText) * 0.55f).toInt() + 6
+                    val hintY = y - 14
+                    context.fill(bx, hintY, bx + hintW, hintY + 10, 0xEE1E1E2E.toInt())
+                    context.fill(bx, hintY, bx + hintW, hintY + 1, 0xFF4CAF50.toInt())
+                    context.matrices.push()
+                    context.matrices.translate((bx + 3).toFloat(), (hintY + 2).toFloat(), 0f)
+                    context.matrices.scale(0.55f, 0.55f, 1f)
+                    context.drawTextWithShadow(textRenderer, hintText, 0, 0, 0x55FF55)
+                    context.matrices.pop()
+                }
 
                 // Cooldown bar INSIDE the active button (bottom 3px)
                 if (isActiveItem) {

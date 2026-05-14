@@ -33,7 +33,7 @@ object TemplateBlockReader {
                 java.util.List::class.java.isAssignableFrom(it.type)
             }
             if (listField != null) {
-                Cobblebase.LOGGER.info(
+                Cobblebase.LOGGER.debug(
                     "[Cobblebase] TemplateBlockReader: using heuristic field '${listField.name}' " +
                     "for block enumeration (none of the known names matched)."
                 )
@@ -78,7 +78,7 @@ object TemplateBlockReader {
                 if (heuristic != null) {
                     if (!heuristicMethodLogged) {
                         heuristicMethodLogged = true
-                        Cobblebase.LOGGER.info(
+                        Cobblebase.LOGGER.debug(
                             "[Cobblebase] TemplateBlockReader: using heuristic palette method '${heuristic.name}'."
                         )
                     }

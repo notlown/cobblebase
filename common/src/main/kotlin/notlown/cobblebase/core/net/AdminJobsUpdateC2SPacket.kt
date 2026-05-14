@@ -83,6 +83,6 @@ data class AdminJobsUpdateC2SPacket(
         }
 
         JobConfigOverrides.save(world)
-        Cobblebase.LOGGER.info("[Cobblebase] Job override updated for '$skillId' by ${player.name.string}")
+        Cobblebase.LOGGER.debug("[Cobblebase] Job override updated for '$skillId' by ${player.name.string}")
     }
 }

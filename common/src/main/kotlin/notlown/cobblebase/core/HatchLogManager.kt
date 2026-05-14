@@ -104,7 +104,7 @@ object HatchLogManager {
                 val type = object : TypeToken<List<HatchEntry>>() {}.type
                 val data: List<HatchEntry> = gson.fromJson(file.readText(), type) ?: return
                 entries.addAll(data)
-                Cobblebase.LOGGER.info("[HatchLog] loaded ${entries.size} hatch entries")
+                Cobblebase.LOGGER.debug("[HatchLog] loaded ${entries.size} hatch entries")
             } catch (e: Exception) {
                 Cobblebase.LOGGER.warn("[HatchLog] load failed: ${e.message}")
             }

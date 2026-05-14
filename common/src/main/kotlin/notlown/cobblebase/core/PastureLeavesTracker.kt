@@ -78,7 +78,7 @@ object PastureLeavesTracker {
 
         val scanMs = (System.nanoTime() - scanStart) / 1_000_000
         if (scanMs > 15) {
-            Cobblebase.LOGGER.warn("[Cobblebase] PERF leaves-scan @ ${pasturePos.toShortString()} took ${scanMs}ms (${newLeaves.size} leaves)")
+            Cobblebase.LOGGER.debug("[Cobblebase] PERF leaves-scan @ ${pasturePos.toShortString()} took ${scanMs}ms (${newLeaves.size} leaves)")
         }
     }
 

@@ -231,7 +231,7 @@ object BaseManager {
 
         val tickMs = (System.nanoTime() - tickStart) / 1_000_000
         if (tickMs > 10) {
-            Cobblebase.LOGGER.warn("[Cobblebase] PERF tickPokemon $speciesName / assign=$rawAssignment took ${tickMs}ms")
+            Cobblebase.LOGGER.debug("[Cobblebase] PERF tickPokemon $speciesName / assign=$rawAssignment took ${tickMs}ms")
         }
     }
 

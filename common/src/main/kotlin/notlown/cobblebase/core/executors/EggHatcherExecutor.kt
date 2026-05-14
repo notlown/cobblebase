@@ -198,7 +198,7 @@ object EggHatcherExecutor : SkillExecutor {
             proficiency = skillEntry.proficiency,
             displayEntityId = eggDisplay?.id ?: -1
         )
-        Cobblebase.LOGGER.info("[EggHatcher] Claim created: $species (prof ${skillEntry.proficiency}) → ${describeEgg(stack)} (timer=$initial) at $newLocation, pasture=$origin")
+        Cobblebase.LOGGER.debug("[EggHatcher] Claim created: $species (prof ${skillEntry.proficiency}) → ${describeEgg(stack)} (timer=$initial) at $newLocation, pasture=$origin")
         if (now % 40L == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
     }
 

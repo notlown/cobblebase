@@ -84,7 +84,7 @@ object LootOverrides {
                 }
                 overrides[normalize(id)] = LootTableDef(normalize(id), rolls, entries)
             }
-            Cobblebase.LOGGER.info("[Cobblebase] Loaded ${overrides.size} loot overrides")
+            Cobblebase.LOGGER.debug("[Cobblebase] Loaded ${overrides.size} loot overrides")
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to load loot overrides: ${e.message}")
         }

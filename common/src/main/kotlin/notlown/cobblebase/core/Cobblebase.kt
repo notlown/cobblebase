@@ -21,7 +21,7 @@ object Cobblebase {
     }
 
     fun init() {
-        LOGGER.info("Launching Cobblebase...")
+        LOGGER.debug("Launching Cobblebase...")
         AutoConfig.register(CobblebaseClothConfig::class.java, ::GsonConfigSerializer)
         registerSounds()
         SkillRegistry.init()
@@ -47,7 +47,7 @@ object Cobblebase {
                         // Skip entries with invalid chars (spaces, apostrophes, etc.)
                     }
                 }
-                LOGGER.info("[Cobblebase] Registered $count sound events")
+                LOGGER.debug("[Cobblebase] Registered $count sound events")
             } else {
                 LOGGER.warn("[Cobblebase] sounds.json not found")
             }

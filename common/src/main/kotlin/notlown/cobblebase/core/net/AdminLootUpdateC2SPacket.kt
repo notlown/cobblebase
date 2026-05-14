@@ -97,6 +97,6 @@ data class AdminLootUpdateC2SPacket(
             }
         }
         LootOverrides.save(world)
-        Cobblebase.LOGGER.info("[Cobblebase] Loot override updated for '$id' by ${player.name.string}")
+        Cobblebase.LOGGER.debug("[Cobblebase] Loot override updated for '$id' by ${player.name.string}")
     }
 }

@@ -83,7 +83,7 @@ object BuildJobManager {
                     completed = d.completed
                 )
             }
-            Cobblebase.LOGGER.info("[Cobblebase] BuildJobManager: loaded ${jobs.size} jobs")
+            Cobblebase.LOGGER.debug("[Cobblebase] BuildJobManager: loaded ${jobs.size} jobs")
         } catch (e: Exception) {
             Cobblebase.LOGGER.warn("[Cobblebase] BuildJobManager: load failed: ${e.message}")
         }

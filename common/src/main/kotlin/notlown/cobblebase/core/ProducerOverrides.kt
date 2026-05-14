@@ -24,13 +24,13 @@ object ProducerOverrides {
     fun setOverride(species: String, entry: ProducerExecutor.ProduceEntry, world: ServerWorld) {
         overrides[species.lowercase()] = entry
         save(world)
-        Cobblebase.LOGGER.info("[Cobblebase] Producer override set for '$species': ${entry.itemId} x${entry.count}")
+        Cobblebase.LOGGER.debug("[Cobblebase] Producer override set for '$species': ${entry.itemId} x${entry.count}")
     }
 
     fun removeOverride(species: String, world: ServerWorld) {
         overrides.remove(species.lowercase())
         save(world)
-        Cobblebase.LOGGER.info("[Cobblebase] Producer override removed for '$species'")
+        Cobblebase.LOGGER.debug("[Cobblebase] Producer override removed for '$species'")
     }
 
     private fun getSaveFile(world: ServerWorld): File {
@@ -70,7 +70,7 @@ object ProducerOverrides {
                 val cooldown = (fields["cooldownSeconds"] as? Double)?.toLong()
                 overrides[species.lowercase()] = ProducerExecutor.ProduceEntry(itemId, count, displayName, cooldown)
             }
-            Cobblebase.LOGGER.info("[Cobblebase] Loaded ${overrides.size} producer overrides")
+            Cobblebase.LOGGER.debug("[Cobblebase] Loaded ${overrides.size} producer overrides")
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to load producer overrides: ${e.message}")
         }

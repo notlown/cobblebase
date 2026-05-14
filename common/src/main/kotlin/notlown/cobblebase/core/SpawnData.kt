@@ -13,7 +13,7 @@ object SpawnData {
     private val speciesBucket = mutableMapOf<String, Bucket>()
 
     fun init() {
-        Cobblebase.LOGGER.info("[SpawnData] Initialized with bucket lookup")
+        Cobblebase.LOGGER.debug("[SpawnData] Initialized with bucket lookup")
     }
 
     /**
@@ -39,7 +39,7 @@ object SpawnData {
                 register(species.substringAfterLast(":"), bucket)
                 entries++
             }
-            Cobblebase.LOGGER.info("[SpawnData] Loaded $entries spawn entries from Cobblemon, ${speciesBucket.size} unique species")
+            Cobblebase.LOGGER.debug("[SpawnData] Loaded $entries spawn entries from Cobblemon, ${speciesBucket.size} unique species")
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[SpawnData] Failed to load from Cobblemon spawn pool: ${e.message}")
         }
@@ -104,7 +104,7 @@ object SpawnData {
                 count++
             } catch (_: Exception) {}
         }
-        Cobblebase.LOGGER.info("[SpawnData] Loaded $count entries, ${speciesBucket.size} unique species")
+        Cobblebase.LOGGER.debug("[SpawnData] Loaded $count entries, ${speciesBucket.size} unique species")
     }
 
     private fun parseCsvLine(line: String): List<String> {

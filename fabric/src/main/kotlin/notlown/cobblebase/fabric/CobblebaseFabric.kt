@@ -416,7 +416,7 @@ object CobblebaseFabric : ModInitializer {
                     }
                     val radius = notlown.cobblebase.core.SkillRegistry.getEffectiveRadius("cobblebase:egg_hatcher")
                     available = notlown.cobblebase.core.executors.EggHatcherExecutor.countAvailableEggs(world, pasturePos, radius)
-                    Cobblebase.LOGGER.info("[EggHatcher] Status query pasture=$pasturePos: ${snapshots.size} active claims, $available eggs available")
+                    Cobblebase.LOGGER.debug("[EggHatcher] Status query pasture=$pasturePos: ${snapshots.size} active claims, $available eggs available")
                 }
 
                 ServerPlayNetworking.send(context.player(),

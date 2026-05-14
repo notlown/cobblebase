@@ -15,7 +15,7 @@ object SpeciesSkillRegistry {
 
     fun init() {
         loadFromResources()
-        Cobblebase.LOGGER.info("SpeciesSkillRegistry: ${speciesMap.size} species registered")
+        Cobblebase.LOGGER.debug("SpeciesSkillRegistry: ${speciesMap.size} species registered")
     }
 
     // Regional/alternate forms that get their own species_skills file (e.g. "vulpix_alolan")

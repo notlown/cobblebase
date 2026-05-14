@@ -53,7 +53,7 @@ object GeneralSettings {
         try {
             val file = getSaveFile(world)
             file.writeText(gson.toJson(settings))
-            Cobblebase.LOGGER.info("[GeneralSettings] Saved to ${file.name}")
+            Cobblebase.LOGGER.debug("[GeneralSettings] Saved to ${file.name}")
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[GeneralSettings] Failed to save: ${e.message}")
         }
@@ -63,13 +63,13 @@ object GeneralSettings {
         try {
             val file = getSaveFile(world)
             if (!file.exists()) {
-                Cobblebase.LOGGER.info("[GeneralSettings] No saved file — using defaults")
+                Cobblebase.LOGGER.debug("[GeneralSettings] No saved file — using defaults")
                 return
             }
             val loaded = gson.fromJson(file.readText(), Settings::class.java)
             if (loaded != null) {
                 settings = loaded
-                Cobblebase.LOGGER.info("[GeneralSettings] Loaded: discordEnabled=${settings.discordEnabled} url=${settings.discordUrl}")
+                Cobblebase.LOGGER.debug("[GeneralSettings] Loaded: discordEnabled=${settings.discordEnabled} url=${settings.discordUrl}")
             }
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[GeneralSettings] Failed to load: ${e.message}")

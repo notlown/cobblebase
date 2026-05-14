@@ -134,14 +134,14 @@ object StructureTemplateRegistry {
 
         cache = found
         if (found.isEmpty()) {
-            Cobblebase.LOGGER.info(
+            Cobblebase.LOGGER.debug(
                 "[Cobblebase] StructureTemplateRegistry: no .nbt structure files found. " +
                 "Install a Pokemon structure datapack (e.g. CobbleTowns, Radical Gyms) " +
                 "or place .nbt files under data/<namespace>/structures/ to give Builder Pokemon something to build."
             )
         } else {
             val elapsedMs = (System.nanoTime() - startNanos) / 1_000_000
-            Cobblebase.LOGGER.info(
+            Cobblebase.LOGGER.debug(
                 "[Cobblebase] StructureTemplateRegistry: indexed ${found.size} templates " +
                 "(vanilla=$vanillaCount, custom=$customCount) in ${elapsedMs}ms — histogram enrichment running in background"
             )
@@ -195,7 +195,7 @@ object StructureTemplateRegistry {
                 cache = updated
                 histogramSuccessCount = ok
                 histogramFailureCount = failed
-                Cobblebase.LOGGER.info(
+                Cobblebase.LOGGER.debug(
                     "[Cobblebase] StructureTemplateRegistry: async histogram enrichment done " +
                     "(OK=$ok, failed=$failed)"
                 )

@@ -13,7 +13,7 @@ object SkillRegistry {
 
     fun init() {
         loadFromResources()
-        Cobblebase.LOGGER.info("SkillRegistry: ${skills.size} skills registered")
+        Cobblebase.LOGGER.debug("SkillRegistry: ${skills.size} skills registered")
     }
 
     fun get(id: String): SkillDef? = skills[id]

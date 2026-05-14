@@ -64,7 +64,7 @@ data class BuildJobConfigureC2SPacket(
                 mirror = mir,
                 completed = false
             ))
-            Cobblebase.LOGGER.info(
+            Cobblebase.LOGGER.debug(
                 "[Cobblebase] BuildJob set @ $pasturePos: template=$tid origin=($originX,$originY,$originZ) rot=$rot"
             )
         }

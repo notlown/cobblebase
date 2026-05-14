@@ -120,7 +120,7 @@ object WorkshopManager {
                 val tick = (fields["phaseStartTick"] as? Double)?.toLong() ?: 0L
                 projects[uuid] = WorkshopProject(recipeId, gathered, required, phase, tick)
             }
-            Cobblebase.LOGGER.info("[Workshop] Loaded ${projects.size} active projects")
+            Cobblebase.LOGGER.debug("[Workshop] Loaded ${projects.size} active projects")
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Workshop] Failed to load: ${e.message}")
         }

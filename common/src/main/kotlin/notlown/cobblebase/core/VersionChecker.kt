@@ -33,7 +33,7 @@ object VersionChecker {
         }
 
         handshakes[player.uuid] = clientVersion
-        Cobblebase.LOGGER.info("[Cobblebase] Player ${player.name.string} connected with Cobblebase v$clientVersion")
+        Cobblebase.LOGGER.debug("[Cobblebase] Player ${player.name.string} connected with Cobblebase v$clientVersion")
     }
 
     /**

@@ -178,7 +178,7 @@ object LogManager {
                 }.toMutableList()
             }
             val totalEntries = logs.values.sumOf { it.size }
-            Cobblebase.LOGGER.info("[Cobblebase] Loaded $totalEntries log entries for ${logs.size} pastures")
+            Cobblebase.LOGGER.debug("[Cobblebase] Loaded $totalEntries log entries for ${logs.size} pastures")
             cleanup()
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to load logs: ${e.message}")

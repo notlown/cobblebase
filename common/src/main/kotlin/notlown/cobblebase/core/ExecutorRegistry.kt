@@ -94,7 +94,7 @@ object ExecutorRegistry {
         register("lucky_charm", LuckyCharmExecutor)          // Boosts shiny rate for nearby wild Pokemon
         register("growth", GrowthAuraExecutor)
 
-        Cobblebase.LOGGER.info("ExecutorRegistry: ${executors.size} executors registered")
+        Cobblebase.LOGGER.debug("ExecutorRegistry: ${executors.size} executors registered")
     }
 
     fun register(name: String, executor: SkillExecutor) {

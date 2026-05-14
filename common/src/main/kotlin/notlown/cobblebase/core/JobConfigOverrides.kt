@@ -124,7 +124,7 @@ object JobConfigOverrides {
                 }?.toMap()
                 overrides[skillId] = JobOverride(cooldown, radius, enabled, tuning?.takeIf { it.isNotEmpty() })
             }
-            Cobblebase.LOGGER.info("[Cobblebase] Loaded ${overrides.size} job config overrides")
+            Cobblebase.LOGGER.debug("[Cobblebase] Loaded ${overrides.size} job config overrides")
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to load job overrides: ${e.message}")
         }

@@ -31,7 +31,7 @@ object SpeciesSkillOverrides {
         // Hot-reload into SpeciesSkillRegistry
         SpeciesSkillRegistry.register(SpeciesSkills(key, skills))
         save(world)
-        Cobblebase.LOGGER.info("[Cobblebase] Override set for species '$key' with ${skills.size} skills")
+        Cobblebase.LOGGER.debug("[Cobblebase] Override set for species '$key' with ${skills.size} skills")
     }
 
     /**
@@ -46,7 +46,7 @@ object SpeciesSkillOverrides {
             SpeciesSkillRegistry.register(builtIn)
         }
         save(world)
-        Cobblebase.LOGGER.info("[Cobblebase] Override removed for species '$key', reverted to built-in")
+        Cobblebase.LOGGER.debug("[Cobblebase] Override removed for species '$key', reverted to built-in")
     }
 
     private fun getSaveFile(world: ServerWorld): File {
@@ -84,7 +84,7 @@ object SpeciesSkillOverrides {
                 // Apply override into SpeciesSkillRegistry
                 SpeciesSkillRegistry.register(SpeciesSkills(species.lowercase(), skills))
             }
-            Cobblebase.LOGGER.info("[Cobblebase] Loaded ${overrides.size} species skill overrides")
+            Cobblebase.LOGGER.debug("[Cobblebase] Loaded ${overrides.size} species skill overrides")
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to load species overrides: ${e.message}")
         }

@@ -254,7 +254,7 @@ object BuilderExecutor : SkillExecutor {
         BuildJobManager.setJob(pasture, job.copy(completed = true))
         BuildJobManager.save(world)
         planCache.remove(pasture)
-        Cobblebase.LOGGER.info("[Cobblebase] Builder: job @ $pasture completed (${job.templateId}).")
+        Cobblebase.LOGGER.debug("[Cobblebase] Builder: job @ $pasture completed (${job.templateId}).")
         // Celebratory burst at the pasture
         world.spawnParticles(
             ParticleTypes.HAPPY_VILLAGER,

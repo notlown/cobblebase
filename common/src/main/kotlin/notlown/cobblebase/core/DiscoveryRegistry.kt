@@ -180,7 +180,7 @@ object DiscoveryRegistry {
                 } catch (_: Exception) {}
             }
             val total = permanentDiscoveries.size + recentSightings.size
-            Cobblebase.LOGGER.info("[Cobblebase] Loaded $total discoveries (${permanentDiscoveries.size} permanent, ${recentSightings.size} sightings)")
+            Cobblebase.LOGGER.debug("[Cobblebase] Loaded $total discoveries (${permanentDiscoveries.size} permanent, ${recentSightings.size} sightings)")
             cleanupOldSightings()
         } catch (e: Exception) {
             Cobblebase.LOGGER.error("[Cobblebase] Failed to load discoveries: ${e.message}")

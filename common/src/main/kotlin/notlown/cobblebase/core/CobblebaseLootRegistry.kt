@@ -30,7 +30,7 @@ object CobblebaseLootRegistry {
 
     fun init() {
         loadFromResources()
-        Cobblebase.LOGGER.info("[Cobblebase] CobblebaseLootRegistry: ${tables.size} loot tables loaded")
+        Cobblebase.LOGGER.debug("[Cobblebase] CobblebaseLootRegistry: ${tables.size} loot tables loaded")
     }
 
     fun get(id: String): LootTableDef? = tables[normalizeId(id)]

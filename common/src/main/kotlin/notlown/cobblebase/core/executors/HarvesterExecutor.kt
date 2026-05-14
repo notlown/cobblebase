@@ -49,6 +49,13 @@ object HarvesterExecutor : SkillExecutor {
     private val lastSearchTime = mutableMapOf<UUID, Long>()
     private val lastHarvestTime = mutableMapOf<UUID, Long>() // per-pokemon cooldown between harvests
     private val harvestedBlockCooldown = mutableMapOf<BlockPos, Long>() // per-block cooldown to prevent instant re-harvest
+    /**
+     * Tracks the world-time tick at which each block was first observed ripe by any
+     * Harvester scan. Used to prefer the longest-ripe crops (FIFO) on next harvest
+     * decision, so newly-ripened blocks don't get picked before older ones.
+     * Pruned automatically when a block stops being ripe (harvested, broken, regressed).
+     */
+    private val firstSeenRipeTime = mutableMapOf<BlockPos, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
@@ -62,6 +69,8 @@ object HarvesterExecutor : SkillExecutor {
         }
         // The block-level cooldown map is keyed by BlockPos; expire entries older than 10s.
         harvestedBlockCooldown.entries.removeAll { now - it.value > 200L }
+        // firstSeenRipeTime is self-pruned during findHarvestable (drops stale entries when
+        // their block stops being ripe). No additional cleanup needed here.
     }
     private const val BLOCK_COOLDOWN_TICKS = 1200L // 60 seconds before same block can be harvested again
     private const val HARVEST_COOLDOWN_TICKS = 200L // 10 seconds between harvests (so Gatherer can keep up)
@@ -141,13 +150,17 @@ object HarvesterExecutor : SkillExecutor {
         if (now - lastSearch < SEARCH_INTERVAL_TICKS) return
         lastSearchTime[pokemonId] = now
 
-        val found = findHarvestable(world, origin, skill.searchRadius)
+        // Use the server-wide pasture range (Admin → Server Settings) so the harvest scan
+        // matches what the player set as the pasture's working radius. Falls through to the
+        // skill's own JSON default when no server setting exists.
+        val pastureRadius = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius
+        val found = findHarvestable(world, origin, pastureRadius)
         if (found != null) {
             targetBlock[pokemonId] = found
             targetSetTime[pokemonId] = now
         } else {
             // Nothing ripe - wander towards nearest growing (not yet ripe) harvestable block
-            val growingPos = findGrowing(world, origin, skill.searchRadius)
+            val growingPos = findGrowing(world, origin, pastureRadius)
             if (growingPos != null) {
                 NavigationHelper.navigateTo(pokemonEntity, growingPos, speed * 0.4)
             }
@@ -161,6 +174,7 @@ object HarvesterExecutor : SkillExecutor {
             harvestedBlockCooldown.entries.removeIf { now - it.value > BLOCK_COOLDOWN_TICKS }
         }
         val candidates = mutableListOf<BlockPos>()
+        val seenThisScan = HashSet<BlockPos>()
 
         for (x in -radius..radius) {
             for (y in 0..radius) { // Only search at pasture level and ABOVE, never below
@@ -171,12 +185,34 @@ object HarvesterExecutor : SkillExecutor {
                     val lastHarvest = harvestedBlockCooldown[immPos]
                     if (lastHarvest != null && now - lastHarvest < BLOCK_COOLDOWN_TICKS) continue
                     if (isReadyToHarvest(world, pos)) {
+                        // First time we've seen this block ripe — remember the tick so we
+                        // can prefer the longest-ripe blocks across future scans.
+                        firstSeenRipeTime.putIfAbsent(immPos, now)
                         candidates.add(immPos)
+                        seenThisScan.add(immPos)
                     }
                 }
             }
         }
-        return candidates.randomOrNull()
+        // Prune any tracked positions inside the radius that are no longer ripe (harvested
+        // by another mon, broken by a player, age regressed, etc.). Positions outside the
+        // current scan radius are left alone — another pasture's harvester may track them.
+        val radiusSquared = (radius.toLong() * radius)
+        firstSeenRipeTime.entries.removeIf { (pos, _) ->
+            val dx = (pos.x - origin.x).toLong()
+            val dy = (pos.y - origin.y).toLong()
+            val dz = (pos.z - origin.z).toLong()
+            val inRange = (dx * dx + dy * dy + dz * dz) <= radiusSquared * 3
+            inRange && pos !in seenThisScan
+        }
+        // Prefer the block that has been ripe the longest (FIFO). Stable secondary sort
+        // by squared distance to the pasture so ties go to the nearest mon-reachable one.
+        return candidates.minWithOrNull(
+            compareBy<BlockPos>(
+                { firstSeenRipeTime[it] ?: now },
+                { (it.x - origin.x).let { d -> d * d } + (it.y - origin.y).let { d -> d * d } + (it.z - origin.z).let { d -> d * d } }
+            )
+        )
     }
 
     /**
@@ -281,6 +317,8 @@ object HarvesterExecutor : SkillExecutor {
     }
 
     private fun harvest(world: ServerWorld, pos: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID) {
+        // Drop ripe-time tracker — block resets to growing, will be re-tracked when ripe again.
+        firstSeenRipeTime.remove(pos.toImmutable())
         val state = world.getBlockState(pos)
         val block = state.block
         // Record harvest time for this block (prevents instant re-harvest)

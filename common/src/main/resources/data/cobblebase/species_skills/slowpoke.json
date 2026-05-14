@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:irrigator",
       "proficiency": 1
+    },
+    {
+      "proficiency": 2,
+      "skillId": "cobblebase:egg_hatcher"
     }
   ]
 }

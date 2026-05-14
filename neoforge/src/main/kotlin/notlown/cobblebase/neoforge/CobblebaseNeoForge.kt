@@ -350,7 +350,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.CODEC
         ) { packet, context ->
             context.enqueueWork {
-                notlown.cobblebase.core.GeneralSettingsCache.update(packet.discordUrl, packet.discordEnabled)
+                notlown.cobblebase.core.GeneralSettingsCache.update(packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled)
             }
         }
 
@@ -364,12 +364,14 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 if (!player.hasPermissionLevel(2)) return@enqueueWork
                 val newSettings = notlown.cobblebase.core.GeneralSettings.Settings(
                     discordUrl = packet.discordUrl,
-                    discordEnabled = packet.discordEnabled
+                    discordEnabled = packet.discordEnabled,
+                    pokeWikiEnabled = packet.pokeWikiEnabled,
+                    pastureRange = packet.pastureRange.coerceIn(5, 30)
                 )
                 notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
                 notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
                 val syncPacket = notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
-                    packet.discordUrl, packet.discordEnabled
+                    newSettings.discordUrl, newSettings.discordEnabled, newSettings.pokeWikiEnabled, newSettings.pastureRange
                 )
                 for (p in player.server.playerManager.playerList) {
                     net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, syncPacket)
@@ -448,6 +450,48 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
             }
         }
+
+        // --- Builder packets ---
+
+        // C2S: client requests the template list
+        registrar.playToServer(
+            notlown.cobblebase.core.net.StructureTemplateListRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.StructureTemplateListRequestC2SPacket.CODEC
+        ) { _, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                val templates = notlown.cobblebase.core.StructureTemplateRegistry
+                    .getAll(player.server)
+                    .map {
+                        notlown.cobblebase.core.net.StructureTemplateListSyncS2CPacket.TemplateDTO(
+                            it.id.toString(), it.displayName, it.sizeX, it.sizeY, it.sizeZ,
+                            it.topBlocks, it.totalBlockCount
+                        )
+                    }
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                    notlown.cobblebase.core.net.StructureTemplateListSyncS2CPacket(templates))
+            }
+        }
+
+        // S2C: template list
+        registrar.playToClient(
+            notlown.cobblebase.core.net.StructureTemplateListSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.StructureTemplateListSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.BuilderCache.update(packet.templates)
+            }
+        }
+
+        // C2S: confirm/clear a build job for a pasture
+        registrar.playToServer(
+            notlown.cobblebase.core.net.BuildJobConfigureC2SPacket.ID,
+            notlown.cobblebase.core.net.BuildJobConfigureC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
+            }
+        }
     }
 
     private fun onPlayerLoggedIn(event: PlayerEvent.PlayerLoggedInEvent) {
@@ -457,7 +501,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         val s = notlown.cobblebase.core.GeneralSettings.getSettings()
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
             player,
-            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(s.discordUrl, s.discordEnabled)
+            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(s.discordUrl, s.discordEnabled, s.pokeWikiEnabled, s.pastureRange)
         )
         // Sync all species skill overrides so the Pasture Skills tab sees
         // the admin-set skill set instead of the bundled default.
@@ -491,6 +535,8 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         notlown.cobblebase.core.GeneralSettings.load(world)
         notlown.cobblebase.core.LootOverrides.load(world)
         notlown.cobblebase.core.SpawnData.loadFromCobblemonSpawnPool()
+        notlown.cobblebase.core.StructureTemplateRegistry.refresh(event.server)
+        notlown.cobblebase.core.BuildJobManager.load(world)
     }
 
     private fun onServerStopping(event: ServerStoppingEvent) {
@@ -504,6 +550,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         notlown.cobblebase.core.WorkshopManager.save(world)
         notlown.cobblebase.core.GeneralSettings.save(world)
         notlown.cobblebase.core.LootOverrides.save(world)
+        notlown.cobblebase.core.BuildJobManager.save(world)
     }
 
     /**

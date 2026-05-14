@@ -23,6 +23,12 @@ import java.util.UUID
 object GrowthAuraExecutor : SkillExecutor {
 
     private val lastTickTime = mutableMapOf<UUID, Long>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastTickTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) lastTickTime.remove(id)
+    }
 
     // How often the aura pulses (in ticks). Every 30 seconds.
     private const val PULSE_INTERVAL = 600L
@@ -44,7 +50,10 @@ object GrowthAuraExecutor : SkillExecutor {
         if (now - lastTime < PULSE_INTERVAL) return
 
         val radius = getRadius(prof, skill.searchRadius)
-        val maxCropsPerPulse = getCropsPerPulse(prof)
+        // Per-job tuning: admin can scale the number of crops ticked per pulse.
+        val growthMult = notlown.cobblebase.core.SkillRegistry
+            .getEffectiveTuning(skill.id, "growthMultiplier", 1.0)
+        val maxCropsPerPulse = (getCropsPerPulse(prof) * growthMult).toInt().coerceAtLeast(1)
 
         // Scan for crop blocks within range
         val candidates = mutableListOf<BlockPos>()

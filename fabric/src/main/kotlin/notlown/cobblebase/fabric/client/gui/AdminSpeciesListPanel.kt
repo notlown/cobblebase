@@ -125,18 +125,9 @@ class AdminSpeciesListPanel(
 
         val listY = y + PADDING + SEARCH_HEIGHT + 16
         val listH = h - PADDING - SEARCH_HEIGHT - 20
-        val maxVisible = listH / ROW_HEIGHT
-
-        // Clamp scroll
-        val maxScroll = (filteredSpecies.size - maxVisible).coerceAtLeast(0)
-        scrollOffset = scrollOffset.coerceIn(0, maxScroll)
-
-        // Species skill counts from cache
-        val speciesSkills = AdminDataCache.speciesSkills
-        val overridden = AdminDataCache.overriddenSpecies
-
-        // "Add new species" row at top when search doesn't match
+        // scrollOffset is in PIXELS, not row index. Smooth scroll, no per-tick row skips.
         var addRowOffset = 0
+        val addRowHeaderPx: Int
         if (showAddOption) {
             val addRowY = listY
             val isHovered = mouseX in x..(x + w) && mouseY in addRowY..(addRowY + ROW_HEIGHT)
@@ -149,16 +140,33 @@ class AdminSpeciesListPanel(
             context.drawTextWithShadow(textRenderer, "\u00A7a+ Add \"${addQuery}\"", 0, 0, 0x55FF55)
             context.matrices.pop()
             addRowOffset = 1
+            addRowHeaderPx = ROW_HEIGHT
+        } else {
+            addRowHeaderPx = 0
         }
 
-        for (i in 0 until maxVisible - addRowOffset) {
-            val idx = i + scrollOffset
-            if (idx >= filteredSpecies.size) break
+        val scrollableH = listH - addRowHeaderPx
+        val contentPx = filteredSpecies.size * ROW_HEIGHT
+        val maxScroll = (contentPx - scrollableH).coerceAtLeast(0)
+        scrollOffset = scrollOffset.coerceIn(0, maxScroll)
+
+        val speciesSkills = AdminDataCache.speciesSkills
+        val overridden = AdminDataCache.overriddenSpecies
+
+        val rowsAreaTop = listY + addRowHeaderPx
+        val rowsAreaBottom = listY + listH
+        val firstIdx = scrollOffset / ROW_HEIGHT
+
+        context.enableScissor(x, rowsAreaTop, x + w, rowsAreaBottom)
+
+        var idx = firstIdx
+        while (idx < filteredSpecies.size) {
+            val rowY = rowsAreaTop + idx * ROW_HEIGHT - scrollOffset
+            if (rowY >= rowsAreaBottom) break
 
             val species = filteredSpecies[idx]
-            val rowY = listY + (i + addRowOffset) * ROW_HEIGHT
             val isSelected = species == selectedSpecies
-            val isHovered = mouseX in x..(x + w) && mouseY in rowY..(rowY + ROW_HEIGHT)
+            val isHovered = mouseX in x..(x + w) && mouseY in rowY..(rowY + ROW_HEIGHT) && mouseY in rowsAreaTop..rowsAreaBottom
 
             val bg = when {
                 isSelected -> ROW_SELECTED
@@ -168,15 +176,12 @@ class AdminSpeciesListPanel(
             }
             context.fill(x + 2, rowY, x + w - 2, rowY + ROW_HEIGHT, bg)
 
-            // Override indicator (orange dot)
             if (overridden.contains(species)) {
                 context.fill(x + 4, rowY + 6, x + 8, rowY + 10, OVERRIDE_INDICATOR)
             }
 
-            // Pokemon sprite
             PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, species, x + 10, rowY + 3, delta)
 
-            // Species name (0.75x scaled)
             val nameX = x + 26
             val displayName = species.replaceFirstChar { it.uppercase() }
             val scale = 0.75f
@@ -186,16 +191,16 @@ class AdminSpeciesListPanel(
             context.drawTextWithShadow(textRenderer, displayName, 0, 0, if (isSelected) 0xFFFFFF else 0xCCCCCC)
             context.matrices.pop()
 
-            // Skill count removed — shown in editor panel after lazy load
+            idx++
         }
+        context.disableScissor()
 
-        // Scrollbar
-        if (filteredSpecies.size > maxVisible) {
+        if (contentPx > scrollableH) {
             val trackX = x + w - 3
-            val trackH = listH
-            val thumbH = ((maxVisible.toFloat() / filteredSpecies.size) * trackH).toInt().coerceAtLeast(10)
-            val thumbY = listY + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
+            val trackH = scrollableH
+            val thumbH = ((scrollableH.toFloat() / contentPx) * trackH).toInt().coerceAtLeast(10)
+            val thumbY = rowsAreaTop + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
+            context.fill(trackX, rowsAreaTop, trackX + 2, rowsAreaTop + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
         }
     }
@@ -217,38 +222,37 @@ class AdminSpeciesListPanel(
 
         val listY = y + PADDING + SEARCH_HEIGHT + 16
         val listH = h - PADDING - SEARCH_HEIGHT - 20
+        val addRowHeaderPx = if (showAddOption) ROW_HEIGHT else 0
+        val rowsAreaTop = listY + addRowHeaderPx
+        val scrollableH = listH - addRowHeaderPx
+        val contentPx = filteredSpecies.size * ROW_HEIGHT
+        val maxScroll = (contentPx - scrollableH).coerceAtLeast(0)
 
-        // Check scrollbar click (8px wide hitbox around the 2px scrollbar track)
+        // Scrollbar drag — hitbox is 8px wide around the 2px track, only in the rows area.
         val trackX = x + w - 3
-        val maxVisible = listH / ROW_HEIGHT
-        val maxScroll = (filteredSpecies.size - maxVisible).coerceAtLeast(0)
-        if (maxScroll > 0 && mouseX >= trackX - 4 && mouseX <= trackX + 4 && mouseY >= listY && mouseY <= listY + listH) {
+        if (maxScroll > 0 && mouseX >= trackX - 4 && mouseX <= trackX + 4 && mouseY >= rowsAreaTop && mouseY <= rowsAreaTop + scrollableH) {
             isDraggingScrollbar = true
-            val trackHeight = listH
-            val relativeY = ((mouseY - listY) / trackHeight.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (relativeY * maxScroll).toInt()
+            val rel = ((mouseY - rowsAreaTop) / scrollableH.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (rel * maxScroll).toInt()
             return true
         }
 
-        if (mouseX >= x && mouseX <= x + w && mouseY >= listY && mouseY <= listY + listH) {
-            val row = ((mouseY - listY) / ROW_HEIGHT).toInt()
-
-            // Handle "Add new species" click
-            if (showAddOption && row == 0) {
-                val newSpecies = addQuery.lowercase().trim().replace(" ", "_")
-                if (newSpecies.isNotEmpty()) {
-                    // Add to cache so it appears in the list
-                    if (newSpecies !in AdminDataCache.allSpecies) {
-                        AdminDataCache.allSpecies = (AdminDataCache.allSpecies + newSpecies).sorted()
-                    }
-                    updateFilter()
-                    select(newSpecies)
+        // Handle "Add new species" click — sits in the fixed header area above the scroll region.
+        if (showAddOption && mouseY in listY.toDouble()..(listY + ROW_HEIGHT).toDouble() && mouseX in x.toDouble()..(x + w).toDouble()) {
+            val newSpecies = addQuery.lowercase().trim().replace(" ", "_")
+            if (newSpecies.isNotEmpty()) {
+                if (newSpecies !in AdminDataCache.allSpecies) {
+                    AdminDataCache.allSpecies = (AdminDataCache.allSpecies + newSpecies).sorted()
                 }
-                return true
+                updateFilter()
+                select(newSpecies)
             }
+            return true
+        }
 
-            val addOffset = if (showAddOption) 1 else 0
-            val idx = (row - addOffset) + scrollOffset
+        // Row click — derive index from pixel-aware scrollOffset.
+        if (mouseX >= x && mouseX <= x + w && mouseY >= rowsAreaTop && mouseY <= rowsAreaTop + scrollableH) {
+            val idx = ((mouseY - rowsAreaTop).toInt() + scrollOffset) / ROW_HEIGHT
             if (idx in filteredSpecies.indices) {
                 select(filteredSpecies[idx])
                 return true
@@ -261,11 +265,13 @@ class AdminSpeciesListPanel(
         if (isDraggingScrollbar) {
             val listY = y + PADDING + SEARCH_HEIGHT + 16
             val listH = h - PADDING - SEARCH_HEIGHT - 20
-            val maxVisible = listH / ROW_HEIGHT
-            val maxScroll = (filteredSpecies.size - maxVisible).coerceAtLeast(0)
-            val trackHeight = listH
-            val relativeY = ((mouseY - listY) / trackHeight.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (relativeY * maxScroll).toInt()
+            val addRowHeaderPx = if (showAddOption) ROW_HEIGHT else 0
+            val rowsAreaTop = listY + addRowHeaderPx
+            val scrollableH = listH - addRowHeaderPx
+            val contentPx = filteredSpecies.size * ROW_HEIGHT
+            val maxScroll = (contentPx - scrollableH).coerceAtLeast(0)
+            val rel = ((mouseY - rowsAreaTop) / scrollableH.toDouble()).coerceIn(0.0, 1.0)
+            scrollOffset = (rel * maxScroll).toInt()
             return true
         }
         return false
@@ -279,17 +285,18 @@ class AdminSpeciesListPanel(
         return false
     }
 
-    private var scrollAccumulator = 0.0
+    /** Pixels scrolled per wheel notch. 9px = half a row — smooth without losing the row rhythm. */
+    private val SCROLL_STEP_PX = 9
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
-            // Accumulate fractional scroll input (touchpad / smooth scroll mice)
-            scrollAccumulator -= verticalAmount
-            val whole = scrollAccumulator.toInt()
-            scrollAccumulator -= whole.toDouble()
-            scrollOffset = (scrollOffset + whole).coerceAtLeast(0)
-            val maxScroll = (filteredSpecies.size - ((h - 20) / ROW_HEIGHT)).coerceAtLeast(0)
-            scrollOffset = scrollOffset.coerceAtMost(maxScroll)
+            val listY = y + PADDING + SEARCH_HEIGHT + 16
+            val listH = h - PADDING - SEARCH_HEIGHT - 20
+            val addRowHeaderPx = if (showAddOption) ROW_HEIGHT else 0
+            val scrollableH = listH - addRowHeaderPx
+            val contentPx = filteredSpecies.size * ROW_HEIGHT
+            val maxScroll = (contentPx - scrollableH).coerceAtLeast(0)
+            scrollOffset = (scrollOffset - (verticalAmount * SCROLL_STEP_PX).toInt()).coerceIn(0, maxScroll)
             return true
         }
         return false

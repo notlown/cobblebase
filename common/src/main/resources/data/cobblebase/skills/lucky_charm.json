@@ -1,10 +1,21 @@
 {
   "id": "cobblebase:lucky_charm",
   "name": "Lucky Charm",
-  "description": "Increases loot quality for all workers",
+  "description": "Increases shiny rate of wild Pokemon near the owner",
   "category": "legendary",
   "cooldownSeconds": 0,
   "searchRadius": 15,
   "executor": "lucky_charm",
-  "effectType": "special"
+  "effectType": "special",
+  "tuning": {
+    "shinyMultiplier": {
+      "label": "Shiny Rate Multiplier",
+      "defaultValue": 1.0,
+      "min": 0.1,
+      "max": 10.0,
+      "step": 0.1,
+      "unit": "x",
+      "tooltip": "Global multiplier on top of the proficiency-scaled shiny rate (base shiny = 1/8192).\n§7Effective shiny rate per proficiency (multiplier × base):\n§8  Prof 1: 1.4x × multiplier\n§8  Prof 2: 1.8x × multiplier\n§8  Prof 3: 2.2x × multiplier\n§8  Prof 4: 2.6x × multiplier\n§8  Prof 5: 3.0x × multiplier"
+    }
+  }
 }

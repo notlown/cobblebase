@@ -29,6 +29,15 @@ object GenericLootExecutor : SkillExecutor {
 
     private val lastLootTime = mutableMapOf<UUID, Long>()
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastLootTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastLootTime.remove(id)
+            heldItems.remove(id)
+        }
+    }
 
     override fun tick(
         world: World,
@@ -40,7 +49,7 @@ object GenericLootExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val items = heldItems[pokemonId]
 
         // If holding items, go deposit

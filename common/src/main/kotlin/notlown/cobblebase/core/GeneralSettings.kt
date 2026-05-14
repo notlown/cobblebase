@@ -16,7 +16,19 @@ object GeneralSettings {
 
     data class Settings(
         var discordUrl: String = "https://discord.gg/6As3sVZgVT",
-        var discordEnabled: Boolean = true
+        var discordEnabled: Boolean = true,
+        /**
+         * Whether the in-game WorkerWiki sub-tab (Pokemon tab → WorkerWiki) is visible to
+         * players. Some server admins prefer their players discover skills by experimenting
+         * rather than being able to read the full species database upfront. Default true.
+         */
+        var pokeWikiEnabled: Boolean = true,
+        /**
+         * Server-wide pasture range — the radius (in blocks) within which Pokemon scan for
+         * work targets and the pasture-owned area extends. Overrides the local cloth-config
+         * `jobSearchRadius` value when running on a dedicated server. Bounded [5, 30].
+         */
+        var pastureRange: Int = 10
     )
 
     private var settings = Settings()
@@ -30,6 +42,7 @@ object GeneralSettings {
 
     fun getDiscordUrl(): String = settings.discordUrl
     fun isDiscordEnabled(): Boolean = settings.discordEnabled
+    fun isPokeWikiEnabled(): Boolean = settings.pokeWikiEnabled
 
     private fun getSaveFile(world: ServerWorld): File {
         val saveDir = world.server.getSavePath(WorldSavePath.ROOT).toFile()

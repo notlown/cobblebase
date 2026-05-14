@@ -42,7 +42,7 @@ class AdminWikiPanel(
     private val links = listOf(
         WikiLink(
             "Documentation",
-            "Full guides for jobs, proficiency, GUI, admin commands and datapacks.",
+            "Full guides for jobs, proficiency, GUI and admin commands.",
             "https://notlown.github.io/cobblebase-web/docs/",
             0xFF4CAF50.toInt()
         ),
@@ -51,12 +51,6 @@ class AdminWikiPanel(
             "Browse all Pokemon with their skill assignments and proficiency.",
             "https://notlown.github.io/cobblebase-web/database/",
             0xFF2196F3.toInt()
-        ),
-        WikiLink(
-            "Datapack Generator",
-            "Create custom species skill datapacks without editing JSON.",
-            "https://notlown.github.io/cobblebase-web/generator/",
-            0xFFFF9800.toInt()
         ),
         WikiLink(
             "Job Reference",
@@ -94,6 +88,11 @@ class AdminWikiPanel(
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
 
+    /** Height reserved at the bottom for the Ko-fi support box. */
+    private val SUPPORT_BOX_H = 38
+    private val KOFI_URL = "https://ko-fi.com/notlown"
+    private var kofiButton: ButtonWidget? = null
+
     fun init(addWidget: Function<ClickableWidget, ClickableWidget>) {
         openButtons.clear()
         for (link in links) {
@@ -104,10 +103,14 @@ class AdminWikiPanel(
             openButtons.add(btn)
             addWidget.apply(btn)
         }
+        kofiButton = ButtonWidget.builder(Text.literal("\u00A76\u00A7lOpen Ko-fi")) {
+            try { Util.getOperatingSystem().open(URI(KOFI_URL)) } catch (_: Exception) {}
+        }.dimensions(0, 0, 60, 14).build()
+        addWidget.apply(kofiButton!!)
     }
 
     private fun listAreaY(): Int = y + HEADER_H
-    private fun listAreaH(): Int = h - HEADER_H - PADDING
+    private fun listAreaH(): Int = h - HEADER_H - PADDING - SUPPORT_BOX_H - 8
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // Background
@@ -161,6 +164,27 @@ class AdminWikiPanel(
             val thumbY = listY + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
             context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
             context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
+        }
+
+        // Ko-fi support box pinned to the bottom — fixed, doesn't scroll with the list.
+        val boxTop = y + h - SUPPORT_BOX_H - PADDING
+        val boxLeft = x + PADDING
+        val boxRight = x + w - PADDING
+        context.fill(boxLeft, boxTop, boxRight, boxTop + SUPPORT_BOX_H, 0xFF332919.toInt())
+        context.fill(boxLeft, boxTop, boxLeft + 3, boxTop + SUPPORT_BOX_H, 0xFFFFD700.toInt())
+
+        drawScaled(context, "§e§l💛 Support Development", boxLeft + 8, boxTop + 4, 0xFFD700, 0.85f)
+        drawScaled(context,
+            "§7Cobblebase is a passion project — free and open source. If it brought you joy,",
+            boxLeft + 8, boxTop + 15, 0xCCCCCC, 0.7f)
+        drawScaled(context,
+            "§7a coffee on Ko-fi helps me keep building new features. Every supporter helps.",
+            boxLeft + 8, boxTop + 23, 0xCCCCCC, 0.7f)
+
+        kofiButton?.let { btn ->
+            btn.visible = true
+            btn.x = boxRight - 64
+            btn.y = boxTop + (SUPPORT_BOX_H - 14) / 2
         }
     }
 

@@ -28,6 +28,10 @@
     {
       "skillId": "cobblebase:craftsman",
       "proficiency": 3
+    },
+    {
+      "proficiency": 2,
+      "skillId": "cobblebase:egg_hatcher"
     }
   ]
 }

@@ -17,11 +17,19 @@ object BaseManager {
     private var dirty = false
     private var lastSaveTick = 0L
     private val SAVE_INTERVAL = 600L // save every 30 seconds
+    private var lastCleanupTick = 0L
+    private const val CLEANUP_INTERVAL = 1200L // sweep stale per-Pokemon executor state every 60 seconds
 
     // Unstuck detection: track last known position + time it changed
     private data class PosRecord(val pos: BlockPos, val changedAt: Long)
     private val lastKnownPos = mutableMapOf<UUID, PosRecord>()
     private const val STUCK_TIMEOUT_TICKS = 160L // 8 seconds without movement = clear nav
+
+    // Throttle the safety-teleport check (sqrt + distance compare + water-submerged check)
+    // to once every 10 ticks per Pokemon — running it 20x/sec was pure overhead since the
+    // Pokemon can't drift through the 30-block safety threshold in 500 ms.
+    private val lastSafetyCheck = mutableMapOf<UUID, Long>()
+    private const val SAFETY_CHECK_INTERVAL = 10L
 
     // Job-based stuck detection: track last successful job action per Pokemon
     private val lastJobSuccess = mutableMapOf<UUID, Long>()
@@ -49,10 +57,58 @@ object BaseManager {
         val pokemonId: UUID = pokemonEntity.pokemon.uuid
         val speciesName: String = resolveSpeciesName(pokemonEntity.pokemon)
         val now = world.time
+        val tickStart = System.nanoTime()
 
         // Auto-save periodically
         if (dirty && world is ServerWorld && now - lastSaveTick > SAVE_INTERVAL) {
             save(world)
+        }
+
+        // Periodic cleanup of stale per-Pokemon state across executors (prevents memory growth
+        // for long-running servers where Pokemon get recalled/despawned without an explicit hook).
+        //
+        // Initialize on first tick instead of running immediately — otherwise on world load the
+        // sweep fires for every Pokemon's first tick (lastCleanupTick=0, so the diff is huge),
+        // iterating LogManager + 20 executor caches at once and contributing to load-time lag.
+        if (lastCleanupTick == 0L) {
+            lastCleanupTick = now
+        } else if (now - lastCleanupTick > CLEANUP_INTERVAL) {
+            lastCleanupTick = now
+            notlown.cobblebase.core.executors.MentorExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.BuffExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.AuraBoostExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.HealerExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.GuardExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.FurnaceFuelExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.CauldronFillExecutor.cleanupStale(now)
+            // Phase 6: 15 more executors whose per-Pokemon state previously leaked indefinitely
+            notlown.cobblebase.core.executors.CraftsmanExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.ExtinguisherExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.FinderExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.FishingExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.GenericLootExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.GrowthAuraExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.HarvesterExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.IrrigatorExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.LuckyCharmExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.MiningExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.ProducerExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.RecruiterExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.ScoutExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.SupplierExecutor.cleanupStale(now)
+            NavigationHelper.cleanupStale(now)
+            notlown.cobblebase.core.executors.InventoryHelper.cleanupStale(now)
+            notlown.cobblebase.core.executors.EggHatcherExecutor.cleanupStale(now)
+            // LogManager has a built-in 24h-age cleanup that was never wired to a periodic call
+            // — now it runs every minute alongside the executor sweep.
+            notlown.cobblebase.core.LogManager.cleanup()
+            // Drop pasture-leaf tracking for pasture blocks that no longer exist in the world.
+            if (world is net.minecraft.server.world.ServerWorld) {
+                notlown.cobblebase.core.PastureLeavesTracker.cleanupOrphanedPastures(world)
+            }
+            // Drop the per-Pokemon safety-check throttle state for stale UUIDs too.
+            val staleSafety = lastSafetyCheck.entries.filter { now - it.value > 1200L }.map { it.key }
+            for (id in staleSafety) lastSafetyCheck.remove(id)
         }
 
         // Brief stuck detection (8s no movement → clear nav) only for working mons
@@ -71,23 +127,27 @@ object BaseManager {
             lastJobSuccess.remove(pokemonId)
         }
 
+        // Safety teleport + drown check are throttled — see SAFETY_CHECK_INTERVAL.
+        val lastSafety = lastSafetyCheck[pokemonId] ?: 0L
+        val runSafety = now - lastSafety >= SAFETY_CHECK_INTERVAL
+        if (runSafety) lastSafetyCheck[pokemonId] = now
+
         // Safety: prevent Pokemon from wandering too far from pasture (causes despawning)
-        val isWaterType = pokemonEntity.pokemon.types.any { it.name.equals("water", ignoreCase = true) }
-        if (CobblebaseConfig.enableSafetyTeleport) {
-            val distFromPasture = kotlin.math.sqrt(
-                pokemonEntity.squaredDistanceTo(
-                    pastureOrigin.x + 0.5, pastureOrigin.y.toDouble(), pastureOrigin.z + 0.5
-                )
+        val isWaterType = NavigationHelper.isWaterType(pokemonEntity.pokemon)
+        if (runSafety && CobblebaseConfig.enableSafetyTeleport) {
+            val distSq = pokemonEntity.squaredDistanceTo(
+                pastureOrigin.x + 0.5, pastureOrigin.y.toDouble(), pastureOrigin.z + 0.5
             )
-            // Water-type Pokemon get double the safety radius (they swim farther)
+            // Water-type Pokemon get double the safety radius (they swim farther).
+            // Compare in squared-distance space to avoid the sqrt entirely.
             val maxDist = if (isWaterType) CobblebaseConfig.safetyTeleportDistance * 2.0 else CobblebaseConfig.safetyTeleportDistance.toDouble()
-            if (distFromPasture > maxDist) {
+            if (distSq > maxDist * maxDist) {
                 val (sx, sz) = getSpawnOffset(world)
                 pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y.toDouble(), pastureOrigin.z + sz)
                 NavigationHelper.clearTargets(pokemonEntity)
             }
         }
-        if (!isWaterType && (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100)) {
+        if (runSafety && !isWaterType && (pokemonEntity.isSubmergedInWater || pokemonEntity.air < 100)) {
             val (sx, sz) = getSpawnOffset(world)
             pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y.toDouble(), pastureOrigin.z + sz)
             pokemonEntity.air = pokemonEntity.maxAir
@@ -105,6 +165,14 @@ object BaseManager {
         // Craftsman supplier mode: run dedicated supplier executor
         // Format: "craftsman_supply:skillId" or "craftsman_supply:skillId:targetItemId"
         if (rawAssignment != null && rawAssignment.startsWith(SUPPLIER_PREFIX)) {
+            // Auto-cleanup: a supplier with no Craftsman left in the same pasture is "stuck"
+            // (player moved this Mon between pastures without resetting the assignment). Reset
+            // it to relax so the user can re-assign normally.
+            if (!hasCraftsmanInPasture(world, pastureOrigin)) {
+                assignments.remove(pokemonId)
+                dirty = true
+                return
+            }
             AmbientBehavior.clearState(pokemonId)
             val afterPrefix = rawAssignment.removePrefix(SUPPLIER_PREFIX)
             val supplierSkillId = afterPrefix.split(":").let {
@@ -117,6 +185,17 @@ object BaseManager {
                     world, pastureOrigin, pokemonEntity, entry
                 )
             }
+        } else if (rawAssignment != null && rawAssignment.startsWith(BUILDER_HELPER_PREFIX)) {
+            // Builder helper mode: pasture has an active build job and this Pokemon is
+            // automatically supplying needed materials. The coordinator picks which block
+            // this helper chases; BuilderHelperExecutor routes to producer/harvester/mining.
+            AmbientBehavior.clearState(pokemonId)
+            val helperSkill = SkillRegistry.get("cobblebase:builder") ?: return
+            // Re-use a synthesized SkillEntry so the executor has the right proficiency.
+            val entry = speciesData.skills.firstOrNull() ?: SkillEntry("cobblebase:builder_helper", 3)
+            notlown.cobblebase.core.executors.BuilderHelperExecutor.tick(
+                world, pastureOrigin, pokemonEntity, helperSkill, entry
+            )
         } else {
             val assignedSkillId = rawAssignment
 
@@ -135,12 +214,24 @@ object BaseManager {
         }
         // null assignment = Idle (do nothing). Only passive buffs run below.
 
-        // Passive buffs: always tick buff skills regardless of job assignment
-        for (entry: SkillEntry in speciesData.skills) {
+        // Passive buffs: tick buff/aura skills regardless of job assignment, BUT respect
+        // the admin disable flag (JobConfigOverrides.isEnabled). Without this check the
+        // "Enabled" toggle in Mod Menu → Admin → Jobs did nothing for support-style jobs,
+        // since players can't manually assign or unassign passive auras.
+        //
+        // The buff subset is cached per species via SpeciesSkillRegistry.getBuffSkills,
+        // so we no longer iterate the full skill list every tick.
+        val buffEntries = SpeciesSkillRegistry.getBuffSkills(speciesName) { isBuffSkill(it) }
+        for (entry: SkillEntry in buffEntries) {
             val skillDef: SkillDef = SkillRegistry.get(entry.skillId) ?: continue
-            if (!isBuffSkill(skillDef.executor)) continue
+            if (!JobConfigOverrides.isEnabled(skillDef.id)) continue
             val exec: SkillExecutor = ExecutorRegistry.get(skillDef.executor) ?: continue
             exec.tick(world, pastureOrigin, pokemonEntity, skillDef, entry)
+        }
+
+        val tickMs = (System.nanoTime() - tickStart) / 1_000_000
+        if (tickMs > 10) {
+            Cobblebase.LOGGER.warn("[Cobblebase] PERF tickPokemon $speciesName / assign=$rawAssignment took ${tickMs}ms")
         }
     }
 
@@ -154,9 +245,10 @@ object BaseManager {
         val speciesName = resolveSpeciesName(pokemon)
         val speciesData = SpeciesSkillRegistry.getSkills(speciesName) ?: return
 
-        for (entry in speciesData.skills) {
+        val buffEntries = SpeciesSkillRegistry.getBuffSkills(speciesName) { isBuffSkill(it) }
+        for (entry in buffEntries) {
             val skillDef = SkillRegistry.get(entry.skillId) ?: continue
-            if (!isBuffSkill(skillDef.executor)) continue
+            if (!JobConfigOverrides.isEnabled(skillDef.id)) continue
             val exec = ExecutorRegistry.get(skillDef.executor) ?: continue
             if (exec !is notlown.cobblebase.core.executors.BuffExecutor) continue
             // Use the pasture-origin-based tick that doesn't need an entity
@@ -164,13 +256,20 @@ object BaseManager {
         }
     }
 
+    // Memoize isBuffSkill — this used to do 1-2 list scans + a HashMap lookup on every
+    // call, and it's called for every skill in every pasture-tethered Pokemon's skill set
+    // on every tick.
+    private val buffSkillCache = mutableMapOf<String, Boolean>()
+
     private fun isBuffSkill(executorOrSkillId: String): Boolean {
-        // Check directly against executor names
-        if (executorOrSkillId in BUFF_EXECUTORS) return true
-        // Also check if a skillId resolves to a buff executor
-        val skillDef = SkillRegistry.get(executorOrSkillId)
-        if (skillDef != null && skillDef.executor in BUFF_EXECUTORS) return true
-        return false
+        buffSkillCache[executorOrSkillId]?.let { return it }
+        val result = run {
+            if (executorOrSkillId in BUFF_EXECUTORS) return@run true
+            val skillDef = SkillRegistry.get(executorOrSkillId)
+            skillDef != null && skillDef.executor in BUFF_EXECUTORS
+        }
+        buffSkillCache[executorOrSkillId] = result
+        return result
     }
 
     private val BUFF_EXECUTORS = listOf(
@@ -200,12 +299,26 @@ object BaseManager {
     fun getAssignment(pokemonId: UUID): String? = assignments[pokemonId]
 
     /** Check if a Pokemon is assigned as a Craftsman supplier. */
+    /**
+     * Returns true if any Pokemon tethered to [pastureOrigin] has the Craftsman skill assigned.
+     * Used by the supplier-cleanup guard so suppliers can't get stuck without a Craftsman.
+     */
+    private fun hasCraftsmanInPasture(world: net.minecraft.world.World, pastureOrigin: BlockPos): Boolean {
+        val pasture = world.getBlockEntity(pastureOrigin)
+                as? com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity ?: return false
+        for (tether in pasture.tetheredPokemon) {
+            if (assignments[tether.pokemonId] == "cobblebase:craftsman") return true
+        }
+        return false
+    }
+
     fun isCraftsmanSupplier(pokemonId: UUID): Boolean {
         val assignment = assignments[pokemonId] ?: return false
         return assignment.startsWith("craftsman_supply:")
     }
 
     const val SUPPLIER_PREFIX = "craftsman_supply:"
+    const val BUILDER_HELPER_PREFIX = "builder_helper"
 
     /**
      * Returns a snapshot of all current assignments for sync packets.

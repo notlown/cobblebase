@@ -44,6 +44,7 @@ object ExecutorRegistry {
         // -- Production --
         register("producer", ProducerExecutor)   // Species-specific passive item production
         register("craftsman", CraftsmanExecutor) // Crafts items from nearby chest materials
+        register("egg_hatcher", notlown.cobblebase.core.executors.EggHatcherExecutor) // Cobbreeding eggs (soft-dep)
 
         // -- Generation --
         register("cauldron_fill", CauldronFillExecutor)

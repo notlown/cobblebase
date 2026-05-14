@@ -25,6 +25,12 @@ import java.util.UUID
 object ProducerExecutor : SkillExecutor {
 
     private val lastProduceTime = mutableMapOf<UUID, Long>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastProduceTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) lastProduceTime.remove(id)
+    }
 
     data class ProduceEntry(
         val itemId: String,
@@ -360,7 +366,7 @@ object ProducerExecutor : SkillExecutor {
 
         val pokemonId = pokemonEntity.pokemon.uuid
         val baseCooldown = entry.cooldownSeconds ?: skill.cooldownSeconds
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency, skill.id)
 
         // Cooldown check — default to now so first assignment waits full cooldown
         val lastTime = lastProduceTime.getOrPut(pokemonId) { now }

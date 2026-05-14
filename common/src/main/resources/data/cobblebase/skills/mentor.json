@@ -6,5 +6,16 @@
   "cooldownSeconds": 0,
   "searchRadius": 10,
   "executor": "mentor",
-  "effectType": "special"
+  "effectType": "special",
+  "tuning": {
+    "xpMultiplier": {
+      "label": "XP Multiplier",
+      "defaultValue": 1.0,
+      "min": 0.0,
+      "max": 5.0,
+      "step": 0.1,
+      "unit": "x",
+      "tooltip": "Global multiplier on top of the proficiency-scaled XP boost.\n§7Effective XP gain per pasture-mate per tick = §fbase × multiplier§7:\n§8  Prof 1: 0.33x × multiplier\n§8  Prof 2: 0.66x × multiplier\n§8  Prof 3: 1.00x × multiplier §8(baseline)\n§8  Prof 4: 1.33x × multiplier\n§8  Prof 5: 1.66x × multiplier"
+    }
+  }
 }

@@ -33,6 +33,19 @@ object FishingExecutor : SkillExecutor {
     private val waterTarget = mutableMapOf<UUID, BlockPos>()
     private const val SUCCESS_PAUSE_TICKS = 40L
     private val waterModeApplied = mutableSetOf<UUID>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastGenerationTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastGenerationTime.remove(id)
+            heldItems.remove(id)
+            successTime.remove(id)
+            waterTarget.remove(id)
+            waterModeApplied.remove(id)
+            failedDepositLocations.remove(id)
+        }
+    }
 
     // Water block cache per pasture origin — scanned once, refreshed every 5 minutes
     private val waterCache = mutableMapOf<BlockPos, MutableSet<BlockPos>>()
@@ -52,7 +65,7 @@ object FishingExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val items = heldItems[pokemonId]
 
         // Adjust swim behaviour for water mons: cap swimSpeed

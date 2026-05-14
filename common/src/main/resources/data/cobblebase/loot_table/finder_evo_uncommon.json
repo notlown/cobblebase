@@ -8,7 +8,7 @@
         { "type": "minecraft:item", "name": "cobblemon:dawn_stone", "weight": 10 },
         { "type": "minecraft:item", "name": "cobblemon:shiny_stone", "weight": 10 },
         { "type": "minecraft:item", "name": "cobblemon:ice_stone", "weight": 10 },
-        { "type": "minecraft:item", "name": "cobblemon:linking_cord", "weight": 8 }
+        { "type": "minecraft:item", "name": "cobblemon:link_cable", "weight": 8 }
       ]
     }
   ]

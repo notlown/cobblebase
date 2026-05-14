@@ -44,6 +44,16 @@ object IrrigatorExecutor : SkillExecutor {
     private val targetBlock = mutableMapOf<UUID, BlockPos>()
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastSearchTime = mutableMapOf<UUID, Long>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastSearchTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            targetBlock.remove(id)
+            targetSetTime.remove(id)
+            lastSearchTime.remove(id)
+        }
+    }
     private val NAV_TIMEOUT_TICKS = 100L
     private val SEARCH_INTERVAL_TICKS = 40L
 

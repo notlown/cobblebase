@@ -31,6 +31,16 @@ public abstract class PastureWidgetMixin {
     @Unique
     private ButtonWidget cobblebase$mainButton;
 
+    @Unique
+    private int cobblebase$widgetX;
+    @Unique
+    private int cobblebase$widgetY;
+
+    @Unique
+    private static final int COBBLEBASE_BTN_W = 78;
+    @Unique
+    private static final int COBBLEBASE_BTN_H = 16;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void cobblebase$onInit(
         com.cobblemon.mod.common.client.gui.pc.StorageWidget storageWidget,
@@ -38,15 +48,57 @@ public abstract class PastureWidgetMixin {
         int x, int y,
         CallbackInfo ci
     ) {
+        cobblebase$widgetX = x;
+        cobblebase$widgetY = y;
         cobblebase$mainButton = ButtonWidget.builder(Text.literal("\u00A7bCobblebase"), btn -> {
             cobblebase$openCobblebaseScreen();
-        }).dimensions(x + 2, y - 18, 78, 16).build();
+        }).dimensions(x + 2, y - 18, COBBLEBASE_BTN_W, COBBLEBASE_BTN_H).build();
+        notlown.cobblebase.neoforge.client.gui.CobblebaseButtonHolder.activeButton = cobblebase$mainButton;
+    }
+
+    @Unique
+    private void cobblebase$reposition() {
+        if (cobblebase$mainButton == null) return;
+        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+        int screenW = client.getWindow().getScaledWidth();
+        int screenH = client.getWindow().getScaledHeight();
+        int pcW = com.cobblemon.mod.common.client.gui.pc.PCGUI.BASE_WIDTH;
+        int pcH = com.cobblemon.mod.common.client.gui.pc.PCGUI.BASE_HEIGHT;
+        int pcX = (screenW - pcW) / 2;
+        int pcY = (screenH - pcH) / 2;
+        int bx, by;
+        switch (notlown.cobblebase.core.CobblebaseConfig.INSTANCE.getMainButtonCorner()) {
+            case TOP_LEFT:
+                bx = pcX;
+                by = pcY - COBBLEBASE_BTN_H;
+                break;
+            case BOTTOM_LEFT:
+                bx = pcX;
+                by = pcY + pcH;
+                break;
+            case BOTTOM_RIGHT:
+                bx = pcX + pcW - COBBLEBASE_BTN_W;
+                by = pcY + pcH;
+                break;
+            case TOP_RIGHT:
+            default:
+                bx = pcX + pcW - COBBLEBASE_BTN_W;
+                by = pcY - COBBLEBASE_BTN_H;
+                break;
+        }
+        cobblebase$mainButton.setX(bx);
+        cobblebase$mainButton.setY(by);
     }
 
     @Inject(method = "renderWidget", at = @At("TAIL"))
     private void cobblebase$onRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (cobblebase$mainButton != null) {
+            cobblebase$reposition();
+            context.getMatrices().push();
+            context.getMatrices().translate(0, 0, 200);
             cobblebase$mainButton.render(context, mouseX, mouseY, delta);
+            context.getMatrices().pop();
+            notlown.cobblebase.neoforge.client.gui.CobblebaseButtonHolder.lastRenderTime = System.currentTimeMillis();
         }
     }
 

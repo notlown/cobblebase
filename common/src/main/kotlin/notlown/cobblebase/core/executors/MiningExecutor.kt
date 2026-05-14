@@ -38,6 +38,18 @@ object MiningExecutor : SkillExecutor {
     private val digTarget = mutableMapOf<UUID, BlockPos>()
     private val digStartTime = mutableMapOf<UUID, Long>()
     private val celebrationUntil = mutableMapOf<UUID, Long>() // short break after finding loot
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastMineTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastMineTime.remove(id)
+            heldItems.remove(id)
+            digTarget.remove(id)
+            digStartTime.remove(id)
+            celebrationUntil.remove(id)
+        }
+    }
 
     private const val DIG_DURATION_TICKS = 60L // 3 seconds of digging animation before loot roll
     private const val NAV_TIMEOUT_TICKS = 100L // 5 seconds max navigation
@@ -94,7 +106,7 @@ object MiningExecutor : SkillExecutor {
         }
 
         // Phase 3: Cooldown check — use standard formula
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val lastTime = lastMineTime[pokemonId] ?: now.also { lastMineTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {
             // Play continuous digging animation + particles while waiting for cooldown

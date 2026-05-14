@@ -1,10 +1,20 @@
 {
   "id": "cobblebase:strength_boost",
   "name": "Strength Boost",
-  "description": "Grants Strength I to nearby players",
+  "description": "Grants Strength to nearby players",
   "category": "support",
   "cooldownSeconds": 60,
   "searchRadius": 16,
   "executor": "strength_boost",
-  "effectType": "heal"
+  "effectType": "heal",
+  "tuning": {
+    "effectLevel": {
+      "label": "Strength Level",
+      "defaultValue": 1.0,
+      "min": 1.0,
+      "max": 5.0,
+      "step": 1.0,
+      "tooltip": "Strength effect level granted to nearby players (1=Strength I, 5=Strength V).\n§7Level is constant; proficiency only scales §fduration§7 and §frange§7:\n§8  Prof 1: 15s @ 30 blocks\n§8  Prof 2: 25s @ 50 blocks\n§8  Prof 3: 35s @ 100 blocks\n§8  Prof 4: 50s @ 200 blocks\n§8  Prof 5: 70s · owner global (anywhere)"
+    }
+  }
 }

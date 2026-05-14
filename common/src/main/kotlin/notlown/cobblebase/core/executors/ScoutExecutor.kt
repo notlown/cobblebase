@@ -42,6 +42,12 @@ import kotlin.math.sqrt
 object ScoutExecutor : SkillExecutor {
 
     private val lastScoutTime = mutableMapOf<UUID, Long>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastScoutTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) lastScoutTime.remove(id)
+    }
 
     // Structure tag keys for locateStructure
     private val STRUCTURE_TAGS = listOf(
@@ -81,6 +87,8 @@ object ScoutExecutor : SkillExecutor {
 
     private const val MAX_DISTANCE_FROM_PASTURE = 20.0
     private const val TELEPORT_DISTANCE = 25.0
+    private const val MAX_DISTANCE_SQ = MAX_DISTANCE_FROM_PASTURE * MAX_DISTANCE_FROM_PASTURE
+    private const val TELEPORT_DISTANCE_SQ = TELEPORT_DISTANCE * TELEPORT_DISTANCE
 
     override fun tick(
         world: World,
@@ -93,26 +101,28 @@ object ScoutExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
-        // Safety: keep Scout near the pasture — teleport back if too far
-        val distFromOrigin = sqrt(
-            pokemonEntity.squaredDistanceTo(
-                origin.x + 0.5, origin.y.toDouble(), origin.z + 0.5
-            )
+        // Safety: keep Scout near the pasture — teleport back if too far.
+        // Compare in squared-distance space to skip the sqrt on every tick.
+        val distSq = pokemonEntity.squaredDistanceTo(
+            origin.x + 0.5, origin.y.toDouble(), origin.z + 0.5
         )
-        if (distFromOrigin > TELEPORT_DISTANCE) {
+        if (distSq > TELEPORT_DISTANCE_SQ) {
             val rand = world.random
             val angle = rand.nextDouble() * Math.PI * 2
             val dist = 1.5 + rand.nextDouble()
             pokemonEntity.setPosition(origin.x + Math.cos(angle) * dist + 0.5, origin.y + 1.0, origin.z + Math.sin(angle) * dist + 0.5)
             NavigationHelper.clearTargets(pokemonEntity)
-            Cobblebase.log("[Scout] ${pokemonEntity.pokemon.species.name} was too far (${distFromOrigin.toInt()} blocks) — teleported back to pasture")
-        } else if (distFromOrigin > MAX_DISTANCE_FROM_PASTURE) {
+            // Only compute sqrt for the (rare) log message
+            if (Cobblebase.LOGGER.isDebugEnabled) {
+                Cobblebase.log("[Scout] ${pokemonEntity.pokemon.species.name} was too far (${sqrt(distSq).toInt()} blocks) — teleported back to pasture")
+            }
+        } else if (distSq > MAX_DISTANCE_SQ) {
             // Gently walk back towards pasture
             NavigationHelper.navigateTo(pokemonEntity, origin, 0.6)
         }
 
         // Cooldown: proficiency reduces cooldown
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
 
         val lastTime = lastScoutTime[pokemonId] ?: now.also { lastScoutTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {

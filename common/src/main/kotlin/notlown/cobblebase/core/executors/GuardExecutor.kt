@@ -29,9 +29,23 @@ import java.util.UUID
 object GuardExecutor : SkillExecutor {
 
     private val lastGuardTime = mutableMapOf<UUID, Long>()
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
     private const val CANDY_DROP_CHANCE = 30 // percent
     private const val XP_PER_REPEL = 50
+    private const val SCAN_INTERVAL_TICKS = 20L  // throttle wild-Pokemon AABB scan when no target is found
+    private const val STALE_TTL_TICKS = 1200L
+
+    /** Drops per-Pokemon state for guards that have stopped ticking. Held items stay because
+     *  the deposit logic preserves them across ticks; if the guard is gone, the items will be
+     *  reclaimed by a Gatherer on the same pasture. */
+    fun cleanupStale(now: Long) {
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastScanTime.remove(id)
+            lastGuardTime.remove(id)
+        }
+    }
 
     override fun tick(
         world: World,
@@ -43,7 +57,7 @@ object GuardExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val items = heldItems[pokemonId]
 
         // If holding loot items, deposit first
@@ -58,6 +72,12 @@ object GuardExecutor : SkillExecutor {
             if (world.time % 20 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
             return
         }
+
+        // Even with cooldown elapsed, don't AABB-scan wild Pokemon every tick when none are
+        // in range — throttle to once per second.
+        val lastScan = lastScanTime[pokemonId] ?: 0L
+        if (now - lastScan < SCAN_INTERVAL_TICKS) return
+        lastScanTime[pokemonId] = now
 
         // Find nearest wild Pokemon within search radius
         val guardRadius = skill.searchRadius.toDouble()

@@ -3,6 +3,7 @@ package notlown.cobblebase.core.net
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.JobConfigOverrides
 import notlown.cobblebase.core.SkillDef
+import notlown.cobblebase.core.TuningField
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.codec.PacketCodec
 import net.minecraft.network.packet.CustomPayload
@@ -32,6 +33,24 @@ data class AdminJobsSyncS2CPacket(
                     val cooldownSeconds = buf.readLong()
                     val searchRadius = buf.readVarInt()
                     val executor = buf.readString()
+                    val tuningCount = buf.readVarInt()
+                    val tuning = if (tuningCount > 0) {
+                        val map = linkedMapOf<String, TuningField>()
+                        repeat(tuningCount) {
+                            val key = buf.readString()
+                            val label = buf.readString()
+                            val defaultValue = buf.readDouble()
+                            val min = buf.readDouble()
+                            val max = buf.readDouble()
+                            val step = buf.readDouble()
+                            val hasUnit = buf.readBoolean()
+                            val unit = if (hasUnit) buf.readString() else null
+                            val hasTip = buf.readBoolean()
+                            val tip = if (hasTip) buf.readString() else null
+                            map[key] = TuningField(label, defaultValue, min, max, step, unit, tip)
+                        }
+                        map
+                    } else null
                     jobs[id] = SkillDef(
                         id = id,
                         name = name,
@@ -39,7 +58,8 @@ data class AdminJobsSyncS2CPacket(
                         category = category,
                         cooldownSeconds = cooldownSeconds,
                         searchRadius = searchRadius,
-                        executor = executor
+                        executor = executor,
+                        tuning = tuning
                     )
                 }
 
@@ -53,10 +73,17 @@ data class AdminJobsSyncS2CPacket(
                     val hasRadius = buf.readBoolean()
                     val radius = if (hasRadius) buf.readVarInt() else null
                     val enabled = buf.readBoolean()
+                    val tuningCount = buf.readVarInt()
+                    val tuning = if (tuningCount > 0) {
+                        val map = mutableMapOf<String, Double>()
+                        repeat(tuningCount) { map[buf.readString()] = buf.readDouble() }
+                        map
+                    } else null
                     overrides[skillId] = JobConfigOverrides.JobOverride(
                         cooldownSeconds = cooldown,
                         searchRadius = radius,
-                        enabled = enabled
+                        enabled = enabled,
+                        tuning = tuning
                     )
                 }
 
@@ -74,6 +101,20 @@ data class AdminJobsSyncS2CPacket(
                     buf.writeLong(job.cooldownSeconds)
                     buf.writeVarInt(job.searchRadius)
                     buf.writeString(job.executor)
+                    val tuning = job.tuning ?: emptyMap()
+                    buf.writeVarInt(tuning.size)
+                    for ((key, field) in tuning) {
+                        buf.writeString(key)
+                        buf.writeString(field.label)
+                        buf.writeDouble(field.defaultValue)
+                        buf.writeDouble(field.min)
+                        buf.writeDouble(field.max)
+                        buf.writeDouble(field.step)
+                        buf.writeBoolean(field.unit != null)
+                        if (field.unit != null) buf.writeString(field.unit)
+                        buf.writeBoolean(field.tooltip != null)
+                        if (field.tooltip != null) buf.writeString(field.tooltip)
+                    }
                 }
 
                 // Write overrides
@@ -85,6 +126,12 @@ data class AdminJobsSyncS2CPacket(
                     buf.writeBoolean(override.searchRadius != null)
                     if (override.searchRadius != null) buf.writeVarInt(override.searchRadius)
                     buf.writeBoolean(override.enabled)
+                    val tuning = override.tuning ?: emptyMap()
+                    buf.writeVarInt(tuning.size)
+                    for ((key, value) in tuning) {
+                        buf.writeString(key)
+                        buf.writeDouble(value)
+                    }
                 }
             }
         }

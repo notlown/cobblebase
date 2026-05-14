@@ -17,36 +17,64 @@ object InventoryHelper {
 
     /**
      * Finds the best container for the given items:
-     * 1. Nearest container that already contains the same item (auto-sort)
-     * 2. If no match, nearest container with free space
+     * 1. Nearest container that can fit the ENTIRE incoming stack and already contains the
+     *    same item type (auto-sort).
+     * 2. If no matching chest has enough room, nearest container with any free space.
      *
-     * Sorted by distance to pokemonPos (not origin) so each Mon goes to its own chest.
+     * The capacity check is what prevents the "drops items because the matching chest is
+     * almost full" bug — previously the matching chest was picked the moment it had ANY
+     * matching slot with room, even if that room was just a few items while the empty
+     * chest next door could fit the whole stack.
      */
     fun findBestContainer(world: World, pokemonPos: BlockPos, radius: Int, items: List<ItemStack>): BlockPos? {
-        val containers = findAllContainers(world, pokemonPos, radius)
+        val cappedRadius = radius.coerceAtMost(CHEST_SCAN_RADIUS_CAP)
+        val containers = findAllContainers(world, pokemonPos, cappedRadius)
         if (containers.isEmpty()) return null
 
-        // Phase 1: Find nearest container that already has this item type
+        // Phase 1: nearest matching chest that can fit ALL incoming items.
         val matchingItem = items.firstOrNull { !it.isEmpty }
         if (matchingItem != null) {
+            val totalIncoming = items.filter { ItemStack.areItemsAndComponentsEqual(it, matchingItem) }
+                .sumOf { it.count }
             val matchingContainer = containers
-                .filter { pos -> containerHasItem(world, pos, matchingItem) }
+                .filter { pos -> containerCapacityFor(world, pos, matchingItem) >= totalIncoming }
                 .minByOrNull { it.getSquaredDistance(pokemonPos) }
 
             if (matchingContainer != null) return matchingContainer
         }
 
-        // Phase 2: Nearest container with free space
+        // Phase 2: nearest container with free space (any kind).
         return containers
             .filter { pos -> containerHasSpace(world, pos) }
             .minByOrNull { it.getSquaredDistance(pokemonPos) }
     }
 
     /**
+     * Returns the maximum count of `itemToMatch` that could still be added to this container,
+     * summing up (a) free room in existing matching slots and (b) empty slots × maxStackSize.
+     * Used by [findBestContainer] to skip "smart sort" chests that don't have enough room for
+     * the whole incoming stack.
+     */
+    private fun containerCapacityFor(world: World, pos: BlockPos, itemToMatch: ItemStack): Int {
+        val blockEntity = world.getBlockEntity(pos) as? Inventory ?: return 0
+        var capacity = 0
+        val maxStack = itemToMatch.maxCount
+        for (i in 0 until blockEntity.size()) {
+            val slot = blockEntity.getStack(i)
+            if (slot.isEmpty) {
+                capacity += maxStack
+            } else if (ItemStack.areItemsAndComponentsEqual(slot, itemToMatch) && slot.count < slot.maxCount) {
+                capacity += slot.maxCount - slot.count
+            }
+        }
+        return capacity
+    }
+
+    /**
      * Legacy method - finds nearest container by distance only.
      */
     fun findNearestContainer(world: World, origin: BlockPos, radius: Int): BlockPos? {
-        return findAllContainers(world, origin, radius)
+        return findAllContainers(world, origin, radius.coerceAtMost(CHEST_SCAN_RADIUS_CAP))
             .minByOrNull { it.getSquaredDistance(origin) }
     }
 
@@ -180,7 +208,7 @@ object InventoryHelper {
         if (targetItem == net.minecraft.item.Items.AIR) return 0
 
         var total = 0
-        for (pos in findAllContainers(world, origin, radius)) {
+        for (pos in findAllContainers(world, origin, radius.coerceAtMost(CHEST_SCAN_RADIUS_CAP))) {
             val inv = world.getBlockEntity(pos) as? Inventory ?: continue
             for (i in 0 until inv.size()) {
                 val slot = inv.getStack(i)
@@ -207,7 +235,7 @@ object InventoryHelper {
         val matchStack = ItemStack(targetItem)
         val helper = ContainerHelperRegistry.instance
 
-        return findAllContainers(world, origin, radius)
+        return findAllContainers(world, origin, radius.coerceAtMost(CHEST_SCAN_RADIUS_CAP))
             .filter { pos ->
                 // Check if container CONTAINS the item (any amount, no stack space requirement)
                 val blockEntity = world.getBlockEntity(pos)
@@ -229,7 +257,105 @@ object InventoryHelper {
     fun findAllContainersPublic(world: World, origin: BlockPos, radius: Int): List<BlockPos> =
         findAllContainers(world, origin, radius)
 
+    // Per-origin container-position cache. Without this, every `findBestContainer` call
+    // scans (2*radius+1)³ positions — at radius 24 that's 117k getBlockEntity calls *per tick*
+    // *per Gatherer/Craftsman/etc Pokemon*, which caused 600-1000ms tick spikes on the server.
+    // We refresh the cache every 10 seconds per origin; container layout in a base doesn't
+    // change often enough to matter.
+    private data class ContainerCacheEntry(val positions: List<BlockPos>, val tick: Long, val radius: Int)
+    private val containerCache = java.util.concurrent.ConcurrentHashMap<BlockPos, ContainerCacheEntry>()
+    private const val CONTAINER_CACHE_TTL_TICKS = 1200L  // 60 seconds — container layout
+    // doesn't change rapidly in normal play, and the per-Pokemon performance cost of cache
+    // misses (was 600-1400ms per tick at radius 24) makes a longer TTL essential.
+
+    /**
+     * Maximum radius we'll EVER scan for containers, regardless of what `skill.searchRadius`
+     * declares. The skill's search radius is for OTHER purposes (e.g. Gatherer item-pickup
+     * range = 24 blocks), but for deposit-chest detection a 12-block cap covers any sensible
+     * base layout while keeping per-scan cost bounded (25³ = 15625 positions).
+     */
+    private const val CHEST_SCAN_RADIUS_CAP = 12
+
     private fun findAllContainers(world: World, origin: BlockPos, radius: Int): List<BlockPos> {
+        val serverWorld = world as? net.minecraft.server.world.ServerWorld
+        if (serverWorld != null) {
+            val now = serverWorld.time
+            val cached = containerCache[origin]
+            // Reuse the cache if the radius asked for is <= cached radius and not stale.
+            if (cached != null && cached.radius >= radius && now - cached.tick < CONTAINER_CACHE_TTL_TICKS) {
+                // Filter to within the requested radius (cache may have been built for a wider one).
+                if (cached.radius == radius) return cached.positions
+                return cached.positions.filter {
+                    kotlin.math.abs(it.x - origin.x) <= radius &&
+                    kotlin.math.abs(it.y - origin.y) <= radius &&
+                    kotlin.math.abs(it.z - origin.z) <= radius
+                }
+            }
+            val fresh = scanAllContainers(world, origin, radius)
+            containerCache[origin] = ContainerCacheEntry(fresh, now, radius)
+            return fresh
+        }
+        return scanAllContainers(world, origin, radius)
+    }
+
+    /** Periodic cleanup hook called from BaseManager's sweep. Drops cache entries older than ~5 min. */
+    fun cleanupStale(now: Long) {
+        containerCache.entries.removeAll { (_, entry) -> now - entry.tick > 6000L }
+    }
+
+    private fun scanAllContainers(world: World, origin: BlockPos, radius: Int): List<BlockPos> {
+        // Fast path: ServerWorld → iterate chunk.getBlockEntities() for chunks intersecting
+        // the radius cube. A 25-block radius touches ~4 chunks × ~20 block entities = ~80
+        // lookups, compared to 15625 position-by-position getBlockEntity calls in the old
+        // cube scan. Same candidate set thanks to the L∞ distance filter below.
+        val serverWorld = world as? net.minecraft.server.world.ServerWorld
+        if (serverWorld != null) {
+            return scanAllContainersChunked(serverWorld, origin, radius)
+        }
+        // Fallback path for non-ServerWorld callers (mostly test harnesses).
+        return scanAllContainersFallback(world, origin, radius)
+    }
+
+    private fun scanAllContainersChunked(
+        world: net.minecraft.server.world.ServerWorld,
+        origin: BlockPos,
+        radius: Int
+    ): List<BlockPos> {
+        val helper = ContainerHelperRegistry.instance
+        val result = mutableListOf<BlockPos>()
+        val cxMin = (origin.x - radius) shr 4
+        val cxMax = (origin.x + radius) shr 4
+        val czMin = (origin.z - radius) shr 4
+        val czMax = (origin.z + radius) shr 4
+        for (cx in cxMin..cxMax) {
+            for (cz in czMin..czMax) {
+                // create=false: never trigger synchronous chunk loads on the main thread.
+                val chunk = world.getChunk(cx, cz, net.minecraft.world.chunk.ChunkStatus.FULL, false) ?: continue
+                // Chunk.blockEntities is protected; use the public position-set + getBlockEntity
+                // lookup. Still vastly cheaper than the old per-position cube scan because
+                // we only touch positions that actually have block entities.
+                for (pos in chunk.blockEntityPositions) {
+                    // L∞ (cube) distance filter so the candidate set matches the old code.
+                    if (kotlin.math.abs(pos.x - origin.x) > radius) continue
+                    if (kotlin.math.abs(pos.y - origin.y) > radius) continue
+                    if (kotlin.math.abs(pos.z - origin.z) > radius) continue
+                    if (helper != null) {
+                        if (helper.isContainer(world, pos)) {
+                            result.add(pos.toImmutable())
+                        }
+                    } else {
+                        val be = chunk.getBlockEntity(pos)
+                        if (be is net.minecraft.block.entity.LockableContainerBlockEntity) {
+                            result.add(pos.toImmutable())
+                        }
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    private fun scanAllContainersFallback(world: World, origin: BlockPos, radius: Int): List<BlockPos> {
         val helper = ContainerHelperRegistry.instance
         val result = mutableListOf<BlockPos>()
         for (x in -radius..radius) {
@@ -237,12 +363,10 @@ object InventoryHelper {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     if (helper != null) {
-                        // Platform-specific detection (vanilla Inventory + Fabric Transfer API / NeoForge Capabilities)
                         if (helper.isContainer(world, pos)) {
                             result.add(pos.toImmutable())
                         }
                     } else {
-                        // Fallback: vanilla storage containers only
                         val blockEntity = world.getBlockEntity(pos)
                         if (blockEntity is net.minecraft.block.entity.LockableContainerBlockEntity) {
                             result.add(pos.toImmutable())

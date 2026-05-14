@@ -1,0 +1,57 @@
+{
+  "id": "cobblebase:egg_hatcher",
+  "name": "Egg Hatcher",
+  "description": "Incubates Cobbreeding Pokemon eggs from the pasture's egg slot and nearby chests, hatching them one at a time. Higher proficiency = faster incubation.",
+  "category": "support",
+  "cooldownSeconds": 1,
+  "searchRadius": 6,
+  "executor": "egg_hatcher",
+  "effectType": "heal",
+  "tuning": {
+    "prof1Speed": {
+      "label": "Prof 1 ★☆☆☆☆ Speed",
+      "defaultValue": 1.0,
+      "min": 0.1,
+      "max": 20.0,
+      "step": 0.5,
+      "unit": "x",
+      "tooltip": "Tick simulations per cycle at Proficiency 1. 1.0 = same as vanilla Cobbreeding (player carrying the egg)."
+    },
+    "prof2Speed": {
+      "label": "Prof 2 ★★☆☆☆ Speed",
+      "defaultValue": 2.0,
+      "min": 0.1,
+      "max": 20.0,
+      "step": 0.5,
+      "unit": "x",
+      "tooltip": "Tick simulations per cycle at Proficiency 2."
+    },
+    "prof3Speed": {
+      "label": "Prof 3 ★★★☆☆ Speed",
+      "defaultValue": 3.0,
+      "min": 0.1,
+      "max": 20.0,
+      "step": 0.5,
+      "unit": "x",
+      "tooltip": "Tick simulations per cycle at Proficiency 3."
+    },
+    "prof4Speed": {
+      "label": "Prof 4 ★★★★☆ Speed",
+      "defaultValue": 4.0,
+      "min": 0.1,
+      "max": 20.0,
+      "step": 0.5,
+      "unit": "x",
+      "tooltip": "Tick simulations per cycle at Proficiency 4."
+    },
+    "prof5Speed": {
+      "label": "Prof 5 ★★★★★ Speed",
+      "defaultValue": 5.0,
+      "min": 0.1,
+      "max": 20.0,
+      "step": 0.5,
+      "unit": "x",
+      "tooltip": "Tick simulations per cycle at Proficiency 5 (best hatchers). Default 5× = a Chansey hatches an egg 5x faster than a vanilla player carrying it."
+    }
+  }
+}

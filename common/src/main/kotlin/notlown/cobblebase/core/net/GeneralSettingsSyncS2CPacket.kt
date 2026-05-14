@@ -7,11 +7,13 @@ import net.minecraft.network.packet.CustomPayload
 import net.minecraft.util.Identifier
 
 /**
- * Server -> Client: syncs general settings (Discord URL, Discord enabled, etc.)
+ * Server -> Client: syncs general settings (Discord URL/enabled, PokeWiki visibility).
  */
 data class GeneralSettingsSyncS2CPacket(
     val discordUrl: String,
-    val discordEnabled: Boolean
+    val discordEnabled: Boolean,
+    val pokeWikiEnabled: Boolean,
+    val pastureRange: Int = 0
 ) : CustomPayload {
 
     companion object {
@@ -21,13 +23,17 @@ data class GeneralSettingsSyncS2CPacket(
             override fun decode(buf: PacketByteBuf): GeneralSettingsSyncS2CPacket {
                 return GeneralSettingsSyncS2CPacket(
                     discordUrl = buf.readString(),
-                    discordEnabled = buf.readBoolean()
+                    discordEnabled = buf.readBoolean(),
+                    pokeWikiEnabled = buf.readBoolean(),
+                    pastureRange = buf.readVarInt()
                 )
             }
 
             override fun encode(buf: PacketByteBuf, packet: GeneralSettingsSyncS2CPacket) {
                 buf.writeString(packet.discordUrl)
                 buf.writeBoolean(packet.discordEnabled)
+                buf.writeBoolean(packet.pokeWikiEnabled)
+                buf.writeVarInt(packet.pastureRange)
             }
         }
     }

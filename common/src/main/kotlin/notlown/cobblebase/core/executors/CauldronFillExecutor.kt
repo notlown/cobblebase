@@ -21,6 +21,19 @@ object CauldronFillExecutor : SkillExecutor {
 
     private val lastFillTime = mutableMapOf<UUID, Long>()
     private val cauldronTarget = mutableMapOf<UUID, BlockPos>()
+    private val lastScanTime = mutableMapOf<UUID, Long>()
+    private const val SCAN_INTERVAL_TICKS = 20L  // throttle cauldron scan when none are empty
+    private const val STALE_TTL_TICKS = 1200L
+
+    /** Drops per-Pokemon state for cauldron-fillers that have stopped ticking. */
+    fun cleanupStale(now: Long) {
+        val stale = lastFillTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastFillTime.remove(id)
+            lastScanTime.remove(id)
+            cauldronTarget.remove(id)
+        }
+    }
 
     override fun tick(
         world: World,
@@ -31,11 +44,19 @@ object CauldronFillExecutor : SkillExecutor {
     ) {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
 
         // Cooldown check
         val lastTime = lastFillTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) return
+
+        // Same scan-throttle pattern as Healer/Guard/FurnaceFuel: don't rescan the radius³
+        // block cube every tick when there's no empty cauldron and no existing target.
+        if (cauldronTarget[pokemonId] == null) {
+            val lastScan = lastScanTime[pokemonId] ?: 0L
+            if (now - lastScan < SCAN_INTERVAL_TICKS) return
+            lastScanTime[pokemonId] = now
+        }
 
         // Find or navigate to cauldron
         val target = cauldronTarget[pokemonId] ?: findEmptyCauldron(world, origin, skill.searchRadius)

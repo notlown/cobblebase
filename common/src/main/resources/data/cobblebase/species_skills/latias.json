@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 4
+    },
+    {
+      "proficiency": 5,
+      "skillId": "cobblebase:egg_hatcher"
     }
   ]
 }

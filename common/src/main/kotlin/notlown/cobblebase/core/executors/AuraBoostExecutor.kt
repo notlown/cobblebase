@@ -28,6 +28,19 @@ object AuraBoostExecutor : SkillExecutor {
 
     private val lastBuffTime = mutableMapOf<UUID, Long>()
     private val activeBuffPlayers = mutableMapOf<UUID, MutableSet<UUID>>()
+    private const val STALE_TTL_TICKS = 1200L  // 60s
+
+    /**
+     * Called periodically by BaseManager — drops per-Pokemon state for Pokemon that
+     * have stopped ticking (recalled, despawned, chunk unloaded).
+     */
+    fun cleanupStale(now: Long) {
+        val stale = lastBuffTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastBuffTime.remove(id)
+            activeBuffPlayers.remove(id)
+        }
+    }
 
     override fun tick(
         world: World,
@@ -37,13 +50,17 @@ object AuraBoostExecutor : SkillExecutor {
         skillEntry: SkillEntry
     ) {
         if (world !is ServerWorld) return
+        // Admin can disable this buff via Cobblebase settings → Buffs → Aura Enabled
+        if (!notlown.cobblebase.core.CobblebaseConfig.isBuffEnabled("aura")) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
         val prof = skillEntry.proficiency.coerceIn(1, 5)
 
-        // No cooldown -- reapply constantly like other buffs
+        // Re-apply at most every 20 ticks (1s) — vanilla Luck duration is 15s+, so 1s refresh
+        // never lets the effect expire while a player is in range, and saves 20x the tick cost
+        // of scanning + applying the status effect every tick.
         val lastTime = lastBuffTime[pokemonId] ?: 0L
-        if (now - lastTime < 0L) return
+        if (now - lastTime < 20L) return
 
         // Find players based on proficiency range
         val players: List<ServerPlayerEntity>
@@ -64,12 +81,15 @@ object AuraBoostExecutor : SkillExecutor {
         }
         if (players.isEmpty()) return
 
-        // Amplifier scales with proficiency
-        val amplifier = when {
+        // Amplifier scales with proficiency, plus the admin's bonus from per-job tuning.
+        val baseAmplifier = when {
             prof >= 5 -> 2  // Luck III
             prof >= 3 -> 1  // Luck II
             else -> 0       // Luck I
         }
+        val bonus = notlown.cobblebase.core.SkillRegistry
+            .getEffectiveTuning(skill.id, "luckBonus", 0.0).toInt()
+        val amplifier = (baseAmplifier + bonus).coerceIn(0, 9)
 
         val durationTicks = getDurationTicks(prof)
         val trackedPlayers = activeBuffPlayers.getOrPut(pokemonId) { mutableSetOf() }

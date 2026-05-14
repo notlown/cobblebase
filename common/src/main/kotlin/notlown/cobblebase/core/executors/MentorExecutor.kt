@@ -28,7 +28,7 @@ object MentorExecutor : SkillExecutor {
      * Map of pasture BlockPos -> highest mentor proficiency active this tick window.
      * Refreshed each tick by every active mentor; stale entries expire after 5 ticks.
      */
-    private data class MentorEntry(val proficiency: Int, val lastTick: Long)
+    private data class MentorEntry(val proficiency: Int, val lastTick: Long, val xpMultiplier: Double)
 
     private val activeMentors = mutableMapOf<BlockPos, MentorEntry>()
     private const val EXPIRY_TICKS = 5L
@@ -44,19 +44,22 @@ object MentorExecutor : SkillExecutor {
 
         val now = world.time
         val proficiency = skillEntry.proficiency.coerceIn(1, 5)
+        // Per-job tuning: admin can scale the XP boost from the Jobs tab.
+        val tuningMultiplier = notlown.cobblebase.core.SkillRegistry
+            .getEffectiveTuning(skill.id, "xpMultiplier", 1.0)
 
         // Register or update this mentor's proficiency for the pasture
         val existing = activeMentors[origin]
         if (existing == null || proficiency > existing.proficiency || now - existing.lastTick > EXPIRY_TICKS) {
-            activeMentors[origin] = MentorEntry(proficiency, now)
+            activeMentors[origin] = MentorEntry(proficiency, now, tuningMultiplier)
         } else if (proficiency == existing.proficiency) {
-            // Same proficiency, refresh timestamp
-            activeMentors[origin] = existing.copy(lastTick = now)
+            // Same proficiency, refresh timestamp and tuning (admin may have just changed it)
+            activeMentors[origin] = existing.copy(lastTick = now, xpMultiplier = tuningMultiplier)
         }
 
         if (now % 200 == 0L) {
             Cobblebase.log(
-                "[Mentor] ${pokemonEntity.pokemon.species.name} active at $origin (prof=$proficiency, boost=${getXpMultiplier(origin)}x)"
+                "[Mentor] ${pokemonEntity.pokemon.species.name} active at $origin (prof=$proficiency, tuningMult=${tuningMultiplier}x, finalBoost=${getXpMultiplier(origin)}x)"
             )
         }
     }
@@ -78,7 +81,8 @@ object MentorExecutor : SkillExecutor {
         val proficiency = entry.proficiency.coerceIn(1, 5)
         val maxBoost = CobblebaseConfig.mentorMaxBoost
         // Prof 3 is the baseline (1.0x). Scale linearly: prof / 3.0
-        return (proficiency / 3.0) * maxBoost
+        // The per-job admin tuning multiplies the final result.
+        return (proficiency / 3.0) * maxBoost * entry.xpMultiplier
     }
 
     /**

@@ -119,6 +119,8 @@ public class PokemonPastureBlockEntityMixin {
     private static void cobblebase$tick(World world, BlockPos blockPos, BlockState blockState, PokemonPastureBlockEntity pastureBlock, CallbackInfo ci) {
         if (world.isClient) return;
 
+        long cobblebase$tickStart = System.nanoTime();
+
         // Keep entities alive: periodically force Cobblemon to re-check entity spawning
         // Only reset every 5 seconds (100 ticks) instead of every tick to avoid
         // triggering Cobblemon's aggressive position correction (makeSuitableY/isSafeFloor)
@@ -130,10 +132,17 @@ public class PokemonPastureBlockEntityMixin {
         }
 
         // Update pasture-area leaf tracking (for PastureLeafCollisionMixin)
+        long cobblebase$leavesStart = System.nanoTime();
         if (world instanceof net.minecraft.server.world.ServerWorld serverWorld) {
             try {
                 notlown.cobblebase.core.PastureLeavesTracker.INSTANCE.updatePasture(serverWorld, blockPos);
             } catch (Exception ignored) { }
+        }
+        long cobblebase$leavesMs = (System.nanoTime() - cobblebase$leavesStart) / 1_000_000;
+        if (cobblebase$leavesMs > 20) {
+            notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().warn(
+                "[Cobblebase] PERF pasture@" + blockPos.toShortString() + ": leaves-scan took " + cobblebase$leavesMs + "ms"
+            );
         }
 
         List<PokemonPastureBlockEntity.Tethering> tetheredPokemon = pastureBlock.getTetheredPokemon();
@@ -165,22 +174,27 @@ public class PokemonPastureBlockEntityMixin {
             }
 
             // Passive XP for all pastured Pokemon (even sleeping)
+            long cobblebase$xpStart = System.nanoTime();
             try {
                 PassiveXp.INSTANCE.tick(world, pokemonEntity, blockPos);
             } catch (Exception ignored) { }
-
-            // Water-type Pokemon on land: navigate toward water FIRST before any job logic
-            // Navigate to the block ABOVE water (like Cobbleworkers does) — the mon walks to the
-            // water edge and Cobblemon's OmniPathNavigation handles entering the water
-            boolean isWaterMon = false;
-            for (com.cobblemon.mod.common.api.types.ElementalType t : pokemon.getTypes()) {
-                if (t.getName().equalsIgnoreCase("water")) { isWaterMon = true; break; }
+            long cobblebase$xpMs = (System.nanoTime() - cobblebase$xpStart) / 1_000_000;
+            if (cobblebase$xpMs > 10) {
+                Cobblebase.INSTANCE.getLOGGER().warn(
+                    "[Cobblebase] PERF PassiveXp.tick " + pokemon.getSpecies().getName() + " took " + cobblebase$xpMs + "ms"
+                );
             }
+
+            // Water-type Pokemon on land: navigate toward water FIRST before any job logic.
+            // Types don't change in the pasture context, so cache the boolean per Pokemon.
+            boolean isWaterMon = NavigationHelper.INSTANCE.isWaterType(pokemon);
             if (isWaterMon && !pokemonEntity.isTouchingWater() && !pokemonEntity.isSubmergedInWater()) {
-                // Water mon is on land — find nearest water and place them in it
-                // Pathfinding can't handle entering water (mons stand at the edge)
-                // so we directly set their position into the water block
-                net.minecraft.util.math.BlockPos waterPos = NavigationHelper.INSTANCE.findNearbyWater(world, blockPos, 20);
+                // Water mon is on land — find nearest water and place them in it.
+                // Cached lookup: this scan walks 21*21*7 = ~3000 block positions, and used to
+                // run every server tick. The cached helper memoizes per Pokemon for 2 seconds.
+                net.minecraft.util.math.BlockPos waterPos = NavigationHelper.INSTANCE.findNearbyWaterCached(
+                    world, blockPos, 20, pokemon.getUuid(), world.getTime()
+                );
                 if (waterPos != null) {
                     pokemonEntity.setPosition(
                         waterPos.getX() + 0.5, waterPos.getY() + 0.5, waterPos.getZ() + 0.5
@@ -192,6 +206,7 @@ public class PokemonPastureBlockEntityMixin {
             String assignment = BaseManager.INSTANCE.getAssignment(pokemonEntity.getPokemon().getUuid());
             boolean isExplicitlyIdle = (assignment == null);
 
+            long cobblebase$ambientStart = System.nanoTime();
             if (isExplicitlyIdle) {
                 // IDLE MON: ambient behaviors (socialize, chase, sit, sleep, etc.)
                 boolean isResting = AmbientBehavior.INSTANCE.shouldPreventMovement(pokemonEntity.getPokemon().getUuid());
@@ -239,19 +254,42 @@ public class PokemonPastureBlockEntityMixin {
                     Cobblebase.INSTANCE.getLOGGER().error("[Cobblebase] Error ticking {}: {}", pokemon.getSpecies().getName(), e.getMessage());
                 }
 
-                // Escape leaves
+                // Escape leaves (instrumented separately so the post-tickPokemon mystery
+                // — where ambient block reported 1145ms but tickPokemon was <10ms — gets
+                // pinned to a specific helper).
+                long cobblebase$elStart = System.nanoTime();
                 try {
                     NavigationHelper.INSTANCE.escapeLeaves(pokemonEntity);
                 } catch (Exception ignored) { }
+                long cobblebase$elMs = (System.nanoTime() - cobblebase$elStart) / 1_000_000;
+                if (cobblebase$elMs > 25) {
+                    Cobblebase.INSTANCE.getLOGGER().warn(
+                        "[Cobblebase] PERF escapeLeaves " + pokemon.getSpecies().getName() + " took " + cobblebase$elMs + "ms"
+                    );
+                }
 
                 // Stuck detection
+                long cobblebase$cuStart = System.nanoTime();
                 try {
                     NavigationHelper.INSTANCE.checkAndUnstick(pokemonEntity, blockPos);
                 } catch (Exception ignored) { }
+                long cobblebase$cuMs = (System.nanoTime() - cobblebase$cuStart) / 1_000_000;
+                if (cobblebase$cuMs > 25) {
+                    Cobblebase.INSTANCE.getLOGGER().warn(
+                        "[Cobblebase] PERF checkAndUnstick " + pokemon.getSpecies().getName() + " took " + cobblebase$cuMs + "ms"
+                    );
+                }
 
                 // Working mons wander when nav is idle (between job cycles)
                 if (pokemonEntity.getNavigation().isIdle()) {
+                    long cobblebase$wnoStart = System.nanoTime();
                     NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
+                    long cobblebase$wnoMs = (System.nanoTime() - cobblebase$wnoStart) / 1_000_000;
+                    if (cobblebase$wnoMs > 25) {
+                        Cobblebase.INSTANCE.getLOGGER().warn(
+                            "[Cobblebase] PERF wanderNearOrigin " + pokemon.getSpecies().getName() + " took " + cobblebase$wnoMs + "ms"
+                        );
+                    }
                 }
             }
 
@@ -261,6 +299,21 @@ public class PokemonPastureBlockEntityMixin {
                     AmbientBehavior.INSTANCE.tickSpecialAnimations(world, pokemonEntity);
                 } catch (Exception ignored) { }
             }
+            long cobblebase$ambientMs = (System.nanoTime() - cobblebase$ambientStart) / 1_000_000;
+            if (cobblebase$ambientMs > 15) {
+                Cobblebase.INSTANCE.getLOGGER().warn(
+                    "[Cobblebase] PERF ambient/tickPokemon block " + pokemon.getSpecies().getName() +
+                    " (idle=" + isExplicitlyIdle + ", assign=" + assignment + ") took " + cobblebase$ambientMs + "ms"
+                );
+            }
+        }
+
+        long cobblebase$totalMs = (System.nanoTime() - cobblebase$tickStart) / 1_000_000;
+        if (cobblebase$totalMs > 20) {
+            notlown.cobblebase.core.Cobblebase.INSTANCE.getLOGGER().warn(
+                "[Cobblebase] PERF pasture@" + blockPos.toShortString() +
+                ": full tick took " + cobblebase$totalMs + "ms (" + tetheredPokemon.size() + " mons) sections: leaves=" + cobblebase$leavesMs + "ms"
+            );
         }
     }
 }

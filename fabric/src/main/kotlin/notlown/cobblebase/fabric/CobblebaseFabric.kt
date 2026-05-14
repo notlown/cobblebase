@@ -241,14 +241,15 @@ object CobblebaseFabric : ModInitializer {
                 if (!player.hasPermissionLevel(2)) return@execute
                 val newSettings = notlown.cobblebase.core.GeneralSettings.Settings(
                     discordUrl = packet.discordUrl,
-                    discordEnabled = packet.discordEnabled
+                    discordEnabled = packet.discordEnabled,
+                    pokeWikiEnabled = packet.pokeWikiEnabled,
+                    pastureRange = packet.pastureRange.coerceIn(5, 30)
                 )
                 notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
                 notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
-                // Broadcast updated settings to ALL players
                 for (p in player.server.playerManager.playerList) {
                     ServerPlayNetworking.send(p, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
-                        packet.discordUrl, packet.discordEnabled
+                        newSettings.discordUrl, newSettings.discordEnabled, newSettings.pokeWikiEnabled, newSettings.pastureRange
                     ))
                 }
             }
@@ -316,11 +317,126 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // C2S: client requests its owned-Pokemon snapshot for the My Pokemon sub-tab.
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.MyPokemonRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.MyPokemonRequestC2SPacket.CODEC
+        )
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(
+            notlown.cobblebase.core.net.MyPokemonRequestC2SPacket.ID
+        ) { _, context ->
+            context.server().execute {
+                val player = context.player()
+                val storage = com.cobblemon.mod.common.Cobblemon.storage
+                fun mkEntry(p: com.cobblemon.mod.common.pokemon.Pokemon): notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Entry {
+                    val species = p.species.name.lowercase()
+                    val skills = notlown.cobblebase.core.SpeciesSkillRegistry
+                        .getSkills(species)?.skills?.map { it.skillId } ?: emptyList()
+                    val display = try { p.getDisplayName().string } catch (_: Exception) { species }
+                    val aspects = try { p.aspects.toList() } catch (_: Exception) { emptyList() }
+                    val sid = try { p.species.resourceIdentifier.toString() } catch (_: Exception) { "" }
+                    return notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Entry(
+                        species = species,
+                        displayName = display.ifBlank { species },
+                        level = p.level,
+                        skillIds = skills,
+                        aspects = aspects,
+                        speciesId = sid
+                    )
+                }
+                val boxes = mutableListOf<notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Box>()
+                try {
+                    // Party — 6 slots, preserve positions including empties.
+                    val party = storage.getParty(player)
+                    val partySize = try { party.size() } catch (_: Exception) { 6 }
+                    val partySlots = (0 until partySize).map { idx ->
+                        try { party.get(idx) } catch (_: Exception) { null }?.let { mkEntry(it) }
+                    }
+                    boxes.add(notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Box(
+                        name = "Party", cols = 6, slots = partySlots
+                    ))
+                    // PC boxes — preserve original box names + slot positions.
+                    val pc = storage.getPC(player)
+                    for ((boxIdx, pcBox) in pc.boxes.withIndex()) {
+                        val cap = 30  // Cobblemon PC boxes default to 6×5 = 30 slots.
+                        val slots = (0 until cap).map { idx ->
+                            try { pcBox.get(idx) } catch (_: Exception) { null }?.let { mkEntry(it) }
+                        }
+                        val boxName = try { pcBox.name?.ifBlank { "Box ${boxIdx + 1}" } ?: "Box ${boxIdx + 1}" } catch (_: Exception) { "Box ${boxIdx + 1}" }
+                        boxes.add(notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Box(
+                            name = boxName, cols = 6, slots = slots
+                        ))
+                    }
+                } catch (e: Exception) {
+                    Cobblebase.LOGGER.warn("[MyPokemon] Failed to enumerate storage: ${e.javaClass.simpleName}: ${e.message}")
+                }
+                ServerPlayNetworking.send(player,
+                    notlown.cobblebase.core.net.MyPokemonSyncS2CPacket(boxes))
+            }
+        }
+
+        // C2S: Hatchery GUI requests the hatch log + stats
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.HatchLogRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.HatchLogRequestC2SPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(
+            notlown.cobblebase.core.net.HatchLogRequestC2SPacket.ID
+        ) { packet, context ->
+            context.server().execute {
+                val entries = notlown.cobblebase.core.HatchLogManager.getAll().map { e ->
+                    notlown.cobblebase.core.net.HatchLogSyncS2CPacket.Entry(
+                        e.realTimestamp, e.worldTime,
+                        e.hatchedSpecies, e.hatcherSpecies, e.hatcherDisplayName,
+                        e.pastureX, e.pastureY, e.pastureZ, e.proficiency
+                    )
+                }
+                val s = notlown.cobblebase.core.HatchLogManager.stats()
+
+                // Live per-pasture state: active hatchers + available eggs in / around this pasture.
+                val pasturePos = packet.pasturePos
+                val world = context.player().serverWorld
+                val active = mutableListOf<notlown.cobblebase.core.net.HatchLogSyncS2CPacket.ActiveHatcher>()
+                var available = 0
+                if (pasturePos != null) {
+                    val snapshots = notlown.cobblebase.core.executors.EggHatcherExecutor.snapshotForPasture(pasturePos)
+                    for (snap in snapshots) {
+                        active.add(notlown.cobblebase.core.net.HatchLogSyncS2CPacket.ActiveHatcher(
+                            hatcherSpecies = snap.hatcherSpecies,
+                            hatcherDisplayName = snap.hatcherDisplayName,
+                            eggSpecies = snap.eggSpecies,
+                            initialTimer = snap.initialTimer,
+                            currentTimer = snap.currentTimer,
+                            proficiency = snap.proficiency
+                        ))
+                    }
+                    val radius = notlown.cobblebase.core.SkillRegistry.getEffectiveRadius("cobblebase:egg_hatcher")
+                    available = notlown.cobblebase.core.executors.EggHatcherExecutor.countAvailableEggs(world, pasturePos, radius)
+                    Cobblebase.LOGGER.info("[EggHatcher] Status query pasture=$pasturePos: ${snapshots.size} active claims, $available eggs available")
+                }
+
+                ServerPlayNetworking.send(context.player(),
+                    notlown.cobblebase.core.net.HatchLogSyncS2CPacket(
+                        entries, s.total, s.totalThisSession, s.uniqueSpecies, s.topHatchers,
+                        active, available
+                    )
+                )
+            }
+        }
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.HatchLogSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.HatchLogSyncS2CPacket.CODEC
+        )
+
         // Send general settings to player on join
         ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
             val s = notlown.cobblebase.core.GeneralSettings.getSettings()
             ServerPlayNetworking.send(handler.player, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
-                s.discordUrl, s.discordEnabled
+                s.discordUrl, s.discordEnabled, s.pokeWikiEnabled, s.pastureRange
             ))
             // Sync all species skill overrides so the client's Pasture Skills
             // tab sees the admin-set skill set instead of the bundled default.
@@ -351,6 +467,8 @@ object CobblebaseFabric : ModInitializer {
             notlown.cobblebase.core.LootOverrides.load(world)
             // Load spawn buckets from Cobblemon's actual spawn pool
             SpawnData.loadFromCobblemonSpawnPool()
+            // Load hatchery log
+            notlown.cobblebase.core.HatchLogManager.load(world)
         }
 
         // Save assignments, logs, discoveries, and overrides when world stops
@@ -365,6 +483,7 @@ object CobblebaseFabric : ModInitializer {
             notlown.cobblebase.core.WorkshopManager.save(world)
             notlown.cobblebase.core.GeneralSettings.save(world)
             notlown.cobblebase.core.LootOverrides.save(world)
+            notlown.cobblebase.core.HatchLogManager.save(world)
         }
     }
 

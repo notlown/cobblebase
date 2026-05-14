@@ -32,6 +32,10 @@
     {
       "skillId": "cobblebase:lucky_charm",
       "proficiency": 3
+    },
+    {
+      "proficiency": 4,
+      "skillId": "cobblebase:egg_hatcher"
     }
   ]
 }

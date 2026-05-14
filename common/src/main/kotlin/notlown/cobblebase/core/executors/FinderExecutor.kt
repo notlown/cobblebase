@@ -36,6 +36,15 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
     private val lastFindTime = mutableMapOf<UUID, Long>()
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
 
+    /** Per-instance cleanup; iterated across all 13 instances via the companion. */
+    fun cleanupStaleInstance(now: Long, ttl: Long) {
+        val stale = lastFindTime.entries.filter { now - it.value > ttl }.map { it.key }
+        for (id in stale) {
+            lastFindTime.remove(id)
+            heldItems.remove(id)
+        }
+    }
+
     private val logTag = "[${finderType.replaceFirstChar { it.uppercase() }}]"
 
     // Loot table ids resolved through LootHelper (admin override > bundled default > vanilla)
@@ -68,7 +77,7 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
         }
 
         // Cooldown
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val lastTime = lastFindTime[pokemonId] ?: now.also { lastFindTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) return
 
@@ -182,5 +191,14 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
 
         /** Smith -- Smithing templates and pottery. */
         val Smith = FinderExecutor("finder_smith")
+
+        private const val STALE_TTL_TICKS = 1200L
+
+        /** Called by BaseManager periodic sweep — sweeps all 13 finder instances. */
+        fun cleanupStale(now: Long) {
+            for (inst in listOf(Generic, Evo, Hea, Bui, Ore, See, Bal, Exp, Food, Stat, Held, Treasure, Smith)) {
+                inst.cleanupStaleInstance(now, STALE_TTL_TICKS)
+            }
+        }
     }
 }

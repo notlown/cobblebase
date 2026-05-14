@@ -42,9 +42,16 @@ class BuffExecutor(
         skillEntry: SkillEntry
     ) {
         if (world !is ServerWorld) return
+        // Admin can disable this specific buff via Cobblebase settings → Buffs
+        if (!notlown.cobblebase.core.CobblebaseConfig.isBuffEnabled(buffType)) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
         val prof = skillEntry.proficiency.coerceIn(1, 5)
+        // Per-job tuning: admin can set the effect level (Speed I, II, III, ...) from the Jobs tab.
+        // effectLevel = 1 → amplifier 0 (Level I), effectLevel = 3 → amplifier 2 (Level III).
+        val tunedLevel = notlown.cobblebase.core.SkillRegistry
+            .getEffectiveTuning(skill.id, "effectLevel", (baseAmplifier + 1).toDouble())
+        val effectiveAmplifier = (tunedLevel.toInt() - 1).coerceIn(0, 9)
 
         // Cooldown check
         val cooldownTicks = getCooldownTicks(prof)
@@ -98,7 +105,7 @@ class BuffExecutor(
             val effectInstance = StatusEffectInstance(
                 statusEffect,
                 durationTicks,
-                baseAmplifier,
+                effectiveAmplifier,
                 true,   // ambient (subtle particles)
                 false,  // showParticles — disabled to avoid annoying player particles
                 true    // showIcon
@@ -135,11 +142,17 @@ class BuffExecutor(
     }
 
     /**
-     * No cooldown for any proficiency — buffs reapply constantly.
-     * Proficiency only affects range.
+     * Re-apply the buff at most once per second (20 ticks). The vanilla status-effect
+     * minimum duration is 15s at Prof 1, so refreshing every 1s leaves a 14s safety
+     * window — the effect never expires for a player who stays in range, and a player
+     * who walks in only waits ≤1s for their buff to tick in (imperceptible).
+     *
+     * Before this throttle the executor scanned all nearby players and called
+     * addStatusEffect on each every single tick (20x/sec per buff per Pokemon),
+     * which was the dominant tick cost on full-buff bases.
      */
     private fun getCooldownTicks(prof: Int): Long {
-        return 0L
+        return 20L
     }
 
     /**
@@ -204,6 +217,9 @@ class BuffExecutor(
         if (world !is ServerWorld) return
         val now = world.time
         val prof = skillEntry.proficiency.coerceIn(1, 5)
+        val tunedLevel = notlown.cobblebase.core.SkillRegistry
+            .getEffectiveTuning(skill.id, "effectLevel", (baseAmplifier + 1).toDouble())
+        val effectiveAmplifier = (tunedLevel.toInt() - 1).coerceIn(0, 9)
 
         val cooldownTicks = getCooldownTicks(prof)
         val lastTime = lastBuffTime[pokemonId] ?: 0L
@@ -222,7 +238,7 @@ class BuffExecutor(
         val durationTicks = getDurationTicks(prof)
         for (player in players) {
             player.addStatusEffect(StatusEffectInstance(
-                statusEffect, durationTicks, baseAmplifier,
+                statusEffect, durationTicks, effectiveAmplifier,
                 true, false, true
             ))
         }
@@ -231,6 +247,31 @@ class BuffExecutor(
     }
 
     companion object {
+        // 60-second TTL: any Pokemon whose tick hasn't refreshed its lastBuffTime in 60s
+        // is considered recalled / despawned / chunk-unloaded and its state is dropped.
+        private const val STALE_TTL_TICKS = 1200L
+
+        /**
+         * Called periodically by BaseManager — drops per-Pokemon tracking state for any
+         * BuffExecutor instance whose lastBuffTime is older than the TTL. Without this
+         * sweep `lastBuffTime` and `activeBuffPlayers` grow indefinitely on long-running
+         * servers as Pokemon are added/removed from pastures.
+         */
+        fun cleanupStale(now: Long) {
+            for (exec in listOf(
+                SpeedBoost, StrengthBoost, ResistanceBoost, NightVision,
+                WaterBreathing, JumpBoost, HasteBoost, SaturationBoost
+            )) {
+                val stale = exec.lastBuffTime.entries
+                    .filter { now - it.value > STALE_TTL_TICKS }
+                    .map { it.key }
+                for (id in stale) {
+                    exec.lastBuffTime.remove(id)
+                    exec.activeBuffPlayers.remove(id)
+                }
+            }
+        }
+
         val SpeedBoost = BuffExecutor("speed_boost", StatusEffects.SPEED, 2)
         val StrengthBoost = BuffExecutor("strength_boost", StatusEffects.STRENGTH, 0)
         val ResistanceBoost = BuffExecutor("resistance_boost", StatusEffects.RESISTANCE, 0)

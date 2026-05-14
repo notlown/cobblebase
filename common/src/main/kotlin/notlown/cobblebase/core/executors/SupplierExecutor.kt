@@ -28,6 +28,15 @@ import java.util.UUID
 object SupplierExecutor {
 
     private val lastProduceTime = mutableMapOf<UUID, Long>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastProduceTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) lastProduceTime.remove(id)
+        // Evict harvestable-position cache entries older than 60s — keeps memory bounded
+        // and forces a fresh scan if a pasture has been idle for a while.
+        harvestableCache.entries.removeAll { (_, entry) -> now - entry.tick > 1200L }
+    }
     private val APRICORNS_TAG = TagKey.of(RegistryKeys.BLOCK, Identifier.of("cobblemon", "apricorns"))
 
     /** Check if an item requires real plants to harvest (shown in GUI). */
@@ -71,7 +80,7 @@ object SupplierExecutor {
 
         val neededItem = findNeededItem(pokemonId) ?: return
         val skillDef = SkillRegistry.getEffective(skillEntry.skillId) ?: return
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skillDef.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skillDef.cooldownSeconds, skillEntry.proficiency, skillDef.id)
 
         val lastTime = lastProduceTime.getOrPut(pokemonId) { now }
         if (now - lastTime < cooldownTicks) {
@@ -173,72 +182,99 @@ object SupplierExecutor {
         Cobblebase.log("[Supplier] ${pokemonEntity.pokemon.species.name} produced 1x $neededItem")
     }
 
+    // Cache of harvestable positions per (pasture origin, target item id, lowercased).
+    // The supplier's cube scan used to run every tick — at radius 24 that's 117k getBlockState
+    // calls per call per Pokemon, which was the dominant world-load lag source for
+    // craftsman_supply assignments. Cache TTL is 30s; cache hits re-validate each cached
+    // position via isMatureHarvestable so already-harvested plants don't get retargeted.
+    private data class HarvestCacheKey(val origin: BlockPos, val itemId: String)
+    private data class HarvestCacheEntry(val positions: List<BlockPos>, val tick: Long)
+    private val harvestableCache = java.util.concurrent.ConcurrentHashMap<HarvestCacheKey, HarvestCacheEntry>()
+    private const val HARVEST_CACHE_TTL_TICKS = 600L  // 30s
+
     /**
      * Find a harvestable plant nearby that produces the needed item.
+     * Cached for 30s per (pasture, item) — see [harvestableCache].
      */
     private fun findHarvestableFor(world: ServerWorld, origin: BlockPos, radius: Int, neededItem: String): BlockPos? {
         val itemLower = neededItem.lowercase()
-        val candidates = mutableListOf<BlockPos>()
+        val now = world.time
+        val key = HarvestCacheKey(origin, itemLower)
+        val cached = harvestableCache[key]
+        if (cached != null && now - cached.tick < HARVEST_CACHE_TTL_TICKS) {
+            // Re-validate cached positions — plants may have been harvested by other suppliers
+            // in the 30s window, or broken by players.
+            val stillValid = cached.positions.filter { pos ->
+                isMatureHarvestable(world, pos, world.getBlockState(pos), itemLower)
+            }
+            if (stillValid.isNotEmpty()) return stillValid.random()
+            // Cache poisoned — fall through to a fresh scan.
+            harvestableCache.remove(key)
+        }
 
+        // Fresh cube scan.
+        val candidates = mutableListOf<BlockPos>()
         for (x in -radius..radius) {
             for (y in 0..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     val state = world.getBlockState(pos)
-
-                    // Apricorns
-                    if (itemLower.contains("apricorn") && state.isIn(APRICORNS_TAG)) {
-                        try {
-                            if (state.get(ApricornBlock.AGE) == ApricornBlock.MAX_AGE) {
-                                // Check if this apricorn color matches the needed one
-                                val blockName = Registries.BLOCK.getId(state.block).path.lowercase()
-                                val neededColor = itemLower.substringAfterLast(":").replace("_apricorn", "")
-                                if (blockName.contains(neededColor)) {
-                                    candidates.add(pos.toImmutable())
-                                }
-                            }
-                        } catch (_: Exception) {}
-                    }
-
-                    // Crops (wheat, carrot, potato, beetroot)
-                    if (state.block is CropBlock && (state.block as CropBlock).isMature(state)) {
-                        if (itemLower.contains("wheat") || itemLower.contains("carrot") ||
-                            itemLower.contains("potato") || itemLower.contains("beetroot")) {
-                            candidates.add(pos.toImmutable())
-                        }
-                    }
-
-                    // Berries
-                    if (state.block is BerryBlock) {
-                        try {
-                            if (state.get(BerryBlock.AGE) >= BerryBlock.FRUIT_AGE) {
-                                candidates.add(pos.toImmutable())
-                            }
-                        } catch (_: Exception) {}
-                    }
-
-                    // Sweet berry bushes
-                    if (state.block is net.minecraft.block.SweetBerryBushBlock) {
-                        try {
-                            if (state.get(net.minecraft.block.SweetBerryBushBlock.AGE) >= 2) {
-                                candidates.add(pos.toImmutable())
-                            }
-                        } catch (_: Exception) {}
-                    }
-
-                    // Nether wart
-                    if (state.block is net.minecraft.block.NetherWartBlock && itemLower.contains("nether_wart")) {
-                        try {
-                            if (state.get(net.minecraft.block.NetherWartBlock.AGE) == 3) {
-                                candidates.add(pos.toImmutable())
-                            }
-                        } catch (_: Exception) {}
+                    if (isMatureHarvestable(world, pos, state, itemLower)) {
+                        candidates.add(pos.toImmutable())
                     }
                 }
             }
         }
-
+        harvestableCache[key] = HarvestCacheEntry(candidates, now)
         return candidates.randomOrNull()
+    }
+
+    /**
+     * Predicate: does this block state count as a mature harvestable for [itemLower]?
+     * Hoisted out of the scan loop so the cache-hit re-validation uses identical logic.
+     */
+    private fun isMatureHarvestable(
+        world: ServerWorld,
+        pos: BlockPos,
+        state: net.minecraft.block.BlockState,
+        itemLower: String
+    ): Boolean {
+        // Apricorns — only the matching color
+        if (itemLower.contains("apricorn") && state.isIn(APRICORNS_TAG)) {
+            try {
+                if (state.get(ApricornBlock.AGE) == ApricornBlock.MAX_AGE) {
+                    val blockName = Registries.BLOCK.getId(state.block).path.lowercase()
+                    val neededColor = itemLower.substringAfterLast(":").replace("_apricorn", "")
+                    if (blockName.contains(neededColor)) return true
+                }
+            } catch (_: Exception) {}
+        }
+        // Crops
+        if (state.block is CropBlock && (state.block as CropBlock).isMature(state)) {
+            if (itemLower.contains("wheat") || itemLower.contains("carrot") ||
+                itemLower.contains("potato") || itemLower.contains("beetroot")) {
+                return true
+            }
+        }
+        // Berries
+        if (state.block is BerryBlock) {
+            try {
+                if (state.get(BerryBlock.AGE) >= BerryBlock.FRUIT_AGE) return true
+            } catch (_: Exception) {}
+        }
+        // Sweet berry bushes
+        if (state.block is net.minecraft.block.SweetBerryBushBlock) {
+            try {
+                if (state.get(net.minecraft.block.SweetBerryBushBlock.AGE) >= 2) return true
+            } catch (_: Exception) {}
+        }
+        // Nether wart
+        if (state.block is net.minecraft.block.NetherWartBlock && itemLower.contains("nether_wart")) {
+            try {
+                if (state.get(net.minecraft.block.NetherWartBlock.AGE) == 3) return true
+            } catch (_: Exception) {}
+        }
+        return false
     }
 
     /**

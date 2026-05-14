@@ -280,10 +280,22 @@ class AdminSkillEditorPanel(
         }
         context.matrices.pop()
 
-        PokemonSpriteHelper.renderSmallIconByName(
-            context, textRenderer, species,
-            x + w - PokemonSpriteHelper.ICON_SIZE - PADDING, y + PADDING - 2, delta
-        )
+        // Big species portrait at the top-right — no colored type box (Workshop tab style).
+        // 3x scale of the 16-px icon = 48 px on screen.
+        //
+        // Note on Y: `renderPortraitOnly` anchors the model at (x + ICON_SIZE/2, y + 1) and the
+        // Pokemon 3D model extends *downward* from that anchor — so an anchor at `y + PADDING`
+        // pushes the visible body down into the producer-section area. Pull the anchor up by
+        // ~18 px so the visible center sits near the panel top.
+        val portraitScale = 3.0f
+        val portraitSize = (PokemonSpriteHelper.ICON_SIZE * portraitScale).toInt()
+        val portraitX = x + w - portraitSize - PADDING
+        val portraitY = y + PADDING - 36
+        context.matrices.push()
+        context.matrices.translate(portraitX.toFloat(), portraitY.toFloat(), 0f)
+        context.matrices.scale(portraitScale, portraitScale, 1f)
+        PokemonSpriteHelper.renderPortraitOnly(context, textRenderer, species, 0, 0, delta)
+        context.matrices.pop()
 
         // --- Producer Section (top, before skill grid) ---
         val producerH = if (producerEnabled) PRODUCER_SECTION_H else 0
@@ -335,9 +347,18 @@ class AdminSkillEditorPanel(
                         context.drawTextWithShadow(textRenderer, "\u2713", 0, 0, 0xFFFFFF)
                         context.matrices.pop()
                     }
+                    // Job icon between checkbox and skill name, vertically centered with
+                    // checkbox (cbY=rowY+3, h=8) and text (rowY+4, scaled height ~7).
+                    val iconX = cbX + cbSize + 2
+                    context.matrices.push()
+                    context.matrices.translate(iconX.toFloat(), (rowY + 4).toFloat(), 0f)
+                    context.matrices.scale(0.4f, 0.4f, 1f)
+                    context.drawItem(JobIcons.stackFor(skill.skillId), 0, 0)
+                    context.matrices.pop()
+
                     val nameColor = if (skill.assigned) 0xFFFFFF else 0x888888
                     context.matrices.push()
-                    context.matrices.translate((cbX + cbSize + 2).toFloat(), (rowY + 4).toFloat(), 0f)
+                    context.matrices.translate((iconX + 8).toFloat(), (rowY + 4).toFloat(), 0f)
                     context.matrices.scale(scale, scale, 1f)
                     context.drawTextWithShadow(textRenderer, skill.displayName, 0, 0, nameColor)
                     context.matrices.pop()
@@ -368,26 +389,41 @@ class AdminSkillEditorPanel(
         }
 
         // --- Suggestion Dropdown (over everything) ---
+        // MC 1.21 batches drawItem/text calls and flushes them at the END of the frame, so
+        // a plain opaque `context.fill` BEFORE the dropdown can't cover icons/text that were
+        // queued earlier in the frame from the skill grid. Push to a much higher Z layer so
+        // the deferred renderer sorts dropdown geometry above the grid's queued items.
         if (showSuggestions && producerEnabled && itemSuggestions.isNotEmpty()) {
             val field = producerItemField ?: return
             val dropX = field.x
             val dropY = field.y + field.height + 1
-            val dropW = field.width
-            val itemH = 10
-            context.fill(dropX, dropY, dropX + dropW, dropY + itemSuggestions.size * itemH, 0xEE1E1E2E.toInt())
-            context.fill(dropX, dropY, dropX + dropW, dropY + itemSuggestions.size * itemH, 0x44FFFFFF)
+            val dropW = (field.width).coerceAtLeast(220)
+            val itemH = 16
+            val dropBottom = dropY + itemSuggestions.size * itemH
+
+            context.matrices.push()
+            context.matrices.translate(0f, 0f, 400f)
+
+            context.fill(dropX - 1, dropY - 1, dropX + dropW + 1, dropBottom + 1, 0xFF000000.toInt())
+            context.fill(dropX, dropY, dropX + dropW, dropBottom, 0xFF1E1E2E.toInt())
             for ((idx, suggestion) in itemSuggestions.withIndex()) {
                 val sy = dropY + idx * itemH
                 val isHovered = mouseX >= dropX && mouseX <= dropX + dropW && mouseY >= sy && mouseY < sy + itemH
                 if (isHovered || idx == selectedSuggestionIdx) {
-                    context.fill(dropX, sy, dropX + dropW, sy + itemH, 0x44FFD700)
+                    context.fill(dropX, sy, dropX + dropW, sy + itemH, 0xFFFFD700.toInt())
+                }
+                val stack = makeStack(suggestion)
+                if (!stack.isEmpty) {
+                    context.drawItem(stack, dropX + 2, sy)
                 }
                 context.matrices.push()
-                context.matrices.translate((dropX + 2).toFloat(), (sy + 1).toFloat(), 0f)
+                context.matrices.translate((dropX + 22).toFloat(), (sy + 4).toFloat(), 0f)
                 context.matrices.scale(0.7f, 0.7f, 1f)
                 context.drawTextWithShadow(textRenderer, suggestion, 0, 0, 0xCCCCCC)
                 context.matrices.pop()
             }
+
+            context.matrices.pop()
         }
     }
 
@@ -449,18 +485,19 @@ class AdminSkillEditorPanel(
         val rightAreaX = x + w - PADDING - 94
         val cActive = producerJobActive
 
-        // Count
+        // Count — local offsets inside a scale(0.75) matrix: "+" at local 22 = screen +16.5
+        // (tight to "x$count" text). Hover range matches the actual rendered position.
         context.matrices.push()
         context.matrices.translate(rightAreaX.toFloat(), (row1Y + 2).toFloat(), 0f)
         context.matrices.scale(scale, scale, 1f)
         val minusHover = cActive && mouseX >= rightAreaX && mouseX < rightAreaX + 8 && mouseY >= row1Y && mouseY < row1Y + 10
         context.drawTextWithShadow(textRenderer, "-", 0, 0, if (minusHover) 0xFF5555 else if (cActive) 0xAAAAAA else 0x555555)
         context.drawTextWithShadow(textRenderer, "x$producerCount", 10, 0, if (cActive) 0xFFFFFF else 0x666666)
-        val plusHover = cActive && mouseX >= rightAreaX + 30 && mouseX < rightAreaX + 40 && mouseY >= row1Y && mouseY < row1Y + 10
-        context.drawTextWithShadow(textRenderer, "+", 32, 0, if (plusHover) 0x55FF55 else if (cActive) 0xAAAAAA else 0x555555)
+        val plusHover = cActive && mouseX >= rightAreaX + 15 && mouseX < rightAreaX + 25 && mouseY >= row1Y && mouseY < row1Y + 10
+        context.drawTextWithShadow(textRenderer, "+", 22, 0, if (plusHover) 0x55FF55 else if (cActive) 0xAAAAAA else 0x555555)
         context.matrices.pop()
 
-        // Cooldown
+        // Cooldown — same scaling math. "+" at local 30 = screen +22.5, just past "3600s" worst case.
         val cdX = rightAreaX + 40
         context.matrices.push()
         context.matrices.translate(cdX.toFloat(), (row1Y + 2).toFloat(), 0f)
@@ -468,8 +505,8 @@ class AdminSkillEditorPanel(
         val cdMinusHover = cActive && mouseX >= cdX && mouseX < cdX + 8 && mouseY >= row1Y && mouseY < row1Y + 10
         context.drawTextWithShadow(textRenderer, "-", 0, 0, if (cdMinusHover) 0xFF5555 else if (cActive) 0xAAAAAA else 0x555555)
         context.drawTextWithShadow(textRenderer, "${producerCooldown}s", 10, 0, if (cActive) 0xFF9800 else 0x666666)
-        val cdPlusHover = cActive && mouseX >= cdX + 46 && mouseX < cdX + 56 && mouseY >= row1Y && mouseY < row1Y + 10
-        context.drawTextWithShadow(textRenderer, "+", 48, 0, if (cdPlusHover) 0x55FF55 else if (cActive) 0xAAAAAA else 0x555555)
+        val cdPlusHover = cActive && mouseX >= cdX + 21 && mouseX < cdX + 31 && mouseY >= row1Y && mouseY < row1Y + 10
+        context.drawTextWithShadow(textRenderer, "+", 30, 0, if (cdPlusHover) 0x55FF55 else if (cActive) 0xAAAAAA else 0x555555)
         context.matrices.pop()
 
         // Row 2: Status text
@@ -500,8 +537,9 @@ class AdminSkillEditorPanel(
             val field = producerItemField ?: return false
             val dropX = field.x
             val dropY = field.y + field.height + 1
-            val dropW = field.width
-            val itemH = 10
+            // Must match the dropW + itemH used in the render block so clicks line up with the icons.
+            val dropW = field.width.coerceAtLeast(220)
+            val itemH = 16
             if (mouseX >= dropX && mouseX <= dropX + dropW) {
                 for ((idx, suggestion) in itemSuggestions.withIndex()) {
                     val sy = dropY + idx * itemH
@@ -529,28 +567,33 @@ class AdminSkillEditorPanel(
                 return true
             }
 
-            // Count and cooldown +/- (only when active)
+            // Count and cooldown +/- (only when active).
+            // Click positions must match the SCALED render — render does
+            // translate(rightAreaX) + scale(0.75) so local offsets 0/10/32/48 become screen
+            // offsets 0/7.5/24/36. The old hit-test used the unscaled offsets which left
+            // the "+" 4–6 px to the LEFT of its click-target.
             if (producerJobActive) {
                 val rightAreaX = x + w - PADDING - 94
                 if (mouseY >= row1Y && mouseY < row1Y + 10) {
-                    // Count [-]
-                    if (mouseX >= rightAreaX && mouseX < rightAreaX + 10) {
+                    // Hit ranges below must match the hover/render geometry in renderProducerSection.
+                    // Count [-] at rightAreaX
+                    if (mouseX >= rightAreaX && mouseX < rightAreaX + 8) {
                         producerCount = (producerCount - 1).coerceAtLeast(1)
                         dirty = true; return true
                     }
-                    // Count [+]
-                    if (mouseX >= rightAreaX + 24 && mouseX < rightAreaX + 40) {
+                    // Count [+] at rightAreaX + 16.5
+                    if (mouseX >= rightAreaX + 15 && mouseX < rightAreaX + 25) {
                         producerCount = (producerCount + 1).coerceAtMost(64)
                         dirty = true; return true
                     }
-                    // Cooldown [-]
                     val cdX = rightAreaX + 40
-                    if (mouseX >= cdX && mouseX < cdX + 10) {
+                    // Cooldown [-] at cdX
+                    if (mouseX >= cdX && mouseX < cdX + 8) {
                         producerCooldown = (producerCooldown - 30).coerceAtLeast(30)
                         dirty = true; return true
                     }
-                    // Cooldown [+]
-                    if (mouseX >= cdX + 40 && mouseX < cdX + 56) {
+                    // Cooldown [+] at cdX + 22.5
+                    if (mouseX >= cdX + 21 && mouseX < cdX + 31) {
                         producerCooldown = (producerCooldown + 30).coerceAtMost(3600)
                         dirty = true; return true
                     }
@@ -599,9 +642,14 @@ class AdminSkillEditorPanel(
                         }
 
                         if (skill.assigned) {
+                            // Stars render inside a scale(0.75) matrix, so screen-width per star
+                            // is (STAR_SIZE+1) * 0.75 = 6.75. Old hit-test used 9 → click landed
+                            // ~1 star to the right of where the user actually clicked.
                             val starsX = cellX + colW - 42
-                            if (mouseX >= starsX && mouseX <= starsX + 5 * (STAR_SIZE + 1)) {
-                                val starClicked = ((mouseX - starsX) / (STAR_SIZE + 1)).toInt() + 1
+                            val starScreenW = (STAR_SIZE + 1) * 0.75
+                            val totalStarsW = (5 * starScreenW).toInt()
+                            if (mouseX >= starsX && mouseX <= starsX + totalStarsW) {
+                                val starClicked = ((mouseX - starsX) / starScreenW).toInt() + 1
                                 skill.proficiency = starClicked.coerceIn(1, 5)
                                 dirty = true
                                 return true

@@ -32,6 +32,14 @@ object LuckyCharmExecutor : SkillExecutor {
     // Track which wild Pokemon we've already processed (UUID set)
     private val processedPokemon = mutableSetOf<UUID>()
     private val lastCleanup = mutableMapOf<UUID, Long>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    /** processedPokemon is cleared every 5min from within tick() — but lastCleanup grows
+     *  per-charm-Pokemon indefinitely. Drop it for charms that have stopped ticking. */
+    fun cleanupStale(now: Long) {
+        val stale = lastCleanup.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) lastCleanup.remove(id)
+    }
 
     // Base shiny chance is 1/8192
     private const val BASE_SHINY_CHANCE = 1.0 / 8192.0
@@ -58,7 +66,11 @@ object LuckyCharmExecutor : SkillExecutor {
         }
 
         val prof = skillEntry.proficiency.coerceIn(1, 5)
-        val shinyMultiplier = getShinyMultiplier(prof)
+        val baseShinyMultiplier = getShinyMultiplier(prof)
+        // Per-job tuning: admin can scale the shiny rate multiplier from the Jobs tab.
+        val tuningMult = notlown.cobblebase.core.SkillRegistry
+            .getEffectiveTuning(skill.id, "shinyMultiplier", 1.0)
+        val shinyMultiplier = baseShinyMultiplier * tuningMult
         val range = getRange(prof)
 
         // Always scan around the OWNER player (not the pasture)

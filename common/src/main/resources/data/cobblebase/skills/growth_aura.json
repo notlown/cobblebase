@@ -6,5 +6,16 @@
   "cooldownSeconds": 0,
   "searchRadius": 10,
   "executor": "growth",
-  "effectType": "special"
+  "effectType": "special",
+  "tuning": {
+    "growthMultiplier": {
+      "label": "Growth Multiplier",
+      "defaultValue": 1.0,
+      "min": 0.1,
+      "max": 5.0,
+      "step": 0.1,
+      "unit": "x",
+      "tooltip": "Multiplier on crops ticked per pulse, on top of the proficiency-derived base count.\n§7Crops ticked per 30s pulse (rounded down, min 1):\n§8  Prof 1: 1 × multiplier\n§8  Prof 2: 1 × multiplier\n§8  Prof 3: 2 × multiplier\n§8  Prof 4: 2 × multiplier\n§8  Prof 5: 3 × multiplier\n§7Search range also scales with proficiency (base radius × 1 to 5)."
+    }
+  }
 }

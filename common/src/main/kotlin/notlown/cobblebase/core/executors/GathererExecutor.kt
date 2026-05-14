@@ -31,10 +31,15 @@ import java.util.UUID
 object GathererExecutor : SkillExecutor {
 
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
+    private val heldOrigin = mutableMapOf<UUID, BlockPos>()       // pasture origin remembered with held items
+    private val heldLastTick = mutableMapOf<UUID, Long>()         // last time this mon's tick() ran (used for orphan cleanup)
     private val originalHeldItem = mutableMapOf<UUID, ItemStack>()  // backup of Pokemon's real held item
     private val visualItems = mutableMapOf<UUID, ItemEntity>()  // floating visual item above Pokemon's head
     private val pickupCooldown = mutableMapOf<UUID, Long>()      // prevents dupe loop after deposit timeout
     private val depositFails = mutableMapOf<UUID, Int>()         // consecutive deposit timeouts (recovery trigger)
+    private var lastOrphanSweep = 0L
+    private const val ORPHAN_SWEEP_INTERVAL_TICKS = 200L          // sweep every 10s
+    private const val ORPHAN_AGE_TICKS = 600L                     // 30s without tick = mon recalled/despawned
 
     // Breadcrumb trail: positions visited during pickup phase, used to retrace path back to chest
     private val breadcrumbs = mutableMapOf<UUID, MutableList<BlockPos>>()
@@ -52,13 +57,15 @@ object GathererExecutor : SkillExecutor {
     // Gatherer cooldown comes from skill.cooldownSeconds (JSON/admin overrides)
 
     /**
-     * Returns search radius based on proficiency (1-5).
-     * Prof 1 = 5, Prof 2 = 7, Prof 3 = 8, Prof 4 = 10, Prof 5 = 12
+     * Returns the item-search radius. Uses the skill's effective radius (admin override
+     * via JobConfigOverrides → JSON default of 24). Proficiency scales it linearly
+     * from 50% at Prof 1 to 100% at Prof 5, so newly trained Gatherers cover less ground
+     * and high-proficiency ones reach the configured maximum.
      */
-    private fun getRadiusForProficiency(proficiency: Int): Double {
-        // Uses the config jobSearchRadius as max, capped at 24
-        // Gatherer radius should be >= other job radii so it can reach all dropped items
-        return CobblebaseConfig.jobSearchRadius.toDouble().coerceAtMost(24.0)
+    private fun getRadiusForProficiency(proficiency: Int, jobRadius: Int): Double {
+        val prof = proficiency.coerceIn(1, 5)
+        val scale = 0.5 + (prof - 1) * 0.125  // Prof1=0.50, Prof3=0.75, Prof5=1.00
+        return (jobRadius * scale).coerceAtLeast(4.0)
     }
 
     /**
@@ -80,6 +87,14 @@ object GathererExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
         val speed = getSpeedForProficiency(skillEntry.proficiency)
+        heldLastTick[pokemonId] = now
+
+        // Periodically drop items held by mons that stopped ticking (recalled, despawned, chunk unloaded)
+        if (now - lastOrphanSweep >= ORPHAN_SWEEP_INTERVAL_TICKS) {
+            lastOrphanSweep = now
+            sweepOrphanedHeldItems(world, now)
+        }
+
         val items = heldItems[pokemonId]
 
         // Update visual floating item position to follow Pokemon
@@ -103,7 +118,7 @@ object GathererExecutor : SkillExecutor {
 
         // Phase 1: deposit items if holding any
         if (!items.isNullOrEmpty()) {
-            depositItems(world, origin, pokemonEntity, pokemonId, speed)
+            depositItems(world, origin, pokemonEntity, pokemonId, speed, skill.searchRadius)
             return
         }
 
@@ -132,7 +147,7 @@ object GathererExecutor : SkillExecutor {
         }
 
         // Phase 3: cooldown between pickups
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val lastPickup = lastPickupTime[pokemonId] ?: 0L
         if (now - lastPickup < cooldownTicks) {
             if (now % 60 == 0L) {
@@ -150,7 +165,7 @@ object GathererExecutor : SkillExecutor {
         if (now - lastSearch < SEARCH_INTERVAL_TICKS) return
         lastSearchTime[pokemonId] = now
 
-        val radius = getRadiusForProficiency(skillEntry.proficiency)
+        val radius = getRadiusForProficiency(skillEntry.proficiency, skill.searchRadius)
         val found = findNearestDroppedItem(world, pokemonEntity, radius, origin)
         if (found != null) {
             // Claim the item immediately — prevent player pickup to avoid dupe glitch
@@ -264,6 +279,7 @@ object GathererExecutor : SkillExecutor {
         }
 
         heldItems[pokemonId] = allStacks
+        heldOrigin[pokemonId] = pastureOrigin.toImmutable()
 
         // Show gathered item visually — spawn a no-gravity, no-pickup item floating above the Pokemon
         // Remove any existing visual item first
@@ -285,20 +301,31 @@ object GathererExecutor : SkillExecutor {
      * Plays happy villager particles on successful deposit.
      */
     private val depositStartTime = mutableMapOf<UUID, Long>()
-    private const val DEPOSIT_TIMEOUT_TICKS = 200L // 10 seconds max to reach chest
+    // Deposit timeout is now dynamic per attempt: 10s base + 1s per block to the chest, capped at 30s.
 
-    private fun depositItems(world: ServerWorld, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID, speed: Double) {
+    private fun depositItems(world: ServerWorld, origin: BlockPos, pokemonEntity: PokemonEntity, pokemonId: UUID, speed: Double, jobRadius: Int) {
         val items = heldItems[pokemonId] ?: return
-        val chestPos = InventoryHelper.findBestContainer(world, origin, 10, items)
+        // Use the skill's effective searchRadius (admin override via Mod Menu → Admin → Jobs
+        // applies on top of the JSON default of 24). Hardcoding this to 10 was the root cause
+        // of "Gatherer picks up but items go nowhere" when the chest sat outside the search cube.
+        val chestPos = InventoryHelper.findBestContainer(world, origin, jobRadius, items)
 
         if (chestPos == null) {
-            // No chest found - drop items so Pokemon doesn't get stuck
-            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items)
+            // No chest found — drop items at the pasture (not Pokemon's wander position) and
+            // tag them with the pasture origin so a later Gatherer can re-pickup once a chest exists.
+            InventoryHelper.dropItems(world, origin, items, origin)
             heldItems.remove(pokemonId)
+            heldOrigin.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
             depositStartTime.remove(pokemonId)
             return
         }
+
+        // Dynamic deposit timeout: 10s base + 1s per block of pasture→chest distance,
+        // capped at 30s. Wooloo and other slow Pokemon used to time out before reaching
+        // a chest that was only ~6-8 blocks from the pasture.
+        val chestDist = kotlin.math.sqrt(chestPos.getSquaredDistance(origin)).toLong()
+        val depositTimeoutTicks = (200L + 20L * chestDist).coerceAtMost(600L)
 
         // Track how long we've been trying to reach the chest
         val startTime = depositStartTime.getOrPut(pokemonId) { world.time }
@@ -330,22 +357,28 @@ object GathererExecutor : SkillExecutor {
         }
 
         val atChest = NavigationHelper.isPokemonAtPosition(pokemonEntity, chestPos)
-        val timedOut = elapsed >= DEPOSIT_TIMEOUT_TICKS
+        val timedOut = elapsed >= depositTimeoutTicks
 
         if (atChest) {
             // Actually reached the chest — insert items, keep leftovers
             val leftovers = InventoryHelper.insertItems(world, chestPos, items)
             val nonEmpty = leftovers.filter { !it.isEmpty }
             if (nonEmpty.isNotEmpty()) {
-                // Chest was full — try another chest or drop leftovers
-                val altChest = InventoryHelper.findBestContainer(world, origin, 10, nonEmpty)
+                // Chest was full — try another chest or drop leftovers.
+                // Use the full job radius (was hardcoded 10) so the retry sees the same set
+                // of containers the first pass did.
+                val altChest = InventoryHelper.findBestContainer(world, origin, jobRadius, nonEmpty)
                 if (altChest != null && altChest != chestPos) {
                     InventoryHelper.insertItems(world, altChest, nonEmpty)
                 } else {
-                    InventoryHelper.dropItems(world, pokemonEntity.blockPos, nonEmpty, origin)
+                    // No usable alt chest — drop the leftovers at the pasture (tagged) so a
+                    // future Gatherer can re-pick them up rather than scattering them at the
+                    // Pokemon's wander position.
+                    InventoryHelper.dropItems(world, origin, nonEmpty, origin)
                 }
             }
             heldItems.remove(pokemonId)
+            heldOrigin.remove(pokemonId)
             restoreOriginalHeldItem(pokemonEntity, pokemonId)
             depositFails.remove(pokemonId)  // reset failure counter on success
             // Reset breadcrumbs (we're back at chest, fresh trail next time)
@@ -366,34 +399,42 @@ object GathererExecutor : SkillExecutor {
             notlown.cobblebase.core.BaseManager.markJobSuccess(pokemonId, world.time)
             depositStartTime.remove(pokemonId)
         } else if (timedOut) {
-            // Couldn't reach chest in 10s — drop items on ground (no fake success)
-            // Tag with pasture origin so OTHER gatherers can pick them up, but apply cooldown to THIS gatherer
-            InventoryHelper.dropItems(world, pokemonEntity.blockPos, items, origin)
-            heldItems.remove(pokemonId)
-            restoreOriginalHeldItem(pokemonEntity, pokemonId)
-            depositStartTime.remove(pokemonId)
-            // Cooldown: don't pickup new items for 30 seconds (prevents dupe loop)
-            pickupCooldown[pokemonId] = world.time + 600L
-            // Reset breadcrumb index (next attempt starts fresh)
-            breadcrumbIndex.remove(pokemonId)
-
-            // Track consecutive failures — after 3, teleport mon back to pasture (it's stuck somewhere unreachable)
+            // Couldn't reach chest in time — track failure
             val fails = (depositFails[pokemonId] ?: 0) + 1
             depositFails[pokemonId] = fails
-            Cobblebase.log("[Gatherer] ${pokemonEntity.pokemon.species.name} deposit timeout #$fails")
+            Cobblebase.log("[Gatherer] ${pokemonEntity.pokemon.species.name} deposit timeout #$fails (chest ${chestDist}b away, deadline ${depositTimeoutTicks}t)")
+
             if (fails >= 3) {
-                // Recovery teleport — find a safe air position 1 block above pasture
+                // Recovery: teleport mon back to pasture AND insert items straight into the chest
+                // (we're now adjacent to the pasture, no further pathing risk).
                 pokemonEntity.refreshPositionAndAngles(
                     origin.x + 0.5, origin.y + 1.0, origin.z + 0.5,
                     pokemonEntity.yaw, pokemonEntity.pitch
                 )
                 pokemonEntity.setVelocity(0.0, 0.0, 0.0)
                 pokemonEntity.velocityDirty = true
+                val leftovers = InventoryHelper.insertItems(world, chestPos, items)
+                val nonEmpty = leftovers.filter { !it.isEmpty }
+                if (nonEmpty.isNotEmpty()) {
+                    // Chest filled up — drop the rest at the pasture, tagged so it can be re-picked up
+                    InventoryHelper.dropItems(world, origin, nonEmpty, origin)
+                }
+                breadcrumbs.remove(pokemonId)  // reset trail after recovery teleport
                 depositFails.remove(pokemonId)
                 pickupCooldown[pokemonId] = world.time + 200L  // brief cooldown after recovery
-                breadcrumbs.remove(pokemonId)  // reset trail after recovery teleport
-                Cobblebase.log("[Gatherer] Recovered ${pokemonEntity.pokemon.species.name} (3x deposit timeout) — teleported to pasture")
+                Cobblebase.log("[Gatherer] Recovered ${pokemonEntity.pokemon.species.name} (3x deposit timeout) — items inserted at pasture chest")
+            } else {
+                // Drop at the pasture (not the wander position) tagged with origin so
+                // another Gatherer — or this one after cooldown — can re-pickup near the chest.
+                InventoryHelper.dropItems(world, origin, items, origin)
+                // Cooldown: don't pickup new items for 30 seconds (prevents dupe loop)
+                pickupCooldown[pokemonId] = world.time + 600L
             }
+            heldItems.remove(pokemonId)
+            heldOrigin.remove(pokemonId)
+            restoreOriginalHeldItem(pokemonEntity, pokemonId)
+            depositStartTime.remove(pokemonId)
+            breadcrumbIndex.remove(pokemonId)
         }
     }
 
@@ -405,5 +446,63 @@ object GathererExecutor : SkillExecutor {
         // Remove the floating visual item
         val visual = visualItems.remove(pokemonId)
         if (visual != null && visual.isAlive) visual.discard()
+    }
+
+    /**
+     * Drops items held by Pokemon that haven't ticked in [ORPHAN_AGE_TICKS] —
+     * recalled to ball, chunk unloaded, owner offline, or otherwise gone. Without
+     * this sweep the items sit in the [heldItems] map forever and vanish on server
+     * restart. Drops are tagged with the remembered pasture origin so any Gatherer
+     * at that base can re-pickup.
+     */
+    private fun sweepOrphanedHeldItems(world: ServerWorld, now: Long) {
+        // Phase A: any Pokemon whose tick hasn't run within ORPHAN_AGE_TICKS is gone.
+        // Drop everything we know about them across ALL maps, not just heldItems.
+        val staleAll = heldLastTick.entries
+            .filter { now - it.value > ORPHAN_AGE_TICKS }
+            .map { it.key }
+        for (pokemonId in staleAll) {
+            // Clean up the non-item-bearing per-Pokemon state first (these existed even for
+            // Pokemon that never picked anything up, so they'd leak indefinitely on long runs).
+            heldLastTick.remove(pokemonId)
+            originalHeldItem.remove(pokemonId)
+            pickupCooldown.remove(pokemonId)
+            depositFails.remove(pokemonId)
+            breadcrumbs.remove(pokemonId)
+            lastBreadcrumbTick.remove(pokemonId)
+            breadcrumbIndex.remove(pokemonId)
+            targetItem.remove(pokemonId)
+            targetSetTime.remove(pokemonId)
+            lastPickupTime.remove(pokemonId)
+            lastSearchTime.remove(pokemonId)
+            depositStartTime.remove(pokemonId)
+        }
+
+        // Phase B: among the orphans (and any stragglers), recover held items into a chest
+        // or drop them tagged at the pasture so a future Gatherer can pick them up.
+        val staleHolding = staleAll.filter { heldItems.containsKey(it) }
+        if (staleHolding.isEmpty()) return
+        for (pokemonId in staleHolding) {
+            val items = heldItems.remove(pokemonId) ?: continue
+            val pastureOrigin = heldOrigin.remove(pokemonId)
+            val visual = visualItems.remove(pokemonId)
+            if (visual != null && visual.isAlive) visual.discard()
+            if (pastureOrigin != null) {
+                // Try to insert into a chest first; fall back to a tagged ground drop.
+                // The Pokemon's job-specific radius is no longer available here (the entity
+                // is gone), so use the gatherer skill's effective radius as a sane default.
+                val chestRadius = notlown.cobblebase.core.SkillRegistry.getEffectiveRadius("cobblebase:gatherer")
+                val chestPos = InventoryHelper.findBestContainer(world, pastureOrigin, chestRadius, items)
+                if (chestPos != null) {
+                    val leftovers = InventoryHelper.insertItems(world, chestPos, items).filter { !it.isEmpty }
+                    if (leftovers.isNotEmpty()) {
+                        InventoryHelper.dropItems(world, pastureOrigin, leftovers, pastureOrigin)
+                    }
+                } else {
+                    InventoryHelper.dropItems(world, pastureOrigin, items, pastureOrigin)
+                }
+                Cobblebase.log("[Gatherer] Orphan-sweep: recovered ${items.size} held stack(s) from inactive Pokemon to pasture at $pastureOrigin")
+            }
+        }
     }
 }

@@ -30,6 +30,16 @@ object CraftsmanExecutor : SkillExecutor {
     // Per-pokemon state (not persisted — reconstructed from WorkshopManager)
     private val targetChest = mutableMapOf<UUID, BlockPos>()
     private val lastGatherTick = mutableMapOf<UUID, Long>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastGatherTick.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastGatherTick.remove(id)
+            targetChest.remove(id)
+            craftedOutput.remove(id)
+        }
+    }
 
     override fun tick(
         world: World,
@@ -142,7 +152,7 @@ object CraftsmanExecutor : SkillExecutor {
         skill: SkillDef, skillEntry: SkillEntry,
         project: WorkshopManager.WorkshopProject, pokemonId: UUID, now: Long
     ) {
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val elapsed = now - project.phaseStartTick
 
         if (elapsed < cooldownTicks) {

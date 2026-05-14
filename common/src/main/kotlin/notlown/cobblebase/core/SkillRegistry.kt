@@ -49,6 +49,19 @@ object SkillRegistry {
         return JobConfigOverrides.getEffectiveRadius(skill)
     }
 
+    /**
+     * Returns the effective value of a tunable parameter for a skill.
+     * Admin override wins, then the JSON `defaultValue`, then the caller's fallback.
+     *
+     * Executors should call this with the same fallback they'd use if the skill
+     * file had been authored without the tuning declaration — keeps the executor
+     * working even on skills that haven't opted in to per-job tuning.
+     */
+    fun getEffectiveTuning(skillId: String, key: String, fallback: Double): Double {
+        val skill = skills[skillId] ?: return fallback
+        return JobConfigOverrides.getEffectiveTuning(skill, key, fallback)
+    }
+
     private fun loadFromResources() {
         val indexPath = "/data/cobblebase/skills/_index.txt"
         val indexStream = Cobblebase::class.java.getResourceAsStream(indexPath)

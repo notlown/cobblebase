@@ -68,7 +68,12 @@ class AdminGeneralPanel(
 
     private fun saveSettings() {
         val url = discordUrlField?.text ?: return
-        ClientPlayNetworking.send(GeneralSettingsUpdateC2SPacket(url, discordEnabled))
+        // PokeWiki toggle is edited in AdminWikiPanel; keep its current value when saving here.
+        ClientPlayNetworking.send(GeneralSettingsUpdateC2SPacket(
+            url, discordEnabled,
+            notlown.cobblebase.core.GeneralSettingsCache.pokeWikiEnabled,
+            notlown.cobblebase.core.GeneralSettingsCache.pastureRange
+        ))
         dirty = false
     }
 

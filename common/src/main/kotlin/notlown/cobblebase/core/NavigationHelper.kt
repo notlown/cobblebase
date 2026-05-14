@@ -111,8 +111,50 @@ object NavigationHelper {
      * Only targets natural trees (LeavesBlock) — does NOT affect enclosed rooms
      * built from solid blocks (stone, planks, etc.), so pasture box bases are safe.
      */
+    // Throttle escapeLeaves to once per second per Pokemon. The check reads 2-5 block states
+    // every tick for every pastured Pokemon, even though "trapped in leaves" is a rare event
+    // that can wait up to 1s to be detected.
+    private val lastEscapeLeavesTick = mutableMapOf<UUID, Long>()
+    private const val ESCAPE_LEAVES_INTERVAL = 20L
+    private const val NAV_STATE_STALE_TICKS = 1200L
+
+    /**
+     * Per-Pokemon cache of "is this a water-type Pokemon". Pokemon types are effectively
+     * immutable in the pasture context (form changes are very rare); the previous code
+     * iterated the type list and string-compared "water" every single tick for every
+     * pastured Pokemon, in both the pasture mixin and `BaseManager.tickPokemon`'s
+     * safety-teleport branch.
+     */
+    private val waterTypeCache = mutableMapOf<UUID, Boolean>()
+
+    fun isWaterType(pokemon: com.cobblemon.mod.common.pokemon.Pokemon): Boolean {
+        val id = pokemon.uuid
+        waterTypeCache[id]?.let { return it }
+        val result = pokemon.types.any { it.name.equals("water", ignoreCase = true) }
+        waterTypeCache[id] = result
+        return result
+    }
+
+    /** Called by BaseManager periodic sweep — drops per-Pokemon throttling state for
+     *  Pokemon that haven't been ticked in 60s (recalled, despawned, chunk unloaded). */
+    fun cleanupStale(now: Long) {
+        val stale = lastEscapeLeavesTick.entries.filter { now - it.value > NAV_STATE_STALE_TICKS }.map { it.key }
+        for (id in stale) {
+            lastEscapeLeavesTick.remove(id)
+            lastPathfindTick.remove(id)
+            waterCache.remove(id)
+            waterTypeCache.remove(id)
+        }
+    }
+
     fun escapeLeaves(pokemonEntity: PokemonEntity) {
         val world = pokemonEntity.world
+        val now = world.time
+        val pokemonId = pokemonEntity.pokemon.uuid
+        val lastCheck = lastEscapeLeavesTick[pokemonId] ?: 0L
+        if (now - lastCheck < ESCAPE_LEAVES_INTERVAL) return
+        lastEscapeLeavesTick[pokemonId] = now
+
         val pos = pokemonEntity.blockPos
         val block = world.getBlockState(pos).block
         val blockBelow = world.getBlockState(pos.down()).block
@@ -390,10 +432,11 @@ object NavigationHelper {
         if (isWaterType) {
             if (pokemonEntity.isTouchingWater || pokemonEntity.isSubmergedInWater) {
                 // In water — check if too far from pasture, swim back toward nearby water closer to origin
-                val distFromOrigin = kotlin.math.sqrt(pokemonEntity.squaredDistanceTo(
+                // Squared-distance comparison avoids the sqrt; 20 blocks → 400 squared.
+                val distSqFromOrigin = pokemonEntity.squaredDistanceTo(
                     origin.x + 0.5, origin.y.toDouble(), origin.z + 0.5
-                ))
-                if (distFromOrigin > 20) {
+                )
+                if (distSqFromOrigin > 400.0) {
                     // Swim back toward pasture — find water block closer to origin
                     val dirX = (origin.x - pokemonEntity.blockX).coerceIn(-5, 5)
                     val dirZ = (origin.z - pokemonEntity.blockZ).coerceIn(-5, 5)
@@ -429,6 +472,36 @@ object NavigationHelper {
             targetZ + 0.5,
             0.3  // slow stroll speed for idle wandering
         )
+    }
+
+    // Cache for findNearbyWaterCached — keyed by Pokemon UUID, holds last result + tick.
+    // Without this, the pasture mixin scans up to 3087 block positions every tick for any
+    // water-type Pokemon that's on land (e.g. spawned on grass next to its pasture).
+    private data class WaterCacheEntry(val pos: BlockPos?, val tick: Long)
+    private val waterCache = mutableMapOf<UUID, WaterCacheEntry>()
+    private const val WATER_CACHE_TICKS = 40L  // re-scan at most every 2 seconds
+
+    /**
+     * Throttled version of [findNearbyWater]. Returns the cached result if it was computed
+     * within the last 2 seconds; otherwise re-scans. Callers that hit this every tick (the
+     * pasture mixin) get a ~40× reduction in block-state reads at the cost of up to 2 seconds
+     * of staleness — acceptable since the water-mon-to-water teleport is a quality-of-life
+     * helper, not a correctness-critical operation.
+     */
+    fun findNearbyWaterCached(
+        world: net.minecraft.world.World,
+        origin: BlockPos,
+        radius: Int,
+        pokemonId: UUID,
+        now: Long
+    ): BlockPos? {
+        val cached = waterCache[pokemonId]
+        if (cached != null && now - cached.tick < WATER_CACHE_TICKS) {
+            return cached.pos
+        }
+        val found = findNearbyWater(world, origin, radius)
+        waterCache[pokemonId] = WaterCacheEntry(found, now)
+        return found
     }
 
     /**

@@ -10,9 +10,16 @@ object GeneralSettingsCache {
         private set
     var discordEnabled: Boolean = true
         private set
+    var pokeWikiEnabled: Boolean = true
+        private set
+    /** Server-wide pasture range (radius in blocks). 0 = not set, fall back to local config. */
+    var pastureRange: Int = 0
+        private set
 
-    fun update(url: String, enabled: Boolean) {
+    fun update(url: String, enabled: Boolean, pokeWiki: Boolean = true, range: Int = 0) {
         discordUrl = url
         discordEnabled = enabled
+        pokeWikiEnabled = pokeWiki
+        pastureRange = range
     }
 }

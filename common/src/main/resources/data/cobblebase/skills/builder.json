@@ -1,0 +1,10 @@
+{
+  "id": "cobblebase:builder",
+  "name": "Builder",
+  "description": "Places blocks from a nearby chest to construct buildings from pre-made templates",
+  "category": "construction",
+  "cooldownSeconds": 2,
+  "searchRadius": 24,
+  "executor": "builder",
+  "effectType": "default"
+}

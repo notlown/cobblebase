@@ -24,6 +24,10 @@
     {
       "skillId": "cobblebase:lava_fill",
       "proficiency": 4
+    },
+    {
+      "proficiency": 3,
+      "skillId": "cobblebase:egg_hatcher"
     }
   ]
 }

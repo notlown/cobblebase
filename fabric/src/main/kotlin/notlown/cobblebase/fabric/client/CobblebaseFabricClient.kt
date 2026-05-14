@@ -7,8 +7,10 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
+import notlown.cobblebase.fabric.client.render.RadiusRenderer
 import notlown.cobblebase.core.AdminDataCache
 import notlown.cobblebase.core.AdminJobDataCache
 import notlown.cobblebase.core.AssignmentCache
@@ -107,7 +109,7 @@ object CobblebaseFabricClient : ClientModInitializer {
         // Register S2C general settings sync (Discord URL, enabled, etc.)
         ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.ID) { packet, context ->
             context.client().execute {
-                notlown.cobblebase.core.GeneralSettingsCache.update(packet.discordUrl, packet.discordEnabled)
+                notlown.cobblebase.core.GeneralSettingsCache.update(packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled, packet.pastureRange)
             }
         }
 
@@ -179,6 +181,29 @@ object CobblebaseFabricClient : ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.JobOverrideSyncS2CPacket.ID) { packet, context ->
             context.client().execute {
                 notlown.cobblebase.core.JobConfigOverrides.updateAll(packet.overrides)
+            }
+        }
+
+        // Radius visualization: draw red wireframe box after translucent pass
+        WorldRenderEvents.AFTER_TRANSLUCENT.register { context ->
+            RadiusRenderer.render(context)
+        }
+
+        // Hatchery log sync receiver
+        ClientPlayNetworking.registerGlobalReceiver(
+            notlown.cobblebase.core.net.HatchLogSyncS2CPacket.ID
+        ) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.fabric.client.HatchLogCache.update(packet)
+            }
+        }
+
+        // My Pokemon sync receiver
+        ClientPlayNetworking.registerGlobalReceiver(
+            notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.ID
+        ) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.fabric.client.MyPokemonCache.update(packet)
             }
         }
 

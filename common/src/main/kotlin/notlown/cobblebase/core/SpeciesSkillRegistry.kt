@@ -24,7 +24,33 @@ object SpeciesSkillRegistry {
     fun getSkills(species: String): SpeciesSkills? = speciesMap[species.lowercase()]
     fun getBuiltInSkills(species: String): SpeciesSkills? = builtInMap[species.lowercase()]
     fun getAllAssigned(): Map<String, SpeciesSkills> = speciesMap.toMap()
-    fun register(speciesSkills: SpeciesSkills) { speciesMap[speciesSkills.species.lowercase()] = speciesSkills }
+    fun register(speciesSkills: SpeciesSkills) {
+        speciesMap[speciesSkills.species.lowercase()] = speciesSkills
+        buffSkillsCache.remove(speciesSkills.species.lowercase())
+    }
+
+    // Cache of buff-skill subset per species — recomputed lazily on demand and invalidated
+    // on register(). The passive-buff loop in BaseManager.tickPokemon used to iterate ALL
+    // species skills every tick (with HashMap lookups for each); for species with many
+    // non-buff skills, most of that work was wasted.
+    private val buffSkillsCache = mutableMapOf<String, List<SkillEntry>>()
+
+    /**
+     * Returns the subset of a species' skills that are passive buff/aura skills.
+     * Cached on first call per species. Returns empty list if the species has no buff skills
+     * or isn't registered.
+     */
+    fun getBuffSkills(species: String, isBuff: (String) -> Boolean): List<SkillEntry> {
+        val lower = species.lowercase()
+        buffSkillsCache[lower]?.let { return it }
+        val all = speciesMap[lower]?.skills ?: return emptyList()
+        val buffs = all.filter { entry ->
+            val skill = SkillRegistry.get(entry.skillId) ?: return@filter false
+            isBuff(skill.executor)
+        }
+        buffSkillsCache[lower] = buffs
+        return buffs
+    }
 
     /**
      * Resolves a form-aware species name from a base species name and a set of aspects.

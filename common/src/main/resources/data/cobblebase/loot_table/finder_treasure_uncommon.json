@@ -33,8 +33,9 @@
           ]
         },
         {
-          "type": "minecraft:item",
-          "name": "cobblemon:nugget",
+          "type": "minecraft:tag",
+          "name": "c:nuggets",
+          "expand": true,
           "weight": 8,
           "functions": [
             {

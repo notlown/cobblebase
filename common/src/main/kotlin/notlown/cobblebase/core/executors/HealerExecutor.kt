@@ -27,6 +27,20 @@ import java.util.UUID
 object HealerExecutor : SkillExecutor {
 
     private val lastHealTime = mutableMapOf<UUID, Long>()
+    private val lastScanTime = mutableMapOf<UUID, Long>()
+    private const val SCAN_INTERVAL_TICKS = 20L  // throttle player search when cooldown has elapsed but nobody needs healing
+    private const val STALE_TTL_TICKS = 1200L
+
+    /** Drops per-Pokemon state for healers that have stopped ticking (recalled / despawned). */
+    fun cleanupStale(now: Long) {
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastScanTime.remove(id)
+            lastHealTime.remove(id)
+            activeSessions.remove(id)
+            navStartTime.remove(id)
+        }
+    }
 
     // Active healing state: healer UUID -> HealingSession
     private val activeSessions = mutableMapOf<UUID, HealingSession>()
@@ -76,19 +90,22 @@ object HealerExecutor : SkillExecutor {
         }
 
         // Cooldown - first heal triggers immediately (lastTime defaults to 0, not now)
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val lastTime = lastHealTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) return
+
+        // Even though the heal cooldown has elapsed, we don't want to scan for players every
+        // tick when nobody needs healing (the cooldown only advances on successful heal).
+        // Throttle the search to once per second.
+        val lastScan = lastScanTime[pokemonId] ?: 0L
+        if (now - lastScan < SCAN_INTERVAL_TICKS) return
+        lastScanTime[pokemonId] = now
 
         // Find player that needs healing
         val radius = skill.searchRadius.toDouble()
         val searchBox = Box.of(origin.toCenterPos(), radius * 2, radius * 2, radius * 2)
 
         val allPlayers = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }
-        if (now % 100 == 0L) {
-            for (p in allPlayers) {
-            }
-        }
 
         val target = allPlayers
             .filter { playerNeedsHealing(it) }

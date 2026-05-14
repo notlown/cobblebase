@@ -17,7 +17,13 @@ object JobConfigOverrides {
     data class JobOverride(
         val cooldownSeconds: Long? = null,
         val searchRadius: Int? = null,
-        val enabled: Boolean = true
+        val enabled: Boolean = true,
+        /**
+         * Per-skill tunable parameter overrides (e.g. mentor's xpMultiplier).
+         * Keys match the JSON `tuning` map; values replace the JSON `defaultValue`.
+         * Entries omitted from this map fall back to the skill's declared default.
+         */
+        val tuning: Map<String, Double>? = null
     )
 
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
@@ -60,6 +66,16 @@ object JobConfigOverrides {
     }
 
     /**
+     * Returns the effective value for a tunable parameter declared on the skill.
+     * Lookup order: admin override → skill's JSON `defaultValue` → caller's fallback.
+     */
+    fun getEffectiveTuning(skill: SkillDef, key: String, fallback: Double): Double {
+        overrides[skill.id]?.tuning?.get(key)?.let { return it }
+        skill.tuning?.get(key)?.let { return it.defaultValue }
+        return fallback
+    }
+
+    /**
      * Bulk-update overrides from a map (used when receiving data from client).
      */
     fun updateAll(newOverrides: Map<String, JobOverride>) {
@@ -79,7 +95,8 @@ object JobConfigOverrides {
                 mapOf(
                     "cooldownSeconds" to override.cooldownSeconds,
                     "searchRadius" to override.searchRadius,
-                    "enabled" to override.enabled
+                    "enabled" to override.enabled,
+                    "tuning" to override.tuning
                 )
             }
             file.writeText(gson.toJson(data))
@@ -99,7 +116,13 @@ object JobConfigOverrides {
                 val cooldown = (fields["cooldownSeconds"] as? Double)?.toLong()
                 val radius = (fields["searchRadius"] as? Double)?.toInt()
                 val enabled = (fields["enabled"] as? Boolean) ?: true
-                overrides[skillId] = JobOverride(cooldown, radius, enabled)
+                @Suppress("UNCHECKED_CAST")
+                val tuningRaw = fields["tuning"] as? Map<String, Any?>
+                val tuning = tuningRaw?.mapNotNull { (k, v) ->
+                    val d = (v as? Number)?.toDouble() ?: return@mapNotNull null
+                    k to d
+                }?.toMap()
+                overrides[skillId] = JobOverride(cooldown, radius, enabled, tuning?.takeIf { it.isNotEmpty() })
             }
             Cobblebase.LOGGER.info("[Cobblebase] Loaded ${overrides.size} job config overrides")
         } catch (e: Exception) {

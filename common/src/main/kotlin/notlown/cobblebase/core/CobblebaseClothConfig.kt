@@ -39,6 +39,10 @@ class CobblebaseClothConfig : ConfigData {
 
         @ConfigEntry.Gui.Tooltip
         var enableConsoleLogging = false
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+        var mainButtonCorner: MainButtonCorner = MainButtonCorner.BOTTOM_RIGHT
     }
 
     class CryGroup {
@@ -84,6 +88,35 @@ class CobblebaseClothConfig : ConfigData {
 
     @ConfigEntry.Gui.CollapsibleObject
     var finder = FinderGroup()
+
+    @ConfigEntry.Gui.CollapsibleObject
+    var buffs = BuffsGroup()
+
+    /**
+     * Per-buff enable flags. Server admins can disable individual aura/buff skills
+     * to prevent specific Pokemon effects from being applied to nearby players.
+     * Disabled buffs short-circuit at the start of the executor's tick — no effect, no particles.
+     */
+    class BuffsGroup {
+        @ConfigEntry.Gui.Tooltip
+        var speedBoostEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var strengthBoostEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var resistanceBoostEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var nightVisionEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var waterBreathingEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var jumpBoostEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var hasteBoostEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var saturationBoostEnabled = true
+        @ConfigEntry.Gui.Tooltip
+        var auraEnabled = true
+    }
 
     class IrrigatorGroup {
         var irrigatorEnabled = true

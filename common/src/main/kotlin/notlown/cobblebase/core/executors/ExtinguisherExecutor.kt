@@ -24,6 +24,12 @@ import java.util.UUID
 object ExtinguisherExecutor : SkillExecutor {
 
     private val lastScanTime = mutableMapOf<UUID, Long>()
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) lastScanTime.remove(id)
+    }
 
     override fun tick(
         world: World,
@@ -38,7 +44,7 @@ object ExtinguisherExecutor : SkillExecutor {
         val prof = skillEntry.proficiency.coerceIn(1, 5)
 
         // Cooldown check
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, prof)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, prof, skill.id)
         val lastTime = lastScanTime[pokemonId] ?: 0L
         if (now - lastTime < cooldownTicks) {
             if (now % 60 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)

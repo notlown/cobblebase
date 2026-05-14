@@ -5,7 +5,6 @@
       "rolls": 1,
       "entries": [
         { "type": "minecraft:item", "name": "cobblemon:max_elixir", "weight": 5 },
-        { "type": "minecraft:item", "name": "cobblemon:sacred_ash", "weight": 3 },
         { "type": "minecraft:item", "name": "cobblemon:rare_candy", "weight": 4 }
       ]
     }

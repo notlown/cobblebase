@@ -38,6 +38,16 @@ object RecruiterExecutor : SkillExecutor {
     private val lastRecruitTime = mutableMapOf<UUID, Long>()
     private val recruitedEntities = mutableSetOf<Int>()
     private val pendingCry = mutableMapOf<Int, Long>() // entityId -> tick when to cry
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastRecruitTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) lastRecruitTime.remove(id)
+        // Entity-keyed maps: expire pendingCry entries whose tick is far in the past.
+        pendingCry.entries.removeAll { now - it.value > STALE_TTL_TICKS }
+        // recruitedEntities grows indefinitely with successful recruits — but entity-IDs are
+        // recycled by MC, so we have to trust the spawn-rate cooldowns to gate growth.
+    }
 
     // Cache: type name -> list of species names (built once)
     private var speciesByType: Map<String, List<String>>? = null
@@ -64,7 +74,7 @@ object RecruiterExecutor : SkillExecutor {
         val pokemonId = pokemonEntity.pokemon.uuid
 
         // All proficiency levels use the same cooldown scaling
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
 
         val lastTime = lastRecruitTime[pokemonId] ?: now.also { lastRecruitTime[pokemonId] = now }
         if (now - lastTime < cooldownTicks) {

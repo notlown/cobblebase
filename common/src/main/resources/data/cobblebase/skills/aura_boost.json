@@ -1,10 +1,20 @@
 {
   "id": "cobblebase:aura_boost",
   "name": "Aura Boost",
-  "description": "All nearby workers perform jobs faster",
+  "description": "Grants Luck (better loot) to nearby players",
   "category": "legendary",
   "cooldownSeconds": 0,
   "searchRadius": 15,
   "executor": "aura",
-  "effectType": "special"
+  "effectType": "special",
+  "tuning": {
+    "luckBonus": {
+      "label": "Extra Luck Levels",
+      "defaultValue": 0.0,
+      "min": 0.0,
+      "max": 4.0,
+      "step": 1.0,
+      "tooltip": "Adds N levels on top of the proficiency-scaled Luck amplifier.\n§7Final amplifier per proficiency (with bonus):\n§8  Prof 1: Luck I + bonus\n§8  Prof 2: Luck I + bonus\n§8  Prof 3: Luck II + bonus\n§8  Prof 4: Luck II + bonus\n§8  Prof 5: Luck III + bonus"
+    }
+  }
 }

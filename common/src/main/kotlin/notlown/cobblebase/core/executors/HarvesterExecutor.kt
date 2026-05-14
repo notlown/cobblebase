@@ -49,6 +49,20 @@ object HarvesterExecutor : SkillExecutor {
     private val lastSearchTime = mutableMapOf<UUID, Long>()
     private val lastHarvestTime = mutableMapOf<UUID, Long>() // per-pokemon cooldown between harvests
     private val harvestedBlockCooldown = mutableMapOf<BlockPos, Long>() // per-block cooldown to prevent instant re-harvest
+    private const val STALE_TTL_TICKS = 1200L
+
+    fun cleanupStale(now: Long) {
+        val stale = lastSearchTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            heldItems.remove(id)
+            targetBlock.remove(id)
+            targetSetTime.remove(id)
+            lastSearchTime.remove(id)
+            lastHarvestTime.remove(id)
+        }
+        // The block-level cooldown map is keyed by BlockPos; expire entries older than 10s.
+        harvestedBlockCooldown.entries.removeAll { now - it.value > 200L }
+    }
     private const val BLOCK_COOLDOWN_TICKS = 1200L // 60 seconds before same block can be harvested again
     private const val HARVEST_COOLDOWN_TICKS = 200L // 10 seconds between harvests (so Gatherer can keep up)
     private val NAV_TIMEOUT_TICKS = 100L // 5 seconds - auto-harvest if can't reach
@@ -83,7 +97,7 @@ object HarvesterExecutor : SkillExecutor {
 
         // Cooldown between harvests (so Gatherer can keep up with drops)
         val lastHarvest = lastHarvestTime[pokemonId] ?: 0L
-        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency)
+        val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         if (now - lastHarvest < cooldownTicks) {
             if (now % 60 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
             return

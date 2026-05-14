@@ -293,7 +293,7 @@ object GathererExecutor : SkillExecutor {
         visualItems[pokemonId] = visualItem
 
         // Play cry on pickup (no markJobSuccess — that fires only on real deposit)
-        SkillEffects.playCryOnly(world, pokemonEntity)
+        SkillEffects.playCryOnly(world, pokemonEntity, pastureOrigin)
     }
 
     /**

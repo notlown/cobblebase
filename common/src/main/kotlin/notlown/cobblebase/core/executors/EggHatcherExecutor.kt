@@ -330,7 +330,7 @@ object EggHatcherExecutor : SkillExecutor {
             )
             killEggDisplay(world, claim.displayEntityId)
             claims.remove(pokemonId)
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, pasture)
             return
         }
         // Keep the visual egg following the hatcher each tick.

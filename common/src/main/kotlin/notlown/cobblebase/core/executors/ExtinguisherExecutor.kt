@@ -83,7 +83,7 @@ object ExtinguisherExecutor : SkillExecutor {
         lastScanTime[pokemonId] = now
 
         if (extinguishedCount > 0) {
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
             LogManager.log(
                 origin, now,
                 pokemonEntity.pokemon.species.name,

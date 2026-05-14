@@ -94,6 +94,32 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             }
         }
 
+        // S2C: Cry playback — client-side decision so cryVolume/cryEnabled actually apply.
+        registrar.playToClient(
+            notlown.cobblebase.core.net.PlayCryS2CPacket.ID,
+            notlown.cobblebase.core.net.PlayCryS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                if (!notlown.cobblebase.core.CobblebaseConfig.cryEnabled) return@enqueueWork
+                val volume = notlown.cobblebase.core.CobblebaseConfig.cryVolume
+                if (volume <= 0) return@enqueueWork
+                val cryId = net.minecraft.util.Identifier.of("cobblebase", "pokemon.${packet.speciesName}.cry")
+                val soundEvent = net.minecraft.registry.Registries.SOUND_EVENT.get(cryId) ?: return@enqueueWork
+                val mc = net.minecraft.client.MinecraftClient.getInstance()
+                val world = mc.world ?: return@enqueueWork
+                world.playSound(
+                    packet.x, packet.y, packet.z,
+                    soundEvent,
+                    net.minecraft.sound.SoundCategory.NEUTRAL,
+                    volume / 100f, 1.0f, false
+                )
+            }
+        }
+        // Common-side platform sender hook — SkillEffects dispatches through this.
+        notlown.cobblebase.core.PlatformPacketSender.sendS2C = { player, payload ->
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, payload)
+        }
+
         // C2S: Skill assignment request (client opens GUI)
         registrar.playToServer(
             SkillAssignmentRequestC2SPacket.ID,

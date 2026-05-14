@@ -113,6 +113,25 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Cry playback — server-side `world.playSound(null, ...)` ignored per-player config,
+        // so cryEnabled/cryVolume are checked HERE on the receiving client before playing.
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.PlayCryS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                if (!notlown.cobblebase.core.CobblebaseConfig.cryEnabled) return@execute
+                val volume = notlown.cobblebase.core.CobblebaseConfig.cryVolume
+                if (volume <= 0) return@execute
+                val cryId = net.minecraft.util.Identifier.of("cobblebase", "pokemon.${packet.speciesName}.cry")
+                val soundEvent = net.minecraft.registry.Registries.SOUND_EVENT.get(cryId) ?: return@execute
+                val world = context.client().world ?: return@execute
+                world.playSound(
+                    packet.x, packet.y, packet.z,
+                    soundEvent,
+                    net.minecraft.sound.SoundCategory.NEUTRAL,
+                    volume / 100f, 1.0f, false
+                )
+            }
+        }
+
         // Lazy-loaded skills response
         ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminSpeciesSkillsResponseS2CPacket.ID) { packet, context ->
             context.client().execute {

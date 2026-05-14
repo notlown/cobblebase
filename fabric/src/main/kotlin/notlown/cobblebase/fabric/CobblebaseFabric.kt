@@ -69,6 +69,17 @@ object CobblebaseFabric : ModInitializer {
         // Register S2C packet for skill assignment sync
         PayloadTypeRegistry.playS2C().register(SkillAssignmentSyncS2CPacket.ID, SkillAssignmentSyncS2CPacket.CODEC)
 
+        // Cry-sound packet — playback decided by the client so cryVolume/cryEnabled actually apply.
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.PlayCryS2CPacket.ID,
+            notlown.cobblebase.core.net.PlayCryS2CPacket.CODEC
+        )
+        // Wire the platform-agnostic sender so common code (SkillEffects) can dispatch S2C
+        // payloads without importing Fabric networking APIs.
+        notlown.cobblebase.core.PlatformPacketSender.sendS2C = { player, payload ->
+            ServerPlayNetworking.send(player, payload)
+        }
+
         // Register C2S packet for skill assignment requests (client opens GUI)
         PayloadTypeRegistry.playC2S().register(SkillAssignmentRequestC2SPacket.ID, SkillAssignmentRequestC2SPacket.CODEC)
         ServerPlayNetworking.registerGlobalReceiver(SkillAssignmentRequestC2SPacket.ID) { _, context ->

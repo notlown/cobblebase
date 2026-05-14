@@ -30,6 +30,30 @@ public class PokemonPastureBlockEntityMixin {
      * Prevent Cobblemon from teleporting water-capable Pokemon out of water.
      * Saves positions before checkPokemon() and restores them for swimming mons.
      */
+    /**
+     * Immediate nav-state cleanup when a Pokemon is released from the pasture (recall,
+     * withdraw, pasture block broken). Without this, per-UUID maps in NavigationHelper
+     * (lastPathfindTick, escapeLeaves, water cache, stuck-detection state) only get pruned
+     * by the 60s periodic sweep — wasted memory for a release event we can hook directly.
+     */
+    @Inject(at = @At("HEAD"), method = "releasePokemon", remap = false)
+    private void cobblebase$onRelease(java.util.UUID pokemonId, CallbackInfo ci) {
+        PokemonPastureBlockEntity self = (PokemonPastureBlockEntity)(Object)this;
+        World world = self.getWorld();
+        if (world == null || world.isClient) return;
+        try {
+            PokemonPastureBlockEntity.Tethering tethering = self.getTetheredPokemon().stream()
+                .filter(t -> t != null && t.getPokemonId().equals(pokemonId))
+                .findFirst().orElse(null);
+            if (tethering != null) {
+                com.cobblemon.mod.common.pokemon.Pokemon pkm = tethering.getPokemon();
+                PokemonEntity entity = (pkm != null) ? pkm.getEntity() : null;
+                notlown.cobblebase.core.NavigationHelper.INSTANCE.clearTargets(entity);
+            }
+            notlown.cobblebase.core.NavigationHelper.INSTANCE.cleanupPokemon(pokemonId);
+        } catch (Exception ignored) { }
+    }
+
     @Inject(at = @At("HEAD"), method = "checkPokemon", remap = false)
     private void cobblebase$beforeCheckPokemon(CallbackInfo ci) {
         PokemonPastureBlockEntity self = (PokemonPastureBlockEntity)(Object)this;
@@ -136,6 +160,11 @@ public class PokemonPastureBlockEntityMixin {
         if (world instanceof net.minecraft.server.world.ServerWorld serverWorld) {
             try {
                 notlown.cobblebase.core.PastureLeavesTracker.INSTANCE.updatePasture(serverWorld, blockPos);
+            } catch (Exception ignored) { }
+            // Refresh per-pasture nearby-player cache so animations + cry packets don't pay
+            // for a 128³ AABB scan per call. Cache TTL handled internally (5s).
+            try {
+                notlown.cobblebase.core.NearbyPlayerCache.INSTANCE.update(serverWorld, blockPos, world.getTime());
             } catch (Exception ignored) { }
         }
         long cobblebase$leavesMs = (System.nanoTime() - cobblebase$leavesStart) / 1_000_000;

@@ -116,7 +116,7 @@ object GuardExecutor : SkillExecutor {
             // Repel the wild Pokemon
             val targetName = targetMon.pokemon.species.name
             targetMon.discard()
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
 
             // Log the guard action
             LogManager.log(

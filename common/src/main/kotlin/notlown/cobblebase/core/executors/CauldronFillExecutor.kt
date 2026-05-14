@@ -75,7 +75,7 @@ object CauldronFillExecutor : SkillExecutor {
             fillCauldron(world, target, skill)
             lastFillTime[pokemonId] = now
             cauldronTarget.remove(pokemonId)
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
         }
     }
 

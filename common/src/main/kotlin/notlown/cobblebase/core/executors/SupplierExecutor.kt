@@ -144,7 +144,7 @@ object SupplierExecutor {
                 }
 
                 lastProduceTime[pokemonId] = now
-                SkillEffects.playSuccess(world, pokemonEntity, skillDef.effectType)
+                SkillEffects.playSuccess(world, pokemonEntity, skillDef.effectType, origin)
 
                 val dropNames = drops.joinToString(", ") { "${it.name.string} x${it.count}" }
                 LogManager.log(origin, now, pokemonEntity.pokemon.species.name, "Harvested", dropNames, LogManager.Rarity.COMMON)
@@ -177,7 +177,7 @@ object SupplierExecutor {
             InventoryHelper.dropItems(world, pokemonEntity.blockPos, listOf(stack), origin)
         }
 
-        SkillEffects.playSuccess(world, pokemonEntity, skillDef.effectType)
+        SkillEffects.playSuccess(world, pokemonEntity, skillDef.effectType, origin)
         LogManager.log(origin, now, pokemonEntity.pokemon.species.name, "Supplied", "${stack.name.string} x1", LogManager.Rarity.COMMON)
         Cobblebase.log("[Supplier] ${pokemonEntity.pokemon.species.name} produced 1x $neededItem")
     }

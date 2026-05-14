@@ -80,7 +80,7 @@ object GenericLootExecutor : SkillExecutor {
 
         if (drops.isNotEmpty()) {
             heldItems[pokemonId] = drops
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
 
             // Log loot
             val speciesDisplay = pokemonEntity.pokemon.species.name

@@ -16,7 +16,54 @@ import java.util.UUID
 object NavigationHelper {
 
     private val lastPathfindTick = mutableMapOf<UUID, Long>()
-    private const val PATHFIND_INTERVAL_TICKS = 5L
+    /**
+     * Ticks between consecutive pathfind requests per Pokemon. 10 ticks (0.5 s) is the
+     * sweet spot: 5 ticks (the previous value) caused expensive A* recalcs every quarter
+     * second, while 20 ticks felt sluggish for time-sensitive jobs like Recruiter/Guard
+     * where the target moves. 10 keeps response time imperceptible to humans while
+     * halving the pathfinding cost.
+     */
+    private const val PATHFIND_INTERVAL_TICKS = 10L
+
+    /**
+     * Returns true if this Pokemon's species can fly. Used to gate the y-clamping logic
+     * below — without grounding, flying mons drift upward on every pathfind tick and end
+     * up 20+ blocks above their crops, never reaching them.
+     */
+    private fun canFly(pokemonEntity: PokemonEntity): Boolean {
+        return try { pokemonEntity.pokemon.species.behaviour.moving.fly.canFly } catch (_: Exception) { false }
+    }
+
+    /**
+     * Snaps a flying Pokemon down to roughly target y if it has drifted more than 1.5
+     * blocks above. Sets a slight downward velocity so it doesn't immediately float back up.
+     */
+    private fun groundFlyingPokemon(pokemonEntity: PokemonEntity, targetY: Double) {
+        if (pokemonEntity.y > targetY + 1.5) {
+            pokemonEntity.refreshPositionAndAngles(
+                pokemonEntity.x, targetY + 1.0, pokemonEntity.z,
+                pokemonEntity.yaw, pokemonEntity.pitch
+            )
+            pokemonEntity.setVelocity(pokemonEntity.velocity.x, -0.1, pokemonEntity.velocity.z)
+            pokemonEntity.velocityDirty = true
+        }
+    }
+
+    /**
+     * Clamps a navigation target to within the Pokemon's tethering roam box. Without this,
+     * a target picked just outside the pasture range would pull the mon over the edge and
+     * Cobblemon's tether system would yank it back — feedback loop, jittery movement.
+     */
+    private fun clampToRoamBox(pokemonEntity: PokemonEntity, targetPos: BlockPos): BlockPos {
+        val tethering = pokemonEntity.tethering ?: return targetPos
+        val min = tethering.minRoamPos
+        val max = tethering.maxRoamPos
+        val clampedX = targetPos.x.coerceIn(min.x, max.x)
+        val clampedY = targetPos.y.coerceIn(min.y, max.y)
+        val clampedZ = targetPos.z.coerceIn(min.z, max.z)
+        return if (clampedX == targetPos.x && clampedY == targetPos.y && clampedZ == targetPos.z) targetPos
+        else BlockPos(clampedX, clampedY, clampedZ)
+    }
 
     /**
      * Checks if the Pokemon's bounding box intersects with the target block area.
@@ -70,10 +117,20 @@ object NavigationHelper {
         if (now - last < PATHFIND_INTERVAL_TICKS) return
         lastPathfindTick[id] = now
 
+        // Clamp the target to within the tethering roam box so navigation never aims
+        // outside the pasture's working radius (Cobblemon would otherwise yank the
+        // mon back, creating a jitter loop).
+        val clampedTarget = clampToRoamBox(pokemonEntity, targetPos)
+
+        // Flying mons drift upward on every pathfind unless we snap them back down.
+        if (canFly(pokemonEntity)) {
+            groundFlyingPokemon(pokemonEntity, clampedTarget.y.toDouble())
+        }
+
         var result = pokemonEntity.navigation.startMovingTo(
-            targetPos.x + 0.5,
-            targetPos.y.toDouble(),
-            targetPos.z + 0.5,
+            clampedTarget.x + 0.5,
+            clampedTarget.y.toDouble(),
+            clampedTarget.z + 0.5,
             actualSpeed
         )
 
@@ -99,10 +156,27 @@ object NavigationHelper {
 
     /**
      * Clears navigation targets and stops the Pokemon's current pathfinding.
+     * Null-safe so the pasture mixin can call it even when the entity has already been
+     * unloaded (e.g. during chunk transition + release in the same tick).
      */
-    fun clearTargets(pokemonEntity: PokemonEntity) {
-        pokemonEntity.navigation.stop()
-        lastPathfindTick.remove(pokemonEntity.pokemon.uuid)
+    fun clearTargets(pokemonEntity: PokemonEntity?) {
+        pokemonEntity?.navigation?.stop()
+        pokemonEntity?.pokemon?.uuid?.let { lastPathfindTick.remove(it) }
+    }
+
+    /**
+     * Drops every per-Pokemon map entry for a UUID. Called immediately from the pasture
+     * mixin's `releasePokemon` hook so memory is freed the moment a mon leaves the pasture
+     * (recall, withdraw, base disassemble), instead of waiting for the 60s periodic sweep.
+     */
+    fun cleanupPokemon(id: UUID) {
+        lastPathfindTick.remove(id)
+        lastEscapeLeavesTick.remove(id)
+        waterTypeCache.remove(id)
+        waterCache.remove(id)
+        lastPositions.remove(id)
+        stuckSince.remove(id)
+        lastWanderTick.remove(id)
     }
 
     /**

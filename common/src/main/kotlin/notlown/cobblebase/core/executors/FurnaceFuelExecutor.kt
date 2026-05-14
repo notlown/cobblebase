@@ -131,7 +131,7 @@ object FurnaceFuelExecutor : SkillExecutor {
             lastFuelTime[pokemonId] = now
             furnaceTarget.remove(pokemonId)
             targetRefreshTime.remove(pokemonId)
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
         }
     }
 

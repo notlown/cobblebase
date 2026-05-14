@@ -167,7 +167,7 @@ object ScoutExecutor : SkillExecutor {
         }
 
         if (success) {
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
             // "Look around" animation
             SkillEffects.sendAnimationPublic(world, pokemonEntity, "cry", "special")
         }

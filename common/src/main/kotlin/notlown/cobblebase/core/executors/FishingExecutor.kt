@@ -110,7 +110,7 @@ object FishingExecutor : SkillExecutor {
             generateLoot(world, pokemonEntity, pokemonId, now)
             val fished = heldItems[pokemonId]
             if (!fished.isNullOrEmpty()) {
-                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
                 for (item in fished) {
                     LogManager.log(
                         origin, world.time,

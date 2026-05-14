@@ -390,7 +390,7 @@ object ProducerExecutor : SkillExecutor {
         InventoryHelper.dropItems(world, pokemonEntity.blockPos, listOf(stack), origin)
 
         // Play success effect
-        SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+        SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
 
         // Log production
         LogManager.log(

@@ -2,36 +2,43 @@ package notlown.cobblebase.core.effects
 
 import com.cobblemon.mod.common.CobblemonNetwork
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
-import notlown.cobblebase.core.CobblebaseConfig
-import notlown.cobblebase.core.Cobblebase
 import com.cobblemon.mod.common.net.messages.client.animation.PlayPosableAnimationPacket
 import net.minecraft.particle.ParticleTypes
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.Identifier
-import java.util.UUID
-import net.minecraft.util.math.Box
+import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import notlown.cobblebase.core.NearbyPlayerCache
+import notlown.cobblebase.core.PlatformPacketSender
+import notlown.cobblebase.core.net.PlayCryS2CPacket
+import java.util.UUID
 
 /**
  * Visual and audio effects for skill execution.
- * Sends animation packets server-side using CobblemonNetwork (same as battle system).
+ *
+ * Two-channel design:
+ *   - Animations are sent via CobblemonNetwork (vanilla pose system).
+ *   - Cries are sent via Cobblebase's own [PlayCryS2CPacket] so client-side cryEnabled /
+ *     cryVolume cloth-config actually applies. Server-side `world.playSound(null, ...)`
+ *     ignores per-player config and was the reason the mute toggle felt broken.
+ *
+ * Both channels broadcast through [NearbyPlayerCache] so the 128³ AABB scan only runs
+ * once per pasture per cache TTL instead of per-animation.
  */
 object SkillEffects {
 
     private val lastCryTime = mutableMapOf<UUID, Long>()
     private const val CRY_COOLDOWN_TICKS = 1200L // 60 seconds between cries per Pokemon
 
-    fun sendAnimationPublic(world: World, pokemonEntity: PokemonEntity, vararg names: String) =
-        sendAnimation(world, pokemonEntity, *names)
+    /** Animation broadcast keyed on a pasture position so [NearbyPlayerCache] can be reused. */
+    fun sendAnimationPublic(world: World, pokemonEntity: PokemonEntity, pasturePos: BlockPos, vararg names: String) =
+        sendAnimation(world, pokemonEntity, pasturePos, *names)
 
-    private fun sendAnimation(world: World, pokemonEntity: PokemonEntity, vararg names: String) {
+    /** Backward-compat overload — uses the Pokemon's own block position as the cache key. */
+    fun sendAnimationPublic(world: World, pokemonEntity: PokemonEntity, vararg names: String) =
+        sendAnimation(world, pokemonEntity, pokemonEntity.blockPos, *names)
+
+    private fun sendAnimation(world: World, pokemonEntity: PokemonEntity, pasturePos: BlockPos, vararg names: String) {
         if (world !is ServerWorld) return
-        // Also add bedrock-format variants "speciesname:animname" as fallback
         val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
         val allNames = mutableSetOf<String>()
         for (name in names) {
@@ -39,92 +46,54 @@ object SkillEffects {
             allNames.add("${speciesName}:${name}")
         }
         val packet = PlayPosableAnimationPacket(pokemonEntity.id, allNames, emptyList())
-        val box = Box.of(pokemonEntity.pos, 128.0, 128.0, 128.0)
-        val players = world.getEntitiesByClass(ServerPlayerEntity::class.java, box) { true }
-        for (player in players) {
+        for (player in NearbyPlayerCache.getPlayers(pasturePos)) {
             CobblemonNetwork.sendPacketToPlayer(player, packet)
         }
     }
 
-    /**
-     * Play a success effect based on skill effect type.
-     * Called when a skill action completes (harvest, catch, repel, etc.)
-     *
-     * Particles disabled for performance — only "heal" effect keeps particles
-     * since healing is rare. Cries and animations still play for all types.
-     */
-    /**
-     * Plays only the cry sound, without marking job success.
-     * Used for intermediate actions (e.g. Gatherer picking up an item).
-     */
-    fun playCryOnly(world: World, pokemonEntity: PokemonEntity) {
+    /** Cry-only — no animation, no success marking. */
+    fun playCryOnly(world: World, pokemonEntity: PokemonEntity, pasturePos: BlockPos = pokemonEntity.blockPos) {
         if (world !is ServerWorld) return
-        playCry(world, pokemonEntity)
+        playCry(world, pokemonEntity, pasturePos)
     }
 
-    private fun playCry(world: ServerWorld, pokemonEntity: PokemonEntity) {
-        if (CobblebaseConfig.cryEnabled && CobblebaseConfig.cryVolume > 0) {
-            val pokemonId = pokemonEntity.pokemon.uuid
-            val now = world.time
-            val lastCry = lastCryTime[pokemonId] ?: 0L
-            if (now - lastCry >= CRY_COOLDOWN_TICKS) {
-                lastCryTime[pokemonId] = now
-                val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
-                val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
-                val soundEvent = Registries.SOUND_EVENT.get(cryId)
-                if (soundEvent != null) {
-                    val volume = CobblebaseConfig.cryVolume / 100f
-                    world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, volume, 1.0f)
-                }
-            }
+    private fun playCry(world: ServerWorld, pokemonEntity: PokemonEntity, pasturePos: BlockPos) {
+        val pokemonId = pokemonEntity.pokemon.uuid
+        val now = world.time
+        val lastCry = lastCryTime[pokemonId] ?: 0L
+        if (now - lastCry < CRY_COOLDOWN_TICKS) return
+        lastCryTime[pokemonId] = now
+        val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
+        val packet = PlayCryS2CPacket(speciesName, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z)
+        for (player in NearbyPlayerCache.getPlayers(pasturePos)) {
+            PlatformPacketSender.sendS2C(player, packet)
         }
     }
 
-    fun playSuccess(world: World, pokemonEntity: PokemonEntity, effectType: String) {
+    fun playSuccess(world: World, pokemonEntity: PokemonEntity, effectType: String, pasturePos: BlockPos = pokemonEntity.blockPos) {
         if (world !is ServerWorld) return
+        playCry(world, pokemonEntity, pasturePos)
 
-        // Play cry sound — max once per 60 seconds per Pokemon to avoid spam
-        if (CobblebaseConfig.cryEnabled && CobblebaseConfig.cryVolume > 0) {
-            val pokemonId = pokemonEntity.pokemon.uuid
-            val now = world.time
-            val lastCry = lastCryTime[pokemonId] ?: 0L
-            if (now - lastCry >= CRY_COOLDOWN_TICKS) {
-                lastCryTime[pokemonId] = now
-                val speciesName = pokemonEntity.pokemon.species.name.lowercase().replace(" ", "_").replace("-", "_")
-                val cryId = Identifier.of("cobblebase", "pokemon.${speciesName}.cry")
-                val soundEvent = Registries.SOUND_EVENT.get(cryId)
-                if (soundEvent != null) {
-                    val volume = CobblebaseConfig.cryVolume / 100f
-                    world.playSound(null, pokemonEntity.x, pokemonEntity.y, pokemonEntity.z, soundEvent, SoundCategory.NEUTRAL, volume, 1.0f)
-                }
-            }
-        }
-
-        // Animations only — no particles (TPS optimization)
         when (effectType) {
-            "harvest" -> sendAnimation(world, pokemonEntity, "tackle", "scratch", "pound", "physical")
-            "water" -> sendAnimation(world, pokemonEntity, "watergun", "bubble", "spray", "special")
-            "fire" -> sendAnimation(world, pokemonEntity, "ember", "flamethrower", "flame", "special")
-            "combat" -> sendAnimation(world, pokemonEntity, "tackle", "bite", "crunch", "physical")
+            "harvest" -> sendAnimation(world, pokemonEntity, pasturePos, "tackle", "scratch", "pound", "physical")
+            "water" -> sendAnimation(world, pokemonEntity, pasturePos, "watergun", "bubble", "spray", "special")
+            "fire" -> sendAnimation(world, pokemonEntity, pasturePos, "ember", "flamethrower", "flame", "special")
+            "combat" -> sendAnimation(world, pokemonEntity, pasturePos, "tackle", "bite", "crunch", "physical")
             "heal" -> {
-                // Heal is rare — keep particles
-                sendAnimation(world, pokemonEntity, "wish", "special")
+                sendAnimation(world, pokemonEntity, pasturePos, "wish", "special")
                 val x = pokemonEntity.x
                 val y = pokemonEntity.y
                 val h = pokemonEntity.height.toDouble()
                 val z = pokemonEntity.z
                 world.spawnParticles(ParticleTypes.HEART, x, y + h, z, 15, 0.6, 0.4, 0.6, 0.03)
             }
-            "special" -> sendAnimation(world, pokemonEntity, "special")
-            else -> sendAnimation(world, pokemonEntity, "special", "physical")
+            "special" -> sendAnimation(world, pokemonEntity, pasturePos, "special")
+            else -> sendAnimation(world, pokemonEntity, pasturePos, "special", "physical")
         }
     }
 
-    /**
-     * Play working particles - called periodically while a skill is on cooldown.
-     */
+    /** Periodic working-particle tick. Disabled for everything except heal (TPS). */
     fun playWorking(world: World, pokemonEntity: PokemonEntity, effectType: String) {
-        // Working particles disabled for performance — only heal keeps subtle particles
         if (world !is ServerWorld) return
         if (effectType == "heal") {
             val x = pokemonEntity.x

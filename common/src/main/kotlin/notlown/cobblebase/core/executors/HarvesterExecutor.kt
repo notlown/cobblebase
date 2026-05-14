@@ -56,6 +56,14 @@ object HarvesterExecutor : SkillExecutor {
      * Pruned automatically when a block stops being ripe (harvested, broken, regressed).
      */
     private val firstSeenRipeTime = mutableMapOf<BlockPos, Long>()
+    /**
+     * BlockPos → UUID of the harvester that picked this block as its target. Prevents
+     * multiple harvesters from converging on the same crop (previously every scan was
+     * independent, so 3 harvesters with overlapping radii routinely chased one apricorn).
+     * Expired when the owner reaches the target, releases voluntarily, or stops ticking.
+     */
+    private val reservedBlocks = mutableMapOf<BlockPos, UUID>()
+    private const val RESERVATION_TIMEOUT_TICKS = 200L
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
@@ -66,6 +74,8 @@ object HarvesterExecutor : SkillExecutor {
             targetSetTime.remove(id)
             lastSearchTime.remove(id)
             lastHarvestTime.remove(id)
+            // Drop reservations owned by a stale harvester.
+            reservedBlocks.entries.removeAll { it.value == id }
         }
         // The block-level cooldown map is keyed by BlockPos; expire entries older than 10s.
         harvestedBlockCooldown.entries.removeAll { now - it.value > 200L }
@@ -121,12 +131,13 @@ object HarvesterExecutor : SkillExecutor {
             val timedOut = now - navStarted >= NAV_TIMEOUT_TICKS
 
             if (NavigationHelper.isPokemonAtPosition(pokemonEntity, target, 3.0) || timedOut) {
+                reservedBlocks.remove(target) // release reservation regardless of harvest outcome
                 harvest(world, target, pokemonEntity, pokemonId)
                 targetBlock.remove(pokemonId)
                 targetSetTime.remove(pokemonId)
                 lastHarvestTime[pokemonId] = now
                 Cobblebase.log("[Harvester] ${pokemonEntity.pokemon.species.name} HARVESTED at $target")
-                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
 
                 // Log harvested items
                 val harvested = heldItems[pokemonId]
@@ -154,10 +165,11 @@ object HarvesterExecutor : SkillExecutor {
         // matches what the player set as the pasture's working radius. Falls through to the
         // skill's own JSON default when no server setting exists.
         val pastureRadius = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius
-        val found = findHarvestable(world, origin, pastureRadius)
+        val found = findHarvestable(world, origin, pastureRadius, pokemonId, now)
         if (found != null) {
             targetBlock[pokemonId] = found
             targetSetTime[pokemonId] = now
+            reservedBlocks[found] = pokemonId
         } else {
             // Nothing ripe - wander towards nearest growing (not yet ripe) harvestable block
             val growingPos = findGrowing(world, origin, pastureRadius)
@@ -167,11 +179,15 @@ object HarvesterExecutor : SkillExecutor {
         }
     }
 
-    private fun findHarvestable(world: World, origin: BlockPos, radius: Int): BlockPos? {
-        val now = world.time
-        // Cleanup old block cooldowns periodically
+    private fun findHarvestable(world: World, origin: BlockPos, radius: Int, requester: UUID, now: Long): BlockPos? {
+        // Periodic cooldown sweep + drop reservations whose owner stopped ticking.
         if (now % 200 == 0L) {
             harvestedBlockCooldown.entries.removeIf { now - it.value > BLOCK_COOLDOWN_TICKS }
+            // A reservation is stale if its owner hasn't refreshed `targetSetTime` recently.
+            reservedBlocks.entries.removeIf { (_, ownerId) ->
+                val tset = targetSetTime[ownerId] ?: return@removeIf true
+                now - tset > RESERVATION_TIMEOUT_TICKS
+            }
         }
         val candidates = mutableListOf<BlockPos>()
         val seenThisScan = HashSet<BlockPos>()
@@ -185,11 +201,13 @@ object HarvesterExecutor : SkillExecutor {
                     val lastHarvest = harvestedBlockCooldown[immPos]
                     if (lastHarvest != null && now - lastHarvest < BLOCK_COOLDOWN_TICKS) continue
                     if (isReadyToHarvest(world, pos)) {
-                        // First time we've seen this block ripe — remember the tick so we
-                        // can prefer the longest-ripe blocks across future scans.
                         firstSeenRipeTime.putIfAbsent(immPos, now)
-                        candidates.add(immPos)
                         seenThisScan.add(immPos)
+                        // Reservations: skip blocks claimed by another harvester. The
+                        // requester's own claim (e.g. re-scan after a tick gap) is allowed.
+                        val owner = reservedBlocks[immPos]
+                        if (owner != null && owner != requester) continue
+                        candidates.add(immPos)
                     }
                 }
             }

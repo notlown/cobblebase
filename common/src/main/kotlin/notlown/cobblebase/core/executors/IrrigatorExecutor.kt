@@ -86,7 +86,7 @@ object IrrigatorExecutor : SkillExecutor {
             val atPos = NavigationHelper.isPokemonAtPosition(pokemonEntity, target, 2.0)
 
             if (atPos || timedOut) {
-                boostGrowth(world, target, pokemonEntity, skill, skillEntry.proficiency)
+                boostGrowth(world, target, pokemonEntity, skill, skillEntry.proficiency, origin)
                 targetBlock.remove(pokemonId)
                 targetSetTime.remove(pokemonId)
             }
@@ -98,40 +98,42 @@ object IrrigatorExecutor : SkillExecutor {
         if (now - lastSearch < SEARCH_INTERVAL_TICKS) return
         lastSearchTime[pokemonId] = now
 
-        val found = findGrowingBlock(world, searchOrigin, skill.searchRadius)
+        // Scan radius follows the server-wide pasture range so admin Settings → Pasture Range
+        // governs every working executor uniformly.
+        val pastureRadius = CobblebaseConfig.jobSearchRadius
+        val found = findGrowingBlock(world, searchOrigin, pastureRadius)
         if (found != null) {
             targetBlock[pokemonId] = found
             targetSetTime[pokemonId] = now
-        } else {
-            // Nothing growing - wander randomly in radius
-            val wanderPos = origin.add(
-                world.random.nextInt(skill.searchRadius * 2) - skill.searchRadius,
-                0,
-                world.random.nextInt(skill.searchRadius * 2) - skill.searchRadius
-            )
-            NavigationHelper.navigateTo(pokemonEntity, wanderPos, speed * 0.4)
         }
+        // No idle wander — random wandering with nothing to irrigate burns ticks and looks
+        // chaotic. Pokemon stays idle, lets Cobblemon's pasture system handle ambient behavior.
     }
 
     /**
-     * Finds any block that is growing but not yet mature.
-     * Includes: apricorns, berries, crops, nuts, mints, herbs, etc.
+     * Finds the nearest growing-but-not-mature block. Closer-first ordering reduces total
+     * travel time on bases with crops spread across the radius, and avoids the previous
+     * behavior of randomly bouncing between far-apart crops.
      */
     private fun findGrowingBlock(world: World, origin: BlockPos, radius: Int): BlockPos? {
-        val candidates = mutableListOf<BlockPos>()
-
+        var closest: BlockPos? = null
+        var closestDistSq = Long.MAX_VALUE
         for (x in -radius..radius) {
             for (y in -radius..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     val state = world.getBlockState(pos)
                     if (isGrowing(world, pos, state)) {
-                        candidates.add(pos.toImmutable())
+                        val distSq = (x.toLong() * x) + (y.toLong() * y) + (z.toLong() * z)
+                        if (distSq < closestDistSq) {
+                            closestDistSq = distSq
+                            closest = pos.toImmutable()
+                        }
                     }
                 }
             }
         }
-        return candidates.randomOrNull()
+        return closest
     }
 
     /**
@@ -201,7 +203,7 @@ object IrrigatorExecutor : SkillExecutor {
         return false
     }
 
-    private fun boostGrowth(world: ServerWorld, pos: BlockPos, pokemonEntity: PokemonEntity, skill: SkillDef, proficiency: Int) {
+    private fun boostGrowth(world: ServerWorld, pos: BlockPos, pokemonEntity: PokemonEntity, skill: SkillDef, proficiency: Int, origin: BlockPos) {
         val state = world.getBlockState(pos)
         val block = state.block
 
@@ -239,7 +241,7 @@ object IrrigatorExecutor : SkillExecutor {
         }
 
         // Watergun animation + cry + splash particles
-        SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+        SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
 
         // Big visible water particles at the plant position
         val x = pos.x + 0.5

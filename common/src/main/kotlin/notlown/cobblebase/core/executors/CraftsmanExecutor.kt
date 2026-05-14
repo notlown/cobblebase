@@ -104,7 +104,7 @@ object CraftsmanExecutor : SkillExecutor {
         // All materials gathered — move to crafting
         if (needed.isEmpty()) {
             WorkshopManager.setPhase(pokemonId, WorkshopManager.Phase.CRAFTING, now)
-            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+            SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
             Cobblebase.log("[Craftsman] ${pokemonEntity.pokemon.species.name} gathered all materials, starting craft")
             return
         }
@@ -178,7 +178,7 @@ object CraftsmanExecutor : SkillExecutor {
         WorkshopManager.resetGathered(pokemonId)
         WorkshopManager.incrementCraftCount(pokemonId)
         WorkshopManager.setPhase(pokemonId, WorkshopManager.Phase.DEPOSITING, now)
-        SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+        SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
 
         // Notify owner
         val ownerUuid = pokemonEntity.pokemon.getOwnerUUID()

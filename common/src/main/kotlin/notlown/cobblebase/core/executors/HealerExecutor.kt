@@ -70,7 +70,7 @@ object HealerExecutor : SkillExecutor {
             if (now >= session.nextPulseTick) {
                 session.ticksRemaining--
                 val isFinalPulse = session.ticksRemaining <= 0
-                doPulse(world, pokemonEntity, session, isFinalPulse)
+                doPulse(world, pokemonEntity, session, isFinalPulse, origin)
                 session.nextPulseTick = now + 20L
 
                 if (isFinalPulse) {
@@ -144,7 +144,7 @@ object HealerExecutor : SkillExecutor {
     /**
      * One heal pulse: heals 33% of each mon's missing HP and plays effects.
      */
-    private fun doPulse(world: World, healer: PokemonEntity, session: HealingSession, isFinalPulse: Boolean) {
+    private fun doPulse(world: World, healer: PokemonEntity, session: HealingSession, isFinalPulse: Boolean, origin: BlockPos) {
         // Heal player HP (33% per pulse = 100% after 3)
         if (session.healPlayerHp) {
             val missing = session.targetPlayer.maxHealth - session.targetPlayer.health
@@ -167,7 +167,7 @@ object HealerExecutor : SkillExecutor {
         }
 
         // Visual: cry + heart particles every pulse
-        SkillEffects.playSuccess(world, healer, "heal")
+        SkillEffects.playSuccess(world, healer, "heal", origin)
     }
 
     private fun playerNeedsHealing(player: ServerPlayerEntity): Boolean {

@@ -99,7 +99,7 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
 
             if (drops.isNotEmpty()) {
                 heldItems[pokemonId] = drops
-                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType)
+                SkillEffects.playSuccess(world, pokemonEntity, skill.effectType, origin)
                 Cobblebase.log("$logTag ${pokemonEntity.pokemon.species.name} (prof ${skillEntry.proficiency}) found: ${drops.map { "${it.name.string}x${it.count}" }}")
 
                 // Log to activity log

@@ -268,6 +268,60 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // Recipe overrides — admin enable/disable per-recipe for Craftsman.
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket.CODEC
+        )
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.RecipeOverridesUpdateC2SPacket.ID,
+            notlown.cobblebase.core.net.RecipeOverridesUpdateC2SPacket.CODEC
+        )
+        // Admin Recipes request + sync — full unfiltered list for the Recipes tab.
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.AdminRecipesRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.AdminRecipesRequestC2SPacket.CODEC
+        )
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminRecipesRequestC2SPacket.ID) { _, context ->
+            context.server().execute {
+                val player = context.player()
+                if (!player.hasPermissionLevel(2)) return@execute
+                val world = player.serverWorld
+                val entries = notlown.cobblebase.core.RecipeHelper.getAllSimplifiedRecipes(world).map { r ->
+                    notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket.Entry(
+                        recipeId = r.recipeId,
+                        outputItemId = r.outputItemId,
+                        outputDisplayName = r.outputDisplayName,
+                        category = r.category,
+                        subCategory = r.subCategory,
+                    )
+                }
+                ServerPlayNetworking.send(player, notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket(
+                    entries, notlown.cobblebase.core.RecipeOverrides.getDisabledSnapshot()
+                ))
+            }
+        }
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.RecipeOverridesUpdateC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                val player = context.player()
+                if (!player.hasPermissionLevel(2)) return@execute
+                for ((id, enabled) in packet.changes) {
+                    notlown.cobblebase.core.RecipeOverrides.set(id, enabled)
+                }
+                notlown.cobblebase.core.RecipeOverrides.save(player.serverWorld)
+                val snapshot = notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket(
+                    notlown.cobblebase.core.RecipeOverrides.getDisabledSnapshot()
+                )
+                for (p in player.server.playerManager.playerList) {
+                    ServerPlayNetworking.send(p, snapshot)
+                }
+            }
+        }
+
         // --- Workshop packets ---
 
         // C2S: Request recipe list + workshop state
@@ -279,8 +333,10 @@ object CobblebaseFabric : ModInitializer {
             context.server().execute {
                 val player = context.player()
                 val world = player.serverWorld
-                // Send recipe list
+                // Send recipe list — filter out admin-disabled recipes so the player Workshop
+                // tab matches the Admin → Jobs → Craftsman → Recipes toggles.
                 val recipes = notlown.cobblebase.core.RecipeHelper.getAllSimplifiedRecipes(world)
+                    .filter { notlown.cobblebase.core.RecipeOverrides.isEnabled(it.recipeId) }
                 val recipeDTOs = recipes.map { r ->
                     notlown.cobblebase.core.net.RecipeListSyncS2CPacket.RecipeDTO(
                         r.recipeId, r.outputItemId, r.outputCount, r.outputDisplayName, r.inputs, r.category
@@ -465,6 +521,13 @@ object CobblebaseFabric : ModInitializer {
                 handler.player,
                 notlown.cobblebase.core.net.JobOverrideSyncS2CPacket(JobConfigOverrides.getAllOverrides())
             )
+            // Sync recipe overrides so the Craftsman Workshop hides admin-disabled recipes.
+            ServerPlayNetworking.send(
+                handler.player,
+                notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket(
+                    notlown.cobblebase.core.RecipeOverrides.getDisabledSnapshot()
+                )
+            )
         }
 
         // Load assignments, logs, discoveries, and overrides when world starts
@@ -479,6 +542,7 @@ object CobblebaseFabric : ModInitializer {
             notlown.cobblebase.core.WorkshopManager.load(world)
             notlown.cobblebase.core.GeneralSettings.load(world)
             notlown.cobblebase.core.LootOverrides.load(world)
+            notlown.cobblebase.core.RecipeOverrides.load(world)
             // Load spawn buckets from Cobblemon's actual spawn pool
             SpawnData.loadFromCobblemonSpawnPool()
             // Load hatchery log
@@ -497,6 +561,7 @@ object CobblebaseFabric : ModInitializer {
             notlown.cobblebase.core.WorkshopManager.save(world)
             notlown.cobblebase.core.GeneralSettings.save(world)
             notlown.cobblebase.core.LootOverrides.save(world)
+            notlown.cobblebase.core.RecipeOverrides.save(world)
             notlown.cobblebase.core.HatchLogManager.save(world)
         }
     }

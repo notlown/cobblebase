@@ -91,7 +91,7 @@ class AdminJobsPanel(
 
     // === New navigation state ===
     enum class ViewMode { GRID, DETAIL }
-    enum class DetailTab { SETTINGS, LOOT, STATS }
+    enum class DetailTab { SETTINGS, LOOT, RECIPES, STATS }
     private var viewMode = ViewMode.GRID
     private var detailJobIdx = -1
     private var detailTab = DetailTab.SETTINGS
@@ -478,6 +478,7 @@ class AdminJobsPanel(
         when (detailTab) {
             DetailTab.SETTINGS -> renderSettings(context, mouseX, mouseY, job, detailJobIdx, rightX, rightW, contentTop, contentBottom)
             DetailTab.LOOT -> renderLoot(context, mouseX, mouseY, delta, job, rightX, rightW, contentTop, contentBottom)
+            DetailTab.RECIPES -> renderRecipes(context, mouseX, mouseY, rightX, rightW, contentTop, contentBottom)
             DetailTab.STATS -> renderStats(context, job, rightX, rightW, contentTop, contentBottom)
         }
     }
@@ -515,7 +516,15 @@ class AdminJobsPanel(
         val tabW = 46
         val gap = 3
         val labelScale = 0.75f
-        val tabs = listOf(DetailTab.SETTINGS to "Settings", DetailTab.LOOT to "Loot", DetailTab.STATS to "Stats")
+        // Recipes sub-tab is Craftsman-only (the only job with a per-recipe enable/disable layer).
+        val isCraftsman = detailJobIdx in jobEdits.indices &&
+            jobEdits[detailJobIdx].skillId == "cobblebase:craftsman"
+        val tabs = buildList {
+            add(DetailTab.SETTINGS to "Settings")
+            add(DetailTab.LOOT to "Loot")
+            if (isCraftsman) add(DetailTab.RECIPES to "Recipes")
+            add(DetailTab.STATS to "Stats")
+        }
         subTabBoxes.clear()
         for ((i, pair) in tabs.withIndex()) {
             val (tab, label) = pair
@@ -525,6 +534,7 @@ class AdminJobsPanel(
             val accent = when (tab) {
                 DetailTab.SETTINGS -> 0xFF4CAF50.toInt()
                 DetailTab.LOOT -> 0xFFFF9800.toInt()
+                DetailTab.RECIPES -> 0xFFE91E63.toInt()
                 DetailTab.STATS -> 0xFF2196F3.toInt()
             }
             val bg = when {
@@ -661,6 +671,193 @@ class AdminJobsPanel(
             tooltipX = panel.tooltipX
             tooltipY = panel.tooltipY
         }
+    }
+
+    // ---- Recipes sub-tab (Craftsman only) ----
+
+    /** Currently selected category in the Recipes sub-tab. Null = pick the first available. */
+    private var recipesSelectedCategory: String? = null
+    /** Whether we already asked the server for the recipe list this session. Reset on tab open. */
+    private var recipesRequestSent: Boolean = false
+    /** Scrollbar for the right-pane recipe list. */
+    private val recipesScrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
+    /** Vertical scroll offset for the right-pane recipe list (pixels). */
+    private var recipesScroll: Int = 0
+    /** Hit-box per category sidebar row. */
+    private val recipesCategoryHitBoxes = linkedMapOf<String, IntArray>()
+    /** Hit-box per recipe-row toggle button. Keyed by recipeId. */
+    private val recipesToggleHitBoxes = mutableMapOf<String, IntArray>()
+    /** Hit-box for the bulk Enable-All / Disable-All category buttons. */
+    private var recipesEnableAllHitBox = intArrayOf(0, 0, 0, 0)
+    private var recipesDisableAllHitBox = intArrayOf(0, 0, 0, 0)
+
+    /** Recipes sub-tab — category sidebar on the left + per-recipe toggle list on the right. */
+    private fun renderRecipes(
+        context: DrawContext, mouseX: Int, mouseY: Int,
+        rightX: Int, rightW: Int, contentTop: Int, contentBottom: Int
+    ) {
+        // Fire the request once on first render. Server replies with the full list +
+        // disabled snapshot, populating AdminRecipesCache. Re-requests on next tab switch
+        // are debounced by the recipesRequestSent flag.
+        if (!recipesRequestSent) {
+            try {
+                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+                    .send(notlown.cobblebase.core.net.AdminRecipesRequestC2SPacket)
+                recipesRequestSent = true
+            } catch (_: Throwable) {}
+        }
+
+        val recipes = notlown.cobblebase.core.AdminRecipesCache.getAll()
+        if (recipes.isEmpty()) {
+            drawScaledText(context, "§8Loading recipes…", rightX + PADDING + 4, contentTop + 6, 0x888888)
+            return
+        }
+        val categories = notlown.cobblebase.core.AdminRecipesCache.getCategories()
+        if (recipesSelectedCategory == null || recipesSelectedCategory !in categories) {
+            recipesSelectedCategory = categories.firstOrNull()
+        }
+
+        val sidebarW = 110
+        val sidebarX = rightX + PADDING
+        val sidebarTop = contentTop + 4
+        val rowH = 12
+
+        // ---- Sidebar: categories ----
+        recipesCategoryHitBoxes.clear()
+        var cy = sidebarTop
+        drawScaledText(context, "§e§lCategories", sidebarX, cy, 0xFFD700)
+        cy += 12
+        for (cat in categories) {
+            val catRecipes = notlown.cobblebase.core.AdminRecipesCache.byCategory(cat)
+            val enabledCount = catRecipes.count { notlown.cobblebase.core.AdminRecipesCache.isEnabled(it.recipeId) }
+            val total = catRecipes.size
+            val active = cat == recipesSelectedCategory
+            val hovered = mouseX in sidebarX..(sidebarX + sidebarW) && mouseY in cy..(cy + rowH)
+            val rowBg = when {
+                active -> 0xFF2A2A4A.toInt()
+                hovered -> 0xFF1F1F33.toInt()
+                else -> 0
+            }
+            if (rowBg != 0) context.fill(sidebarX, cy, sidebarX + sidebarW, cy + rowH, rowBg)
+            // Accent line on the active row
+            if (active) context.fill(sidebarX, cy, sidebarX + 2, cy + rowH, 0xFFE91E63.toInt())
+            // Label color: dimmed when no recipe in the category is enabled
+            val labelColor = when {
+                enabledCount == 0 -> 0x666666     // fully disabled
+                enabledCount == total -> 0xFFFFFF  // fully enabled
+                else -> 0xCCCCCC                   // mixed
+            }
+            drawScaledText(context, cat, sidebarX + 6, cy + 2, labelColor)
+            drawScaledText(context, "§7$enabledCount/$total", sidebarX + sidebarW - 28, cy + 2, 0x888888)
+            recipesCategoryHitBoxes[cat] = intArrayOf(sidebarX, cy, sidebarW, rowH)
+            cy += rowH
+        }
+
+        // ---- Right pane: recipes of selected category ----
+        val rightPaneX = sidebarX + sidebarW + 6
+        val rightPaneW = rightX + rightW - rightPaneX - PADDING
+        val selectedCat = recipesSelectedCategory ?: return
+        val catRecipes = notlown.cobblebase.core.AdminRecipesCache.byCategory(selectedCat)
+            .sortedBy { it.outputDisplayName }
+
+        drawScaledText(context, "§e§l$selectedCat", rightPaneX, contentTop + 4, 0xFFD700)
+        val totalInCat = catRecipes.size
+        val enabledInCat = catRecipes.count { notlown.cobblebase.core.AdminRecipesCache.isEnabled(it.recipeId) }
+        drawScaledText(context, "§7$enabledInCat / $totalInCat enabled", rightPaneX + 90, contentTop + 4, 0x888888)
+
+        // Bulk Enable-All / Disable-All buttons (under the title, above the list).
+        val bulkY = contentTop + 16
+        val bulkBtnH = 12
+        val bulkBtnW = 70
+        val enableX = rightPaneX
+        val disableX = enableX + bulkBtnW + 4
+        val enableHov = mouseX in enableX..(enableX + bulkBtnW) && mouseY in bulkY..(bulkY + bulkBtnH)
+        val disableHov = mouseX in disableX..(disableX + bulkBtnW) && mouseY in bulkY..(bulkY + bulkBtnH)
+        context.fill(enableX, bulkY, enableX + bulkBtnW, bulkY + bulkBtnH,
+            if (enableHov) 0xFF2E5E33.toInt() else 0xFF1F4022.toInt())
+        context.fill(enableX, bulkY + bulkBtnH - 1, enableX + bulkBtnW, bulkY + bulkBtnH, 0xFF4CAF50.toInt())
+        drawScaledText(context, "§a✓ Enable All", enableX + 6, bulkY + 3, 0xFFFFFF)
+        recipesEnableAllHitBox = intArrayOf(enableX, bulkY, bulkBtnW, bulkBtnH)
+
+        context.fill(disableX, bulkY, disableX + bulkBtnW, bulkY + bulkBtnH,
+            if (disableHov) 0xFF5E2E2E.toInt() else 0xFF402020.toInt())
+        context.fill(disableX, bulkY + bulkBtnH - 1, disableX + bulkBtnW, bulkY + bulkBtnH, 0xFFD32F2F.toInt())
+        drawScaledText(context, "§c✗ Disable All", disableX + 6, bulkY + 3, 0xFFFFFF)
+        recipesDisableAllHitBox = intArrayOf(disableX, bulkY, bulkBtnW, bulkBtnH)
+
+        // Recipe list (scrollable)
+        val listTop = bulkY + bulkBtnH + 6
+        val listBottom = contentBottom - 4
+        val listH = listBottom - listTop
+        val recipeRowH = 14
+        val contentHeight = catRecipes.size * recipeRowH
+
+        recipesScrollbar.layout(
+            trackX = rightPaneX + rightPaneW - 6,
+            trackY = listTop,
+            trackHeight = listH,
+            contentHeight = contentHeight,
+            viewportHeight = listH,
+            currentScroll = recipesScroll,
+        )
+
+        context.enableScissor(rightPaneX, listTop, rightPaneX + rightPaneW - 8, listBottom)
+        recipesToggleHitBoxes.clear()
+        for ((i, r) in catRecipes.withIndex()) {
+            val ry = listTop + i * recipeRowH - recipesScroll
+            if (ry + recipeRowH < listTop || ry > listBottom) continue
+            val enabled = notlown.cobblebase.core.AdminRecipesCache.isEnabled(r.recipeId)
+            // Row background (zebra)
+            val rowBg = if (i % 2 == 0) 0xFF14141E.toInt() else 0xFF18181F.toInt()
+            context.fill(rightPaneX, ry, rightPaneX + rightPaneW - 8, ry + recipeRowH, rowBg)
+            // Output item icon — render via the registries lookup
+            val itemId = try { net.minecraft.util.Identifier.of(r.outputItemId) } catch (_: Throwable) { null }
+            val itemStack = itemId?.let { net.minecraft.item.ItemStack(net.minecraft.registry.Registries.ITEM.get(it)) }
+            if (itemStack != null && !itemStack.isEmpty) {
+                context.drawItem(itemStack, rightPaneX + 4, ry - 1)
+            }
+            // Display name, dimmed when disabled
+            val nameColor = if (enabled) 0xFFFFFF else 0x777777
+            val namePrefix = if (enabled) "§f" else "§7§o"
+            drawScaledText(context, "$namePrefix${r.outputDisplayName}", rightPaneX + 22, ry + 3, nameColor)
+            // Toggle button on the right
+            val toggleW = 56
+            val toggleH = 10
+            val toggleX = rightPaneX + rightPaneW - toggleW - 14
+            val toggleY = ry + (recipeRowH - toggleH) / 2
+            val toggleHov = mouseX in toggleX..(toggleX + toggleW) && mouseY in toggleY..(toggleY + toggleH)
+            val toggleBg = when {
+                enabled && toggleHov -> 0xFF2E5E33.toInt()
+                enabled -> 0xFF1F4022.toInt()
+                toggleHov -> 0xFF5E2E2E.toInt()
+                else -> 0xFF402020.toInt()
+            }
+            context.fill(toggleX, toggleY, toggleX + toggleW, toggleY + toggleH, toggleBg)
+            val accent = if (enabled) 0xFF4CAF50.toInt() else 0xFFD32F2F.toInt()
+            context.fill(toggleX, toggleY + toggleH - 1, toggleX + toggleW, toggleY + toggleH, accent)
+            val label = if (enabled) "§a✓ Enabled" else "§c✗ Disabled"
+            drawScaledText(context, label, toggleX + 4, toggleY + 2, 0xFFFFFF)
+            recipesToggleHitBoxes[r.recipeId] = intArrayOf(toggleX, toggleY, toggleW, toggleH)
+        }
+        context.disableScissor()
+        recipesScrollbar.render(context, mouseX, mouseY)
+        recipesScroll = recipesScrollbar.scroll
+    }
+
+    /** Sends a partial recipe-override update to the server + optimistically applies on the client. */
+    private fun submitRecipeChanges(changes: Map<String, Boolean>) {
+        if (changes.isEmpty()) return
+        notlown.cobblebase.core.AdminRecipesCache.setLocalMany(
+            changes.filterValues { !it }.keys, false
+        )
+        notlown.cobblebase.core.AdminRecipesCache.setLocalMany(
+            changes.filterValues { it }.keys, true
+        )
+        try {
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                notlown.cobblebase.core.net.RecipeOverridesUpdateC2SPacket(changes)
+            )
+        } catch (_: Throwable) {}
     }
 
     /** Stats sub-tab — top Pokemon by proficiency, total species count. */
@@ -825,6 +1022,9 @@ class AdminJobsPanel(
                     detailTab = tab
                     // Hide loot widgets when leaving Loot tab; ensure shown when entering.
                     if (tab != DetailTab.LOOT) setActiveLootPanel(null)
+                    // Reset the recipes request flag so each tab open refreshes the list,
+                    // catching admin edits made in another client session.
+                    if (tab == DetailTab.RECIPES) recipesRequestSent = false
                     return true
                 }
             }
@@ -841,6 +1041,44 @@ class AdminJobsPanel(
         // Forward to embedded loot panel when in Loot sub-tab
         if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.LOOT) {
             currentLootPanel?.let { if (it.mouseClicked(mouseX, mouseY, button)) return true }
+        }
+
+        // Recipes sub-tab interactions
+        if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.RECIPES) {
+            // Scrollbar drag start first — must consume the click before row hit-tests.
+            if (recipesScrollbar.mouseClicked(mouseX, mouseY)) {
+                recipesScroll = recipesScrollbar.scroll
+                return true
+            }
+            // Category sidebar click
+            for ((cat, box) in recipesCategoryHitBoxes) {
+                if (inBox(mouseX, mouseY, box)) {
+                    recipesSelectedCategory = cat
+                    recipesScroll = 0
+                    return true
+                }
+            }
+            // Bulk Enable-All / Disable-All for current category
+            val selectedCat = recipesSelectedCategory
+            if (selectedCat != null) {
+                val catRecipes = notlown.cobblebase.core.AdminRecipesCache.byCategory(selectedCat)
+                if (inBox(mouseX, mouseY, recipesEnableAllHitBox)) {
+                    submitRecipeChanges(catRecipes.associate { it.recipeId to true })
+                    return true
+                }
+                if (inBox(mouseX, mouseY, recipesDisableAllHitBox)) {
+                    submitRecipeChanges(catRecipes.associate { it.recipeId to false })
+                    return true
+                }
+            }
+            // Per-recipe toggle click
+            for ((recipeId, box) in recipesToggleHitBoxes) {
+                if (inBox(mouseX, mouseY, box)) {
+                    val currentlyEnabled = notlown.cobblebase.core.AdminRecipesCache.isEnabled(recipeId)
+                    submitRecipeChanges(mapOf(recipeId to !currentlyEnabled))
+                    return true
+                }
+            }
         }
 
         // Grid tile click
@@ -1040,6 +1278,11 @@ class AdminJobsPanel(
         if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.LOOT) {
             return currentLootPanel?.mouseDragged(mouseX, mouseY, button, deltaX, deltaY) ?: false
         }
+        if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.RECIPES &&
+            recipesScrollbar.mouseDragged(mouseY)) {
+            recipesScroll = recipesScrollbar.scroll
+            return true
+        }
         if (gridScrollbar.mouseDragged(mouseY)) {
             scrollOffset = -gridScrollbar.scroll
             return true
@@ -1051,6 +1294,7 @@ class AdminJobsPanel(
         if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.LOOT) {
             return currentLootPanel?.mouseReleased(mouseX, mouseY, button) ?: false
         }
+        if (recipesScrollbar.mouseReleased()) return true
         if (gridScrollbar.mouseReleased()) return true
         return false
     }
@@ -1058,6 +1302,10 @@ class AdminJobsPanel(
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
         if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.LOOT) {
             return currentLootPanel?.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount) ?: false
+        }
+        if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.RECIPES) {
+            recipesScroll = (recipesScroll - (verticalAmount * 14).toInt()).coerceAtLeast(0)
+            return true
         }
         if (viewMode == ViewMode.GRID && mouseX >= x + SIDEBAR_W) {
             scrollOffset = (scrollOffset + verticalAmount.toInt() * 16).coerceAtMost(0)

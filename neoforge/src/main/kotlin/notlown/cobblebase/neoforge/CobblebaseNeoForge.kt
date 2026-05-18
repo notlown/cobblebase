@@ -322,6 +322,80 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             }
         }
 
+        // S2C: Recipe override sync
+        registrar.playToClient(
+            notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.RecipeOverridesCache.setSnapshot(packet.disabledRecipeIds)
+                val current = notlown.cobblebase.core.AdminRecipesCache.getAll()
+                if (current.isNotEmpty()) {
+                    notlown.cobblebase.core.AdminRecipesCache.set(
+                        notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket(current, packet.disabledRecipeIds)
+                    )
+                }
+            }
+        }
+
+        // C2S: Admin recipes request — full unfiltered list
+        registrar.playToServer(
+            notlown.cobblebase.core.net.AdminRecipesRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.AdminRecipesRequestC2SPacket.CODEC
+        ) { _, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!player.hasPermissionLevel(2)) return@enqueueWork
+                val world = player.serverWorld
+                val entries = notlown.cobblebase.core.RecipeHelper.getAllSimplifiedRecipes(world).map { r ->
+                    notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket.Entry(
+                        recipeId = r.recipeId,
+                        outputItemId = r.outputItemId,
+                        outputDisplayName = r.outputDisplayName,
+                        category = r.category,
+                        subCategory = r.subCategory,
+                    )
+                }
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+                    player,
+                    notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket(
+                        entries, notlown.cobblebase.core.RecipeOverrides.getDisabledSnapshot()
+                    )
+                )
+            }
+        }
+
+        // S2C: Admin recipes sync
+        registrar.playToClient(
+            notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.AdminRecipesCache.set(packet)
+            }
+        }
+
+        // C2S: Recipe override update (admin only)
+        registrar.playToServer(
+            notlown.cobblebase.core.net.RecipeOverridesUpdateC2SPacket.ID,
+            notlown.cobblebase.core.net.RecipeOverridesUpdateC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!player.hasPermissionLevel(2)) return@enqueueWork
+                for ((id, enabled) in packet.changes) {
+                    notlown.cobblebase.core.RecipeOverrides.set(id, enabled)
+                }
+                notlown.cobblebase.core.RecipeOverrides.save(player.serverWorld)
+                val snapshot = notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket(
+                    notlown.cobblebase.core.RecipeOverrides.getDisabledSnapshot()
+                )
+                for (p in player.server.playerManager.playerList) {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, snapshot)
+                }
+            }
+        }
+
         // C2S: Admin loot request
         registrar.playToServer(
             notlown.cobblebase.core.net.AdminLootRequestC2SPacket.ID,
@@ -419,7 +493,10 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             context.enqueueWork {
                 val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
                 val world = player.serverWorld
+                // Filter out admin-disabled recipes so the player Workshop tab matches
+                // the Admin → Jobs → Craftsman → Recipes toggles.
                 val recipes = notlown.cobblebase.core.RecipeHelper.getAllSimplifiedRecipes(world)
+                    .filter { notlown.cobblebase.core.RecipeOverrides.isEnabled(it.recipeId) }
                 val recipeDTOs = recipes.map { r ->
                     notlown.cobblebase.core.net.RecipeListSyncS2CPacket.RecipeDTO(
                         r.recipeId, r.outputItemId, r.outputCount, r.outputDisplayName, r.inputs, r.category
@@ -550,6 +627,13 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             player,
             notlown.cobblebase.core.net.JobOverrideSyncS2CPacket(JobConfigOverrides.getAllOverrides())
         )
+        // Sync recipe overrides so Craftsman recipes admin-disabled stay disabled on the client.
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+            player,
+            notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket(
+                notlown.cobblebase.core.RecipeOverrides.getDisabledSnapshot()
+            )
+        )
     }
 
     private fun onPlayerLoggedOut(event: PlayerEvent.PlayerLoggedOutEvent) {
@@ -568,6 +652,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         notlown.cobblebase.core.WorkshopManager.load(world)
         notlown.cobblebase.core.GeneralSettings.load(world)
         notlown.cobblebase.core.LootOverrides.load(world)
+        notlown.cobblebase.core.RecipeOverrides.load(world)
         notlown.cobblebase.core.SpawnData.loadFromCobblemonSpawnPool()
         notlown.cobblebase.core.StructureTemplateRegistry.refresh(event.server)
         notlown.cobblebase.core.BuildJobManager.load(world)
@@ -584,6 +669,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         notlown.cobblebase.core.WorkshopManager.save(world)
         notlown.cobblebase.core.GeneralSettings.save(world)
         notlown.cobblebase.core.LootOverrides.save(world)
+        notlown.cobblebase.core.RecipeOverrides.save(world)
         notlown.cobblebase.core.BuildJobManager.save(world)
     }
 

@@ -175,6 +175,29 @@ object CobblebaseFabricClient : ClientModInitializer {
             }
         }
 
+        // Register S2C recipe-override sync packet receiver — populates the client cache
+        // the Admin → Jobs → Craftsman → Recipes tab reads from.
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.core.RecipeOverridesCache.setSnapshot(packet.disabledRecipeIds)
+                // Keep the AdminRecipesCache disabled-set in sync too — admin panel may
+                // be open when an admin in another client toggles a recipe.
+                val current = notlown.cobblebase.core.AdminRecipesCache.getAll()
+                if (current.isNotEmpty()) {
+                    notlown.cobblebase.core.AdminRecipesCache.set(
+                        notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket(current, packet.disabledRecipeIds)
+                    )
+                }
+            }
+        }
+
+        // Register S2C admin recipes sync (full list incl. disabled, for the admin Recipes tab).
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminRecipesSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.core.AdminRecipesCache.set(packet)
+            }
+        }
+
         // Register S2C admin loot sync packet receiver
         ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.AdminLootSyncS2CPacket.ID) { packet, context ->
             context.client().execute {

@@ -62,6 +62,15 @@ object CraftsmanExecutor : SkillExecutor {
             return
         }
 
+        // Admin can disable individual recipes from the Admin → Jobs → Craftsman →
+        // Recipes tab. A disabled recipe makes the executor pause silently — the
+        // existing project state is preserved so admins can re-enable and Craftsmen
+        // resume without the player having to re-pick the recipe.
+        if (!notlown.cobblebase.core.RecipeOverrides.isEnabled(project.recipeId)) {
+            if (now % 100 == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+            return
+        }
+
         when (project.phase) {
             WorkshopManager.Phase.IDLE -> {
                 WorkshopManager.setPhase(pokemonId, WorkshopManager.Phase.GATHERING, now)

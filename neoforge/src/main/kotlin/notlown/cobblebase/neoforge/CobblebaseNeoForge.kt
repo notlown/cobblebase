@@ -653,6 +653,11 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         notlown.cobblebase.core.GeneralSettings.load(world)
         notlown.cobblebase.core.LootOverrides.load(world)
         notlown.cobblebase.core.RecipeOverrides.load(world)
+        // Sweep orphan egg ItemDisplays — survived across restarts, no in-memory claim
+        // references them anymore. Walks every loaded ServerWorld.
+        for (w in event.server.worlds) {
+            notlown.cobblebase.core.executors.EggHatcherExecutor.purgeOrphanDisplays(w)
+        }
         notlown.cobblebase.core.SpawnData.loadFromCobblemonSpawnPool()
         notlown.cobblebase.core.StructureTemplateRegistry.refresh(event.server)
         notlown.cobblebase.core.BuildJobManager.load(world)

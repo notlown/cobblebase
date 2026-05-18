@@ -279,6 +279,18 @@ object NavigationHelper {
             try { pokemonEntity.navigation.stop() } catch (_: Exception) {}
         }
 
+        // Whenever we detect leaves near the Pokemon (either touching or hovering under
+        // canopy), dynamically register those leaves into the pasture-leaves tracker so
+        // PastureLeafCollisionMixin strips their collision on the next entity-shape
+        // lookup. Without this, leaves outside SCAN_RADIUS of the pasture block stay
+        // collidable and flying mons physically can't escape through them. Cheap: 7³ =
+        // 343 block reads but only when actually stuck, not every tick.
+        if ((touchingLeaves || canopyAbove) && world is net.minecraft.server.world.ServerWorld) {
+            try {
+                PastureLeavesTracker.registerLeavesNear(world, pos, radius = 3)
+            } catch (_: Exception) {}
+        }
+
         // Expensive path (downward ground scan + reposition) stays throttled to once
         // per second per Pokemon — block reads here can total up to ~20 per call.
         val lastCheck = lastEscapeLeavesTick[pokemonId] ?: 0L

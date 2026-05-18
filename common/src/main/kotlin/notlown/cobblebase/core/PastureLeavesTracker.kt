@@ -20,12 +20,15 @@ object PastureLeavesTracker {
     // Using long-packed BlockPos for memory efficiency (1 long vs 16 bytes per BlockPos)
     private val pastureLeaves: MutableSet<Long> = ConcurrentHashMap.newKeySet()
 
-    // Was 20 (= 41×41×41 = 68 921 blocks per scan). At that radius every pasture re-scan
-    // costs nearly 70k block-state reads on the main thread. With multiple pastures all
-    // firing their first scan on the same tick after a world load, this caused 5-10 seconds
-    // of visible lag. 10 reduces it to 21³ = 9261 blocks per scan, ~7× cheaper and still
-    // covers the typical Pokemon working radius.
-    private const val SCAN_RADIUS = 10
+    // Was 20, briefly 10 in 1.5.5 (perf hardening) — but flying mons started getting
+    // stuck in tree canopies 10-20 blocks from the pasture because their leaves were no
+    // longer tracked and collision wasn't removed. 16 is the compromise: 33³ = 35k reads
+    // per pasture scan (~3.5× cheaper than the original 20 but ~4× more expensive than
+    // the regressed 10), and still picks up most natural-tree canopies a Pokemon could
+    // reach from a pasture. Per-Pokemon fallback in escapeLeaves dynamically registers
+    // leaves further out via [registerLeavesNear] so even an off-the-edge canopy still
+    // gets its collision removed within a tick.
+    private const val SCAN_RADIUS = 16
     private const val SCAN_INTERVAL_TICKS = 100L // rescan every 5 seconds
 
     // Per-pasture last scan time + cached leaf positions (for incremental cleanup)
@@ -100,6 +103,28 @@ object PastureLeavesTracker {
      */
     fun isPastureLeaf(pos: BlockPos): Boolean {
         return pastureLeaves.contains(pos.asLong())
+    }
+
+    /**
+     * Dynamically registers any LeavesBlock within [radius] of [around] into the
+     * tracked set so the collision mixin removes their collision immediately on the
+     * next entity-shape lookup. Used by escapeLeaves when it detects a Pokemon stuck
+     * against leaves that the 5-second pasture sweep hadn't yet picked up (e.g. tree
+     * canopies further than SCAN_RADIUS from the pasture block).
+     */
+    fun registerLeavesNear(world: ServerWorld, around: BlockPos, radius: Int = 3) {
+        val mp = BlockPos.Mutable()
+        for (dx in -radius..radius) {
+            for (dy in -radius..radius) {
+                for (dz in -radius..radius) {
+                    mp.set(around.x + dx, around.y + dy, around.z + dz)
+                    val block = world.getBlockState(mp).block
+                    if (block is net.minecraft.block.LeavesBlock) {
+                        pastureLeaves.add(mp.asLong())
+                    }
+                }
+            }
+        }
     }
 
     /**

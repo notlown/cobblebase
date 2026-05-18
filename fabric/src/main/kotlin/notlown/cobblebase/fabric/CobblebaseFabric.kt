@@ -543,6 +543,12 @@ object CobblebaseFabric : ModInitializer {
             notlown.cobblebase.core.GeneralSettings.load(world)
             notlown.cobblebase.core.LootOverrides.load(world)
             notlown.cobblebase.core.RecipeOverrides.load(world)
+            // Sweep orphan egg ItemDisplays — survived across restarts, no in-memory
+            // claim references them anymore. Has to run after world load so the entity
+            // streams are populated. Walks every loaded ServerWorld.
+            for (w in server.worlds) {
+                notlown.cobblebase.core.executors.EggHatcherExecutor.purgeOrphanDisplays(w)
+            }
             // Load spawn buckets from Cobblemon's actual spawn pool
             SpawnData.loadFromCobblemonSpawnPool()
             // Load hatchery log

@@ -146,6 +146,8 @@ object EggHatcherExecutor : SkillExecutor {
     private val claims = mutableMapOf<UUID, Claim>()
     private const val CLAIM_TTL_TICKS = 200L  // 10 seconds without refresh = drop the claim
     private const val STALE_TTL_TICKS = 1200L  // periodic cleanup
+    /** Marker custom-name written on every spawned egg ItemDisplay. */
+    private const val EGG_DISPLAY_MARKER = "Cobblebase Hatcher Egg"
 
     // ---- Executor entry point ----
 
@@ -224,6 +226,13 @@ object EggHatcherExecutor : SkillExecutor {
             }
             billboardMethod?.isAccessible = true
             billboardMethod?.invoke(display, DisplayEntity.BillboardMode.CENTER)
+
+            // Marker custom-name lets [purgeOrphanDisplays] find and remove leftover
+            // displays that survived a server restart (ItemDisplays are persistent
+            // entities, so without this marker an orphan from a crashed claim sits in
+            // the world forever as an un-pickup-able floating egg).
+            display.customName = net.minecraft.text.Text.literal(EGG_DISPLAY_MARKER)
+            display.isCustomNameVisible = false
 
             // Hold the egg in FRONT of the Pokemon's body, not stuffed inside its head.
             // Previous offset (height * 0.85, no horizontal offset) painted the egg through
@@ -380,6 +389,36 @@ object EggHatcherExecutor : SkillExecutor {
         val freshTimer = readEggTimer(stack)
         claims[pokemonId] = claim.copy(lastSeenTick = now, currentTimer = freshTimer)
         if (now % 40L == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
+    }
+
+    /**
+     * Scans every loaded ItemDisplay in [world] and discards any that carry the
+     * [EGG_DISPLAY_MARKER] custom name. Called once per world on server start —
+     * ItemDisplay entities persist across restarts (saved into chunk data), so a
+     * crashed-claim leftover can otherwise sit in the world forever as an un-
+     * pickup-able floating egg. By the time this runs the in-memory claims map is
+     * empty (server just started), so every marked display is by definition orphan.
+     *
+     * The match is by [EGG_DISPLAY_MARKER] custom-name so we don't accidentally
+     * discard any other ItemDisplay a player might have placed.
+     */
+    fun purgeOrphanDisplays(world: ServerWorld) {
+        var removed = 0
+        try {
+            for (entity in world.iterateEntities()) {
+                if (entity !is net.minecraft.entity.decoration.DisplayEntity.ItemDisplayEntity) continue
+                val name = entity.customName?.string
+                if (name == EGG_DISPLAY_MARKER) {
+                    entity.discard()
+                    removed++
+                }
+            }
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.warn("[EggHatcher] purgeOrphanDisplays failed: ${e.javaClass.simpleName}: ${e.message}")
+        }
+        if (removed > 0) {
+            Cobblebase.LOGGER.info("[EggHatcher] Purged $removed orphan egg display(s) on world ${world.registryKey.value}")
+        }
     }
 
     /**

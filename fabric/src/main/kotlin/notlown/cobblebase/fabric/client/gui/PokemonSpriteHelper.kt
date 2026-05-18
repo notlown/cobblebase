@@ -117,18 +117,12 @@ object PokemonSpriteHelper {
         // Pokemon / Logs and contributed nothing the type-emoji or skill-name color
         // doesn't already convey. The 3D portrait now sits on a transparent backdrop.
 
-        // Render the 3D Pokemon portrait on top.
-        //
-        // drawProfilePokemon anchors the model's *feet* at the translate point and
-        // renders upward — so the translate Y must sit at the BOTTOM edge of the slot
-        // (y + ICON_SIZE - 1), not the top. Previously the function passed `y + 1` and
-        // the visible sprite landed in the top portion of the slot; that worked only
-        // because the type-colored frame visually re-centered it. Without the frame,
-        // the sprite was clearly shifted toward bottom-right of where it "should" be.
-        //
-        // Horizontal anchor is the slot center (x + ICON_SIZE / 2) with a -0.5 px
-        // adjustment to counter the +35° yaw rotation, which displaces the visual
-        // mass of the model slightly to the right.
+        // Anchor: slot center horizontally (with -0.5 px nudge to counter the +35° yaw
+        // rotation that shifts visual mass slightly to the right), and `y + 1` vertically
+        // — that's where drawProfilePokemon lands the model inside a 16px slot at
+        // scale 4.5 (its profileTranslation already does the per-species offset). A
+        // bottom-edge anchor (y + ICON_SIZE - 1) overshoots and drops the sprite into
+        // the next row.
         try {
             val cacheKey = "${species}_${aspects.sorted().joinToString(",")}"
             val state = getOrCreateState(cacheKey, aspects)
@@ -137,7 +131,7 @@ object PokemonSpriteHelper {
             matrixStack.push()
             matrixStack.translate(
                 (x + ICON_SIZE / 2.0 - 0.5),
-                (y.toDouble() + ICON_SIZE - 1.0),
+                (y.toDouble() + 1.0),
                 0.0
             )
             matrixStack.scale(1.5F, 1.5F, 1F)
@@ -195,10 +189,10 @@ object PokemonSpriteHelper {
             val state = getOrCreateState(cacheKey, aspects)
             val matrixStack = context.matrices
             matrixStack.push()
-            // Same bottom-center anchor as renderIcon — see its comment for why.
+            // Same anchor convention as renderIcon — see its comment.
             matrixStack.translate(
                 (x + ICON_SIZE / 2.0 - 0.5),
-                (y.toDouble() + ICON_SIZE - 1.0),
+                (y.toDouble() + 1.0),
                 0.0
             )
             matrixStack.scale(1.5F, 1.5F, 1F)
@@ -252,7 +246,7 @@ object PokemonSpriteHelper {
             matrixStack.push()
             matrixStack.translate(
                 (x + size / 2.0 - 0.5),
-                (y.toDouble() + size - 1.0),
+                (y.toDouble() + 1.0),
                 0.0
             )
             matrixStack.scale(0.9F, 0.9F, 1F)

@@ -122,11 +122,13 @@ object PokemonSpriteHelper {
             val matrixStack = context.matrices
 
             matrixStack.push()
-            // Bottom-center anchor (was y+1, drew the sprite top-aligned and
-            // shifted bottom-right after the colored frame was removed).
+            // Slot-center horizontally with -0.5 px to counter the +35° yaw lean;
+            // y + 1 vertically — drawProfilePokemon's own profileTranslation handles
+            // the per-species offset at scale 4.5. y + ICON_SIZE - 1 overshoots into
+            // the next row.
             matrixStack.translate(
                 (x + ICON_SIZE / 2.0 - 0.5),
-                (y.toDouble() + ICON_SIZE - 1.0),
+                (y.toDouble() + 1.0),
                 0.0
             )
             matrixStack.scale(1.5F, 1.5F, 1F)
@@ -189,7 +191,7 @@ object PokemonSpriteHelper {
             matrixStack.push()
             matrixStack.translate(
                 (x + size / 2.0 - 0.5),
-                (y.toDouble() + size - 1.0),
+                (y.toDouble() + 1.0),
                 0.0
             )
             matrixStack.scale(0.9F, 0.9F, 1F)

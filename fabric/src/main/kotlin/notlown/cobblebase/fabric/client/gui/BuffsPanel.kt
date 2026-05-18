@@ -479,12 +479,13 @@ class BuffsPanel(
             context.drawText(textRenderer, stars, 0, 0, starColor, false)
             context.matrices.pop()
 
-            // Effect description (scaled 0.75x). Overshadowed → gray, same as the
-            // rest of the row, so the player can tell at a glance the description
-            // applies to a buff that doesn't actually fire.
+            // Effect description (scaled 0.75x). Same neutral light gray for active
+            // and passive — the buff's own name carries the color (passiveBuffColor),
+            // tinting the description too made the passive sub-tab look like a
+            // green-on-green wall. Overshadowed → dim gray, signals the row doesn't
+            // actually fire.
             val descColor = when {
                 isOvershadowed -> 0x666666
-                entry.isPassiveBuff -> 0x88DDAA
                 else -> 0xCCCCCC
             }
             context.matrices.push()

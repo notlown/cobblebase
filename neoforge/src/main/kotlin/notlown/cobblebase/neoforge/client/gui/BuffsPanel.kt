@@ -301,8 +301,9 @@ class BuffsPanel(
             context.drawText(textRenderer, stars, 0, 0, starColor, false)
             context.matrices.pop()
 
-            // Effect description (scaled 0.75x)
-            val descColor = if (entry.isPassiveBuff) 0x88DDAA else 0xCCCCCC
+            // Effect description (scaled 0.75x) — same neutral light gray for
+            // active & passive; the buff's name carries its own hue.
+            val descColor = 0xCCCCCC
             context.matrices.push()
             context.matrices.translate(colDesc.toFloat(), (ry + 9).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)

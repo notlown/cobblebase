@@ -30,7 +30,11 @@ class BuffsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    private val ROW_HEIGHT = 28
+    // Compacted from 28 — Active/Passive entries had way too much vertical breathing
+    // room after removing the category color bar and packing the name + level into the
+    // same column. 22 keeps the 16-px sprite (now scaled 1.3× to 20-21 px) fully visible
+    // and the two-line name/level stack readable, without wasting half a row on padding.
+    private val ROW_HEIGHT = 22
     private val HEADER_HEIGHT = 18
     private val PADDING = 8
     private val ROW_EVEN = 0x33FFFFFF.toInt()
@@ -328,6 +332,15 @@ class BuffsPanel(
         context.drawTextWithShadow(textRenderer, "\u00A7eJob", colSkill, contentTop, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eEffect", colDesc, contentTop, 0xFFFF55)
 
+        // Passive sub-tab: dedupe winners per buff type so the player sees clearly that
+        // only the highest-proficiency mon per buff actually applies its effect (no
+        // stacking). Group by skillId, pick the max prof, the rest render dimmed.
+        val maxProfPerSkill: Map<String, Int> = if (activeSubTab == SubTab.PASSIVE) {
+            visible.groupingBy { it.skillId }.fold(0) { acc, e ->
+                if (e.proficiency > acc) e.proficiency else acc
+            }
+        } else emptyMap()
+
         // Scrollable content
         context.enableScissor(panelX, contentTop + 12, panelX + panelW, contentBottom)
 
@@ -335,35 +348,54 @@ class BuffsPanel(
             val ry = contentTop + 14 + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
 
-            // Row background
+            // Row background \u2014 uniform tone, no category color bar (user found the
+            // colored boxes distracting). The action/buff category is still encoded by
+            // the icon and skill-name color, just not by a row-edge stripe.
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
-            // Category color bar on the left (green for passive buffs)
-            val catColor = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
-                else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
-            context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, catColor)
+            // Passive-buff dedup state: this entry "loses" if there's another passive
+            // buff of the same skillId with a higher proficiency. Render dimmed so the
+            // player sees "this Pokemon contributes nothing \u2014 overshadowed."
+            val maxProfHere = maxProfPerSkill[entry.skillId]
+            val isOvershadowed = activeSubTab == SubTab.PASSIVE && maxProfHere != null && entry.proficiency < maxProfHere
 
             val scale = 0.75f
+            val cat = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
+                else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
 
-            // Pokemon portrait icon (top-aligned)
+            // Pokemon portrait icon \u2014 scaled up 1.3\u00D7 so a 16-px sprite renders at ~21 px
+            // (we got rid of the category color bar so there's room to make sprites the
+            // visual anchor of the row). Anchored ry+1 so it stays inside the 22-px row.
+            val spriteScale = 1.3f
+            val spriteX = colPokemon + 4
+            val spriteY = ry + 1
+            context.matrices.push()
+            context.matrices.translate(spriteX.toFloat(), spriteY.toFloat(), 0f)
+            context.matrices.scale(spriteScale, spriteScale, 1f)
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, entry.species, entry.pokemonName, entry.aspects,
-                colPokemon + 4, ry + 4, delta
+                0, 0, delta
             )
+            context.matrices.pop()
+            // Use the wider icon footprint for the text column offset.
+            val scaledIconWidth = (PokemonSpriteHelper.ICON_SIZE * spriteScale).toInt()
+            val nameOffset = scaledIconWidth + 4
 
-            // Pokemon name + level (shifted right for icon, scaled 0.75x)
-            val nameX = (colPokemon + 4 + ICON_OFFSET).toFloat()
+            // Pokemon name + level (shifted right past the bigger icon).
+            val nameX = (colPokemon + 4 + nameOffset).toFloat()
+            val nameColor = if (isOvershadowed) 0x666666 else 0xFFFFFF
             context.matrices.push()
             context.matrices.translate(nameX, (ry + 4).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, entry.pokemonName, 0, 0, 0xFFFFFF)
+            context.drawTextWithShadow(textRenderer, entry.pokemonName, 0, 0, nameColor)
             context.matrices.pop()
 
             context.matrices.push()
             context.matrices.translate(nameX, (ry + 14).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", 0, 0, 0xAAAAAA)
+            val lvlColor = if (isOvershadowed) 0x555555 else 0xAAAAAA
+            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", 0, 0, lvlColor)
             context.matrices.pop()
 
             // Job icon left of the skill name (same vocabulary as Skills/Jobs tab).
@@ -375,17 +407,24 @@ class BuffsPanel(
             context.matrices.pop()
 
             // Skill name (PASSIVE label removed \u2014 sub-tab already separates the two).
+            // Overshadowed passive rows: skill name uses a dim gray instead of the buff color.
             val skillTextX = colSkill + 11
-            val skillNameColor = if (entry.isPassiveBuff) 0x55FFAA else catColor
+            val skillNameColor = when {
+                isOvershadowed -> 0x666666
+                entry.isPassiveBuff -> 0x55FFAA
+                else -> cat
+            }
             context.matrices.push()
             context.matrices.translate(skillTextX.toFloat(), (ry + 4).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
             context.drawTextWithShadow(textRenderer, entry.skillName, 0, 0, skillNameColor)
             context.matrices.pop()
 
-            // Proficiency stars (scaled 0.75x)
+            // Proficiency stars (scaled 0.75x). Overshadowed mons get gray stars
+            // regardless of their actual prof \u2014 visual cue that this rank "doesn't count."
             val stars = "\u2605".repeat(entry.proficiency) + "\u2606".repeat(5 - entry.proficiency)
             val starColor = when {
+                isOvershadowed -> 0x555555
                 entry.proficiency >= 5 -> 0xFFD700
                 entry.proficiency >= 4 -> 0xFFA500
                 entry.proficiency >= 3 -> 0x88CC88

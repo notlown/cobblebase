@@ -30,7 +30,8 @@ class BuffsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    private val ROW_HEIGHT = 28
+    // Compacted to match Fabric — 28 was wasting vertical space on padding.
+    private val ROW_HEIGHT = 22
     private val HEADER_HEIGHT = 18
     private val PADDING = 8
     private val ROW_EVEN = 0x33FFFFFF.toInt()
@@ -237,25 +238,31 @@ class BuffsPanel(
             val ry = contentTop + 14 + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
 
-            // Row background
+            // Row background — uniform, no category color bar (user found the colored
+            // boxes distracting in the Buffs tab).
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
-            // Category color bar on the left (green for passive buffs)
+            val scale = 0.75f
             val catColor = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
                 else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
-            context.fill(panelX + 1, ry, panelX + 4, ry + ROW_HEIGHT - 1, catColor)
 
-            val scale = 0.75f
-
-            // Pokemon portrait icon (top-aligned)
+            // Pokemon portrait icon — scaled 1.3× for ~21 px sprite (was 16, looked
+            // anaemic without the category color bar).
+            val spriteScale = 1.3f
+            context.matrices.push()
+            context.matrices.translate((colPokemon + 4).toFloat(), (ry + 1).toFloat(), 0f)
+            context.matrices.scale(spriteScale, spriteScale, 1f)
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, entry.species, entry.pokemonName, entry.aspects,
-                colPokemon + 4, ry + 4, delta
+                0, 0, delta
             )
+            context.matrices.pop()
+            val scaledIconWidth = (PokemonSpriteHelper.ICON_SIZE * spriteScale).toInt()
+            val nameOffset = scaledIconWidth + 4
 
-            // Pokemon name + level (shifted right for icon, scaled 0.75x)
-            val nameX = (colPokemon + 4 + ICON_OFFSET).toFloat()
+            // Pokemon name + level (shifted right past the bigger icon).
+            val nameX = (colPokemon + 4 + nameOffset).toFloat()
             context.matrices.push()
             context.matrices.translate(nameX, (ry + 4).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)

@@ -24,12 +24,33 @@ class LogsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    private val ROW_HEIGHT = 14
+    // 16 px row matches the 16 px sprite; was 14 → sprite overflowed 2 px below row.
+    private val ROW_HEIGHT = 16
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8
     private val ROW_EVEN = 0x22FFFFFF.toInt()
     private val ROW_ODD = 0x11FFFFFF.toInt()
+
+    /** Subtle per-action background tint, see Fabric LogsPanel for the rationale. */
+    private fun actionTintColor(action: String): Int {
+        return when (action.lowercase()) {
+            "found" -> 0x22FFD700.toInt()
+            "mined" -> 0x22A0A0A0.toInt()
+            "fished" -> 0x223399FF.toInt()
+            "harvested" -> 0x2255CC55.toInt()
+            "supplied" -> 0x2244BB99.toInt()
+            "producer", "produced" -> 0x22F0E6C8.toInt()
+            "craftsman", "crafted" -> 0x22B07050.toInt()
+            "healed" -> 0x22FF6666.toInt()
+            "recruited" -> 0x22CC66FF.toInt()
+            "sorted" -> 0x22FFA040.toInt()
+            "hatched" -> 0x22FF99CC.toInt()
+            "spotted", "discovered" -> 0x22DDDD66.toInt()
+            "repelled", "extinguisher" -> 0x22FF7733.toInt()
+            else -> 0
+        }
+    }
 
     private var scrollY = 0
     private var filterRarity: Rarity? = null
@@ -114,6 +135,10 @@ class LogsPanel(
 
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
+            val tint = actionTintColor(entry.action)
+            if (tint != 0) {
+                context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, tint)
+            }
 
             val rarityColor = entry.rarity.color
             context.fill(panelX + 1, ry, panelX + 3, ry + ROW_HEIGHT - 1, rarityColor)
@@ -127,9 +152,10 @@ class LogsPanel(
             context.drawTextWithShadow(textRenderer, timeStr, 0, 0, 0x999999)
             context.matrices.pop()
 
+            // Sprite is 16 px, row is 16 px → ry + 0 to center properly. Was ry + 2.
             PokemonSpriteHelper.renderSmallIconByName(
                 context, textRenderer, entry.pokemonName,
-                colPokemon, ry + 2, delta
+                colPokemon, ry, delta
             )
 
             context.matrices.push()

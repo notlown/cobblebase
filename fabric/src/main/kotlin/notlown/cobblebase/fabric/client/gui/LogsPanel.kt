@@ -25,12 +25,40 @@ class LogsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    private val ROW_HEIGHT = 14
+    // Row height matches the 16-px Pokemon sprite — the previous 14-px row was 2 px
+    // shorter than the sprite, so PokemonSpriteHelper.renderSmallIconByName (which is
+    // actually a full 16-px icon despite the "small" name) overflowed the row bottom.
+    private val ROW_HEIGHT = 16
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8
     private val ROW_EVEN = 0x22FFFFFF.toInt()
     private val ROW_ODD = 0x11FFFFFF.toInt()
+
+    /**
+     * Subtle per-action background tint applied over the zebra pattern, so a glance at
+     * the Logs tab tells you which type of event each row is. Alpha 0x22 = ~13%, low
+     * enough that rarity color bar + text stay readable but high enough to be useful.
+     * Match falls back to no tint for unknown actions.
+     */
+    private fun actionTintColor(action: String): Int {
+        return when (action.lowercase()) {
+            "found" -> 0x22FFD700.toInt()        // Finder family — gold
+            "mined" -> 0x22A0A0A0.toInt()        // Mining — stone gray
+            "fished" -> 0x223399FF.toInt()       // Fishing — water blue
+            "harvested" -> 0x2255CC55.toInt()    // Harvester / Supplier-harvest — leaf green
+            "supplied" -> 0x2244BB99.toInt()     // Supplier-generate — teal
+            "producer", "produced" -> 0x22F0E6C8.toInt()  // Producer — wool cream
+            "craftsman", "crafted" -> 0x22B07050.toInt()  // Craftsman — workbench brown
+            "healed" -> 0x22FF6666.toInt()       // Healer — soft red
+            "recruited" -> 0x22CC66FF.toInt()    // Recruiter — purple
+            "sorted" -> 0x22FFA040.toInt()       // Gatherer — orange
+            "hatched" -> 0x22FF99CC.toInt()      // Egg Hatcher — baby pink
+            "spotted", "discovered" -> 0x22DDDD66.toInt() // Scout — light yellow
+            "repelled", "extinguisher" -> 0x22FF7733.toInt()  // Guard / Extinguish — flame
+            else -> 0
+        }
+    }
 
     private var scrollY = 0
     private var filterRarity: Rarity? = null // null = show all
@@ -123,9 +151,15 @@ class LogsPanel(
             val ry = contentTop + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
 
-            // Row background
+            // Row background — zebra base + subtle per-action tint stacked on top.
+            // Keeps the alternating-row affordance while adding an at-a-glance category
+            // cue per row (Found = gold, Mined = stone, Harvested = green, etc.).
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
+            val tint = actionTintColor(entry.action)
+            if (tint != 0) {
+                context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, tint)
+            }
 
             // Rarity color bar
             val rarityColor = entry.rarity.color
@@ -141,10 +175,12 @@ class LogsPanel(
             context.drawTextWithShadow(textRenderer, timeStr, 0, 0, 0x999999)
             context.matrices.pop()
 
-            // Pokemon icon only (no name text — saves space)
+            // Pokemon icon only (no name text — saves space). Sprite is 16 px, row is
+            // 16 px → draw at ry + 0 to center perfectly. Previous +2 offset overflowed
+            // the row bottom by 2 px and left an even gap at the top.
             PokemonSpriteHelper.renderSmallIconByName(
                 context, textRenderer, entry.pokemonName,
-                colPokemon, ry + 2, delta
+                colPokemon, ry, delta
             )
 
             // Action (scaled 0.75x)

@@ -46,6 +46,7 @@ class HatcheryPanel(
     private var activeSubTab = SubTab.HOME
 
     private var scrollOffset = 0
+    private val scrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
     private var lastPollMs = 0L
     private val POLL_INTERVAL_MS = 2000L
 
@@ -418,22 +419,42 @@ class HatcheryPanel(
         }
         context.disableScissor()
 
-        if (entries.size > maxVisible) {
-            val trackX = panelX + panelW - PADDING - 3
-            val trackH = maxVisible * ROW_H
-            val thumbH = ((maxVisible.toFloat() / entries.size) * trackH).toInt().coerceAtLeast(10)
-            val thumbY = listTop + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, listTop, trackX + 2, listTop + trackH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        // Reusable scrollbar component — render-only path here, mouseClicked/mouseDragged
+        // below delegate the drag interaction. scrollOffset is in row-units; convert to
+        // pixels for the component, back to row-units after the interaction.
+        scrollbar.layout(
+            trackX = panelX + panelW - PADDING - 4,
+            trackY = listTop,
+            trackHeight = maxVisible * ROW_H,
+            contentHeight = entries.size * ROW_H,
+            viewportHeight = maxVisible * ROW_H,
+            currentScroll = scrollOffset * ROW_H,
+        )
+        scrollbar.render(context, 0, 0)
+        scrollOffset = scrollbar.scroll / ROW_H
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         // Sub-tab click handling.
         if (inBox(mouseX, mouseY, homeTabBox)) { activeSubTab = SubTab.HOME; scrollOffset = 0; return true }
         if (inBox(mouseX, mouseY, logsTabBox)) { activeSubTab = SubTab.LOGS; scrollOffset = 0; return true }
+        // Scrollbar click — re-layout's last frame is still authoritative.
+        if (scrollbar.mouseClicked(mouseX, mouseY)) {
+            scrollOffset = scrollbar.scroll / ROW_H
+            return true
+        }
         return false
     }
+
+    fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, dx: Double, dy: Double): Boolean {
+        if (scrollbar.mouseDragged(mouseY)) {
+            scrollOffset = scrollbar.scroll / ROW_H
+            return true
+        }
+        return false
+    }
+
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = scrollbar.mouseReleased()
 
     private fun inBox(mx: Double, my: Double, box: IntArray): Boolean {
         val (x, y, w, h) = box

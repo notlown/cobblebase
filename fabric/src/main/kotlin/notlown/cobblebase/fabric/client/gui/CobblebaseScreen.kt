@@ -232,7 +232,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.BUFFS -> buffsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.WORKSHOP -> workshopPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
-            Tab.HATCHERY -> false
+            Tab.HATCHERY -> hatcheryPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.LOGS -> logsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.DISCOVERY -> discoveryPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
         }
@@ -245,7 +245,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.BUFFS -> buffsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.WORKSHOP -> workshopPanel.mouseReleased(mouseX, mouseY, button)
-            Tab.HATCHERY -> false
+            Tab.HATCHERY -> hatcheryPanel.mouseReleased(mouseX, mouseY, button)
             Tab.LOGS -> logsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.DISCOVERY -> discoveryPanel.mouseReleased(mouseX, mouseY, button)
         }

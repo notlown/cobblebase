@@ -101,53 +101,8 @@ class SkillsPanel(
         // contentY shifts down to leave room for the sub-tab strip at the top.
         contentY = panelY + SUBTAB_H + HEADER_HEIGHT + PANEL_PADDING
 
-        // Bottom bar: Discord icon | Mute toggle | Done button
-        // Discord icon button (bottom-left) — only if enabled via GeneralSettings
-        val discordEnabled = notlown.cobblebase.core.GeneralSettingsCache.discordEnabled
-        val muteBtnX = if (discordEnabled) {
-            addWidget.apply(ButtonWidget.builder(Text.literal("\u00A79\u2689")) {
-                val url = notlown.cobblebase.core.GeneralSettingsCache.discordUrl
-                try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI(url)) } catch (_: Exception) {}
-            }.dimensions(panelX + 4, panelY + panelH - 16, 14, 12).build())
-            panelX + 22
-        } else {
-            panelX + 4
-        }
-
-        // Mute toggle button (next to Discord, or leftmost if Discord disabled)
-        val muteBtn = ButtonWidget.builder(Text.literal(getMuteIcon())) { btn ->
-            val config = me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).config
-            config.cry.cryEnabled = !config.cry.cryEnabled
-            me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).save()
-            btn.message = Text.literal(getMuteIcon())
-        }.dimensions(muteBtnX, panelY + panelH - 16, 14, 12).build()
-        addWidget.apply(muteBtn)
-
-        // Show Radius toggle (next to Mute) — closes GUI and draws a wireframe
-        // box around the pasture. Label tracks *this* pasture's state, not any
-        // other pasture that might be showing its own radius.
-        val activeHere = pastureOrigin != null && RadiusRenderer.isActiveAt(pastureOrigin)
-        val radiusLabel = if (activeHere) "\u00A7aRadius ON" else "\u00A7cRadius OFF"
-        val radiusBtn = ButtonWidget.builder(Text.literal(radiusLabel)) {
-            val origin = pastureOrigin ?: return@builder
-            RadiusRenderer.toggle(origin, computeMaxRadius())
-            parent.close()
-        }.dimensions(muteBtnX + 18, panelY + panelH - 16, 58, 12).build()
-        radiusBtn.active = pastureOrigin != null
-        addWidget.apply(radiusBtn)
-
-        // Admin button (only if OP) — bottom-right, before Done
-        val client = net.minecraft.client.MinecraftClient.getInstance()
-        if (client.player?.hasPermissionLevel(2) == true) {
-            addWidget.apply(ButtonWidget.builder(Text.literal("\u00A76Admin")) {
-                parent.close()
-                notlown.cobblebase.neoforge.client.CobblebaseNeoForgeClient.requestAdminScreen()
-            }.dimensions(panelX + panelW - 98, panelY + panelH - 16, 36, 12).build())
-        }
-
-        // Done button (bottom-right)
-        addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
-            .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
+        // Bottom bar (Discord / Mute / Radius / Admin) + Close button now live in the
+        // parent CobblebaseScreen so they're consistent across every tab.
 
         var cumulativeY = 0
 

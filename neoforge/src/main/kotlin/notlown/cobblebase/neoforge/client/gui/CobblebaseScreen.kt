@@ -3,6 +3,7 @@ package notlown.cobblebase.neoforge.client.gui
 import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket.PasturePokemonDataDTO
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import notlown.cobblebase.core.CobblebaseConfig
@@ -33,6 +34,15 @@ class CobblebaseScreen(
     // Tab buttons
     private val TAB_HEIGHT = 22
     private val TAB_GAP = 2
+
+    /** Bottom strip reserved for the persistent Discord/Mute/Radius/Admin bar. */
+    private val BOTTOM_BAR_H = 20
+
+    /** Close button (top-right X). 14×14 sits inside the panel header. */
+    private val CLOSE_BTN_SIZE = 14
+    private val CLOSE_BTN_INSET = 4
+    private var closeBtnX = 0
+    private var closeBtnY = 0
 
     // Style constants matching existing dark theme
     companion object {
@@ -71,18 +81,82 @@ class CobblebaseScreen(
         panelY = (height - panelH) / 2
         contentY = panelY + TAB_HEIGHT + 4
 
-        skillsPanel = SkillsPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
-        buffsPanel = BuffsPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
-        logsPanel = LogsPanel(this, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
-        discoveryPanel = DiscoveryPanel(this, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
-        workshopPanel = WorkshopPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
-        hatcheryPanel = HatcheryPanel(pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
+        // Reserve the bottom strip for the persistent bottom bar (Discord / Mute /
+        // Radius / Admin). Sub-panels now render their content above this strip
+        // instead of placing their own Done buttons.
+        val subPanelH = panelH - TAB_HEIGHT - 4 - BOTTOM_BAR_H
+        skillsPanel = SkillsPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, subPanelH, textRenderer)
+        buffsPanel = BuffsPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, subPanelH, textRenderer)
+        logsPanel = LogsPanel(this, pastureOrigin, panelX, contentY, panelW, subPanelH, textRenderer)
+        discoveryPanel = DiscoveryPanel(this, panelX, contentY, panelW, subPanelH, textRenderer)
+        workshopPanel = WorkshopPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, subPanelH, textRenderer)
+        hatcheryPanel = HatcheryPanel(pokemonList, pastureOrigin, panelX, contentY, panelW, subPanelH, textRenderer)
 
         initCurrentTab()
     }
 
+    /** Bottom-bar buttons that persist across tab switches. Re-added each tab init. */
+    private fun addBottomBarWidgets() {
+        val barY = panelY + panelH - BOTTOM_BAR_H + 4
+        val barBtnH = 12
+
+        // Discord icon button — only if enabled via GeneralSettings.
+        val discordEnabled = notlown.cobblebase.core.GeneralSettingsCache.discordEnabled
+        var nextX = panelX + 6
+        if (discordEnabled) {
+            addDrawableChild(ButtonWidget.builder(Text.literal("§9⚉")) {
+                val url = notlown.cobblebase.core.GeneralSettingsCache.discordUrl
+                try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI(url)) } catch (_: Exception) {}
+            }.dimensions(nextX, barY, 14, barBtnH).build())
+            nextX += 16
+        }
+
+        // Mute toggle.
+        val muteBtn = ButtonWidget.builder(Text.literal(getMuteIcon())) { btn ->
+            val config = me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).config
+            config.cry.cryEnabled = !config.cry.cryEnabled
+            me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).save()
+            btn.message = Text.literal(getMuteIcon())
+        }.dimensions(nextX, barY, 14, barBtnH).build()
+        addDrawableChild(muteBtn)
+        nextX += 16
+
+        // Show Radius toggle (only if we have a pastureOrigin).
+        if (pastureOrigin != null) {
+            val activeHere = notlown.cobblebase.neoforge.client.render.RadiusRenderer.isActiveAt(pastureOrigin)
+            val radiusLabel = if (activeHere) "§aRadius ON" else "§cRadius OFF"
+            addDrawableChild(ButtonWidget.builder(Text.literal(radiusLabel)) {
+                notlown.cobblebase.neoforge.client.render.RadiusRenderer.toggle(pastureOrigin, computeMaxRadius())
+                close()
+            }.dimensions(nextX, barY, 58, barBtnH).build())
+        }
+
+        // Admin button (only if OP) — bottom-right.
+        val client = net.minecraft.client.MinecraftClient.getInstance()
+        if (client.player?.hasPermissionLevel(2) == true) {
+            addDrawableChild(ButtonWidget.builder(Text.literal("§6Admin")) {
+                close()
+                notlown.cobblebase.neoforge.client.CobblebaseNeoForgeClient.requestAdminScreen()
+            }.dimensions(panelX + panelW - 44, barY, 38, barBtnH).build())
+        }
+    }
+
+    private fun getMuteIcon(): String {
+        return if (notlown.cobblebase.core.CobblebaseConfig.cryEnabled) "§e♫" else "§8♫"
+    }
+
+    /**
+     * Maximum pasture work radius across all jobs — used by the Radius wireframe.
+     * Mirrors the per-job effective radius calculation from SkillRegistry.
+     */
+    private fun computeMaxRadius(): Int {
+        return notlown.cobblebase.core.SkillRegistry.getAll().keys
+            .maxOfOrNull { notlown.cobblebase.core.SkillRegistry.getEffectiveRadius(it) } ?: 16
+    }
+
     private fun initCurrentTab() {
         clearChildren()
+        addBottomBarWidgets()  // persists across tab switches
         when (activeTab) {
             Tab.SKILLS -> skillsPanel.init(this::addDrawableChild)
             Tab.BUFFS -> buffsPanel.init(this::addDrawableChild)
@@ -134,7 +208,9 @@ class CobblebaseScreen(
     private fun renderTabs(context: DrawContext, mouseX: Int, mouseY: Int) {
         val tabs = Tab.entries
         val tabCount = tabs.size
-        val tabW = (panelW - TAB_GAP * (tabCount - 1)) / tabCount
+        // Reserve space on the right for the close button so tabs don't overlap it.
+        val tabsAreaW = panelW - CLOSE_BTN_SIZE - CLOSE_BTN_INSET * 2
+        val tabW = (tabsAreaW - TAB_GAP * (tabCount - 1)) / tabCount
 
         for ((i, tab) in tabs.withIndex()) {
             val tx = panelX + i * (tabW + TAB_GAP)
@@ -196,15 +272,38 @@ class CobblebaseScreen(
             val textColor = if (isActive) 0xFFFFFF else 0x999999
             context.drawTextWithShadow(textRenderer, label, groupX + iconRenderW + 2, ty + 7, textColor)
         }
+
+        // Close button (X) on the top-right of the tab strip — replaces the per-panel
+        // Done buttons. Hover turns red so it reads as "destructive / closes the window".
+        closeBtnX = panelX + panelW - CLOSE_BTN_INSET - CLOSE_BTN_SIZE
+        closeBtnY = panelY + (TAB_HEIGHT - CLOSE_BTN_SIZE) / 2
+        val closeHovered = mouseX in closeBtnX..(closeBtnX + CLOSE_BTN_SIZE) &&
+            mouseY in closeBtnY..(closeBtnY + CLOSE_BTN_SIZE)
+        val closeBg = if (closeHovered) 0xFFB23A3A.toInt() else 0xFF44445A.toInt()
+        context.fill(closeBtnX, closeBtnY, closeBtnX + CLOSE_BTN_SIZE, closeBtnY + CLOSE_BTN_SIZE, closeBg)
+        val xLabel = "§f✕"
+        val xW = textRenderer.getWidth(xLabel)
+        context.drawTextWithShadow(
+            textRenderer, xLabel,
+            closeBtnX + (CLOSE_BTN_SIZE - xW) / 2,
+            closeBtnY + (CLOSE_BTN_SIZE - 8) / 2,
+            0xFFFFFF
+        )
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        // Mute button moved to SkillsPanel bottom bar
+        // Close button (X) — top-right of the tab strip.
+        if (mouseX >= closeBtnX && mouseX <= closeBtnX + CLOSE_BTN_SIZE &&
+            mouseY >= closeBtnY && mouseY <= closeBtnY + CLOSE_BTN_SIZE) {
+            close()
+            return true
+        }
 
-        // Check tab clicks
+        // Tab clicks (width matches the tab-area excluding the X button).
         val tabs = Tab.entries
         val tabCount = tabs.size
-        val tabW = (panelW - TAB_GAP * (tabCount - 1)) / tabCount
+        val tabsAreaW = panelW - CLOSE_BTN_SIZE - CLOSE_BTN_INSET * 2
+        val tabW = (tabsAreaW - TAB_GAP * (tabCount - 1)) / tabCount
         for ((i, tab) in tabs.withIndex()) {
             val tx = panelX + i * (tabW + TAB_GAP)
             val ty = panelY

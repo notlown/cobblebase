@@ -85,9 +85,7 @@ class DiscoveryPanel(
             filterType = DiscoveryType.WILD_POKEMON; scrollY = 0
         }.dimensions(startX + (btnW + 2) + (btnW + 10) + 2 + btnW + 2, filterY, btnW + 5, btnH).build())
 
-        // Done button
-        addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
-            .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
+        // Done button removed — Close (X) lives in the parent CobblebaseScreen.
     }
 
     private fun getFilteredDiscoveries(): List<DiscoveryRegistry.Discovery> {

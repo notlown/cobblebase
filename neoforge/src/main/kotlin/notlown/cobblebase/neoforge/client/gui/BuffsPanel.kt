@@ -77,8 +77,7 @@ class BuffsPanel(
         scrollY = 0
         entries = buildBuffEntries()
 
-        addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
-            .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
+        // Done button removed — Close (X) lives in the parent CobblebaseScreen.
     }
 
     /** Returns entries filtered to the active sub-tab. */

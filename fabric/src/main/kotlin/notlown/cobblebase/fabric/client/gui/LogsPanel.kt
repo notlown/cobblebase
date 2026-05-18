@@ -103,9 +103,7 @@ class LogsPanel(
             filterRarity = Rarity.ULTRA_RARE; scrollY = 0
         }.dimensions(startX + (btnW + 2) * 3, filterY, btnW, btnH).build())
 
-        // Done button
-        addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
-            .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
+        // Done button removed — Close (X) lives in the parent CobblebaseScreen.
     }
 
     private fun getFilteredEntries(): List<LogManager.LogEntry> {

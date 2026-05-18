@@ -5,15 +5,13 @@ import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.util.math.Vec3d;
 import notlown.cobblebase.core.AmbientBehavior;
+import notlown.cobblebase.core.SleepLockState;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Hard-locks the position and AI of a pastured Pokemon while it is in the
@@ -45,30 +43,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * X/Z to an anchor recorded on the first sleep tick. Y velocity is left untouched so a mon
  * that fell asleep mid-air still settles to the ground naturally.
  *
- * <h3>Anchor pinning vs gravity</h3>
+ * <h3>Where the anchor state lives</h3>
  *
- * The XZ snap-back uses a 1-block radius — anything within drift is left alone (so vanilla
- * physics like swimming-in-place still work) but a hard teleport, knockback, or path-driven
- * shuffle is reverted. Y is never pinned, so:
- * <ul>
- *   <li>Falling off a leaf block to the ground while sleeping: works, mon lands and stops.</li>
- *   <li>Sleeping in water: works, mon floats up to surface or stays at floor (vanilla buoyancy).</li>
- *   <li>Sleeping on a stable block: no movement at all, X/Z/Y all stable.</li>
- * </ul>
- *
- * <h3>Cleanup</h3>
- *
- * The anchor map is keyed by Pokemon UUID. We drop the entry on the first tick the
- * mon is <em>not</em> sleeping (natural awake transition cleans itself), and the periodic
- * 60s sweep in {@code BaseManager.tickPokemon} catches strays from despawned / withdrawn
- * mons that never woke up "the normal way." This map cannot grow without bound — it's
- * capped by the number of Pokemon currently in the SLEEPING state at any moment.
+ * Mixin disallows non-private static methods inside an {@code @Mixin}-annotated class
+ * (the applicator throws {@code InvalidMixinException} on apply). The anchor map and the
+ * cleanup helper live in {@link SleepLockState} — a regular Kotlin object — and this mixin
+ * just calls into it. The mixin itself owns no shared state.
  */
 @Mixin(PokemonEntity.class)
 public abstract class PokemonEntitySleepLockMixin {
-
-    @Unique
-    private static final Map<UUID, Vec3d> cobblebase$sleepAnchors = new ConcurrentHashMap<>();
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void cobblebase$enforceSleepLock(CallbackInfo ci) {
@@ -90,13 +73,14 @@ public abstract class PokemonEntitySleepLockMixin {
         }
 
         if (!sleeping) {
-            cobblebase$sleepAnchors.remove(uuid);
+            SleepLockState.INSTANCE.forget(uuid);
             return;
         }
 
         // Anchor on first sleep tick. Use entry position so a fall-into-sleep doesn't pin
         // mid-air — the mon falls until the anchor is reset next time isSleeping flips on/off.
-        Vec3d anchor = cobblebase$sleepAnchors.computeIfAbsent(uuid, k -> self.getPos());
+        final PokemonEntity finalSelf = self;
+        Vec3d anchor = SleepLockState.INSTANCE.computeIfAbsent(uuid, () -> finalSelf.getPos());
 
         // 1. Stop active path
         try {
@@ -130,22 +114,5 @@ public abstract class PokemonEntitySleepLockMixin {
         if (dx * dx + dz * dz > 1.0) {
             self.setPosition(anchor.x, self.getY(), anchor.z);
         }
-    }
-
-    /**
-     * Drop anchors for Pokemon that are no longer in the SLEEPING state. Called from the
-     * periodic 60s sweep in {@code BaseManager.tickPokemon} so a Pokemon that despawned
-     * mid-sleep (entity unloaded, owner went offline, world reload) doesn't leak its
-     * anchor Vec3d indefinitely. The mixin's per-tick code already removes the anchor on
-     * a normal wake-up; this sweep handles the abrupt-stop edge cases.
-     */
-    public static void cobblebase$cleanupStale() {
-        cobblebase$sleepAnchors.keySet().removeIf(id -> {
-            try {
-                return !AmbientBehavior.INSTANCE.isSleeping(id);
-            } catch (Throwable t) {
-                return true;
-            }
-        });
     }
 }

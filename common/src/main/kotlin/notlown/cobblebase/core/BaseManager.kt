@@ -111,7 +111,7 @@ object BaseManager {
             for (id in staleSafety) lastSafetyCheck.remove(id)
             // Sleep-lock mixin holds an anchor Vec3d per sleeping Pokemon. Normal wake-up
             // clears it; this sweep catches anchors orphaned by despawn / chunk unload.
-            notlown.cobblebase.mixin.PokemonEntitySleepLockMixin.`cobblebase$cleanupStale`()
+            notlown.cobblebase.core.SleepLockState.cleanupStale()
         }
 
         // Brief stuck detection (8s no movement → clear nav) only for working mons

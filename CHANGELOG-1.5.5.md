@@ -50,18 +50,21 @@ A new mixin (`PCGUIClickPriorityMixin`) intercepts mouse clicks on the Cobblemon
 
 ### Server Settings: per-pasture working-pokemon cap
 
-A new admin-only knob in **Mod Menu → Admin → Server**: *"Max Working Pokemon per Pasture"*. The previous behavior — every tethered Pokemon with a job assignment ticks every server tick — is preserved as the default (value `0` shown as **Unlimited** in the GUI). Lowering it caps how many assigned mons per pasture actually run their executors at once.
+A new admin-only knob in **Mod Menu → Admin → Server**: *"Max Working Pokemon per Pasture"*. The previous behavior — every tethered Pokemon with a job assignment ticks every server tick — is preserved as the default (value `0` shown as **Unlimited** in the GUI). Lowering it caps how many assigned mons per pasture can hold a job assignment at once.
 
-**Order:** the first N assigned mons in tethering order are the active workers. The remainder keep their job assignment but are flagged as **⏸ Queued** in the Pasture tab — their executors and passive buffs are skipped server-side until a slot frees up. Tethering order is what Cobblemon already exposes via the pasture's `tetheredPokemon` list, so "order = the order you tethered them in", and there's no extra UI to manage priority.
+**Over-cap behavior:** the first N assigned mons in **tether order** are the workers. Anyone past that gets hard-unassigned to **Relax** — no "queued" badge, no kept-but-paused state, just the same Relax that any other idle mon shows. Cleaner UX than the alternative (where a mon looks assigned in the GUI but visibly doesn't work, which reads as a bug).
 
-**Graceful transitions:**
-- Lowering the cap (10 active → cap 8) immediately stops the bottom 2 from ticking — their assignment is **kept**, no withdraw, no Relax-reset. Raise the cap back and they resume next tick.
-- Withdrawing or unassigning an active worker promotes the next queued mon automatically (the rank shifts down on the next tick).
-- Aura-only mons (no job assignment, species grants a passive buff like Speed Boost) are **not counted** toward the cap and always tick their buff — they're bonuses, not workers, so a cap meant to throttle workers shouldn't kill them.
+Tether order is the order Cobblemon already exposes via `tetheredPokemon`, so "earliest tethered = highest priority". Players reorder by withdrawing + re-tethering.
+
+**Enforcement points:**
+- **Up-front:** trying to assign a job through the Skills tab when the pasture is already at cap silently fails — the server doesn't apply the change, and the broadcast sync flips the client GUI back. No toast, same UX as clicking a job button on a Pokemon that doesn't have that skill.
+- **Lazy on-tick:** when an admin lowers the cap mid-session, the affected pasture's next tick walks its workers in tether order and Relaxes the ones past the new cap. Player sees their assignments clear within a server tick of opening the pasture.
+
+**Aura-only mons** (no job assignment, species grants a passive buff like Speed Boost) are **not counted** toward the cap and always tick their buff — they're bonuses, not workers, and a "worker cap" shouldn't kill them.
 
 **Bounds:** 0–64. The upper bound leaves room for modded larger-than-vanilla pastures; the stock Cobblemon pasture maxes at 16, so any cap ≥16 is functionally identical to "unlimited" on a vanilla setup.
 
-**Why:** server admins running large Cobbleverse / multi-player setups asked for a way to dial down per-pasture work output for both performance and game-balance reasons. The cap is per-pasture, not per-player or per-server, so a player with multiple pastures gets `cap × pastures` total workers as before — the knob is about how concentrated a single pasture can be.
+**Why:** server admins running large Cobbleverse / multi-player setups asked for a way to dial down per-pasture work output for both performance and game-balance reasons. The cap is per-pasture, not per-player or per-server — a player with multiple pastures gets `cap × pastures` total workers, so the knob is about how concentrated a single pasture can be.
 
 ---
 

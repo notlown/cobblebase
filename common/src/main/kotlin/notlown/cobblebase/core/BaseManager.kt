@@ -160,18 +160,15 @@ object BaseManager {
             return
         }
 
-        // Working-cap gate. If the admin has set maxWorkingPokemonPerPasture > 0 and this
-        // Pokemon is an assigned worker beyond the cap (counted in pasture tethering order
-        // among assigned mons only), skip its executor + passive-buff dispatch entirely.
-        //
-        // Aura-only mons (null assignment, species grants a passive buff) don't count
-        // toward the cap and always tick their buffs — they're bonuses, not workers, so
-        // a cap meant to throttle "workers" shouldn't kill them.
-        if (assignments[pokemonId] != null && isOverWorkingCap(world, pastureOrigin, pokemonId)) {
+        val rawAssignment: String? = assignments[pokemonId]
+
+        // Working-cap enforcement (lazy): if this worker is past the cap in its pasture's
+        // tether order, drop the assignment to Relax now. This catches admins lowering the
+        // cap mid-session — the trim happens on the next pasture tick after the change.
+        // Aura-only mons (null assignment) don't count toward the cap and are skipped here.
+        if (rawAssignment != null && relaxIfOverCap(world, pastureOrigin, pokemonId)) {
             return
         }
-
-        val rawAssignment: String? = assignments[pokemonId]
 
         // Craftsman supplier mode: run dedicated supplier executor
         // Format: "craftsman_supply:skillId" or "craftsman_supply:skillId:targetItemId"
@@ -255,13 +252,6 @@ object BaseManager {
         if (world !is net.minecraft.server.world.ServerWorld) return
         val speciesName = resolveSpeciesName(pokemon)
         val speciesData = SpeciesSkillRegistry.getSkills(speciesName) ?: return
-
-        // Same working-cap gate as tickPokemon: queued assigned mons should also be silent
-        // here so their auras don't sneak past the cap when their entity isn't loaded.
-        // Aura-only (null assignment) mons aren't counted toward the cap and pass through.
-        if (assignments[pokemon.uuid] != null && isOverWorkingCap(world, pastureOrigin, pokemon.uuid)) {
-            return
-        }
 
         val buffEntries = SpeciesSkillRegistry.getBuffSkills(speciesName) { isBuffSkill(it) }
         for (entry in buffEntries) {
@@ -347,19 +337,52 @@ object BaseManager {
     }
 
     /**
-     * Returns true if this assigned Pokemon is queued behind the working cap and should
-     * have its executor + buff dispatch skipped this tick.
+     * Working-cap helpers. Cap semantics: server admins set
+     * `GeneralSettings.maxWorkingPokemonPerPasture`. The first N assigned mons in a
+     * pasture's tether order are the active workers; if more mons get assigned past
+     * the cap, they're hard-unassigned (set to Relax) instead of being silently
+     * paused. The clear-to-Relax approach matches what the GUI already conveys for
+     * idle mons — no separate "queued" state to confuse players.
      *
-     * "Assigned" Pokemon are counted in pasture tethering order; the first
-     * `maxWorkingPokemonPerPasture` of them are the active workers. Aura-only mons
-     * (null assignment) are ignored by the count — they don't compete for worker slots
-     * and they don't push other Pokemon out of theirs.
+     * Enforcement happens in two places:
+     *   - **Up-front rejection** via `wouldExceedWorkingCap`, called from the
+     *     SkillAssignment C2S handler before applying a player click.
+     *   - **Lazy on-tick trim** via `isWorkerOverCap`, called from `tickPokemon`.
+     *     This handles cap-lowering by an admin: on the affected pasture's next tick,
+     *     each over-cap worker gets Relaxed and the sync packet flows to the player.
      *
-     * Cheap O(N) scan over `pasture.tetheredPokemon` (N ≤ pasture max, ~16 normally).
-     * Called per Pokemon per tick from `tickPokemon`. Returns false fast when the cap is
-     * 0 (unlimited) or when the pasture isn't over the cap yet.
+     * Aura-only mons (null assignment, species grants passive buff) are not counted
+     * toward the cap and never touched — they're bonuses, not workers.
      */
-    private fun isOverWorkingCap(
+    fun wouldExceedWorkingCap(
+        world: World,
+        pastureOrigin: BlockPos,
+        pokemonId: UUID,
+        incomingSkillId: String?
+    ): Boolean {
+        if (incomingSkillId == null) return false
+        val cap = GeneralSettings.getSettings().maxWorkingPokemonPerPasture
+        if (cap <= 0) return false
+
+        val pasture = world.getBlockEntity(pastureOrigin)
+                as? com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+            ?: return false
+
+        var assignedCount = 0
+        for (tether in pasture.tetheredPokemon) {
+            if (tether.pokemonId == pokemonId) continue
+            if (assignments[tether.pokemonId] != null) assignedCount++
+        }
+        return assignedCount >= cap
+    }
+
+    /**
+     * Returns true if this currently-assigned worker is past the cap in its pasture's
+     * tether order. Called from `tickPokemon`; if true, the caller drops the
+     * assignment to Relax. Aura-only mons are skipped because the caller only invokes
+     * this when `rawAssignment != null`.
+     */
+    private fun isWorkerOverCap(
         world: World,
         pastureOrigin: BlockPos,
         pokemonId: UUID
@@ -383,27 +406,50 @@ object BaseManager {
     }
 
     /**
-     * Client-facing variant of the cap check. Mirrors the server's gating logic so the
-     * Pasture-tab GUI can render a "queued" badge on mons that the server would skip.
-     *
-     * Takes the tether-ordered list of Pokemon UUIDs in the pasture (as the client sees
-     * it via OpenPasturePacket) plus the local assignment cache. Returns the set of
-     * Pokemon UUIDs that are over the cap.
+     * Called from `tickPokemon` to enforce the cap lazily: if this worker is past the
+     * cap, drop its assignment to Relax. Returns true when an unassignment happened so
+     * the caller can short-circuit (no executor, no buffs) on this tick.
      */
-    fun computeQueuedPokemon(
-        tetheredOrder: List<UUID>,
-        assignmentLookup: (UUID) -> String?,
-        cap: Int
-    ): Set<UUID> {
-        if (cap <= 0) return emptySet()
-        val queued = mutableSetOf<UUID>()
-        var workingRank = 0
-        for (id in tetheredOrder) {
-            if (assignmentLookup(id) == null) continue
-            if (workingRank >= cap) queued.add(id)
-            workingRank++
+    private fun relaxIfOverCap(
+        world: World,
+        pastureOrigin: BlockPos,
+        pokemonId: UUID
+    ): Boolean {
+        if (!isWorkerOverCap(world, pastureOrigin, pokemonId)) return false
+        assignments.remove(pokemonId)
+        lastJobSuccess.remove(pokemonId)
+        dirty = true
+        return true
+    }
+
+    /**
+     * Walks the loaded pasture block entities within 16 blocks of [player] and returns
+     * the position of the one whose tetheredPokemon contains [pokemonId]. Used by the
+     * SkillAssignment C2S handler to find the pasture origin for the cap pre-check —
+     * the packet itself only carries Pokemon + skill ID, but the player can only have
+     * opened a pasture they're standing next to, so a small radius scan is sufficient.
+     */
+    fun findPokemonPasture(
+        player: net.minecraft.server.network.ServerPlayerEntity,
+        pokemonId: UUID
+    ): BlockPos? {
+        val world = player.serverWorld
+        val playerPos = player.blockPos
+        val searchRadius = 16
+        for (x in -searchRadius..searchRadius) {
+            for (y in -searchRadius..searchRadius) {
+                for (z in -searchRadius..searchRadius) {
+                    val pos = playerPos.add(x, y, z)
+                    val be = world.getBlockEntity(pos)
+                    if (be is com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity) {
+                        if (be.tetheredPokemon.any { it.pokemonId == pokemonId }) {
+                            return pos.toImmutable()
+                        }
+                    }
+                }
+            }
         }
-        return queued
+        return null
     }
 
     fun getAvailableSkills(pokemonEntity: PokemonEntity): List<SkillEntry> {

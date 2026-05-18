@@ -32,6 +32,17 @@ data class SkillAssignmentC2SPacket(
 
     fun handle(player: ServerPlayerEntity) {
         val id = if (skillId.isEmpty()) null else skillId
+        // Working-cap pre-check: refuse new (non-null) assignments that would push the
+        // pasture past the admin-configured cap. The caller broadcasts a sync packet
+        // regardless of whether `handle` mutated state, so the client cache flips its
+        // optimistic update back when we no-op here.
+        if (id != null) {
+            val pasturePos = BaseManager.findPokemonPasture(player, pokemonId)
+            if (pasturePos != null &&
+                BaseManager.wouldExceedWorkingCap(player.serverWorld, pasturePos, pokemonId, id)) {
+                return
+            }
+        }
         BaseManager.assignSkill(pokemonId, id)
     }
 }

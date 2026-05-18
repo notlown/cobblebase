@@ -571,6 +571,9 @@ class SkillsPanel(
     private var pokeWikiSortFieldHitBox: IntArray = intArrayOf(0, 0, 0, 0)
     /** Asc/desc toggle hit-box for the WorkerWiki view. */
     private var pokeWikiSortDirHitBox: IntArray = intArrayOf(0, 0, 0, 0)
+    /** "Open Web DB" button hit-box for the WorkerWiki view. */
+    private var pokeWikiWebDbHitBox: IntArray = intArrayOf(0, 0, 0, 0)
+    private val POKEWIKI_WEB_DB_URL = "https://notlown.github.io/cobblebase-web/database/"
     /** Shared scroll offset for the sidebar (My Pokemon + WorkerWiki use the same widget). */
     private var sidebarScroll: Int = 0
     /** Sidebar viewport bounds — recomputed each render, consulted by mouseScrolled. */
@@ -824,8 +827,8 @@ class SkillsPanel(
         )
         val mainW = panelX + panelW - mainX - 6
 
-        // Two sort controls (top-right): [Field \u25BE] [\u2191/\u2193]. Field button cycles through
-        // Dex/Name/Prof/Skills/Rarity; direction button toggles asc/desc independently.
+        // Top-right controls: [\u{1F310} Web DB] [Field \u25BE] [\u2191/\u2193]. Web DB opens the web
+        // species database in the user's default browser; sort buttons are unchanged.
         val fieldLabel = when (pokeWikiSortField) {
             SortField.DEX -> "\u00A7fDex#"
             SortField.NAME -> "\u00A7fName"
@@ -836,10 +839,18 @@ class SkillsPanel(
         val dirLabel = if (pokeWikiSortDesc) "\u00A7f\u2193" else "\u00A7f\u2191"
         val fieldW = 44
         val dirW = 14
+        val webDbW = 56
         val sortH = 12
         val dirX = panelX + panelW - dirW - 8
         val fieldX = dirX - fieldW - 2
+        val webDbX = fieldX - webDbW - 6
         val sortY = listTop - 14
+        // Web DB button (accent gold to draw the eye to the external option)
+        val wHov = mouseX in webDbX..(webDbX + webDbW) && mouseY in sortY..(sortY + sortH)
+        context.fill(webDbX, sortY, webDbX + webDbW, sortY + sortH, if (wHov) 0xFF6C5A2A.toInt() else 0xFF453820.toInt())
+        context.fill(webDbX, sortY, webDbX + webDbW, sortY + 1, 0xFFF7C948.toInt())
+        drawScaled(context, "\u00A7e\u00A7l\u26F1 Web DB", webDbX + 4, sortY + 3, 0xFFD700, 0.75f)
+        pokeWikiWebDbHitBox = intArrayOf(webDbX, sortY, webDbW, sortH)
         // Field button
         val fHov = mouseX in fieldX..(fieldX + fieldW) && mouseY in sortY..(sortY + sortH)
         context.fill(fieldX, sortY, fieldX + fieldW, sortY + sortH, if (fHov) 0xFF3A3A6C.toInt() else 0xFF252545.toInt())
@@ -1142,7 +1153,17 @@ class SkillsPanel(
 
             // Sort controls (WorkerWiki only). Field button cycles Dex → Name → Prof → Skills → Rarity.
             // Direction button toggles ascending/descending independently.
+            // Web DB button opens the live web species database in the user's default browser.
             if (isWiki) {
+                run {
+                    val (bx, by, bw, bh) = pokeWikiWebDbHitBox
+                    if (bw > 0 && mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh) {
+                        try {
+                            net.minecraft.util.Util.getOperatingSystem().open(java.net.URI(POKEWIKI_WEB_DB_URL))
+                        } catch (_: Exception) {}
+                        return true
+                    }
+                }
                 run {
                     val (bx, by, bw, bh) = pokeWikiSortFieldHitBox
                     if (bw > 0 && mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh) {

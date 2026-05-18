@@ -29,8 +29,9 @@ class LogsPanel(
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8
-    private val ROW_EVEN = 0x22FFFFFF.toInt()
-    private val ROW_ODD = 0x11FFFFFF.toInt()
+    // Single uniform row background — zebra removed (two consecutive same-action rows
+    // looked like two different categories due to zebra + tint blending).
+    private val ROW_BG = 0x18FFFFFF.toInt()
 
     /** Subtle per-action background tint, see Fabric LogsPanel for the rationale. */
     private fun actionTintColor(action: String): Int {
@@ -133,8 +134,7 @@ class LogsPanel(
             val ry = contentTop + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
 
-            val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
-            context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
+            context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, ROW_BG)
             val tint = actionTintColor(entry.action)
             if (tint != 0) {
                 context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, tint)

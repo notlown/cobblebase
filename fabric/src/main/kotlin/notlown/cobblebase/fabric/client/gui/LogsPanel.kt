@@ -32,8 +32,11 @@ class LogsPanel(
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8
-    private val ROW_EVEN = 0x22FFFFFF.toInt()
-    private val ROW_ODD = 0x11FFFFFF.toInt()
+    // Single uniform row background — zebra striping removed because two consecutive
+    // rows with the same action ended up in different shades (zebra + action-tint
+    // combining to slightly different combined colors), which read as "two different
+    // categories" rather than "two of the same."
+    private val ROW_BG = 0x18FFFFFF.toInt()
 
     /**
      * Subtle per-action background tint applied over the zebra pattern, so a glance at
@@ -151,11 +154,9 @@ class LogsPanel(
             val ry = contentTop + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
 
-            // Row background — zebra base + subtle per-action tint stacked on top.
-            // Keeps the alternating-row affordance while adding an at-a-glance category
-            // cue per row (Found = gold, Mined = stone, Harvested = green, etc.).
-            val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
-            context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
+            // Row background — uniform base + per-action tint stacked on top so two
+            // consecutive same-action rows render identical (no zebra confusion).
+            context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, ROW_BG)
             val tint = actionTintColor(entry.action)
             if (tint != 0) {
                 context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, tint)

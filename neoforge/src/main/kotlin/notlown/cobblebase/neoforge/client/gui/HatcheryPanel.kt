@@ -35,8 +35,8 @@ class HatcheryPanel(
     private val panelH: Int,
     private val textRenderer: TextRenderer
 ) {
-    private val PADDING = 6
-    private val ROW_H = 14
+    private val PADDING = UiTokens.PANEL_PAD  // 8 — matches Skills / Buffs / Logs / Discovery
+    private val ROW_H = UiTokens.ROW_TIGHT    // 14 — same as Admin Species DB
     private val STATS_H = 38
     private val CARD_H = 46
     private val SUBTAB_H = 16
@@ -181,14 +181,14 @@ class HatcheryPanel(
         drawEggIcon(context, panelX + PADDING + 6, stripY + 3)
         context.matrices.push()
         context.matrices.translate((panelX + PADDING + 26).toFloat(), (stripY + 5).toFloat(), 0f)
-        context.matrices.scale(0.85f, 0.85f, 1f)
+        context.matrices.scale(UiTokens.TEXT_MD, UiTokens.TEXT_MD, 1f)
         context.drawTextWithShadow(textRenderer, "§e§lHatchery", 0, 0, 0xFFFFFF)
         context.matrices.pop()
 
         // Egg-availability badge — right-aligned, text only (no second egg icon).
         val countText = "§f§l${packet.availableEggs}"
         val labelText = "§7Eggs available: "
-        val scale = 0.85f
+        val scale = UiTokens.TEXT_MD
         val labelW = (textRenderer.getWidth(labelText) * scale).toInt()
         val countW = (textRenderer.getWidth(countText) * scale).toInt()
         val badgeRight = panelX + panelW - PADDING - 6
@@ -227,7 +227,7 @@ class HatcheryPanel(
         context.fill(panelX + PADDING, startY, panelX + panelW - PADDING, startY + 1, 0xFFFFB300.toInt())
         context.matrices.push()
         context.matrices.translate((panelX + PADDING + 4).toFloat(), (startY + 3).toFloat(), 0f)
-        context.matrices.scale(0.65f, 0.65f, 1f)
+        context.matrices.scale(UiTokens.TEXT_XS, UiTokens.TEXT_XS, 1f)
         context.drawTextWithShadow(textRenderer, "§e§lACTIVE HATCHERS §8(${active.size})", 0, 0, 0xFFB300)
         context.matrices.pop()
 
@@ -267,21 +267,21 @@ class HatcheryPanel(
         val nameX = cardLeft + 40
         context.matrices.push()
         context.matrices.translate(nameX.toFloat(), (y + 4).toFloat(), 0f)
-        context.matrices.scale(0.75f, 0.75f, 1f)
+        context.matrices.scale(UiTokens.TEXT_SM, UiTokens.TEXT_SM, 1f)
         context.drawTextWithShadow(textRenderer, "§f§l${a.hatcherDisplayName}", 0, 0, 0xFFFFFF)
         context.matrices.pop()
 
         val stars = (1..5).joinToString("") { if (it <= a.proficiency) "★" else "☆" }
         context.matrices.push()
         context.matrices.translate(nameX.toFloat(), (y + 13).toFloat(), 0f)
-        context.matrices.scale(0.6f, 0.6f, 1f)
+        context.matrices.scale(UiTokens.TEXT_XS, UiTokens.TEXT_XS, 1f)
         context.drawTextWithShadow(textRenderer, "§6Hatcher  §e$stars", 0, 0, 0xFFD700)
         context.matrices.pop()
 
         // Generic status — egg species hidden so the hatchling stays a surprise.
         context.matrices.push()
         context.matrices.translate(nameX.toFloat(), (y + 22).toFloat(), 0f)
-        context.matrices.scale(0.7f, 0.7f, 1f)
+        context.matrices.scale(UiTokens.TEXT_SM, UiTokens.TEXT_SM, 1f)
         context.drawTextWithShadow(textRenderer, "§7§oIncubating…", 0, 0, 0xCCCCCC)
         context.matrices.pop()
 
@@ -298,10 +298,10 @@ class HatcheryPanel(
         if (fillW > 0) context.fill(barX, barY, barX + fillW, barY + barH, 0xFFFF9800.toInt())
 
         val pctText = "${(progress * 100).toInt()}%"
-        val pctW = (textRenderer.getWidth(pctText) * 0.55f).toInt()
+        val pctW = (textRenderer.getWidth(pctText) * UiTokens.TEXT_XS).toInt()
         context.matrices.push()
         context.matrices.translate((barX + barW / 2 - pctW / 2).toFloat(), (barY - 1).toFloat(), 0f)
-        context.matrices.scale(0.55f, 0.55f, 1f)
+        context.matrices.scale(UiTokens.TEXT_XS, UiTokens.TEXT_XS, 1f)
         context.drawTextWithShadow(textRenderer, pctText, 0, 0, 0xFFFFFF)
         context.matrices.pop()
     }
@@ -325,7 +325,7 @@ class HatcheryPanel(
         // Thin blue accent stripe on the left edge
         context.fill(cardLeft, rowY, cardLeft + 2, rowY + ROW_H - 1, 0xFF2196F3.toInt())
 
-        val textScale = 0.7f
+        val textScale = UiTokens.TEXT_SM
 
         // Hatched sprite (16x16 — overflows row slightly, same as LogsPanel).
         PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, e.hatchedSpecies, cardLeft + 4, rowY - 1, 0f)
@@ -388,7 +388,7 @@ class HatcheryPanel(
         context.fill(panelX + PADDING, startY, panelX + panelW - PADDING, startY + 1, 0xFF2196F3.toInt())
         context.matrices.push()
         context.matrices.translate((panelX + PADDING + 4).toFloat(), (startY + 3).toFloat(), 0f)
-        context.matrices.scale(0.65f, 0.65f, 1f)
+        context.matrices.scale(UiTokens.TEXT_XS, UiTokens.TEXT_XS, 1f)
         val total = packet?.entries?.size ?: 0
         context.drawTextWithShadow(textRenderer, "§b§lHATCH LOG §8($total entries)", 0, 0, 0x2196F3)
         context.matrices.pop()

@@ -33,9 +33,9 @@ class WorkshopPanel(
     private val panelH: Int,
     private val textRenderer: TextRenderer
 ) {
-    private val PADDING = 6
-    private val ROW_HEIGHT = 20
-    private val SCALE = 0.75f
+    private val PADDING = UiTokens.PANEL_PAD   // 8 — matches user-facing panels
+    private val ROW_HEIGHT = 20                // intentional middle ground (sprite + chip)
+    private val SCALE = UiTokens.TEXT_SM       // 0.75 — default small-label scale
     private val ICON_SCALE = 16f / 16f  // full size item icons
 
     private enum class SubTab { OVERVIEW, RECIPES, PREVIEW }

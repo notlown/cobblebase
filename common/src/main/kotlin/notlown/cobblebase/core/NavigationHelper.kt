@@ -225,17 +225,35 @@ object NavigationHelper {
         val world = pokemonEntity.world
         val now = world.time
         val pokemonId = pokemonEntity.pokemon.uuid
+
+        // Cheap path runs EVERY tick (2 block reads): detect in/on leaves and continuously
+        // clear the brain's movement memories so flying mons (Butterfree, Combee, Ninjask)
+        // can't immediately re-issue a "fly up" path between the throttled ground-scan
+        // resets below. Previously the whole function was throttled to once per second,
+        // so a flying mon would visibly twitch in-tree for the full 1 s gap because its
+        // brain re-engaged the climb path as soon as the reposition landed.
+        val pos = pokemonEntity.blockPos
+        val block = world.getBlockState(pos).block
+        val blockBelow = world.getBlockState(pos.down()).block
+        val inLeaves = block is net.minecraft.block.LeavesBlock
+        val onLeaves = blockBelow is net.minecraft.block.LeavesBlock
+
+        if (inLeaves || onLeaves) {
+            try {
+                val brain = pokemonEntity.brain
+                brain.forget(net.minecraft.entity.ai.brain.MemoryModuleType.WALK_TARGET)
+                brain.forget(net.minecraft.entity.ai.brain.MemoryModuleType.PATH)
+            } catch (_: Exception) {}
+            try { pokemonEntity.navigation.stop() } catch (_: Exception) {}
+        }
+
+        // Expensive path (canopy check + downward ground scan + reposition) stays
+        // throttled to once per second per Pokemon — block reads here can total up to
+        // ~23 per call, way too costly to run every tick across every pastured mon.
         val lastCheck = lastEscapeLeavesTick[pokemonId] ?: 0L
         if (now - lastCheck < ESCAPE_LEAVES_INTERVAL) return
         lastEscapeLeavesTick[pokemonId] = now
 
-        val pos = pokemonEntity.blockPos
-        val block = world.getBlockState(pos).block
-        val blockBelow = world.getBlockState(pos.down()).block
-
-        // Check if IN leaves, ON leaves, or trapped under a leaf canopy
-        val inLeaves = block is net.minecraft.block.LeavesBlock
-        val onLeaves = blockBelow is net.minecraft.block.LeavesBlock
         val underCanopy = !inLeaves && !onLeaves && hasLeavesAbove(world, pos, 3)
 
         if (inLeaves || onLeaves || underCanopy) {

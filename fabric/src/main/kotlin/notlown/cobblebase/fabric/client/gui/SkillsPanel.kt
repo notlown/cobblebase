@@ -59,6 +59,13 @@ class SkillsPanel(
     private var contentY = 0
     private var isDraggingScrollbar = false
 
+    /**
+     * Reusable scrollbar for the main right-side grid in the My Pokemon and WorkerWiki
+     * sub-tabs. Only one of those is visible at a time, so a single instance with
+     * geometry refreshed each frame is sufficient.
+     */
+    private val mainGridScrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 14)
+
     // Per-pokemon layout: cumulative Y offset and row height
     private val rowOffsets = mutableListOf<Int>()
     private val rowHeights = mutableListOf<Int>()
@@ -379,13 +386,18 @@ class SkillsPanel(
             context.drawTooltip(textRenderer, pendingMonTooltipLines, pendingMonTooltipX, pendingMonTooltipY)
         }
 
-        if (contentH > viewportH) {
-            val trackX = panelX + panelW - 4
-            val thumbH = ((viewportH.toFloat() / contentH) * viewportH).toInt().coerceAtLeast(10)
-            val thumbY = listTop + ((clamped.toFloat() / maxScroll) * (viewportH - thumbH)).toInt()
-            context.fill(trackX, listTop, trackX + 2, listTop + viewportH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        // Scrollbar — handed off to the reusable component so click-and-drag works,
+        // not just wheel scroll. Geometry refreshes per frame; component owns drag state.
+        mainGridScrollbar.layout(
+            trackX = panelX + panelW - 6,
+            trackY = listTop,
+            trackHeight = viewportH,
+            contentHeight = contentH,
+            viewportHeight = viewportH,
+            currentScroll = clamped,
+        )
+        mainGridScrollbar.render(context, mouseX, mouseY)
+        if (mainGridScrollbar.scroll != clamped) onScrollSet(mainGridScrollbar.scroll)
     }
 
     /**
@@ -931,13 +943,18 @@ class SkillsPanel(
             context.drawTooltip(textRenderer, pendingMonTooltipLines, pendingMonTooltipX, pendingMonTooltipY)
         }
 
-        if (contentH > viewportH) {
-            val trackX = panelX + panelW - 4
-            val thumbH = ((viewportH.toFloat() / contentH) * viewportH).toInt().coerceAtLeast(10)
-            val thumbY = listTop + ((clamped.toFloat() / maxScroll) * (viewportH - thumbH)).toInt()
-            context.fill(trackX, listTop, trackX + 2, listTop + viewportH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        // Shared scrollbar component (also used by My Pokemon). Click on the track
+        // jumps the thumb and starts a drag; drag-and-release works as expected.
+        mainGridScrollbar.layout(
+            trackX = panelX + panelW - 6,
+            trackY = listTop,
+            trackHeight = viewportH,
+            contentHeight = contentH,
+            viewportHeight = viewportH,
+            currentScroll = clamped,
+        )
+        mainGridScrollbar.render(context, mouseX, mouseY)
+        if (mainGridScrollbar.scroll != clamped) pokeWikiScroll = mainGridScrollbar.scroll
     }
 
     /** Pokedex number for sorting. Mirrors AdminSpeciesListPanel's helper. */
@@ -1151,6 +1168,14 @@ class SkillsPanel(
             val selectedSkills = if (isWiki) pokeWikiSelectedSkills else myPokemonSelectedSkills
             val expandedCats = if (isWiki) pokeWikiExpandedCats else myPokemonExpandedCats
 
+            // Right-side grid scrollbar — claim the click before any sidebar/grid hit-test,
+            // otherwise drag attempts on the thumb get intercepted by row clicks underneath.
+            if (mainGridScrollbar.mouseClicked(mouseX, mouseY)) {
+                if (isWiki) pokeWikiScroll = mainGridScrollbar.scroll
+                else myPokemonScroll = mainGridScrollbar.scroll
+                return true
+            }
+
             // Sort controls (WorkerWiki only). Field button cycles Dex → Name → Prof → Skills → Rarity.
             // Direction button toggles ascending/descending independently.
             // Web DB button opens the live web species database in the user's default browser.
@@ -1255,6 +1280,11 @@ class SkillsPanel(
             updateScrollFromMouse(mouseY)
             return true
         }
+        if (mainGridScrollbar.mouseDragged(mouseY)) {
+            if (activeSubTab == SubTab.MY_POKEMON) myPokemonScroll = mainGridScrollbar.scroll
+            else if (activeSubTab == SubTab.POKEWIKI) pokeWikiScroll = mainGridScrollbar.scroll
+            return true
+        }
         return false
     }
 
@@ -1263,6 +1293,7 @@ class SkillsPanel(
             isDraggingScrollbar = false
             return true
         }
+        if (mainGridScrollbar.mouseReleased()) return true
         return false
     }
 

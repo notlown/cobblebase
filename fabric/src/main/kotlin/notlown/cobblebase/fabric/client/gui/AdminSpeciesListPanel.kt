@@ -34,6 +34,7 @@ class AdminSpeciesListPanel(
         private set
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
+    private val scrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
 
     /** Sort modes cycled by the toggle button next to the "Species" header. */
     private enum class SortMode { POKEDEX, A_Z, Z_A }
@@ -195,14 +196,16 @@ class AdminSpeciesListPanel(
         }
         context.disableScissor()
 
-        if (contentPx > scrollableH) {
-            val trackX = x + w - 3
-            val trackH = scrollableH
-            val thumbH = ((scrollableH.toFloat() / contentPx) * trackH).toInt().coerceAtLeast(10)
-            val thumbY = rowsAreaTop + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, rowsAreaTop, trackX + 2, rowsAreaTop + trackH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        scrollbar.layout(
+            trackX = x + w - 4,
+            trackY = rowsAreaTop,
+            trackHeight = scrollableH,
+            contentHeight = contentPx,
+            viewportHeight = scrollableH,
+            currentScroll = scrollOffset,
+        )
+        scrollbar.render(context, 0, 0)
+        scrollOffset = scrollbar.scroll
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
@@ -228,12 +231,9 @@ class AdminSpeciesListPanel(
         val contentPx = filteredSpecies.size * ROW_HEIGHT
         val maxScroll = (contentPx - scrollableH).coerceAtLeast(0)
 
-        // Scrollbar drag — hitbox is 8px wide around the 2px track, only in the rows area.
-        val trackX = x + w - 3
-        if (maxScroll > 0 && mouseX >= trackX - 4 && mouseX <= trackX + 4 && mouseY >= rowsAreaTop && mouseY <= rowsAreaTop + scrollableH) {
-            isDraggingScrollbar = true
-            val rel = ((mouseY - rowsAreaTop) / scrollableH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (rel * maxScroll).toInt()
+        // Scrollbar drag — shared component handles thumb-grab + track-jump.
+        if (scrollbar.mouseClicked(mouseX, mouseY)) {
+            scrollOffset = scrollbar.scroll
             return true
         }
 
@@ -262,28 +262,14 @@ class AdminSpeciesListPanel(
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        if (isDraggingScrollbar) {
-            val listY = y + PADDING + SEARCH_HEIGHT + 16
-            val listH = h - PADDING - SEARCH_HEIGHT - 20
-            val addRowHeaderPx = if (showAddOption) ROW_HEIGHT else 0
-            val rowsAreaTop = listY + addRowHeaderPx
-            val scrollableH = listH - addRowHeaderPx
-            val contentPx = filteredSpecies.size * ROW_HEIGHT
-            val maxScroll = (contentPx - scrollableH).coerceAtLeast(0)
-            val rel = ((mouseY - rowsAreaTop) / scrollableH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (rel * maxScroll).toInt()
+        if (scrollbar.mouseDragged(mouseY)) {
+            scrollOffset = scrollbar.scroll
             return true
         }
         return false
     }
 
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (isDraggingScrollbar) {
-            isDraggingScrollbar = false
-            return true
-        }
-        return false
-    }
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = scrollbar.mouseReleased()
 
     /** Pixels scrolled per wheel notch. 9px = half a row — smooth without losing the row rhythm. */
     private val SCROLL_STEP_PX = 9

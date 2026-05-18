@@ -81,6 +81,7 @@ class AdminJobsPanel(
 
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
+    private val gridScrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 14)
 
     private var activeFieldJob: Int = -1
     private var activeFieldType: FieldType = FieldType.NONE
@@ -392,19 +393,22 @@ class AdminJobsPanel(
         }
         gridTiles = tiles
 
-        // Scrollbar for grid if it overflows
+        // Scrollbar for grid if it overflows.
+        // AdminJobsPanel uses NEGATIVE scrollOffset (0 = top, -N = scrolled down); the
+        // component expects positive values, so we feed -scrollOffset and read back -scroll.
         val rowsTotal = (visible.size + cols - 1) / cols
         val totalH = rowsTotal * (tileH + 4)
         val visibleH = gridBottom - gridTop
-        if (totalH > visibleH) {
-            val trackX = rightX + rightW - 3
-            val trackH = visibleH
-            val thumbH = ((visibleH.toFloat() / totalH) * trackH).toInt().coerceAtLeast(10)
-            val maxScroll = (totalH - visibleH).coerceAtLeast(1)
-            val thumbY = gridTop + ((-scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, gridTop, trackX + 2, gridTop + trackH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        gridScrollbar.layout(
+            trackX = rightX + rightW - 4,
+            trackY = gridTop,
+            trackHeight = visibleH,
+            contentHeight = totalH,
+            viewportHeight = visibleH,
+            currentScroll = -scrollOffset,
+        )
+        gridScrollbar.render(context, mouseX, mouseY)
+        scrollOffset = -gridScrollbar.scroll
     }
 
     private fun renderJobTile(
@@ -771,6 +775,11 @@ class AdminJobsPanel(
     // ---- Input handling ----
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Grid scrollbar — claim drag clicks before anything else so the thumb is grabbable.
+        if (gridScrollbar.mouseClicked(mouseX, mouseY)) {
+            scrollOffset = -gridScrollbar.scroll
+            return true
+        }
         // Sidebar click
         if (mouseX in x.toDouble()..(x + SIDEBAR_W).toDouble() && mouseY in y.toDouble()..(y + h).toDouble()) {
             val relY = mouseY - (y + PADDING + 11)
@@ -1031,6 +1040,10 @@ class AdminJobsPanel(
         if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.LOOT) {
             return currentLootPanel?.mouseDragged(mouseX, mouseY, button, deltaX, deltaY) ?: false
         }
+        if (gridScrollbar.mouseDragged(mouseY)) {
+            scrollOffset = -gridScrollbar.scroll
+            return true
+        }
         return false
     }
 
@@ -1038,6 +1051,7 @@ class AdminJobsPanel(
         if (viewMode == ViewMode.DETAIL && detailTab == DetailTab.LOOT) {
             return currentLootPanel?.mouseReleased(mouseX, mouseY, button) ?: false
         }
+        if (gridScrollbar.mouseReleased()) return true
         return false
     }
 

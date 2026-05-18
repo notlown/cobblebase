@@ -54,6 +54,7 @@ class AdminSkillEditorPanel(
     private val skillEdits = mutableListOf<AdminButtonData>()
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
+    private val scrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
     private var saveButton: ButtonWidget? = null
     private var resetButton: ButtonWidget? = null
     private var dirty = false
@@ -379,14 +380,17 @@ class AdminSkillEditorPanel(
 
         context.disableScissor()
 
-        // Scrollbar
-        if (gridRows.size > maxVisible) {
-            val trackX = x + w - 3
-            val thumbH = ((maxVisible.toFloat() / gridRows.size) * listH).toInt().coerceAtLeast(10)
-            val thumbY = listY + ((scrollOffset.toFloat() / maxScroll) * (listH - thumbH)).toInt()
-            context.fill(trackX, listY, trackX + 2, listY + listH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        // Shared scrollbar component (handles click + drag).
+        scrollbar.layout(
+            trackX = x + w - 4,
+            trackY = listY,
+            trackHeight = listH,
+            contentHeight = gridRows.size * ROW_HEIGHT,
+            viewportHeight = listH,
+            currentScroll = scrollOffset * ROW_HEIGHT,
+        )
+        scrollbar.render(context, x + w - 4, listY)
+        scrollOffset = scrollbar.scroll / ROW_HEIGHT
 
         // --- Suggestion Dropdown (over everything) ---
         // MC 1.21 batches drawItem/text calls and flushes them at the END of the frame, so
@@ -612,12 +616,9 @@ class AdminSkillEditorPanel(
         val maxVisible = listH / ROW_HEIGHT
         val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
 
-        // Scrollbar
-        val trackX = x + w - 3
-        if (maxScroll > 0 && mouseX >= trackX - 4 && mouseX <= trackX + 4 && mouseY >= listY && mouseY <= listY + listH) {
-            isDraggingScrollbar = true
-            val relativeY = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (relativeY * maxScroll).toInt()
+        // Scrollbar drag — delegates to the shared component for proper thumb-grab semantics.
+        if (scrollbar.mouseClicked(mouseX, mouseY)) {
+            scrollOffset = scrollbar.scroll / ROW_HEIGHT
             return true
         }
 
@@ -668,24 +669,14 @@ class AdminSkillEditorPanel(
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        if (isDraggingScrollbar) {
-            val producerH = if (producerEnabled) PRODUCER_SECTION_H else 0
-            val listY = y + PADDING + 14 + producerH
-            val listH = h - PADDING * 2 - 32 - producerH
-            val maxVisible = listH / ROW_HEIGHT
-            val gridRows = buildGridRows(3)
-            val maxScroll = (gridRows.size - maxVisible).coerceAtLeast(0)
-            val relativeY = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (relativeY * maxScroll).toInt()
+        if (scrollbar.mouseDragged(mouseY)) {
+            scrollOffset = scrollbar.scroll / ROW_HEIGHT
             return true
         }
         return false
     }
 
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (isDraggingScrollbar) { isDraggingScrollbar = false; return true }
-        return false
-    }
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = scrollbar.mouseReleased()
 
     private var scrollAccumulator = 0.0
 

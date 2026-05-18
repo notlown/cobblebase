@@ -118,6 +118,12 @@ class AdminLootPanel(
     private var selectedRarity: String = ""
     private var sidebarScroll = 0
     private var listScroll = 0
+    private val sidebarScrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
+    private val listScrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
+    /** Last row-height in pixels for the editEntries list — used to scale the listScrollbar
+     *  pixel-based scroll back into row-units for [listScroll]. Refreshed each render. */
+    private var listRowH: Int = 16
+    private var sidebarRowH: Int = 12
 
     private val editEntries = mutableListOf<LootEntry>()
     private var editRolls = 1
@@ -372,15 +378,17 @@ class AdminLootPanel(
             }
             context.disableScissor()
 
-            if (jobs.size > maxSidebarRows) {
-                val trackX = x + SIDEBAR_W - 3
-                val trackH = sidebarListH
-                val maxScroll = (jobs.size - maxSidebarRows).coerceAtLeast(1)
-                val thumbH = ((maxSidebarRows.toFloat() / jobs.size) * trackH).toInt().coerceAtLeast(8)
-                val thumbY = sidebarListY + ((sidebarScroll.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-                context.fill(trackX, sidebarListY, trackX + 2, sidebarListY + trackH, 0x33FFFFFF)
-                context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-            }
+            sidebarRowH = ROW_H
+            sidebarScrollbar.layout(
+                trackX = x + SIDEBAR_W - 4,
+                trackY = sidebarListY,
+                trackHeight = sidebarListH,
+                contentHeight = jobs.size * ROW_H,
+                viewportHeight = sidebarListH,
+                currentScroll = sidebarScroll * ROW_H,
+            )
+            sidebarScrollbar.render(context, mouseX, mouseY)
+            sidebarScroll = sidebarScrollbar.scroll / ROW_H
         }
 
         // Right pane \u2014 when locked the content fills the whole panel.
@@ -597,16 +605,18 @@ class AdminLootPanel(
         }
         context.disableScissor()
 
-        // List scrollbar
-        if (editEntries.size > maxRows) {
-            val trackX = rightX + rightW - 3
-            val trackH = listH
-            val maxScroll = (editEntries.size - maxRows).coerceAtLeast(1)
-            val thumbH = ((maxRows.toFloat() / editEntries.size) * trackH).toInt().coerceAtLeast(8)
-            val thumbY = listY + ((listScroll.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        // List scrollbar via shared component — handles click on track + drag of thumb.
+        listRowH = ROW_H
+        listScrollbar.layout(
+            trackX = rightX + rightW - 4,
+            trackY = listY,
+            trackHeight = listH,
+            contentHeight = editEntries.size * ROW_H,
+            viewportHeight = listH,
+            currentScroll = listScroll * ROW_H,
+        )
+        listScrollbar.render(context, rightX, listY)
+        listScroll = listScrollbar.scroll / ROW_H
 
         // Autocomplete popup — drawn after the rows so it overlays subsequent
         // rows. Anchored under the active item field.
@@ -725,6 +735,15 @@ class AdminLootPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Two scrollbars on this panel — claim drag clicks before any list/row hit-test.
+        if (sidebarScrollbar.mouseClicked(mouseX, mouseY)) {
+            sidebarScroll = sidebarScrollbar.scroll / sidebarRowH.coerceAtLeast(1)
+            return true
+        }
+        if (listScrollbar.mouseClicked(mouseX, mouseY)) {
+            listScroll = listScrollbar.scroll / listRowH.coerceAtLeast(1)
+            return true
+        }
         // Locked-mode geometry matches render: no sidebar, right pane fills the whole area.
         val sidebarW = effectiveSidebarW()
         val gap = if (isLocked()) 0 else 2
@@ -760,42 +779,15 @@ class AdminLootPanel(
 
         commitActiveField()
 
-        // Sidebar scrollbar drag start (skipped in locked mode — no sidebar)
-        if (!isLocked()) {
-            val sidebarListY = y + 14
-            val sidebarListH = h - 14 - FOOTER_H
-            val sidebarMaxRows = sidebarListH / ROW_H
-            val sidebarMaxScroll = (jobs.size - sidebarMaxRows).coerceAtLeast(0)
-            val sidebarTrackX = x + SIDEBAR_W - 3
-            if (sidebarMaxScroll > 0 &&
-                mouseX in (sidebarTrackX - 3).toDouble()..(sidebarTrackX + 5).toDouble() &&
-                mouseY in sidebarListY.toDouble()..(sidebarListY + sidebarListH).toDouble()
-            ) {
-                dragging = DragTarget.SIDEBAR
-                val rel = ((mouseY - sidebarListY) / sidebarListH.toDouble()).coerceIn(0.0, 1.0)
-                sidebarScroll = (rel * sidebarMaxScroll).toInt()
-                return true
-            }
-        }
-
-        // Right list scrollbar drag start
+        // Scrollbar drag start handled by the shared component (see top of mouseClicked).
+        // The previous custom drag logic was replaced by ScrollbarComponent — it preserves
+        // the grab offset within the thumb, which the rel-position math here did not.
+        // Below we still need rightX/rightW/rightListY for the rarity-tab + row-click hit-tests.
         val rightX = x + sidebarW + gap
         val rightW = w - sidebarW - gap
         val headerY = y + 41
         val rightListY = headerY + 12
         val rightListH = y + h - FOOTER_H - rightListY - 2
-        val rightMaxRows = rightListH / ROW_H
-        val rightMaxScroll = (editEntries.size - rightMaxRows).coerceAtLeast(0)
-        val rightTrackX = rightX + rightW - 3
-        if (rightMaxScroll > 0 &&
-            mouseX in (rightTrackX - 3).toDouble()..(rightTrackX + 5).toDouble() &&
-            mouseY in rightListY.toDouble()..(rightListY + rightListH).toDouble()
-        ) {
-            dragging = DragTarget.LIST
-            val rel = ((mouseY - rightListY) / rightListH.toDouble()).coerceIn(0.0, 1.0)
-            listScroll = (rel * rightMaxScroll).toInt()
-            return true
-        }
 
         // Sidebar selection (only when not clicking the scrollbar) — skipped in locked mode.
         if (!isLocked()) {
@@ -1001,39 +993,20 @@ class AdminLootPanel(
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        when (dragging) {
-            DragTarget.SIDEBAR -> {
-                val sidebarListY = y + 14
-                val sidebarListH = h - 14 - FOOTER_H
-                val maxRows = sidebarListH / ROW_H
-                val maxScroll = (jobs.size - maxRows).coerceAtLeast(0)
-                if (maxScroll > 0) {
-                    val rel = ((mouseY - sidebarListY) / sidebarListH.toDouble()).coerceIn(0.0, 1.0)
-                    sidebarScroll = (rel * maxScroll).toInt()
-                }
-                return true
-            }
-            DragTarget.LIST -> {
-                val headerY = y + 41
-                val rightListY = headerY + 12
-                val rightListH = y + h - FOOTER_H - rightListY - 2
-                val maxRows = rightListH / ROW_H
-                val maxScroll = (editEntries.size - maxRows).coerceAtLeast(0)
-                if (maxScroll > 0) {
-                    val rel = ((mouseY - rightListY) / rightListH.toDouble()).coerceIn(0.0, 1.0)
-                    listScroll = (rel * maxScroll).toInt()
-                }
-                return true
-            }
-            null -> return false
+        if (sidebarScrollbar.mouseDragged(mouseY)) {
+            sidebarScroll = sidebarScrollbar.scroll / sidebarRowH.coerceAtLeast(1)
+            return true
         }
+        if (listScrollbar.mouseDragged(mouseY)) {
+            listScroll = listScrollbar.scroll / listRowH.coerceAtLeast(1)
+            return true
+        }
+        return false
     }
 
     fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (dragging != null) {
-            dragging = null
-            return true
-        }
+        if (sidebarScrollbar.mouseReleased()) return true
+        if (listScrollbar.mouseReleased()) return true
         return false
     }
 

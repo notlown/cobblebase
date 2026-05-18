@@ -87,6 +87,7 @@ class AdminWikiPanel(
     private val openButtons = mutableListOf<ButtonWidget>()
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
+    private val scrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
 
     /** Height reserved at the bottom for the Ko-fi support box. */
     private val SUPPORT_BOX_H = 38
@@ -156,15 +157,16 @@ class AdminWikiPanel(
 
         context.disableScissor()
 
-        // Scrollbar
-        if (links.size > maxVisible) {
-            val trackX = x + w - 4
-            val trackH = listH
-            val thumbH = ((maxVisible.toFloat() / links.size) * trackH).toInt().coerceAtLeast(10)
-            val thumbY = listY + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        scrollbar.layout(
+            trackX = x + w - 4,
+            trackY = listY,
+            trackHeight = listH,
+            contentHeight = links.size * ROW_H,
+            viewportHeight = listH,
+            currentScroll = scrollOffset * ROW_H,
+        )
+        scrollbar.render(context, 0, 0)
+        scrollOffset = scrollbar.scroll / ROW_H
 
         // Ko-fi support box pinned to the bottom — fixed, doesn't scroll with the list.
         val boxTop = y + h - SUPPORT_BOX_H - PADDING
@@ -197,43 +199,22 @@ class AdminWikiPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        val listY = listAreaY()
-        val listH = listAreaH()
-        val maxVisible = listH / ROW_H
-        val maxScroll = (links.size - maxVisible).coerceAtLeast(0)
-        val trackX = x + w - 4
-        if (maxScroll > 0 &&
-            mouseX in (trackX - 4).toDouble()..(trackX + 4).toDouble() &&
-            mouseY in listY.toDouble()..(listY + listH).toDouble()
-        ) {
-            isDraggingScrollbar = true
-            val rel = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (rel * maxScroll).toInt()
+        if (scrollbar.mouseClicked(mouseX, mouseY)) {
+            scrollOffset = scrollbar.scroll / ROW_H
             return true
         }
         return false
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        if (isDraggingScrollbar) {
-            val listY = listAreaY()
-            val listH = listAreaH()
-            val maxVisible = listH / ROW_H
-            val maxScroll = (links.size - maxVisible).coerceAtLeast(0)
-            val rel = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (rel * maxScroll).toInt()
+        if (scrollbar.mouseDragged(mouseY)) {
+            scrollOffset = scrollbar.scroll / ROW_H
             return true
         }
         return false
     }
 
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (isDraggingScrollbar) {
-            isDraggingScrollbar = false
-            return true
-        }
-        return false
-    }
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = scrollbar.mouseReleased()
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontal: Double, vertical: Double): Boolean {
         if (mouseX in x.toDouble()..(x + w).toDouble() && mouseY in y.toDouble()..(y + h).toDouble()) {

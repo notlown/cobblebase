@@ -1003,17 +1003,25 @@ class SkillsPanel(
             // Pokemon portrait — 1.0× scale (16 px native). Fits the compact 18-px
             // row exactly. Name + Lv stack vertically next to it.
             val name = pokemonData.displayName.string
+            val spriteScale = 1.15f
             context.matrices.push()
             context.matrices.translate((panelX + PANEL_PADDING).toFloat(), (ry + 1).toFloat(), 0f)
+            context.matrices.scale(spriteScale, spriteScale, 1f)
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, pokemonData.species, name, pokemonData.aspects,
                 0, 0, delta
             )
             context.matrices.pop()
 
-            // Pokemon name top + Lv tiny underneath, both fit inside the compact 18-px row.
-            val nameX = panelX + PANEL_PADDING + ICON_OFFSET
-            context.drawTextWithShadow(textRenderer, name, nameX, ry + 1, 0xFFFFFFFF.toInt())
+            // Name at 0.9 scale — slightly tighter than full size so it doesn't
+            // crowd the chip column for longer names. Lv stays at 0.75.
+            val nameX = panelX + PANEL_PADDING + ICON_OFFSET + 2
+            val nameScale = 0.9f
+            context.matrices.push()
+            context.matrices.translate(nameX.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(nameScale, nameScale, 1f)
+            context.drawTextWithShadow(textRenderer, name, 0, 0, 0xFFFFFFFF.toInt())
+            context.matrices.pop()
 
             val lvScale = 0.75f
             context.matrices.push()

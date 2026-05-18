@@ -30,11 +30,11 @@ class BuffsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    // Compacted from 28 — Active/Passive entries had way too much vertical breathing
-    // room after removing the category color bar and packing the name + level into the
-    // same column. 22 keeps the 16-px sprite (now scaled 1.3× to 20-21 px) fully visible
-    // and the two-line name/level stack readable, without wasting half a row on padding.
-    private val ROW_HEIGHT = 22
+    // Synced to the Pasture tab's row dimensions (18 px) so the two tabs feel
+    // like one product. Sprite is 1.15× (~18 px) — minimally bigger than 1.0×,
+    // fills the row vertically. Pokemon name renders at 0.9× scale so longer
+    // names don't crowd the chip column.
+    private val ROW_HEIGHT = 18
     private val HEADER_HEIGHT = 18
     private val PADDING = 8
     private val ROW_EVEN = 0x33FFFFFF.toInt()
@@ -385,13 +385,12 @@ class BuffsPanel(
             val isOvershadowed = activeSubTab == SubTab.PASSIVE && maxProfHere != null && entry.proficiency < maxProfHere
 
             val scale = 0.75f
+            val nameScale = 0.9f
             val cat = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
                 else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
 
-            // Pokemon portrait icon \u2014 scaled up 1.3\u00D7 so a 16-px sprite renders at ~21 px
-            // (we got rid of the category color bar so there's room to make sprites the
-            // visual anchor of the row). Anchored ry+1 so it stays inside the 22-px row.
-            val spriteScale = 1.3f
+            // Pokemon portrait \u2014 1.15\u00D7 scale (~18 px), matches Pasture tab.
+            val spriteScale = 1.15f
             val spriteX = colPokemon + 4
             val spriteY = ry + 1
             context.matrices.push()
@@ -413,17 +412,17 @@ class BuffsPanel(
                 context.fill(spriteX, spriteY, spriteX + scaledIconWidth, spriteY + scaledH, 0x88000000.toInt())
             }
 
-            // Pokemon name + level (shifted right past the bigger icon).
+            // Pokemon name (0.9\u00D7) + Lv (0.75\u00D7) \u2014 matches Pasture tab pitch.
             val nameX = (colPokemon + 4 + nameOffset).toFloat()
             val nameColor = if (isOvershadowed) 0x666666 else 0xFFFFFF
             context.matrices.push()
-            context.matrices.translate(nameX, (ry + 4).toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
+            context.matrices.translate(nameX, (ry + 2).toFloat(), 0f)
+            context.matrices.scale(nameScale, nameScale, 1f)
             context.drawTextWithShadow(textRenderer, entry.pokemonName, 0, 0, nameColor)
             context.matrices.pop()
 
             context.matrices.push()
-            context.matrices.translate(nameX, (ry + 14).toFloat(), 0f)
+            context.matrices.translate(nameX, (ry + 11).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
             val lvlColor = if (isOvershadowed) 0x555555 else 0xAAAAAA
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", 0, 0, lvlColor)
@@ -435,7 +434,7 @@ class BuffsPanel(
             // overlay a dark mask so the icon reads as inactive \u2014 same visual language
             // as the gray name/stars/skill-name color below.
             val jobIconX = colSkill
-            val jobIconY = ry + 3
+            val jobIconY = ry + 1
             context.matrices.push()
             context.matrices.translate(jobIconX.toFloat(), jobIconY.toFloat(), 0f)
             context.matrices.scale(0.55f, 0.55f, 1f)
@@ -458,8 +457,8 @@ class BuffsPanel(
                 else -> cat
             }
             context.matrices.push()
-            context.matrices.translate(skillTextX.toFloat(), (ry + 4).toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
+            context.matrices.translate(skillTextX.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(nameScale, nameScale, 1f)
             context.drawTextWithShadow(textRenderer, entry.skillName, 0, 0, skillNameColor)
             context.matrices.pop()
 
@@ -474,7 +473,7 @@ class BuffsPanel(
                 else -> 0x888888
             }
             context.matrices.push()
-            context.matrices.translate((colSkill + 11).toFloat(), (ry + 14).toFloat(), 0f)
+            context.matrices.translate((colSkill + 11).toFloat(), (ry + 11).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
             context.drawText(textRenderer, stars, 0, 0, starColor, false)
             context.matrices.pop()
@@ -489,7 +488,7 @@ class BuffsPanel(
                 else -> 0xCCCCCC
             }
             context.matrices.push()
-            context.matrices.translate(colDesc.toFloat(), (ry + 9).toFloat(), 0f)
+            context.matrices.translate(colDesc.toFloat(), (ry + 6).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
             context.drawTextWithShadow(textRenderer, entry.description, 0, 0, descColor)
             context.matrices.pop()

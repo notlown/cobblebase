@@ -600,6 +600,47 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 packet.handle(context.player() as net.minecraft.server.network.ServerPlayerEntity)
             }
         }
+
+        // C2S: HatchLog request (Hatchery sub-tab opens) — server replies with logs +
+        // active hatchers + available eggs in/around the pasture.
+        registrar.playToServer(
+            notlown.cobblebase.core.net.HatchLogRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.HatchLogRequestC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                handleHatchLogRequest(context.player() as net.minecraft.server.network.ServerPlayerEntity, packet)
+            }
+        }
+
+        // S2C: HatchLog sync (server pushes hatchery state to client)
+        registrar.playToClient(
+            notlown.cobblebase.core.net.HatchLogSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.HatchLogSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.neoforge.client.HatchLogCache.update(packet)
+            }
+        }
+
+        // C2S: MyPokemon request (My Pokemon sub-tab opens)
+        registrar.playToServer(
+            notlown.cobblebase.core.net.MyPokemonRequestC2SPacket.ID,
+            notlown.cobblebase.core.net.MyPokemonRequestC2SPacket.CODEC
+        ) { _, context ->
+            context.enqueueWork {
+                handleMyPokemonRequest(context.player() as net.minecraft.server.network.ServerPlayerEntity)
+            }
+        }
+
+        // S2C: MyPokemon sync
+        registrar.playToClient(
+            notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.neoforge.client.MyPokemonCache.update(packet)
+            }
+        }
     }
 
     private fun onPlayerLoggedIn(event: PlayerEvent.PlayerLoggedInEvent) {
@@ -781,5 +822,92 @@ class CobblebaseNeoForge(modBus: IEventBus) {
 
         val overridden = SpeciesSkillOverrides.getAllOverriddenSpecies()
         context.reply(AdminSpeciesSyncS2CPacket(allSpecies, overridden))
+    }
+
+    private fun handleHatchLogRequest(
+        player: net.minecraft.server.network.ServerPlayerEntity,
+        packet: notlown.cobblebase.core.net.HatchLogRequestC2SPacket
+    ) {
+        val entries = notlown.cobblebase.core.HatchLogManager.getAll().map { e ->
+            notlown.cobblebase.core.net.HatchLogSyncS2CPacket.Entry(
+                e.realTimestamp, e.worldTime,
+                e.hatchedSpecies, e.hatcherSpecies, e.hatcherDisplayName,
+                e.pastureX, e.pastureY, e.pastureZ, e.proficiency
+            )
+        }
+        val s = notlown.cobblebase.core.HatchLogManager.stats()
+
+        val pasturePos = packet.pasturePos
+        val world = player.serverWorld
+        val active = mutableListOf<notlown.cobblebase.core.net.HatchLogSyncS2CPacket.ActiveHatcher>()
+        var available = 0
+        if (pasturePos != null) {
+            val snapshots = notlown.cobblebase.core.executors.EggHatcherExecutor.snapshotForPasture(pasturePos)
+            for (snap in snapshots) {
+                active.add(notlown.cobblebase.core.net.HatchLogSyncS2CPacket.ActiveHatcher(
+                    hatcherSpecies = snap.hatcherSpecies,
+                    hatcherDisplayName = snap.hatcherDisplayName,
+                    eggSpecies = snap.eggSpecies,
+                    initialTimer = snap.initialTimer,
+                    currentTimer = snap.currentTimer,
+                    proficiency = snap.proficiency
+                ))
+            }
+            val radius = notlown.cobblebase.core.SkillRegistry.getEffectiveRadius("cobblebase:egg_hatcher")
+            available = notlown.cobblebase.core.executors.EggHatcherExecutor.countAvailableEggs(world, pasturePos, radius)
+        }
+
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+            notlown.cobblebase.core.net.HatchLogSyncS2CPacket(
+                entries, s.total, s.totalThisSession, s.uniqueSpecies, s.topHatchers,
+                active, available
+            )
+        )
+    }
+
+    private fun handleMyPokemonRequest(player: net.minecraft.server.network.ServerPlayerEntity) {
+        val storage = com.cobblemon.mod.common.Cobblemon.storage
+        fun mkEntry(p: com.cobblemon.mod.common.pokemon.Pokemon): notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Entry {
+            val species = p.species.name.lowercase()
+            val skills = notlown.cobblebase.core.SpeciesSkillRegistry
+                .getSkills(species)?.skills?.map { it.skillId } ?: emptyList()
+            val display = try { p.getDisplayName().string } catch (_: Exception) { species }
+            val aspects = try { p.aspects.toList() } catch (_: Exception) { emptyList() }
+            val sid = try { p.species.resourceIdentifier.toString() } catch (_: Exception) { "" }
+            return notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Entry(
+                species = species,
+                displayName = display.ifBlank { species },
+                level = p.level,
+                skillIds = skills,
+                aspects = aspects,
+                speciesId = sid
+            )
+        }
+        val boxes = mutableListOf<notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Box>()
+        try {
+            val party = storage.getParty(player)
+            val partySize = try { party.size() } catch (_: Exception) { 6 }
+            val partySlots = (0 until partySize).map { idx ->
+                try { party.get(idx) } catch (_: Exception) { null }?.let { mkEntry(it) }
+            }
+            boxes.add(notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Box(
+                name = "Party", cols = 6, slots = partySlots
+            ))
+            val pc = storage.getPC(player)
+            for ((boxIdx, pcBox) in pc.boxes.withIndex()) {
+                val cap = 30
+                val slots = (0 until cap).map { idx ->
+                    try { pcBox.get(idx) } catch (_: Exception) { null }?.let { mkEntry(it) }
+                }
+                val boxName = try { pcBox.name?.ifBlank { "Box ${boxIdx + 1}" } ?: "Box ${boxIdx + 1}" } catch (_: Exception) { "Box ${boxIdx + 1}" }
+                boxes.add(notlown.cobblebase.core.net.MyPokemonSyncS2CPacket.Box(
+                    name = boxName, cols = 6, slots = slots
+                ))
+            }
+        } catch (e: Exception) {
+            Cobblebase.LOGGER.warn("[MyPokemon] Failed to enumerate storage: ${e.javaClass.simpleName}: ${e.message}")
+        }
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+            notlown.cobblebase.core.net.MyPokemonSyncS2CPacket(boxes))
     }
 }

@@ -112,20 +112,23 @@ object PokemonSpriteHelper {
         y: Int,
         delta: Float
     ) {
-        // Type-colored background + border removed — see Fabric PokemonSpriteHelper
-        // for rationale (noisy, no signal value).
+        // Type-colored background + border removed per user request — the colored
+        // squares around every Pokemon icon were noisy across Buffs / Pasture / My
+        // Pokemon / Logs and contributed nothing the type-emoji or skill-name color
+        // doesn't already convey. The 3D portrait now sits on a transparent backdrop.
 
-        // Render the 3D Pokemon portrait on top
+        // Anchor: slot center horizontally (with -0.5 px nudge to counter the +35° yaw
+        // rotation that shifts visual mass slightly to the right), and `y + 1` vertically
+        // — that's where drawProfilePokemon lands the model inside a 16px slot at
+        // scale 4.5 (its profileTranslation already does the per-species offset). A
+        // bottom-edge anchor (y + ICON_SIZE - 1) overshoots and drops the sprite into
+        // the next row.
         try {
             val cacheKey = "${species}_${aspects.sorted().joinToString(",")}"
             val state = getOrCreateState(cacheKey, aspects)
             val matrixStack = context.matrices
 
             matrixStack.push()
-            // Slot-center horizontally with -0.5 px to counter the +35° yaw lean;
-            // y + 1 vertically — drawProfilePokemon's own profileTranslation handles
-            // the per-species offset at scale 4.5. y + ICON_SIZE - 1 overshoots into
-            // the next row.
             matrixStack.translate(
                 (x + ICON_SIZE / 2.0 - 0.5),
                 (y.toDouble() + 1.0),
@@ -168,6 +171,58 @@ object PokemonSpriteHelper {
     }
 
     /**
+     * Portrait-only renderer — draws the 3D Pokemon portrait at the standard 16x16 slot
+     * but skips the type-colored background and border. Caller is responsible for
+     * providing any cell decoration (e.g. rarity-tinted background in SkillsPanel's
+     * My Pokemon / WorkerWiki grid).
+     */
+    fun renderPortraitOnly(
+        context: DrawContext,
+        species: Identifier,
+        aspects: Set<String>,
+        x: Int,
+        y: Int,
+        delta: Float = 0f
+    ) {
+        try {
+            val cacheKey = "${species}_${aspects.sorted().joinToString(",")}"
+            val state = getOrCreateState(cacheKey, aspects)
+            val matrixStack = context.matrices
+            matrixStack.push()
+            // Same anchor convention as renderIcon — see its comment.
+            matrixStack.translate(
+                (x + ICON_SIZE / 2.0 - 0.5),
+                (y.toDouble() + 1.0),
+                0.0
+            )
+            matrixStack.scale(1.5F, 1.5F, 1F)
+            drawProfilePokemon(
+                species = species,
+                matrixStack = matrixStack,
+                rotation = Quaternionf().fromEulerXYZDegrees(Vector3f(13F, 35F, 0F)),
+                state = state,
+                partialTicks = delta,
+                scale = 4.5F
+            )
+            matrixStack.pop()
+        } catch (_: Exception) { /* caller's cell bg shows through */ }
+    }
+
+    /** Portrait-only variant that takes a display name + optional aspect set. */
+    fun renderPortraitOnlyByName(
+        context: DrawContext,
+        pokemonName: String,
+        explicitAspects: Set<String>,
+        x: Int,
+        y: Int,
+        delta: Float = 0f
+    ) {
+        val (baseName, formAspects) = extractFormAspects(pokemonName)
+        val speciesId = resolveSpeciesFromName(baseName) ?: return
+        renderPortraitOnly(context, speciesId, formAspects + explicitAspects, x, y, delta)
+    }
+
+    /**
      * Renders a smaller icon (for compact rows like logs).
      * Size: 12x12 pixels. Uses 3D portrait at smaller scale.
      */
@@ -181,7 +236,7 @@ object PokemonSpriteHelper {
         delta: Float = 0f
     ) {
         val size = 12
-        // Type-colored background + border removed (see Fabric helper for rationale).
+        // Type-colored bg + border removed (see renderIcon above for rationale).
 
         // Render small 3D portrait
         try {
@@ -233,10 +288,11 @@ object PokemonSpriteHelper {
         delta: Float = 0f,
         scale: Float = 12.0f
     ) {
-        val speciesId = resolveSpeciesFromName(pokemonName) ?: return
+        val (baseName, aspects) = extractFormAspects(pokemonName)
+        val speciesId = resolveSpeciesFromName(baseName) ?: return
         try {
-            val cacheKey = "${speciesId}_large"
-            val state = getOrCreateState(cacheKey, emptySet())
+            val cacheKey = "${speciesId}_large_${aspects.joinToString(",")}"
+            val state = getOrCreateState(cacheKey, aspects)
             val matrixStack = context.matrices
 
             // Scissor so the sprite is clipped to the requested region
@@ -278,10 +334,11 @@ object PokemonSpriteHelper {
         y: Int,
         delta: Float = 0f
     ) {
-        val speciesId = resolveSpeciesFromName(pokemonName) ?: return
+        val (baseName, aspects) = extractFormAspects(pokemonName)
+        val speciesId = resolveSpeciesFromName(baseName) ?: return
         try {
-            val cacheKey = "${speciesId}_"
-            val state = getOrCreateState(cacheKey, emptySet())
+            val cacheKey = "${speciesId}_portrait_${aspects.joinToString(",")}"
+            val state = getOrCreateState(cacheKey, aspects)
             context.matrices.push()
             context.matrices.translate(
                 (x + ICON_SIZE / 2.0),
@@ -313,10 +370,35 @@ object PokemonSpriteHelper {
         y: Int,
         delta: Float = 0f
     ) {
-        val speciesId = resolveSpeciesFromName(pokemonName)
+        val (baseName, aspects) = extractFormAspects(pokemonName)
+        val speciesId = resolveSpeciesFromName(baseName)
         if (speciesId != null) {
-            // Use full-size renderIcon for better visibility (16x16 with 3D portrait)
-            renderIcon(context, textRenderer, speciesId, pokemonName, emptySet(), x, y, delta)
+            renderIcon(context, textRenderer, speciesId, pokemonName, aspects, x, y, delta)
+        } else {
+            renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
+        }
+    }
+
+    /**
+     * Overload that accepts explicit aspects (e.g. forwarded from server-side `Pokemon.aspects`).
+     * Required for species like Pyroar (female-only sprite needs the `female` aspect) and
+     * gender-variant fakemons. Without aspects, Cobblemon's renderer falls back to a placeholder.
+     * Form suffixes embedded in the name are still extracted and merged with the supplied set.
+     */
+    fun renderSmallIconByName(
+        context: DrawContext,
+        textRenderer: TextRenderer,
+        pokemonName: String,
+        explicitAspects: Set<String>,
+        x: Int,
+        y: Int,
+        delta: Float = 0f
+    ) {
+        val (baseName, formAspects) = extractFormAspects(pokemonName)
+        val speciesId = resolveSpeciesFromName(baseName)
+        val combined = formAspects + explicitAspects
+        if (speciesId != null) {
+            renderIcon(context, textRenderer, speciesId, pokemonName, combined, x, y, delta)
         } else {
             renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
         }
@@ -340,46 +422,99 @@ object PokemonSpriteHelper {
      * whose `.name` matches the requested display name, regardless of
      * namespace. The result is cached.
      */
+    /**
+     * Strips a regional-variant suffix from a species name and returns it as an aspect set.
+     * Cobblemon stores Hisuian/Alolan/Galarian/Paldean variants as aspects on the BASE species,
+     * not as standalone species entries — so "decidueye_hisuian" resolves to species "decidueye"
+     * with aspects = {"hisuian"}. Without this stripping, sprite lookup fails for every
+     * regional-form Pokemon (Hisuian Zoroark, Galarian Slowking, etc.).
+     */
+    private fun extractFormAspects(name: String): Pair<String, Set<String>> {
+        val lower = name.lowercase()
+        val variants = listOf("hisuian", "alolan", "galarian", "paldean")
+        for (v in variants) {
+            // Match either `*_<variant>` (file naming) or `<variant>_*` (display naming).
+            if (lower.endsWith("_$v")) {
+                return name.substring(0, name.length - v.length - 1) to setOf(v)
+            }
+            if (lower.startsWith("${v}_")) {
+                return name.substring(v.length + 1) to setOf(v)
+            }
+        }
+        return name to emptySet()
+    }
+
     private fun resolveSpeciesFromName(name: String): Identifier? {
-        val normalized = name.trim().lowercase()
-            .replace(" ", "_").replace("-", "_")
-            .replace(Regex("[^a-z0-9/._-]"), "") // Strip invalid identifier chars
-        if (normalized.isEmpty()) return null
+        val raw = name.trim().lowercase()
+        if (raw.isEmpty()) return null
 
-        speciesIdCache[normalized]?.let { return it }
-        if (speciesIdCache.containsKey(normalized)) return null // null cached too
+        // Cobblemon's species IDs strip ALL punctuation, hyphens, and spaces:
+        //   "Wo-Chien"   → "wochien"
+        //   "Ho-Oh"      → "hooh"
+        //   "Type: Null" → "typenull"
+        //   "Mr. Mime"   → "mrmime"
+        // The previous normalization mapped hyphens to underscores ("wo_chien"), which
+        // doesn't match Cobblemon's registry → the four Treasures of Ruin and other
+        // hyphenated species fell back to letter badges. We now try the strict
+        // alphanumeric form first, then a hyphen/underscore-preserving form as a
+        // secondary match for display-name lookups.
+        val strictId = raw.replace(Regex("[^a-z0-9]"), "")
+        val withUnderscores = raw.replace(" ", "_").replace("-", "_")
+            .replace(Regex("[^a-z0-9/._-]"), "")
 
-        // 1) Fast path: try cobblemon:<name> directly (works for vanilla mons)
-        try {
-            val id = Identifier.of("cobblemon", normalized)
-            if (PokemonSpecies.getByIdentifier(id) != null) {
-                speciesIdCache[normalized] = id
-                return id
-            }
-        } catch (_: Exception) { }
+        val cacheKey = strictId
+        speciesIdCache[cacheKey]?.let { return it }
+        if (speciesIdCache.containsKey(cacheKey)) return null
 
-        // 2) PokemonSpecies.getByName walks every namespace by display name
-        try {
-            val species = PokemonSpecies.getByName(normalized)
-            if (species != null) {
-                val id = species.resourceIdentifier
-                speciesIdCache[normalized] = id
-                return id
-            }
-        } catch (_: Exception) { }
+        // 1) Strict-id fast path — matches the Cobblemon ID convention
+        if (strictId.isNotEmpty()) {
+            try {
+                val id = Identifier.of("cobblemon", strictId)
+                if (PokemonSpecies.getByIdentifier(id) != null) {
+                    speciesIdCache[cacheKey] = id
+                    return id
+                }
+            } catch (_: Exception) { }
+        }
 
-        // 3) Fallback: iterate the whole registry once and match by .name
+        // 2) Underscore fallback — some species (e.g. "porygon_z") use snake_case in their ID
+        if (withUnderscores.isNotEmpty() && withUnderscores != strictId) {
+            try {
+                val id = Identifier.of("cobblemon", withUnderscores)
+                if (PokemonSpecies.getByIdentifier(id) != null) {
+                    speciesIdCache[cacheKey] = id
+                    return id
+                }
+            } catch (_: Exception) { }
+        }
+
+        // 3) PokemonSpecies.getByName walks every namespace by registered name (any mod)
+        for (candidate in setOf(strictId, withUnderscores).filter { it.isNotEmpty() }) {
+            try {
+                val species = PokemonSpecies.getByName(candidate)
+                if (species != null) {
+                    val id = species.resourceIdentifier
+                    speciesIdCache[cacheKey] = id
+                    return id
+                }
+            } catch (_: Exception) { }
+        }
+
+        // 4) Last-resort: iterate the whole registry, matching by .name with both
+        //    strict-stripped and underscore variants of each registered species
         try {
             for (s in PokemonSpecies.species) {
-                if (s.name.equals(normalized, ignoreCase = true)) {
+                val sName = s.name.lowercase()
+                val sStrict = sName.replace(Regex("[^a-z0-9]"), "")
+                if (sStrict == strictId || sName == withUnderscores) {
                     val id = s.resourceIdentifier
-                    speciesIdCache[normalized] = id
+                    speciesIdCache[cacheKey] = id
                     return id
                 }
             }
         } catch (_: Exception) { }
 
-        speciesIdCache[normalized] = null
+        speciesIdCache[cacheKey] = null
         return null
     }
 

@@ -13,6 +13,7 @@ import java.util.function.Function
 
 /**
  * Logs tab content - shows recent activity events for this Pasture.
+ * Scrollable table with filter buttons by rarity.
  */
 class LogsPanel(
     private val parent: CobblebaseScreen,
@@ -24,39 +25,49 @@ class LogsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    // 16 px row matches the 16 px sprite; was 14 → sprite overflowed 2 px below row.
+    // Row height matches the 16-px Pokemon sprite — the previous 14-px row was 2 px
+    // shorter than the sprite, so PokemonSpriteHelper.renderSmallIconByName (which is
+    // actually a full 16-px icon despite the "small" name) overflowed the row bottom.
     private val ROW_HEIGHT = 16
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8
-    // Single uniform row background — zebra removed (two consecutive same-action rows
-    // looked like two different categories due to zebra + tint blending).
+    // Single uniform row background — zebra striping removed because two consecutive
+    // rows with the same action ended up in different shades (zebra + action-tint
+    // combining to slightly different combined colors), which read as "two different
+    // categories" rather than "two of the same."
     private val ROW_BG = 0x18FFFFFF.toInt()
 
-    /** Subtle per-action background tint, see Fabric LogsPanel for the rationale. */
+    /**
+     * Subtle per-action background tint applied over the zebra pattern, so a glance at
+     * the Logs tab tells you which type of event each row is. Alpha 0x22 = ~13%, low
+     * enough that rarity color bar + text stay readable but high enough to be useful.
+     * Match falls back to no tint for unknown actions.
+     */
     private fun actionTintColor(action: String): Int {
         return when (action.lowercase()) {
-            "found" -> 0x22FFD700.toInt()
-            "mined" -> 0x22A0A0A0.toInt()
-            "fished" -> 0x223399FF.toInt()
-            "harvested" -> 0x2255CC55.toInt()
-            "supplied" -> 0x2244BB99.toInt()
-            "producer", "produced" -> 0x22F0E6C8.toInt()
-            "craftsman", "crafted" -> 0x22B07050.toInt()
-            "healed" -> 0x22FF6666.toInt()
-            "recruited" -> 0x22CC66FF.toInt()
-            "sorted" -> 0x22FFA040.toInt()
-            "hatched" -> 0x22FF99CC.toInt()
-            "spotted", "discovered" -> 0x22DDDD66.toInt()
-            "repelled", "extinguisher" -> 0x22FF7733.toInt()
+            "found" -> 0x22FFD700.toInt()        // Finder family — gold
+            "mined" -> 0x22A0A0A0.toInt()        // Mining — stone gray
+            "fished" -> 0x223399FF.toInt()       // Fishing — water blue
+            "harvested" -> 0x2255CC55.toInt()    // Harvester / Supplier-harvest — leaf green
+            "supplied" -> 0x2244BB99.toInt()     // Supplier-generate — teal
+            "producer", "produced" -> 0x22F0E6C8.toInt()  // Producer — wool cream
+            "craftsman", "crafted" -> 0x22B07050.toInt()  // Craftsman — workbench brown
+            "healed" -> 0x22FF6666.toInt()       // Healer — soft red
+            "recruited" -> 0x22CC66FF.toInt()    // Recruiter — purple
+            "sorted" -> 0x22FFA040.toInt()       // Gatherer — orange
+            "hatched" -> 0x22FF99CC.toInt()      // Egg Hatcher — baby pink
+            "spotted", "discovered" -> 0x22DDDD66.toInt() // Scout — light yellow
+            "repelled", "extinguisher" -> 0x22FF7733.toInt()  // Guard / Extinguish — flame
             else -> 0
         }
     }
 
     private var scrollY = 0
-    private var filterRarity: Rarity? = null
+    private var filterRarity: Rarity? = null // null = show all
     private var isDraggingScrollbar = false
 
+    // Scrollbar track dimensions (updated each render)
     private var trackX = 0
     private var trackTop = 0
     private var trackHeight = 0
@@ -70,6 +81,7 @@ class LogsPanel(
     fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
         scrollY = 0
 
+        // Filter buttons
         val filterY = panelY + HEADER_HEIGHT + 2
         val btnW = 70
         val btnH = 14
@@ -91,13 +103,18 @@ class LogsPanel(
             filterRarity = Rarity.ULTRA_RARE; scrollY = 0
         }.dimensions(startX + (btnW + 2) * 3, filterY, btnW, btnH).build())
 
+        // Done button
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
             .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
     }
 
     private fun getFilteredEntries(): List<LogManager.LogEntry> {
         val minRarity = filterRarity
-        return if (minRarity != null) LogManager.getClientLogs(minRarity) else LogManager.getClientLogs()
+        return if (minRarity != null) {
+            LogManager.getClientLogs(minRarity)
+        } else {
+            LogManager.getClientLogs()
+        }
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -112,15 +129,17 @@ class LogsPanel(
             val msg = if (pastureOrigin == null) "\u00A77No pasture data available"
                 else "\u00A77No activity logged yet"
             context.drawCenteredTextWithShadow(textRenderer, msg, panelX + panelW / 2, panelY + panelH / 2 - 4, 0x888888)
+            // Still render footer
             context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
             return
         }
 
-        val ICON_SIZE = 16
+        // Column headers (with small icon offset for Pokemon column)
+        val ICON_SIZE = 16 // bigger icon, no name text
         val colTime = panelX + PADDING
-        val colPokemon = panelX + PADDING + 60
-        val colAction = panelX + PADDING + 82
-        val colItem = panelX + PADDING + 148
+        val colPokemon = panelX + PADDING + 60 // just the icon, no name
+        val colAction = panelX + PADDING + 82  // shifted left (was 155+14)
+        val colItem = panelX + PADDING + 148   // shifted left
         val colRarity = panelX + panelW - PADDING - 55
         context.drawTextWithShadow(textRenderer, "\u00A7eTime", colTime, contentTop - 10, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eMon", colPokemon, contentTop - 10, 0xFFFF55)
@@ -128,23 +147,28 @@ class LogsPanel(
         context.drawTextWithShadow(textRenderer, "\u00A7eItem", colItem, contentTop - 10, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eRarity", colRarity, contentTop - 10, 0xFFFF55)
 
+        // Scrollable content
         context.enableScissor(panelX, contentTop, panelX + panelW, contentBottom)
 
         for ((index, entry) in entries.withIndex()) {
             val ry = contentTop + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
 
+            // Row background — uniform base + per-action tint stacked on top so two
+            // consecutive same-action rows render identical (no zebra confusion).
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, ROW_BG)
             val tint = actionTintColor(entry.action)
             if (tint != 0) {
                 context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, tint)
             }
 
+            // Rarity color bar
             val rarityColor = entry.rarity.color
             context.fill(panelX + 1, ry, panelX + 3, ry + ROW_HEIGHT - 1, rarityColor)
 
             val scale = 0.75f
 
+            // Time (scaled 0.75x)
             val timeStr = timeFormat.format(Date(entry.timestamp))
             context.matrices.push()
             context.matrices.translate(colTime.toFloat(), (ry + 2).toFloat(), 0f)
@@ -152,24 +176,29 @@ class LogsPanel(
             context.drawTextWithShadow(textRenderer, timeStr, 0, 0, 0x999999)
             context.matrices.pop()
 
-            // Sprite is 16 px, row is 16 px → ry + 0 to center properly. Was ry + 2.
+            // Pokemon icon only (no name text — saves space). Sprite is 16 px, row is
+            // 16 px → draw at ry + 0 to center perfectly. Previous +2 offset overflowed
+            // the row bottom by 2 px and left an even gap at the top.
             PokemonSpriteHelper.renderSmallIconByName(
                 context, textRenderer, entry.pokemonName,
                 colPokemon, ry, delta
             )
 
+            // Action (scaled 0.75x)
             context.matrices.push()
             context.matrices.translate(colAction.toFloat(), (ry + 2).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
             context.drawTextWithShadow(textRenderer, entry.action, 0, 0, 0xCCCCCC)
             context.matrices.pop()
 
+            // Item (scaled 0.75x)
             context.matrices.push()
             context.matrices.translate(colItem.toFloat(), (ry + 2).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
             context.drawTextWithShadow(textRenderer, entry.itemName, 0, 0, 0xCCCCCC)
             context.matrices.pop()
 
+            // Rarity (scaled 0.75x)
             context.matrices.push()
             context.matrices.translate(colRarity.toFloat(), (ry + 2).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
@@ -179,24 +208,30 @@ class LogsPanel(
 
         context.disableScissor()
 
+        // Scrollbar
         totalContentHeight = entries.size * ROW_HEIGHT
         visibleHeight = contentBottom - contentTop
         if (totalContentHeight > visibleHeight) {
             trackX = panelX + panelW - 8
             trackTop = contentTop
             trackHeight = visibleHeight
+            // Track background
             context.fill(trackX, trackTop, trackX + 6, trackTop + trackHeight, 0x44FFFFFF.toInt())
+            // Thumb
             thumbHeight = (visibleHeight.toFloat() / totalContentHeight * trackHeight).toInt().coerceAtLeast(16)
             val scrollRange = totalContentHeight - visibleHeight
             val scrollProgress = (-scrollY).toFloat() / scrollRange.coerceAtLeast(1)
             thumbY = trackTop + ((trackHeight - thumbHeight) * scrollProgress).toInt()
+            // Highlight when hovering or dragging
             val isHovered = mouseX in trackX..(trackX + 6) && mouseY in thumbY..(thumbY + thumbHeight)
             val thumbColor = if (isDraggingScrollbar || isHovered) 0xFFDDDDDD.toInt() else 0xFFAAAAAA.toInt()
             context.fill(trackX, thumbY, trackX + 6, thumbY + thumbHeight, thumbColor)
         }
 
+        // Footer line
         context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
 
+        // Entry count
         val filterLabel = if (filterRarity != null) " (${filterRarity!!.displayName}+)" else ""
         context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} events$filterLabel", panelX + PADDING, panelY + panelH - 14, 0x666666)
     }

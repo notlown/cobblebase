@@ -10,6 +10,7 @@ import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import notlown.cobblebase.core.AssignmentCache
 import notlown.cobblebase.core.SpeciesSkillRegistry
 import notlown.cobblebase.core.WorkshopCache
@@ -25,6 +26,7 @@ import java.util.UUID
 class WorkshopPanel(
     private val parent: CobblebaseScreen,
     private val pokemonList: List<PasturePokemonDataDTO>,
+    private val pastureOrigin: BlockPos?,
     private val panelX: Int,
     private val panelY: Int,
     private val panelW: Int,

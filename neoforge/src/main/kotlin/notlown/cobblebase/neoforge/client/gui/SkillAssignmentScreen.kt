@@ -6,11 +6,11 @@ import notlown.cobblebase.core.SkillRegistry
 import notlown.cobblebase.core.SpeciesSkillRegistry
 import notlown.cobblebase.core.net.SkillAssignmentC2SPacket
 import com.cobblemon.mod.common.net.messages.client.pasture.OpenPasturePacket.PasturePokemonDataDTO
+import net.neoforged.neoforge.network.PacketDistributor
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.text.Text
-import net.neoforged.neoforge.network.PacketDistributor
 import java.util.UUID
 
 class SkillAssignmentScreen(
@@ -24,7 +24,7 @@ class SkillAssignmentScreen(
     private val ROW_EVEN = 0x44FFFFFF.toInt()
     private val ROW_ODD = 0x22FFFFFF.toInt()
 
-    private val ROW_HEIGHT = 42
+    private val ROW_HEIGHT = 42 // taller for 2-row button wrapping
     private val HEADER_HEIGHT = 36
     private val PANEL_PADDING = 8
     private val NAME_WIDTH = 90
@@ -44,6 +44,8 @@ class SkillAssignmentScreen(
         "legendary" to 0xFFFFD700.toInt(),
         "social" to 0xFFFF55FF.toInt()
     )
+
+    // SkillButton is defined at file level below to avoid ClassLoader issues
 
     private val allButtons = mutableListOf<SkillButtonData>()
     private var panelX = 0
@@ -74,17 +76,20 @@ class SkillAssignmentScreen(
             val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName)
             val availableSkills = speciesSkills?.skills ?: emptyList()
 
+
             val rowY = contentY + index * ROW_HEIGHT
             val btnStartX = panelX + PANEL_PADDING + NAME_WIDTH
             val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
             var btnX = btnStartX
             var btnY = rowY
 
+            // Auto button
             allButtons.add(SkillButtonData(pokemonId, null, "Auto", 0, "", btnX, btnY, currentAssignment == null))
             btnX += BTN_WIDTH + BTN_GAP
 
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
+                // Wrap to second row if overflowing
                 if (btnX > maxBtnX) {
                     btnX = btnStartX
                     btnY = rowY + BTN_HEIGHT + BTN_GAP
@@ -101,32 +106,40 @@ class SkillAssignmentScreen(
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context, mouseX, mouseY, delta)
 
+        // Main panel background
         context.fill(panelX - 1, panelY - 1, panelX + panelW + 1, panelY + panelH + 1, PANEL_BORDER)
         context.fill(panelX, panelY, panelX + panelW, panelY + panelH, PANEL_COLOR)
 
+        // Header
         context.fill(panelX, panelY, panelX + panelW, panelY + HEADER_HEIGHT, PANEL_HEADER)
         context.fill(panelX, panelY + HEADER_HEIGHT, panelX + panelW, panelY + HEADER_HEIGHT + 1, PANEL_BORDER)
         context.drawCenteredTextWithShadow(textRenderer, "\u00A7l\u00A7fSkill Assignment", panelX + panelW / 2, panelY + 6, 0xFFFFFF)
 
+        // Column headers
         val headerY = contentY - 12
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", panelX + PANEL_PADDING, headerY, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eSkills", panelX + PANEL_PADDING + NAME_WIDTH, headerY, 0xFFFF55)
 
+        // Content area with scissor
         val contentBottom = panelY + panelH - 28
         context.enableScissor(panelX, contentY - 2, panelX + panelW, contentBottom)
 
+        // Row backgrounds + Pokemon names
         pokemonList.forEachIndexed { index, pokemonData ->
             val ry = contentY + index * ROW_HEIGHT + scrollY
             if (ry < contentY - ROW_HEIGHT || ry > contentBottom) return@forEachIndexed
 
+            // Alternating row color
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
+            // Name + level
             val name = pokemonData.displayName.string
             context.drawTextWithShadow(textRenderer, name, panelX + PANEL_PADDING, ry + 4, 0xFFFFFF)
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", panelX + PANEL_PADDING, ry + 14, 0xAAAAAA)
         }
 
+        // Skill buttons
         for (btn in allButtons) {
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
@@ -136,6 +149,7 @@ class SkillAssignmentScreen(
 
             val hovered = mouseX in rx..(rx + BTN_WIDTH) && mouseY in ry..(ry + BTN_HEIGHT)
 
+            // Button background
             val categoryColor = CATEGORY_COLORS[btn.category] ?: 0xFF666666.toInt()
             val bg = when {
                 btn.selected -> categoryColor
@@ -144,17 +158,20 @@ class SkillAssignmentScreen(
             }
             context.fill(rx, ry + 2, rx + BTN_WIDTH, ry + 2 + BTN_HEIGHT, bg)
 
+            // Border
             val border = if (btn.selected) 0xFFFFFFFF.toInt() else 0xFF555577.toInt()
             context.drawHorizontalLine(rx, rx + BTN_WIDTH - 1, ry + 2, border)
             context.drawHorizontalLine(rx, rx + BTN_WIDTH - 1, ry + 1 + BTN_HEIGHT, border)
             context.drawVerticalLine(rx, ry + 2, ry + 1 + BTN_HEIGHT, border)
             context.drawVerticalLine(rx + BTN_WIDTH - 1, ry + 2, ry + 1 + BTN_HEIGHT, border)
 
+            // Skill name
             val textColor = if (btn.selected) 0xFFFFFF else 0xBBBBBB
             val nameText = btn.displayName
             val nameWidth = textRenderer.getWidth(nameText)
             context.drawTextWithShadow(textRenderer, nameText, rx + (BTN_WIDTH - nameWidth) / 2, ry + 4, textColor)
 
+            // Proficiency stars below name (only for actual skills, not Auto)
             if (btn.proficiency > 0) {
                 val stars = "\u2605".repeat(btn.proficiency) + "\u2606".repeat(5 - btn.proficiency)
                 val starColor = when {
@@ -170,6 +187,7 @@ class SkillAssignmentScreen(
 
         context.disableScissor()
 
+        // Footer line
         context.fill(panelX, panelY + panelH - 28, panelX + panelW, panelY + panelH - 27, PANEL_BORDER)
 
         super.render(context, mouseX, mouseY, delta)
@@ -216,3 +234,4 @@ class SkillAssignmentScreen(
 
     override fun shouldPause(): Boolean = false
 }
+// SkillButtonData is defined in SkillButtonData.java to avoid Fabric ClassLoader issues

@@ -19,7 +19,7 @@ class CobblebaseScreen(
     private val parentScreen: Screen?
 ) : Screen(Text.literal("Cobblebase")) {
 
-    enum class Tab { SKILLS, BUFFS, WORKSHOP, LOGS, DISCOVERY }
+    enum class Tab { SKILLS, BUFFS, WORKSHOP, HATCHERY, LOGS, DISCOVERY }
 
     private var activeTab = Tab.SKILLS
 
@@ -60,6 +60,7 @@ class CobblebaseScreen(
     private lateinit var logsPanel: LogsPanel
     private lateinit var discoveryPanel: DiscoveryPanel
     private lateinit var workshopPanel: WorkshopPanel
+    private lateinit var hatcheryPanel: HatcheryPanel
 
     override fun init() {
         super.init()
@@ -70,11 +71,12 @@ class CobblebaseScreen(
         panelY = (height - panelH) / 2
         contentY = panelY + TAB_HEIGHT + 4
 
-        skillsPanel = SkillsPanel(this, pokemonList, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
+        skillsPanel = SkillsPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
         buffsPanel = BuffsPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
         logsPanel = LogsPanel(this, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
         discoveryPanel = DiscoveryPanel(this, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
-        workshopPanel = WorkshopPanel(this, pokemonList, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
+        workshopPanel = WorkshopPanel(this, pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
+        hatcheryPanel = HatcheryPanel(pokemonList, pastureOrigin, panelX, contentY, panelW, panelH - TAB_HEIGHT - 4, textRenderer)
 
         initCurrentTab()
     }
@@ -85,6 +87,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.init(this::addDrawableChild)
             Tab.BUFFS -> buffsPanel.init(this::addDrawableChild)
             Tab.WORKSHOP -> workshopPanel.init(this::addDrawableChild)
+            Tab.HATCHERY -> hatcheryPanel.init(this::addDrawableChild)
             Tab.LOGS -> logsPanel.init(this::addDrawableChild)
             Tab.DISCOVERY -> discoveryPanel.init(this::addDrawableChild)
         }
@@ -114,6 +117,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.render(context, mouseX, mouseY, delta)
             Tab.BUFFS -> buffsPanel.render(context, mouseX, mouseY, delta)
             Tab.WORKSHOP -> workshopPanel.render(context, mouseX, mouseY, delta)
+            Tab.HATCHERY -> hatcheryPanel.render(context, mouseX, mouseY, delta)
             Tab.LOGS -> logsPanel.render(context, mouseX, mouseY, delta)
             Tab.DISCOVERY -> discoveryPanel.render(context, mouseX, mouseY, delta)
         }
@@ -151,23 +155,46 @@ class CobblebaseScreen(
                     Tab.SKILLS -> 0xFF4CAF50.toInt()
                     Tab.BUFFS -> 0xFFFF9800.toInt()
                     Tab.WORKSHOP -> 0xFFFF5722.toInt()
+                    Tab.HATCHERY -> 0xFFFFB300.toInt()
                     Tab.LOGS -> 0xFF2196F3.toInt()
                     Tab.DISCOVERY -> 0xFF9C27B0.toInt()
                 }
                 context.fill(tx, ty + TAB_HEIGHT - 2, tx + tabW, ty + TAB_HEIGHT, accentColor)
             }
 
-            // Tab label
+            // Tab icon (vanilla item, same vocabulary as the Admin job grid) + label.
+            val iconItem = when (tab) {
+                Tab.SKILLS -> net.minecraft.item.Items.ENCHANTED_BOOK
+                Tab.BUFFS -> net.minecraft.item.Items.POTION
+                Tab.WORKSHOP -> net.minecraft.item.Items.CRAFTING_TABLE
+                Tab.HATCHERY -> JobIcons.POKEMON_EGG  // Cobbreeding's pokemon_egg, falls back to vanilla
+                Tab.LOGS -> net.minecraft.item.Items.PAPER
+                Tab.DISCOVERY -> net.minecraft.item.Items.SPYGLASS
+            }
             val label = when (tab) {
-                Tab.SKILLS -> "\u00A7fSkills"
+                Tab.SKILLS -> "\u00A7fPokemon"
                 Tab.BUFFS -> "\u00A7fBuffs"
                 Tab.WORKSHOP -> "\u00A7fWorkshop"
+                Tab.HATCHERY -> "\u00A7fHatchery"
                 Tab.LOGS -> "\u00A7fLogs"
                 Tab.DISCOVERY -> "\u00A7fScout"
             }
             val labelW = textRenderer.getWidth(label)
+            // Compose icon (8px after 0.5 scale) + 2px gap + label, centered in tab.
+            val iconRenderW = 9
+            val totalW = iconRenderW + 2 + labelW
+            val groupX = tx + (tabW - totalW) / 2
+
+            // Icon Y: text drawn at ty+7 (height 9) → text center ty+11.5. Icon scaled height
+            // ≈ 9 → icon-top should be ty+7 so its center matches the text center.
+            context.matrices.push()
+            context.matrices.translate(groupX.toFloat(), (ty + 7).toFloat(), 0f)
+            context.matrices.scale(0.55f, 0.55f, 1f)
+            context.drawItem(net.minecraft.item.ItemStack(iconItem), 0, 0)
+            context.matrices.pop()
+
             val textColor = if (isActive) 0xFFFFFF else 0x999999
-            context.drawTextWithShadow(textRenderer, label, tx + (tabW - labelW) / 2, ty + 7, textColor)
+            context.drawTextWithShadow(textRenderer, label, groupX + iconRenderW + 2, ty + 7, textColor)
         }
     }
 
@@ -194,6 +221,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseClicked(mouseX, mouseY, button)
             Tab.BUFFS -> buffsPanel.mouseClicked(mouseX, mouseY, button)
             Tab.WORKSHOP -> workshopPanel.mouseClicked(mouseX, mouseY, button)
+            Tab.HATCHERY -> hatcheryPanel.mouseClicked(mouseX, mouseY, button)
             Tab.LOGS -> logsPanel.mouseClicked(mouseX, mouseY, button)
             Tab.DISCOVERY -> discoveryPanel.mouseClicked(mouseX, mouseY, button)
         }
@@ -204,6 +232,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.BUFFS -> buffsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.WORKSHOP -> workshopPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+            Tab.HATCHERY -> hatcheryPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.LOGS -> logsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.DISCOVERY -> discoveryPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
         }
@@ -216,6 +245,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.BUFFS -> buffsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.WORKSHOP -> workshopPanel.mouseReleased(mouseX, mouseY, button)
+            Tab.HATCHERY -> hatcheryPanel.mouseReleased(mouseX, mouseY, button)
             Tab.LOGS -> logsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.DISCOVERY -> discoveryPanel.mouseReleased(mouseX, mouseY, button)
         }
@@ -228,6 +258,7 @@ class CobblebaseScreen(
             Tab.SKILLS -> skillsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
             Tab.BUFFS -> buffsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
             Tab.WORKSHOP -> workshopPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+            Tab.HATCHERY -> hatcheryPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
             Tab.LOGS -> logsPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
             Tab.DISCOVERY -> discoveryPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
         }

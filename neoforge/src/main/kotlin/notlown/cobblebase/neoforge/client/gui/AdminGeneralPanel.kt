@@ -1,5 +1,6 @@
 package notlown.cobblebase.neoforge.client.gui
 
+import net.neoforged.neoforge.network.PacketDistributor
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
@@ -32,6 +33,7 @@ class AdminGeneralPanel(
     fun init(addWidget: Function<net.minecraft.client.gui.widget.ClickableWidget, net.minecraft.client.gui.widget.ClickableWidget>) {
         discordEnabled = GeneralSettingsCache.discordEnabled
 
+        // Discord URL text field
         val field = TextFieldWidget(
             textRenderer,
             x + PADDING,
@@ -46,6 +48,7 @@ class AdminGeneralPanel(
         discordUrlField = field
         addWidget.apply(field)
 
+        // Discord enabled toggle
         discordEnabledBtn = ButtonWidget.builder(Text.literal(getToggleLabel())) { btn ->
             discordEnabled = !discordEnabled
             btn.message = Text.literal(getToggleLabel())
@@ -53,6 +56,7 @@ class AdminGeneralPanel(
         }.dimensions(x + PADDING, y + 100, 140, 18).build()
         addWidget.apply(discordEnabledBtn!!)
 
+        // Save button
         saveBtn = ButtonWidget.builder(Text.literal("\u00A72Save")) { saveSettings() }
             .dimensions(x + w - 64, y + h - 20, 54, 16).build()
         addWidget.apply(saveBtn!!)
@@ -64,20 +68,21 @@ class AdminGeneralPanel(
 
     private fun saveSettings() {
         val url = discordUrlField?.text ?: return
-        net.neoforged.neoforge.network.PacketDistributor.sendToServer(
-            GeneralSettingsUpdateC2SPacket(
-                url, discordEnabled,
-                notlown.cobblebase.core.GeneralSettingsCache.pokeWikiEnabled,
-                notlown.cobblebase.core.GeneralSettingsCache.pastureRange,
-                notlown.cobblebase.core.GeneralSettingsCache.maxWorkingPokemonPerPasture
-            )
-        )
+        // PokeWiki toggle is edited in AdminWikiPanel; keep its current value when saving here.
+        PacketDistributor.sendToServer(GeneralSettingsUpdateC2SPacket(
+            url, discordEnabled,
+            notlown.cobblebase.core.GeneralSettingsCache.pokeWikiEnabled,
+            notlown.cobblebase.core.GeneralSettingsCache.pastureRange,
+            notlown.cobblebase.core.GeneralSettingsCache.maxWorkingPokemonPerPasture
+        ))
         dirty = false
     }
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // Background
         context.fill(x, y, x + w, y + h, 0xCC1E1E2E.toInt())
 
+        // Header
         context.drawTextWithShadow(
             textRenderer, "\u00A7f\u00A7lGeneral Settings",
             x + PADDING, y + PADDING, 0xFFFFFF
@@ -87,11 +92,13 @@ class AdminGeneralPanel(
             x + PADDING, y + PADDING + 12, 0x8B8B99
         )
 
+        // Discord URL label
         context.drawTextWithShadow(
             textRenderer, "\u00A7eDiscord Button URL",
             x + PADDING, y + 46, 0xFFFF55
         )
 
+        // Discord enabled label
         if (dirty) {
             context.drawTextWithShadow(
                 textRenderer, "\u00A7e*unsaved changes",
@@ -99,6 +106,7 @@ class AdminGeneralPanel(
             )
         }
 
+        // Description/help text
         context.drawTextWithShadow(
             textRenderer, "\u00A78When disabled, the Discord icon is hidden from the Skills GUI.",
             x + PADDING + 144, y + 105, 0x8B8B99

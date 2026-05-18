@@ -42,7 +42,7 @@ class AdminWikiPanel(
     private val links = listOf(
         WikiLink(
             "Documentation",
-            "Full guides for jobs, proficiency, GUI, admin commands and datapacks.",
+            "Full guides for jobs, proficiency, GUI and admin commands.",
             "https://notlown.github.io/cobblebase-web/docs/",
             0xFF4CAF50.toInt()
         ),
@@ -51,12 +51,6 @@ class AdminWikiPanel(
             "Browse all Pokemon with their skill assignments and proficiency.",
             "https://notlown.github.io/cobblebase-web/database/",
             0xFF2196F3.toInt()
-        ),
-        WikiLink(
-            "Datapack Generator",
-            "Create custom species skill datapacks without editing JSON.",
-            "https://notlown.github.io/cobblebase-web/generator/",
-            0xFFFF9800.toInt()
         ),
         WikiLink(
             "Job Reference",
@@ -93,6 +87,12 @@ class AdminWikiPanel(
     private val openButtons = mutableListOf<ButtonWidget>()
     private var scrollOffset = 0
     private var isDraggingScrollbar = false
+    private val scrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
+
+    /** Height reserved at the bottom for the Ko-fi support box. */
+    private val SUPPORT_BOX_H = 38
+    private val KOFI_URL = "https://ko-fi.com/notlown"
+    private var kofiButton: ButtonWidget? = null
 
     fun init(addWidget: Function<ClickableWidget, ClickableWidget>) {
         openButtons.clear()
@@ -104,10 +104,14 @@ class AdminWikiPanel(
             openButtons.add(btn)
             addWidget.apply(btn)
         }
+        kofiButton = ButtonWidget.builder(Text.literal("\u00A76\u00A7lOpen Ko-fi")) {
+            try { Util.getOperatingSystem().open(URI(KOFI_URL)) } catch (_: Exception) {}
+        }.dimensions(0, 0, 60, 14).build()
+        addWidget.apply(kofiButton!!)
     }
 
     private fun listAreaY(): Int = y + HEADER_H
-    private fun listAreaH(): Int = h - HEADER_H - PADDING
+    private fun listAreaH(): Int = h - HEADER_H - PADDING - SUPPORT_BOX_H - 8
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // Background
@@ -153,14 +157,36 @@ class AdminWikiPanel(
 
         context.disableScissor()
 
-        // Scrollbar
-        if (links.size > maxVisible) {
-            val trackX = x + w - 4
-            val trackH = listH
-            val thumbH = ((maxVisible.toFloat() / links.size) * trackH).toInt().coerceAtLeast(10)
-            val thumbY = listY + ((scrollOffset.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
+        scrollbar.layout(
+            trackX = x + w - 4,
+            trackY = listY,
+            trackHeight = listH,
+            contentHeight = links.size * ROW_H,
+            viewportHeight = listH,
+            currentScroll = scrollOffset * ROW_H,
+        )
+        scrollbar.render(context, 0, 0)
+        scrollOffset = scrollbar.scroll / ROW_H
+
+        // Ko-fi support box pinned to the bottom — fixed, doesn't scroll with the list.
+        val boxTop = y + h - SUPPORT_BOX_H - PADDING
+        val boxLeft = x + PADDING
+        val boxRight = x + w - PADDING
+        context.fill(boxLeft, boxTop, boxRight, boxTop + SUPPORT_BOX_H, 0xFF332919.toInt())
+        context.fill(boxLeft, boxTop, boxLeft + 3, boxTop + SUPPORT_BOX_H, 0xFFFFD700.toInt())
+
+        drawScaled(context, "§e§l💛 Support Development", boxLeft + 8, boxTop + 4, 0xFFD700, 0.85f)
+        drawScaled(context,
+            "§7Cobblebase is a passion project — free and open source. If it brought you joy,",
+            boxLeft + 8, boxTop + 15, 0xCCCCCC, 0.7f)
+        drawScaled(context,
+            "§7a coffee on Ko-fi helps me keep building new features. Every supporter helps.",
+            boxLeft + 8, boxTop + 23, 0xCCCCCC, 0.7f)
+
+        kofiButton?.let { btn ->
+            btn.visible = true
+            btn.x = boxRight - 64
+            btn.y = boxTop + (SUPPORT_BOX_H - 14) / 2
         }
     }
 
@@ -173,43 +199,22 @@ class AdminWikiPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        val listY = listAreaY()
-        val listH = listAreaH()
-        val maxVisible = listH / ROW_H
-        val maxScroll = (links.size - maxVisible).coerceAtLeast(0)
-        val trackX = x + w - 4
-        if (maxScroll > 0 &&
-            mouseX in (trackX - 4).toDouble()..(trackX + 4).toDouble() &&
-            mouseY in listY.toDouble()..(listY + listH).toDouble()
-        ) {
-            isDraggingScrollbar = true
-            val rel = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (rel * maxScroll).toInt()
+        if (scrollbar.mouseClicked(mouseX, mouseY)) {
+            scrollOffset = scrollbar.scroll / ROW_H
             return true
         }
         return false
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        if (isDraggingScrollbar) {
-            val listY = listAreaY()
-            val listH = listAreaH()
-            val maxVisible = listH / ROW_H
-            val maxScroll = (links.size - maxVisible).coerceAtLeast(0)
-            val rel = ((mouseY - listY) / listH.toDouble()).coerceIn(0.0, 1.0)
-            scrollOffset = (rel * maxScroll).toInt()
+        if (scrollbar.mouseDragged(mouseY)) {
+            scrollOffset = scrollbar.scroll / ROW_H
             return true
         }
         return false
     }
 
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (isDraggingScrollbar) {
-            isDraggingScrollbar = false
-            return true
-        }
-        return false
-    }
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean = scrollbar.mouseReleased()
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontal: Double, vertical: Double): Boolean {
         if (mouseX in x.toDouble()..(x + w).toDouble() && mouseY in y.toDouble()..(y + h).toDouble()) {

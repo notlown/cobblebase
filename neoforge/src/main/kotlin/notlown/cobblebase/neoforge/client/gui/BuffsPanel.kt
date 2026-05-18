@@ -30,8 +30,10 @@ class BuffsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    // Compacted to match Fabric — 28 was wasting vertical space on padding.
-    // Synced with Pasture-tab row dimensions (Fabric: 18 px).
+    // Synced to the Pasture tab's row dimensions (18 px) so the two tabs feel
+    // like one product. Sprite is 1.15× (~18 px) — minimally bigger than 1.0×,
+    // fills the row vertically. Pokemon name renders at 0.9× scale so longer
+    // names don't crowd the chip column.
     private val ROW_HEIGHT = 18
     private val HEADER_HEIGHT = 18
     private val PADDING = 8
@@ -55,6 +57,7 @@ class BuffsPanel(
         val species: Identifier,
         val aspects: Set<String>,
         val level: Int,
+        val skillId: String,
         val skillName: String,
         val category: String,
         val proficiency: Int,
@@ -64,12 +67,74 @@ class BuffsPanel(
 
     private var entries = listOf<BuffEntry>()
 
+    private enum class SubTab { ACTIVE, PASSIVE }
+    private var activeSubTab = SubTab.ACTIVE
+    private val SUBTAB_H = 16
+    private var activeTabBox = intArrayOf(0, 0, 0, 0)
+    private var passiveTabBox = intArrayOf(0, 0, 0, 0)
+
     fun init(addWidget: Function<ButtonWidget, ButtonWidget>) {
         scrollY = 0
         entries = buildBuffEntries()
 
         addWidget.apply(ButtonWidget.builder(Text.literal("Done")) { parent.close() }
             .dimensions(panelX + panelW - 54, panelY + panelH - 16, 40, 12).build())
+    }
+
+    /** Returns entries filtered to the active sub-tab. */
+    private fun visibleEntries(): List<BuffEntry> = when (activeSubTab) {
+        SubTab.ACTIVE -> entries.filter { !it.isPassiveBuff }
+        SubTab.PASSIVE -> entries.filter { it.isPassiveBuff }
+    }
+
+    private fun renderSubTabs(context: DrawContext, mouseX: Int, mouseY: Int): Int {
+        val tabsY = panelY + 2
+        val tabH = SUBTAB_H
+        val gap = 4
+        val activeW = 60
+        val passiveW = 64
+        val activeX = panelX + PADDING
+        val passiveX = activeX + activeW + gap
+        activeTabBox = intArrayOf(activeX, tabsY, activeW, tabH)
+        passiveTabBox = intArrayOf(passiveX, tabsY, passiveW, tabH)
+
+        renderSubTabButton(context, "Active", activeTabBox, activeSubTab == SubTab.ACTIVE, mouseX, mouseY, 0xFFFF9800.toInt())
+        renderSubTabButton(context, "Passive", passiveTabBox, activeSubTab == SubTab.PASSIVE, mouseX, mouseY, 0xFF55FFAA.toInt())
+
+        // Per-tab counter on the right.
+        val visible = visibleEntries()
+        val counter = "§8${visible.size} entries"
+        val counterW = textRenderer.getWidth(counter)
+        context.drawTextWithShadow(textRenderer, counter, panelX + panelW - PADDING - counterW, tabsY + 4, 0x666666)
+
+        return tabsY + tabH + 4
+    }
+
+    private fun renderSubTabButton(
+        context: DrawContext,
+        label: String,
+        box: IntArray,
+        active: Boolean,
+        mouseX: Int, mouseY: Int,
+        accent: Int
+    ) {
+        val (x, y, w, h) = box
+        val hovered = mouseX in x..(x + w) && mouseY in y..(y + h)
+        val bg = when {
+            active -> 0xFF2A2A4A.toInt()
+            hovered -> 0xFF252540.toInt()
+            else -> 0xFF1A1A2A.toInt()
+        }
+        context.fill(x, y, x + w, y + h, bg)
+        if (active) context.fill(x, y + h - 2, x + w, y + h, accent)
+        val labelW = textRenderer.getWidth(label)
+        val color = if (active) 0xFFFFFF else 0x999999
+        context.drawTextWithShadow(textRenderer, label, x + (w - labelW) / 2, y + 4, color)
+    }
+
+    private fun inBox(mx: Double, my: Double, box: IntArray): Boolean {
+        val (x, y, w, h) = box
+        return mx >= x && mx <= x + w && my >= y && my <= y + h
     }
 
     private fun buildBuffEntries(): List<BuffEntry> {
@@ -95,6 +160,7 @@ class BuffsPanel(
                         species = species,
                         aspects = aspects,
                         level = level,
+                        skillId = skillDef.id,
                         skillName = skillDef.name,
                         category = skillDef.category,
                         proficiency = entry.proficiency,
@@ -106,26 +172,77 @@ class BuffsPanel(
 
             // Add assigned job (non-buff skills only)
             if (assignment != null) {
-                val entry = availableSkills.find { it.skillId == assignment }
-                if (entry != null) {
-                    val skillDef = SkillRegistry.get(entry.skillId)
-                    if (skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor)) {
-                        result.add(BuffEntry(
-                            pokemonName = pokemonName,
-                            species = species,
-                            aspects = aspects,
-                            level = level,
-                            skillName = skillDef.name,
-                            category = skillDef.category,
-                            proficiency = entry.proficiency,
-                            description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds, speciesName)
-                        ))
+                if (assignment.startsWith("craftsman_supply:")) {
+                    // Synthetic entry — supplier Mons don't have a regular skill assigned
+                    // (the assignment string is "craftsman_supply:<craftsmanSkillId>:<itemId>"),
+                    // so they were getting dropped from the Active sub-tab entirely.
+                    val parts = assignment.split(":")
+                    val targetItem = if (parts.size >= 4) parts.last() else null
+                    val materialLabel = targetItem
+                        ?.substringAfterLast(":")
+                        ?.replace("_", " ")
+                        ?.split(" ")
+                        ?.joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+                    val desc = if (materialLabel != null) "Supplying §6$materialLabel§7 for the Craftsman"
+                        else "Helping the Craftsman by sourcing materials"
+                    result.add(BuffEntry(
+                        pokemonName = pokemonName,
+                        species = species,
+                        aspects = aspects,
+                        level = level,
+                        skillId = "cobblebase:craftsman",
+                        skillName = "Craftsman Supplier",
+                        category = "gathering",
+                        proficiency = 0,
+                        description = desc
+                    ))
+                } else {
+                    val entry = availableSkills.find { it.skillId == assignment }
+                    if (entry != null) {
+                        val skillDef = SkillRegistry.get(entry.skillId)
+                        if (skillDef != null && !BaseManager.isBuffExecutor(skillDef.executor)) {
+                            result.add(BuffEntry(
+                                pokemonName = pokemonName,
+                                species = species,
+                                aspects = aspects,
+                                level = level,
+                                skillId = skillDef.id,
+                                skillName = skillDef.name,
+                                category = skillDef.category,
+                                proficiency = entry.proficiency,
+                                description = generateDescription(skillDef.name, skillDef.executor, entry.proficiency, skillDef.cooldownSeconds, speciesName)
+                            ))
+                        }
                     }
                 }
             }
             // Relax (null assignment) = only passive buffs shown (already added above)
         }
         return result
+    }
+
+    /**
+     * Per-buff text color. Matches the *effect* the buff applies — Speed reads as the
+     * sky-blue Speed-effect tint, Strength as fire-red, Aura as gold, etc. Returns the
+     * neutral passive-green for unknown buff IDs so we never end up with invisible text.
+     */
+    private fun passiveBuffColor(skillId: String): Int {
+        val id = skillId.removePrefix("cobblebase:")
+        return when (id) {
+            "speed_boost" -> 0x66CCFF              // sky blue
+            "strength_boost" -> 0xFF6666           // fire red
+            "resistance_boost" -> 0xCCCCCC         // armor gray
+            "night_vision" -> 0x9966FF             // indigo
+            "water_breathing" -> 0x66E0FF          // water cyan
+            "jump_boost" -> 0x88FF88               // jump green
+            "haste_boost" -> 0xFFCC33              // haste yellow
+            "saturation_boost" -> 0xFFAA66         // saturation orange
+            "aura", "aura_boost" -> 0xFFD700       // luck gold
+            "lucky_charm" -> 0xFF99FF              // shiny pink
+            "growth", "growth_aura" -> 0xAAFF66    // crop green
+            "mentor" -> 0xCC88FF                   // XP purple
+            else -> 0x55FFAA                       // fallback: generic passive
+        }
     }
 
     private fun generateDescription(skillName: String, executor: String, proficiency: Int, cooldownSeconds: Long, speciesName: String = ""): String {
@@ -197,6 +314,8 @@ class BuffsPanel(
             "aura" -> "Luck for nearby players"
             "growth" -> "Accelerates crop growth nearby"
             "egg_hatcher" -> {
+                // Speed multiplier is the prof-keyed tuning field; falls back to prof level
+                // (default linear scaling) when admins haven't customized it.
                 val tuningKey = "prof${prof}Speed"
                 val multiplier = try {
                     SkillRegistry.getEffectiveTuning("cobblebase:egg_hatcher", tuningKey, prof.toDouble())
@@ -213,13 +332,18 @@ class BuffsPanel(
         // Refresh entries each frame to pick up assignment/config changes
         entries = buildBuffEntries()
 
-        val contentTop = panelY + HEADER_HEIGHT
+        // Sub-tab bar at top \u2192 shifts content header below it.
+        val tabsBottom = renderSubTabs(context, mouseX, mouseY)
+        val contentTop = tabsBottom
         val contentBottom = panelY + panelH - 18
 
-
-
-        if (entries.isEmpty()) {
-            context.drawCenteredTextWithShadow(textRenderer, "\u00A77No Pokemon in this Pasture", panelX + panelW / 2, panelY + panelH / 2 - 4, 0x888888)
+        val visible = visibleEntries()
+        if (visible.isEmpty()) {
+            val message = when (activeSubTab) {
+                SubTab.ACTIVE -> if (pokemonList.isEmpty()) "\u00A77No Pokemon in this Pasture" else "\u00A77No active jobs \u2014 assign a job in the Skills tab"
+                SubTab.PASSIVE -> if (pokemonList.isEmpty()) "\u00A77No Pokemon in this Pasture" else "\u00A77No passive buffs available from this Pasture's Pokemon"
+            }
+            context.drawCenteredTextWithShadow(textRenderer, message, panelX + panelW / 2, panelY + panelH / 2 - 4, 0x888888)
             return
         }
 
@@ -232,79 +356,137 @@ class BuffsPanel(
         context.drawTextWithShadow(textRenderer, "\u00A7eJob", colSkill, contentTop, 0xFFFF55)
         context.drawTextWithShadow(textRenderer, "\u00A7eEffect", colDesc, contentTop, 0xFFFF55)
 
+        // Passive sub-tab: dedupe winners per buff type so the player sees clearly that
+        // only the highest-proficiency mon per buff actually applies its effect (no
+        // stacking). Group by skillId, pick the max prof, the rest render dimmed.
+        val maxProfPerSkill: Map<String, Int> = if (activeSubTab == SubTab.PASSIVE) {
+            visible.groupingBy { it.skillId }.fold(0) { acc, e ->
+                if (e.proficiency > acc) e.proficiency else acc
+            }
+        } else emptyMap()
+
         // Scrollable content
         context.enableScissor(panelX, contentTop + 12, panelX + panelW, contentBottom)
 
-        for ((index, entry) in entries.withIndex()) {
+        for ((index, entry) in visible.withIndex()) {
             val ry = contentTop + 14 + index * ROW_HEIGHT + scrollY
             if (ry < contentTop - ROW_HEIGHT || ry > contentBottom) continue
 
-            // Row background — uniform, no category color bar (user found the colored
-            // boxes distracting in the Buffs tab).
+            // Row background \u2014 uniform tone, no category color bar (user found the
+            // colored boxes distracting). The action/buff category is still encoded by
+            // the icon and skill-name color, just not by a row-edge stripe.
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + ROW_HEIGHT - 1, rowColor)
 
+            // Passive-buff dedup state: this entry "loses" if there's another passive
+            // buff of the same skillId with a higher proficiency. Render dimmed so the
+            // player sees "this Pokemon contributes nothing \u2014 overshadowed."
+            val maxProfHere = maxProfPerSkill[entry.skillId]
+            val isOvershadowed = activeSubTab == SubTab.PASSIVE && maxProfHere != null && entry.proficiency < maxProfHere
+
             val scale = 0.75f
             val nameScale = 0.9f
-            val catColor = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
+            val cat = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
                 else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
 
-            // Pokemon portrait — 1.15× (matches Pasture tab).
+            // Pokemon portrait \u2014 1.15\u00D7 scale (~18 px), matches Pasture tab.
             val spriteScale = 1.15f
+            val spriteX = colPokemon + 4
+            val spriteY = ry + 1
             context.matrices.push()
-            context.matrices.translate((colPokemon + 4).toFloat(), (ry + 1).toFloat(), 0f)
+            context.matrices.translate(spriteX.toFloat(), spriteY.toFloat(), 0f)
             context.matrices.scale(spriteScale, spriteScale, 1f)
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, entry.species, entry.pokemonName, entry.aspects,
                 0, 0, delta
             )
             context.matrices.pop()
+            // Use the wider icon footprint for the text column offset.
             val scaledIconWidth = (PokemonSpriteHelper.ICON_SIZE * spriteScale).toInt()
             val nameOffset = scaledIconWidth + 4
+            // Overshadowed \u2192 cover the sprite with a semi-transparent dark overlay so
+            // the whole row reads as inactive in one glance (name + level + skill +
+            // stars + desc + sprite all dimmed together).
+            if (isOvershadowed) {
+                val scaledH = (PokemonSpriteHelper.ICON_SIZE * spriteScale).toInt()
+                context.fill(spriteX, spriteY, spriteX + scaledIconWidth, spriteY + scaledH, 0x88000000.toInt())
+            }
 
-            // Pokemon name + level (shifted right past the bigger icon).
+            // Pokemon name (0.9\u00D7) + Lv (0.75\u00D7) \u2014 matches Pasture tab pitch.
             val nameX = (colPokemon + 4 + nameOffset).toFloat()
+            val nameColor = if (isOvershadowed) 0x666666 else 0xFFFFFF
             context.matrices.push()
             context.matrices.translate(nameX, (ry + 2).toFloat(), 0f)
             context.matrices.scale(nameScale, nameScale, 1f)
-            context.drawTextWithShadow(textRenderer, entry.pokemonName, 0, 0, 0xFFFFFF)
+            context.drawTextWithShadow(textRenderer, entry.pokemonName, 0, 0, nameColor)
             context.matrices.pop()
 
             context.matrices.push()
             context.matrices.translate(nameX, (ry + 11).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", 0, 0, 0xAAAAAA)
+            val lvlColor = if (isOvershadowed) 0x555555 else 0xAAAAAA
+            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${entry.level}", 0, 0, lvlColor)
             context.matrices.pop()
 
-            // Skill name with category color + PASSIVE tag for buff skills (scaled 0.75x)
+            // Job icon left of the skill name (same vocabulary as Skills/Jobs tab).
+            // Small scale 0.55 \u2248 9 px so it fits next to scaled text without crowding.
+            // When the row is overshadowed (passive buff with a stronger contributor),
+            // overlay a dark mask so the icon reads as inactive \u2014 same visual language
+            // as the gray name/stars/skill-name color below.
+            val jobIconX = colSkill
+            val jobIconY = ry + 1
             context.matrices.push()
-            context.matrices.translate(colSkill.toFloat(), (ry + 2).toFloat(), 0f)
-            context.matrices.scale(nameScale, nameScale, 1f)
-            if (entry.isPassiveBuff) {
-                context.drawTextWithShadow(textRenderer, entry.skillName, 0, 0, 0x55FFAA)
-                context.drawTextWithShadow(textRenderer, "\u00A72PASSIVE", textRenderer.getWidth(entry.skillName) + 4, 0, 0x55FF55)
-            } else {
-                context.drawTextWithShadow(textRenderer, entry.skillName, 0, 0, catColor)
+            context.matrices.translate(jobIconX.toFloat(), jobIconY.toFloat(), 0f)
+            context.matrices.scale(0.55f, 0.55f, 1f)
+            context.drawItem(JobIcons.stackFor(entry.skillId), 0, 0)
+            context.matrices.pop()
+            if (isOvershadowed) {
+                // 9-px overlay (~ scaled icon size). 0x77 alpha kills the saturation
+                // without blacking out the icon entirely.
+                context.fill(jobIconX, jobIconY, jobIconX + 9, jobIconY + 9, 0x77000000.toInt())
             }
+
+            // Skill name (PASSIVE label removed \u2014 sub-tab already separates the two).
+            // Each buff type carries its own hue matching the effect it applies \u2014 Speed
+            // is sky blue, Strength is fire-red, Aura is gold, etc. Single universal
+            // "passive green" was unreadable when 5 passive buffs lined up in a column.
+            val skillTextX = colSkill + 11
+            val skillNameColor = when {
+                isOvershadowed -> 0x666666
+                entry.isPassiveBuff -> passiveBuffColor(entry.skillId)
+                else -> cat
+            }
+            context.matrices.push()
+            context.matrices.translate(skillTextX.toFloat(), (ry + 2).toFloat(), 0f)
+            context.matrices.scale(nameScale, nameScale, 1f)
+            context.drawTextWithShadow(textRenderer, entry.skillName, 0, 0, skillNameColor)
             context.matrices.pop()
 
-            // Proficiency stars (scaled 0.75x)
+            // Proficiency stars (scaled 0.75x). Overshadowed mons get gray stars
+            // regardless of their actual prof \u2014 visual cue that this rank "doesn't count."
             val stars = "\u2605".repeat(entry.proficiency) + "\u2606".repeat(5 - entry.proficiency)
             val starColor = when {
+                isOvershadowed -> 0x555555
                 entry.proficiency >= 5 -> 0xFFD700
                 entry.proficiency >= 4 -> 0xFFA500
                 entry.proficiency >= 3 -> 0x88CC88
                 else -> 0x888888
             }
             context.matrices.push()
-            context.matrices.translate(colSkill.toFloat(), (ry + 11).toFloat(), 0f)
+            context.matrices.translate((colSkill + 11).toFloat(), (ry + 11).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
             context.drawText(textRenderer, stars, 0, 0, starColor, false)
             context.matrices.pop()
 
-            // Effect description (scaled 0.75x) — same neutral light gray for
-            // active & passive; the buff's name carries its own hue.
-            val descColor = 0xCCCCCC
+            // Effect description (scaled 0.75x). Same neutral light gray for active
+            // and passive — the buff's own name carries the color (passiveBuffColor),
+            // tinting the description too made the passive sub-tab look like a
+            // green-on-green wall. Overshadowed → dim gray, signals the row doesn't
+            // actually fire.
+            val descColor = when {
+                isOvershadowed -> 0x666666
+                else -> 0xCCCCCC
+            }
             context.matrices.push()
             context.matrices.translate(colDesc.toFloat(), (ry + 6).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
@@ -315,7 +497,7 @@ class BuffsPanel(
         context.disableScissor()
 
         // Scrollbar
-        totalContentHeight = entries.size * ROW_HEIGHT
+        totalContentHeight = visible.size * ROW_HEIGHT
         visibleHeight = contentBottom - contentTop - 14
         if (totalContentHeight > visibleHeight) {
             trackX = panelX + panelW - 8
@@ -338,7 +520,7 @@ class BuffsPanel(
         context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
 
         // Entry count
-        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} active", panelX + PADDING, panelY + panelH - 14, 0x666666)
+        context.drawTextWithShadow(textRenderer, "\u00A78${visible.size} shown", panelX + PADDING, panelY + panelH - 14, 0x666666)
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {
@@ -348,6 +530,9 @@ class BuffsPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Sub-tab switching takes priority over scroll-track clicks.
+        if (inBox(mouseX, mouseY, activeTabBox)) { activeSubTab = SubTab.ACTIVE; scrollY = 0; return true }
+        if (inBox(mouseX, mouseY, passiveTabBox)) { activeSubTab = SubTab.PASSIVE; scrollY = 0; return true }
         if (totalContentHeight <= visibleHeight) return false
         if (mouseX >= trackX && mouseX <= trackX + 6 && mouseY >= trackTop && mouseY <= trackTop + trackHeight) {
             isDraggingScrollbar = true

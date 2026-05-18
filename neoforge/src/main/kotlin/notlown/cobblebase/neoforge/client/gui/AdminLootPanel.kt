@@ -40,7 +40,14 @@ class AdminLootPanel(
     private val y: Int,
     private val w: Int,
     private val h: Int,
-    private val textRenderer: TextRenderer
+    private val textRenderer: TextRenderer,
+    /**
+     * If non-null, the panel hides the sidebar entirely and is locked to that one job
+     * (matched by base-name like "mining" or "finder_bal"). Used by the embedded Loot
+     * sub-tab inside AdminJobsPanel where the surrounding view already establishes
+     * which job we're editing.
+     */
+    private val lockedToBaseName: String? = null
 ) {
     companion object {
         private const val PADDING = 4
@@ -111,6 +118,12 @@ class AdminLootPanel(
     private var selectedRarity: String = ""
     private var sidebarScroll = 0
     private var listScroll = 0
+    private val sidebarScrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
+    private val listScrollbar = ScrollbarComponent(trackWidth = 4, minThumbHeight = 12)
+    /** Last row-height in pixels for the editEntries list — used to scale the listScrollbar
+     *  pixel-based scroll back into row-units for [listScroll]. Refreshed each render. */
+    private var listRowH: Int = 16
+    private var sidebarRowH: Int = 12
 
     private val editEntries = mutableListOf<LootEntry>()
     private var editRolls = 1
@@ -189,11 +202,23 @@ class AdminLootPanel(
     private var refreshBtn: ButtonWidget? = null
     private var addRowBtn: ButtonWidget? = null
 
+    /** Toggle every widget this panel owns. Used when embedded so widgets only show when active. */
+    fun setWidgetsVisible(visible: Boolean) {
+        saveBtn?.visible = visible
+        resetBtn?.visible = visible
+        refreshBtn?.visible = visible
+        addRowBtn?.visible = visible
+    }
+
     fun init(addWidget: Function<ClickableWidget, ClickableWidget>) {
-        refreshBtn = ButtonWidget.builder(Text.literal("\u00A7bRefresh")) {
-            PacketDistributor.sendToServer(AdminLootRequestC2SPacket())
-        }.dimensions(x + PADDING, y + h - FOOTER_H + 2, 50, 12).build()
-        addWidget.apply(refreshBtn!!)
+        // Refresh button isn't useful in locked (embedded) mode \u2014 the parent already triggers
+        // data fetch when opening the loot sub-tab, and it would overlap with Add Item.
+        if (!isLocked()) {
+            refreshBtn = ButtonWidget.builder(Text.literal("\u00A7bRefresh")) {
+                PacketDistributor.sendToServer(AdminLootRequestC2SPacket())
+            }.dimensions(x + PADDING, y + h - FOOTER_H + 2, 50, 12).build()
+            addWidget.apply(refreshBtn!!)
+        }
 
         addRowBtn = ButtonWidget.builder(Text.literal("\u00A7a+ Add Item")) {
             // Insert at the top so the user immediately sees the new row.
@@ -206,7 +231,7 @@ class AdminLootPanel(
             fieldText = ""
             suggestions = emptyList()
             selectedSuggestion = -1
-        }.dimensions(x + SIDEBAR_W + PADDING + 4, y + h - FOOTER_H + 2, 60, 12).build()
+        }.dimensions(x + effectiveSidebarW() + PADDING + 4, y + h - FOOTER_H + 2, 60, 12).build()
         addWidget.apply(addRowBtn!!)
 
         saveBtn = ButtonWidget.builder(Text.literal("\u00A72Save")) { commitActiveField(); saveCurrent() }
@@ -236,14 +261,27 @@ class AdminLootPanel(
         val orderedKeys = PRETTY_NAMES.keys.filter { it in grouped }.toMutableList()
         orderedKeys.addAll(grouped.keys.filter { it !in PRETTY_NAMES }.sorted())
 
-        for (base in orderedKeys) {
+        // When locked to a single job (embedded mode), include only that one.
+        val keepKeys = if (lockedToBaseName != null) orderedKeys.filter { it == lockedToBaseName } else orderedKeys
+        for (base in keepKeys) {
             val sorted = LinkedHashMap<String, String>()
             for (r in (RARITY_ORDER + listOf(""))) {
                 grouped[base]?.get(r)?.let { sorted[r] = it }
             }
             jobs.add(JobGroup(base, PRETTY_NAMES[base] ?: base.replaceFirstChar { it.uppercase() }, sorted))
         }
+
+        // Auto-select the only entry when locked, so the editor opens immediately.
+        if (lockedToBaseName != null && jobs.isNotEmpty() && selectedJob == null) {
+            selectedJob = jobs.first()
+            selectedRarity = jobs.first().rarities.keys.firstOrNull() ?: ""
+            loadCurrentTable()
+        }
     }
+
+    /** True when sidebar should be hidden (single-job embedded mode). */
+    private fun isLocked(): Boolean = lockedToBaseName != null
+    private fun effectiveSidebarW(): Int = if (isLocked()) 0 else SIDEBAR_W
 
     private fun loadCurrentTable() {
         commitActiveField()
@@ -304,52 +342,58 @@ class AdminLootPanel(
         // Background
         context.fill(x, y, x + w, y + h, 0xCC1E1E2E.toInt())
 
-        // Sidebar
-        context.fill(x, y, x + SIDEBAR_W, y + h, SIDEBAR_BG)
-        context.fill(x + SIDEBAR_W, y, x + SIDEBAR_W + 1, y + h, SEPARATOR)
-        drawScaled(context, "\u00A7f\u00A7lJobs", x + PADDING, y + PADDING, 0xFFFFFF, 0.85f)
+        val sidebarW = effectiveSidebarW()
 
-        if (jobs.isEmpty()) {
-            drawScaled(context, "\u00A77Loading...", x + PADDING, y + 14, 0xAAAAAA, SCALE)
-        }
+        // Sidebar \u2014 skipped entirely in single-job (locked) mode.
+        if (!isLocked()) {
+            context.fill(x, y, x + SIDEBAR_W, y + h, SIDEBAR_BG)
+            context.fill(x + SIDEBAR_W, y, x + SIDEBAR_W + 1, y + h, SEPARATOR)
+            drawScaled(context, "\u00A7f\u00A7lJobs", x + PADDING, y + PADDING, 0xFFFFFF, 0.85f)
 
-        val sidebarListY = y + 14
-        val sidebarListH = h - 14 - FOOTER_H
-        val maxSidebarRows = sidebarListH / ROW_H
-        sidebarScroll = sidebarScroll.coerceIn(0, (jobs.size - maxSidebarRows).coerceAtLeast(0))
-
-        context.enableScissor(x, sidebarListY, x + SIDEBAR_W, sidebarListY + sidebarListH)
-        for (i in 0 until maxSidebarRows + 1) {
-            val idx = i + sidebarScroll
-            if (idx >= jobs.size) break
-            val job = jobs[idx]
-            val rowY = sidebarListY + i * ROW_H
-            val isSelected = job === selectedJob
-            val isHovered = mouseX in x..(x + SIDEBAR_W) && mouseY in rowY..(rowY + ROW_H)
-            if (isSelected) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, 0x442196F3)
-            else if (isHovered) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, ROW_HOVER)
-            val anyOverridden = job.rarities.values.any { AdminLootDataCache.isOverridden(it) }
-            val color = if (isSelected) 0xFFFFFF else 0xCCCCCC
-            drawScaled(context, job.displayName, x + PADDING + 4, rowY + 3, color, SCALE)
-            if (anyOverridden) {
-                drawScaled(context, "\u00A76\u25CF", x + SIDEBAR_W - 9, rowY + 3, 0xFF9800, 0.7f)
+            if (jobs.isEmpty()) {
+                drawScaled(context, "\u00A77Loading...", x + PADDING, y + 14, 0xAAAAAA, SCALE)
             }
-        }
-        context.disableScissor()
 
-        if (jobs.size > maxSidebarRows) {
-            val trackX = x + SIDEBAR_W - 3
-            val trackH = sidebarListH
-            val maxScroll = (jobs.size - maxSidebarRows).coerceAtLeast(1)
-            val thumbH = ((maxSidebarRows.toFloat() / jobs.size) * trackH).toInt().coerceAtLeast(8)
-            val thumbY = sidebarListY + ((sidebarScroll.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, sidebarListY, trackX + 2, sidebarListY + trackH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
+            val sidebarListY = y + 14
+            val sidebarListH = h - 14 - FOOTER_H
+            val maxSidebarRows = sidebarListH / ROW_H
+            sidebarScroll = sidebarScroll.coerceIn(0, (jobs.size - maxSidebarRows).coerceAtLeast(0))
+
+            context.enableScissor(x, sidebarListY, x + SIDEBAR_W, sidebarListY + sidebarListH)
+            for (i in 0 until maxSidebarRows + 1) {
+                val idx = i + sidebarScroll
+                if (idx >= jobs.size) break
+                val job = jobs[idx]
+                val rowY = sidebarListY + i * ROW_H
+                val isSelected = job === selectedJob
+                val isHovered = mouseX in x..(x + SIDEBAR_W) && mouseY in rowY..(rowY + ROW_H)
+                if (isSelected) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, 0x442196F3)
+                else if (isHovered) context.fill(x + 1, rowY, x + SIDEBAR_W, rowY + ROW_H, ROW_HOVER)
+                val anyOverridden = job.rarities.values.any { AdminLootDataCache.isOverridden(it) }
+                val color = if (isSelected) 0xFFFFFF else 0xCCCCCC
+                drawScaled(context, job.displayName, x + PADDING + 4, rowY + 3, color, SCALE)
+                if (anyOverridden) {
+                    drawScaled(context, "\u00A76\u25CF", x + SIDEBAR_W - 9, rowY + 3, 0xFF9800, 0.7f)
+                }
+            }
+            context.disableScissor()
+
+            sidebarRowH = ROW_H
+            sidebarScrollbar.layout(
+                trackX = x + SIDEBAR_W - 4,
+                trackY = sidebarListY,
+                trackHeight = sidebarListH,
+                contentHeight = jobs.size * ROW_H,
+                viewportHeight = sidebarListH,
+                currentScroll = sidebarScroll * ROW_H,
+            )
+            sidebarScrollbar.render(context, mouseX, mouseY)
+            sidebarScroll = sidebarScrollbar.scroll / ROW_H
         }
 
-        // Right pane
-        val rightX = x + SIDEBAR_W + 2
-        val rightW = w - SIDEBAR_W - 2
+        // Right pane \u2014 when locked the content fills the whole panel.
+        val rightX = x + sidebarW + if (isLocked()) 0 else 2
+        val rightW = w - sidebarW - if (isLocked()) 0 else 2
         val job = selectedJob ?: return
 
         drawScaled(context, "\u00A7f\u00A7l${job.displayName}", rightX + PADDING, y + PADDING, 0xFFFFFF, 0.85f)
@@ -561,16 +605,18 @@ class AdminLootPanel(
         }
         context.disableScissor()
 
-        // List scrollbar
-        if (editEntries.size > maxRows) {
-            val trackX = rightX + rightW - 3
-            val trackH = listH
-            val maxScroll = (editEntries.size - maxRows).coerceAtLeast(1)
-            val thumbH = ((maxRows.toFloat() / editEntries.size) * trackH).toInt().coerceAtLeast(8)
-            val thumbY = listY + ((listScroll.toFloat() / maxScroll) * (trackH - thumbH)).toInt()
-            context.fill(trackX, listY, trackX + 2, listY + trackH, 0x33FFFFFF)
-            context.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, 0xAAFFFFFF.toInt())
-        }
+        // List scrollbar via shared component — handles click on track + drag of thumb.
+        listRowH = ROW_H
+        listScrollbar.layout(
+            trackX = rightX + rightW - 4,
+            trackY = listY,
+            trackHeight = listH,
+            contentHeight = editEntries.size * ROW_H,
+            viewportHeight = listH,
+            currentScroll = listScroll * ROW_H,
+        )
+        listScrollbar.render(context, rightX, listY)
+        listScroll = listScrollbar.scroll / ROW_H
 
         // Autocomplete popup — drawn after the rows so it overlays subsequent
         // rows. Anchored under the active item field.
@@ -689,10 +735,23 @@ class AdminLootPanel(
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Two scrollbars on this panel — claim drag clicks before any list/row hit-test.
+        if (sidebarScrollbar.mouseClicked(mouseX, mouseY)) {
+            sidebarScroll = sidebarScrollbar.scroll / sidebarRowH.coerceAtLeast(1)
+            return true
+        }
+        if (listScrollbar.mouseClicked(mouseX, mouseY)) {
+            listScroll = listScrollbar.scroll / listRowH.coerceAtLeast(1)
+            return true
+        }
+        // Locked-mode geometry matches render: no sidebar, right pane fills the whole area.
+        val sidebarW = effectiveSidebarW()
+        val gap = if (isLocked()) 0 else 2
+
         // Suggestion popup click — must run before commitActiveField since it
         // would clear the active state and the suggestions.
         if (activeFieldType == FieldType.ITEM && suggestions.isNotEmpty() && activeFieldRow >= 0) {
-            val rightX = x + SIDEBAR_W + 2
+            val rightX = x + sidebarW + gap
             val colItemX = rightX + PADDING + 14
             val headerY = y + 41
             val rightListY = headerY + 12
@@ -720,51 +779,29 @@ class AdminLootPanel(
 
         commitActiveField()
 
-        // Sidebar scrollbar drag start
-        val sidebarListY = y + 14
-        val sidebarListH = h - 14 - FOOTER_H
-        val sidebarMaxRows = sidebarListH / ROW_H
-        val sidebarMaxScroll = (jobs.size - sidebarMaxRows).coerceAtLeast(0)
-        val sidebarTrackX = x + SIDEBAR_W - 3
-        if (sidebarMaxScroll > 0 &&
-            mouseX in (sidebarTrackX - 3).toDouble()..(sidebarTrackX + 5).toDouble() &&
-            mouseY in sidebarListY.toDouble()..(sidebarListY + sidebarListH).toDouble()
-        ) {
-            dragging = DragTarget.SIDEBAR
-            val rel = ((mouseY - sidebarListY) / sidebarListH.toDouble()).coerceIn(0.0, 1.0)
-            sidebarScroll = (rel * sidebarMaxScroll).toInt()
-            return true
-        }
-
-        // Right list scrollbar drag start
-        val rightX = x + SIDEBAR_W + 2
-        val rightW = w - SIDEBAR_W - 2
+        // Scrollbar drag start handled by the shared component (see top of mouseClicked).
+        // The previous custom drag logic was replaced by ScrollbarComponent — it preserves
+        // the grab offset within the thumb, which the rel-position math here did not.
+        // Below we still need rightX/rightW/rightListY for the rarity-tab + row-click hit-tests.
+        val rightX = x + sidebarW + gap
+        val rightW = w - sidebarW - gap
         val headerY = y + 41
         val rightListY = headerY + 12
         val rightListH = y + h - FOOTER_H - rightListY - 2
-        val rightMaxRows = rightListH / ROW_H
-        val rightMaxScroll = (editEntries.size - rightMaxRows).coerceAtLeast(0)
-        val rightTrackX = rightX + rightW - 3
-        if (rightMaxScroll > 0 &&
-            mouseX in (rightTrackX - 3).toDouble()..(rightTrackX + 5).toDouble() &&
-            mouseY in rightListY.toDouble()..(rightListY + rightListH).toDouble()
-        ) {
-            dragging = DragTarget.LIST
-            val rel = ((mouseY - rightListY) / rightListH.toDouble()).coerceIn(0.0, 1.0)
-            listScroll = (rel * rightMaxScroll).toInt()
-            return true
-        }
 
-        // Sidebar selection (only when not clicking the scrollbar)
-        if (mouseX in x.toDouble()..(x + SIDEBAR_W - 4).toDouble() &&
-            mouseY in sidebarListY.toDouble()..(y + h - FOOTER_H).toDouble()
-        ) {
-            val idx = ((mouseY - sidebarListY) / ROW_H).toInt() + sidebarScroll
-            if (idx in jobs.indices) {
-                selectedJob = jobs[idx]
-                selectedRarity = jobs[idx].rarities.keys.first()
-                loadCurrentTable()
-                return true
+        // Sidebar selection (only when not clicking the scrollbar) — skipped in locked mode.
+        if (!isLocked()) {
+            val sidebarListY = y + 14
+            if (mouseX in x.toDouble()..(x + SIDEBAR_W - 4).toDouble() &&
+                mouseY in sidebarListY.toDouble()..(y + h - FOOTER_H).toDouble()
+            ) {
+                val idx = ((mouseY - sidebarListY) / ROW_H).toInt() + sidebarScroll
+                if (idx in jobs.indices) {
+                    selectedJob = jobs[idx]
+                    selectedRarity = jobs[idx].rarities.keys.first()
+                    loadCurrentTable()
+                    return true
+                }
             }
         }
 
@@ -810,7 +847,7 @@ class AdminLootPanel(
         val colMaxX = rightX + PADDING + 214
         val colActionX = rightX + PADDING + 246
 
-        if (mouseX in rightX.toDouble()..(rightX + (w - SIDEBAR_W)).toDouble() &&
+        if (mouseX in rightX.toDouble()..(rightX + rightW).toDouble() &&
             mouseY in listY.toDouble()..(listY + listH).toDouble()
         ) {
             val visRow = ((mouseY - listY) / ROW_H).toInt()
@@ -956,44 +993,27 @@ class AdminLootPanel(
     }
 
     fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
-        when (dragging) {
-            DragTarget.SIDEBAR -> {
-                val sidebarListY = y + 14
-                val sidebarListH = h - 14 - FOOTER_H
-                val maxRows = sidebarListH / ROW_H
-                val maxScroll = (jobs.size - maxRows).coerceAtLeast(0)
-                if (maxScroll > 0) {
-                    val rel = ((mouseY - sidebarListY) / sidebarListH.toDouble()).coerceIn(0.0, 1.0)
-                    sidebarScroll = (rel * maxScroll).toInt()
-                }
-                return true
-            }
-            DragTarget.LIST -> {
-                val headerY = y + 41
-                val rightListY = headerY + 12
-                val rightListH = y + h - FOOTER_H - rightListY - 2
-                val maxRows = rightListH / ROW_H
-                val maxScroll = (editEntries.size - maxRows).coerceAtLeast(0)
-                if (maxScroll > 0) {
-                    val rel = ((mouseY - rightListY) / rightListH.toDouble()).coerceIn(0.0, 1.0)
-                    listScroll = (rel * maxScroll).toInt()
-                }
-                return true
-            }
-            null -> return false
+        if (sidebarScrollbar.mouseDragged(mouseY)) {
+            sidebarScroll = sidebarScrollbar.scroll / sidebarRowH.coerceAtLeast(1)
+            return true
         }
-    }
-
-    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (dragging != null) {
-            dragging = null
+        if (listScrollbar.mouseDragged(mouseY)) {
+            listScroll = listScrollbar.scroll / listRowH.coerceAtLeast(1)
             return true
         }
         return false
     }
 
+    fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (sidebarScrollbar.mouseReleased()) return true
+        if (listScrollbar.mouseReleased()) return true
+        return false
+    }
+
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontal: Double, vertical: Double): Boolean {
-        if (mouseX in x.toDouble()..(x + SIDEBAR_W).toDouble() &&
+        val sidebarW = effectiveSidebarW()
+        // Sidebar scroll (skipped in locked mode — no sidebar to scroll)
+        if (!isLocked() && mouseX in x.toDouble()..(x + SIDEBAR_W).toDouble() &&
             mouseY in y.toDouble()..(y + h).toDouble()
         ) {
             val sidebarListH = h - 14 - FOOTER_H
@@ -1002,7 +1022,8 @@ class AdminLootPanel(
             sidebarScroll = (sidebarScroll - vertical.toInt() * 2).coerceIn(0, maxScroll)
             return true
         }
-        if (mouseX in (x + SIDEBAR_W).toDouble()..(x + w).toDouble() &&
+        // Right-list scroll — area spans from `sidebarW` to the right edge.
+        if (mouseX in (x + sidebarW).toDouble()..(x + w).toDouble() &&
             mouseY in y.toDouble()..(y + h).toDouble()
         ) {
             val listY = y + 53

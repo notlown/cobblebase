@@ -225,10 +225,17 @@ object EggHatcherExecutor : SkillExecutor {
             billboardMethod?.isAccessible = true
             billboardMethod?.invoke(display, DisplayEntity.BillboardMode.CENTER)
 
+            // Hold the egg in FRONT of the Pokemon's body, not stuffed inside its head.
+            // Previous offset (height * 0.85, no horizontal offset) painted the egg through
+            // the head of larger/wider species. Now we push half a block forward along the
+            // body yaw and sit it at mid-chest height (~0.55 of height).
+            val yawRad = Math.toRadians(pokemonEntity.bodyYaw.toDouble())
+            val forwardX = -Math.sin(yawRad) * 0.5
+            val forwardZ = Math.cos(yawRad) * 0.5
             display.setPosition(
-                pokemonEntity.x,
-                pokemonEntity.y + pokemonEntity.height * 0.85,
-                pokemonEntity.z
+                pokemonEntity.x + forwardX,
+                pokemonEntity.y + pokemonEntity.height * 0.55,
+                pokemonEntity.z + forwardZ
             )
             world.spawnEntity(display)
             display
@@ -243,10 +250,15 @@ object EggHatcherExecutor : SkillExecutor {
         if (displayId < 0) return
         val entity = world.getEntityById(displayId) ?: return
         if (entity.isRemoved) return
+        // Same body-front offset as spawnEggDisplay — must mirror, otherwise the display
+        // would snap back to the head on the first follow-update.
+        val yawRad = Math.toRadians(pokemonEntity.bodyYaw.toDouble())
+        val forwardX = -Math.sin(yawRad) * 0.5
+        val forwardZ = Math.cos(yawRad) * 0.5
         entity.setPosition(
-            pokemonEntity.x,
-            pokemonEntity.y + pokemonEntity.height * 0.85,
-            pokemonEntity.z
+            pokemonEntity.x + forwardX,
+            pokemonEntity.y + pokemonEntity.height * 0.55,
+            pokemonEntity.z + forwardZ
         )
     }
 
@@ -370,8 +382,30 @@ object EggHatcherExecutor : SkillExecutor {
         if (now % 40L == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
     }
 
-    /** Called by BaseManager periodic sweep — drops claims for Pokemon that have stopped ticking. */
-    fun cleanupStale(now: Long) {
+    /**
+     * Called by BaseManager periodic sweep — drops claims for Pokemon that have stopped
+     * ticking. For each dropped claim, also discards the ItemDisplay entity carrying the
+     * egg visual. Without this kill, a hatcher that despawns / chunks-out / loses its
+     * owner leaves an orphan ItemDisplay in the world — a floating non-pickup-able egg
+     * that the player has no way to clear (reported by Umutcan 2026-05-18).
+     */
+    fun cleanupStale(now: Long, world: net.minecraft.world.World? = null) {
+        val stale = claims.entries.filter { (_, c) -> now - c.lastSeenTick > STALE_TTL_TICKS }
+        if (stale.isEmpty()) return
+        if (world is ServerWorld) {
+            // Check every loaded world (the display can be in any dimension the player
+            // visited; we only have a reference to one of them here, but iterating the
+            // server's worlds catches the rest).
+            val worlds: Iterable<ServerWorld> = world.server?.worlds ?: listOf(world)
+            for ((_, c) in stale) {
+                if (c.displayEntityId < 0) continue
+                for (w in worlds) {
+                    val ent = w.getEntityById(c.displayEntityId) ?: continue
+                    try { ent.discard() } catch (_: Exception) {}
+                    break
+                }
+            }
+        }
         claims.entries.removeAll { (_, c) -> now - c.lastSeenTick > STALE_TTL_TICKS }
     }
 

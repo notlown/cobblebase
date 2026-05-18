@@ -98,7 +98,7 @@ object BaseManager {
             notlown.cobblebase.core.executors.SupplierExecutor.cleanupStale(now)
             NavigationHelper.cleanupStale(now)
             notlown.cobblebase.core.executors.InventoryHelper.cleanupStale(now)
-            notlown.cobblebase.core.executors.EggHatcherExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.EggHatcherExecutor.cleanupStale(now, world)
             // LogManager has a built-in 24h-age cleanup that was never wired to a periodic call
             // — now it runs every minute alongside the executor sweep.
             notlown.cobblebase.core.LogManager.cleanup()

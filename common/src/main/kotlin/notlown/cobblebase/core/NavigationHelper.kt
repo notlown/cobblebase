@@ -226,37 +226,45 @@ object NavigationHelper {
         val now = world.time
         val pokemonId = pokemonEntity.pokemon.uuid
 
-        // Cheap path runs EVERY tick (2 block reads): detect in/on leaves and continuously
-        // clear the brain's movement memories so flying mons (Butterfree, Combee, Ninjask)
-        // can't immediately re-issue a "fly up" path between the throttled ground-scan
-        // resets below. Previously the whole function was throttled to once per second,
-        // so a flying mon would visibly twitch in-tree for the full 1 s gap because its
-        // brain re-engaged the climb path as soon as the reposition landed.
+        // Cheap detection (every tick). Scans the Pokemon's bounding box + one block above
+        // for any LeavesBlock — previous version only checked the floored blockPos and the
+        // single block below, which missed flying mons hovering in air pockets inside the
+        // canopy (Butterfree/Combee/Ninjask had a feet position in air with leaves on
+        // every side, and "in leaves" never fired). Up to ~8 block reads per Pokemon per
+        // tick for a typical 1×1×1 box; cheap enough to run unthrottled.
         val pos = pokemonEntity.blockPos
+        val bb = pokemonEntity.boundingBox
+        val nearLeaves = isInOrUnderLeaves(world, bb)
+        // Keep these two flags around — the expensive ground-scan below still uses them
+        // for the on-leaves / in-leaves vs under-canopy distinction.
         val block = world.getBlockState(pos).block
         val blockBelow = world.getBlockState(pos.down()).block
         val inLeaves = block is net.minecraft.block.LeavesBlock
         val onLeaves = blockBelow is net.minecraft.block.LeavesBlock
 
-        if (inLeaves || onLeaves) {
+        if (nearLeaves) {
+            // Clear movement memories EVERY tick the mon is touching leaves. Flying mons
+            // re-issue a fly-up path the instant the brain ticks; this stops them from
+            // climbing back into the canopy between the throttled reposition sweeps.
             try {
                 val brain = pokemonEntity.brain
                 brain.forget(net.minecraft.entity.ai.brain.MemoryModuleType.WALK_TARGET)
                 brain.forget(net.minecraft.entity.ai.brain.MemoryModuleType.PATH)
+                brain.forget(net.minecraft.entity.ai.brain.MemoryModuleType.LOOK_TARGET)
             } catch (_: Exception) {}
             try { pokemonEntity.navigation.stop() } catch (_: Exception) {}
         }
 
-        // Expensive path (canopy check + downward ground scan + reposition) stays
+        // Expensive path (canopy probe + downward ground scan + reposition) stays
         // throttled to once per second per Pokemon — block reads here can total up to
         // ~23 per call, way too costly to run every tick across every pastured mon.
         val lastCheck = lastEscapeLeavesTick[pokemonId] ?: 0L
         if (now - lastCheck < ESCAPE_LEAVES_INTERVAL) return
         lastEscapeLeavesTick[pokemonId] = now
 
-        val underCanopy = !inLeaves && !onLeaves && hasLeavesAbove(world, pos, 3)
+        val underCanopy = nearLeaves && !inLeaves && !onLeaves
 
-        if (inLeaves || onLeaves || underCanopy) {
+        if (nearLeaves) {
             // Find ground below (skip leaves and air only — fences are valid ground)
             var groundY = pos.y
             for (y in pos.y downTo pos.y - 20) {
@@ -285,6 +293,34 @@ object NavigationHelper {
         for (y in 1..range) {
             if (world.getBlockState(pos.up(y)).block is net.minecraft.block.LeavesBlock) {
                 return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * True if the Pokemon's bounding box overlaps any LeavesBlock, OR if there's a
+     * LeavesBlock within 2 blocks directly above the box. Used as the every-tick
+     * detection signal for [escapeLeaves]; the more expensive ground-scan + reposition
+     * still gates on this returning true before running.
+     *
+     * Reads roughly `(boxWidth + 1) × (boxHeight + 2) × (boxDepth + 1)` block states —
+     * for a typical 1×1×1 Pokemon that's 8 reads. Cheap enough for every server tick.
+     */
+    private fun isInOrUnderLeaves(world: World, bb: net.minecraft.util.math.Box): Boolean {
+        val minX = Math.floor(bb.minX).toInt()
+        val minY = Math.floor(bb.minY).toInt()
+        val minZ = Math.floor(bb.minZ).toInt()
+        val maxX = Math.floor(bb.maxX).toInt()
+        val maxY = Math.floor(bb.maxY).toInt() + 2  // include 2 blocks above the box
+        val maxZ = Math.floor(bb.maxZ).toInt()
+        val mp = BlockPos.Mutable()
+        for (x in minX..maxX) {
+            for (y in minY..maxY) {
+                for (z in minZ..maxZ) {
+                    mp.set(x, y, z)
+                    if (world.getBlockState(mp).block is net.minecraft.block.LeavesBlock) return true
+                }
             }
         }
         return false

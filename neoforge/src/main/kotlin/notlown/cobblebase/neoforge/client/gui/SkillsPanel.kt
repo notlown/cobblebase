@@ -30,17 +30,26 @@ class SkillsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    private val ROW_HEIGHT_SMALL = 24
-    private val ROW_HEIGHT_LARGE = 42
+    // Pasture redesign (synced with Fabric):
+    //   * Compact 18-px rows — fits 10+ Pokemon on screen.
+    //   * Dynamic chip width per Pokemon — fits all skills in ONE row.
+    //   * Unified chip height for active and available; differentiation via color
+    //     and content only (no height-pump breaking the row silhouette).
+    private val ROW_HEIGHT_SMALL = 18
+    private val ROW_HEIGHT_LARGE = 18
     private val HEADER_HEIGHT = 14
     private val PANEL_PADDING = 8
-    private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
-    private val NAME_WIDTH = 50 + ICON_OFFSET
+    private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4
+    private val NAME_WIDTH = 56 + ICON_OFFSET
     private val AURA_ICON_WIDTH = 15
-    private val AUTO_BTN_WIDTH = 36
+    private val AUTO_BTN_WIDTH = 26
     private val BTN_WIDTH = 58
+    private val BTN_MIN_WIDTH = 38
     private val BTN_HEIGHT = 16
     private val BTN_GAP = 2
+
+    /** Per-Pokemon chip width (varies when many skills must fit into one row). */
+    private val chipWidthByPokemon = mutableMapOf<java.util.UUID, Int>()
 
     private val ROW_EVEN = 0x44FFFFFF.toInt()
     private val ROW_ODD = 0x22FFFFFF.toInt()
@@ -68,6 +77,7 @@ class SkillsPanel(
         allButtons.clear()
         rowOffsets.clear()
         rowHeights.clear()
+        chipWidthByPokemon.clear()
         scrollX = 0
         scrollY = 0
         contentY = panelY + HEADER_HEIGHT + PANEL_PADDING
@@ -125,39 +135,38 @@ class SkillsPanel(
             // Auto button has its own column, skills start after it
             val autoX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
             val skillStartX = autoX + AUTO_BTN_WIDTH + BTN_GAP
-            val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
-            val btnsPerRow = ((maxBtnX - skillStartX) / (BTN_WIDTH + BTN_GAP)) + 1
-            val needsTwoRows = skillCount > btnsPerRow
-            val rowH = if (needsTwoRows) ROW_HEIGHT_LARGE else ROW_HEIGHT_SMALL
+            val skillAreaW = panelX + panelW - PANEL_PADDING - skillStartX
+
+            // Dynamic chip width: divide available space evenly across the Pokemon's
+            // skills, clamped at BTN_MIN_WIDTH for readability.
+            val chipW = if (skillCount <= 0) BTN_WIDTH else {
+                val perChipBudget = (skillAreaW - (skillCount - 1) * BTN_GAP) / skillCount
+                perChipBudget.coerceIn(BTN_MIN_WIDTH, BTN_WIDTH)
+            }
+            chipWidthByPokemon[pokemonId] = chipW
 
             rowOffsets.add(cumulativeY)
-            rowHeights.add(rowH)
+            rowHeights.add(ROW_HEIGHT_SMALL)
 
             val rowY = contentY + cumulativeY
 
-            // Auto button in its own column
             allButtons.add(SkillButtonData(pokemonId, null, "Relax", 0, "", autoX, rowY, currentAssignment == null))
 
-            // Skill buttons start after Auto column
             var btnX = skillStartX
-            var btnY = rowY
+            val btnY = rowY
 
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
                 if (BaseManager.isBuffExecutor(skillDef.executor)) continue
                 if (!JobConfigOverrides.isEnabled(entry.skillId)) continue
-                if (btnX > maxBtnX) {
-                    btnX = skillStartX
-                    btnY = rowY + BTN_HEIGHT + BTN_GAP
-                }
                 allButtons.add(SkillButtonData(
                     pokemonId, entry.skillId, skillDef.name, entry.proficiency,
                     skillDef.category, btnX, btnY, currentAssignment == entry.skillId
                 ))
-                btnX += BTN_WIDTH + BTN_GAP
+                btnX += chipW + BTN_GAP
             }
 
-            cumulativeY += rowH
+            cumulativeY += ROW_HEIGHT_SMALL
         }
     }
 
@@ -180,25 +189,31 @@ class SkillsPanel(
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + rowH - 1, rowColor)
 
-            // Pokemon portrait icon
+            // Pokemon portrait \u2014 1.15\u00D7 scale (~18 px), fills the compact row.
             val name = pokemonData.displayName.string
+            val spriteScale = 1.15f
+            context.matrices.push()
+            context.matrices.translate((panelX + PANEL_PADDING).toFloat(), (ry + 1).toFloat(), 0f)
+            context.matrices.scale(spriteScale, spriteScale, 1f)
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, pokemonData.species, name, pokemonData.aspects,
-                panelX + PANEL_PADDING, ry + 4, delta
+                0, 0, delta
             )
-
-            // Pokemon name + level (shifted right for icon, scaled 0.75x)
-            val nameX = panelX + PANEL_PADDING + ICON_OFFSET
-            val nameScale = 0.75f
-            context.matrices.push()
-            context.matrices.translate(nameX.toFloat(), (ry + 4).toFloat(), 0f)
-            context.matrices.scale(nameScale, nameScale, 1f)
-            context.drawTextWithShadow(textRenderer, name, 0, 0, 0xFFFFFF)
             context.matrices.pop()
 
+            // Pokemon name at 0.9\u00D7 + Lv at 0.75\u00D7 beneath it.
+            val nameX = panelX + PANEL_PADDING + ICON_OFFSET + 2
+            val nameScale = 0.9f
             context.matrices.push()
-            context.matrices.translate(nameX.toFloat(), (ry + 14).toFloat(), 0f)
+            context.matrices.translate(nameX.toFloat(), (ry + 2).toFloat(), 0f)
             context.matrices.scale(nameScale, nameScale, 1f)
+            context.drawTextWithShadow(textRenderer, name, 0, 0, 0xFFFFFFFF.toInt())
+            context.matrices.pop()
+
+            val lvScale = 0.75f
+            context.matrices.push()
+            context.matrices.translate(nameX.toFloat(), (ry + 11).toFloat(), 0f)
+            context.matrices.scale(lvScale, lvScale, 1f)
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", 0, 0, 0xAAAAAA)
             context.matrices.pop()
 
@@ -216,7 +231,7 @@ class SkillsPanel(
                     val auraX = panelX + PANEL_PADDING + NAME_WIDTH
                     val auraScale = 0.75f
                     context.matrices.push()
-                    context.matrices.translate(auraX.toFloat(), (ry + 4).toFloat(), 0f)
+                    context.matrices.translate(auraX.toFloat(), (ry + 5).toFloat(), 0f)
                     context.matrices.scale(auraScale, auraScale, 1f)
                     context.drawTextWithShadow(textRenderer, buffEmoji, 0, 0, 0xFFFFFF)
                     context.matrices.pop()
@@ -229,61 +244,75 @@ class SkillsPanel(
             .filter { AssignmentCache.isCraftsmanSupplier(it.pokemonId) }
             .map { it.pokemonId }.toSet()
 
-        // Skill buttons — skip entirely for supplier Mons
+        // Unified chip rendering (synced with Fabric Pasture redesign).
         for (btn in allButtons) {
-            if (btn.pokemonId in supplierPokemonIds) continue // Don't render buttons for suppliers
+            if (btn.pokemonId in supplierPokemonIds) continue
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
             val isAutoBtn = btn.skillId == null
-            val bw = if (isAutoBtn) AUTO_BTN_WIDTH else BTN_WIDTH
+            val bw = if (isAutoBtn) AUTO_BTN_WIDTH else (chipWidthByPokemon[btn.pokemonId] ?: BTN_WIDTH)
 
             if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) continue
             if (rx + bw < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
 
             val hovered = mouseX in rx..(rx + bw) && mouseY in ry..(ry + BTN_HEIGHT)
-
             val categoryColor = CobblebaseScreen.CATEGORY_COLORS[btn.category] ?: 0xFF666666.toInt()
-            val bg = when {
-                btn.selected -> categoryColor
-                hovered -> 0xFF4A4A6A.toInt()
-                else -> 0xFF2A2A3E.toInt()
-            }
-            context.fill(rx, ry + 2, rx + bw, ry + 2 + BTN_HEIGHT, bg)
-
-            val border = if (btn.selected) 0xFFFFFFFF.toInt() else 0xFF555577.toInt()
-            context.drawHorizontalLine(rx, rx + bw - 1, ry + 2, border)
-            context.drawHorizontalLine(rx, rx + bw - 1, ry + 1 + BTN_HEIGHT, border)
-            context.drawVerticalLine(rx, ry + 2, ry + 1 + BTN_HEIGHT, border)
-            context.drawVerticalLine(rx + bw - 1, ry + 2, ry + 1 + BTN_HEIGHT, border)
-
-            val textColor = if (btn.selected) 0xFFFFFF else 0xBBBBBB
-            val nameText = btn.displayName
-
-            // Scale text to 0.75x for better readability in small buttons
             val scale = 0.75f
+
+            val chipTop = ry + 1
+            val chipBot = chipTop + BTN_HEIGHT
+
+            val isRelaxActive = isAutoBtn && btn.selected
+            val isJobActive = btn.selected && !isAutoBtn
+
+            val (bg, border, textColor) = when {
+                isJobActive   -> Triple(categoryColor, 0xFFFFFFFF.toInt(), 0xFFFFFF)
+                isRelaxActive -> Triple(0xFF5A4A2A.toInt(), 0xFFAA8844.toInt(), 0xFFCC88)
+                hovered       -> Triple(0xFF3A3A4E.toInt(), 0xFF7777AA.toInt(), 0xDDDDDD)
+                else          -> Triple(0xFF22222E.toInt(), 0xFF44445A.toInt(), 0x999999)
+            }
+
+            context.fill(rx, chipTop, rx + bw, chipBot, bg)
+            context.drawHorizontalLine(rx, rx + bw - 1, chipTop, border)
+            context.drawHorizontalLine(rx, rx + bw - 1, chipBot - 1, border)
+            context.drawVerticalLine(rx, chipTop, chipBot - 1, border)
+            context.drawVerticalLine(rx + bw - 1, chipTop, chipBot - 1, border)
+
+            if (!isJobActive && !isAutoBtn) {
+                val stripe = (categoryColor and 0x00FFFFFF) or 0xCC000000.toInt()
+                context.fill(rx + 1, chipBot - 2, rx + bw - 1, chipBot - 1, stripe)
+            }
+
+            val nameText = btn.displayName
             val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
-            val textX = rx + (bw - nameWidth) / 2
-            val textY = ry + 4
 
-            context.matrices.push()
-            context.matrices.translate(textX.toFloat(), textY.toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
-            context.matrices.pop()
-
-            if (btn.proficiency > 0) {
-                val stars = "\u2605".repeat(btn.proficiency) + "\u2606".repeat(5 - btn.proficiency)
-                val starColor = if (btn.proficiency >= 5) 0xFFD700
-                    else if (btn.proficiency >= 4) 0xFFA500
-                    else if (btn.proficiency >= 3) 0x88CC88
-                    else 0x888888
-                val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
-                val starX = rx + (bw - starWidth) / 2
-
+            if (isJobActive) {
                 context.matrices.push()
-                context.matrices.translate(starX.toFloat(), (ry + 12).toFloat(), 0f)
+                context.matrices.translate((rx + (bw - nameWidth) / 2).toFloat(), (chipTop + 2).toFloat(), 0f)
                 context.matrices.scale(scale, scale, 1f)
-                context.drawText(textRenderer, stars, 0, 0, starColor, false)
+                context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
+                context.matrices.pop()
+
+                if (btn.proficiency > 0) {
+                    val stars = "\u2605".repeat(btn.proficiency) + "\u2606".repeat(5 - btn.proficiency)
+                    val starColor = when {
+                        btn.proficiency >= 5 -> 0xFFD700
+                        btn.proficiency >= 4 -> 0xFFA500
+                        btn.proficiency >= 3 -> 0x88CC88
+                        else -> 0x888888
+                    }
+                    val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
+                    context.matrices.push()
+                    context.matrices.translate((rx + (bw - starWidth) / 2).toFloat(), (chipTop + 9).toFloat(), 0f)
+                    context.matrices.scale(scale, scale, 1f)
+                    context.drawText(textRenderer, stars, 0, 0, starColor, false)
+                    context.matrices.pop()
+                }
+            } else {
+                context.matrices.push()
+                context.matrices.translate((rx + (bw - nameWidth) / 2).toFloat(), (chipTop + 5).toFloat(), 0f)
+                context.matrices.scale(scale, scale, 1f)
+                context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
                 context.matrices.pop()
             }
         }
@@ -352,9 +381,9 @@ class SkillsPanel(
 
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
-            val bw = if (btn.skillId == null) AUTO_BTN_WIDTH else BTN_WIDTH
+            val bw = if (btn.skillId == null) AUTO_BTN_WIDTH else (chipWidthByPokemon[btn.pokemonId] ?: BTN_WIDTH)
             if (mouseX >= rx && mouseX <= rx + bw &&
-                mouseY >= ry + 2 && mouseY <= ry + 2 + BTN_HEIGHT &&
+                mouseY >= ry + 1 && mouseY <= ry + 1 + BTN_HEIGHT &&
                 mouseY >= contentY && mouseY < contentBottom
             ) {
                 selectSkill(btn.pokemonId, btn.skillId)

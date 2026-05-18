@@ -240,30 +240,8 @@ object NavigationHelper {
         // from under the canopy either. User reported "es ging doch vorher" and this
         // is exactly why.
         val pos = pokemonEntity.blockPos
-        val bb = pokemonEntity.boundingBox
-        val touchingLeaves = bbOverlapsLeaves(world, bb)
+        val touchingLeaves = bbOverlapsLeaves(world, pokemonEntity.boundingBox)
         val canopyAbove = !touchingLeaves && hasLeavesAbove(world, pos, 3)
-        val block = world.getBlockState(pos).block
-        val blockBelow = world.getBlockState(pos.down()).block
-        val inLeaves = block is net.minecraft.block.LeavesBlock
-        val onLeaves = blockBelow is net.minecraft.block.LeavesBlock
-
-        // ── DEBUG ──
-        // Log once per second per Pokemon so we don't spam. Captures both the box
-        // overlap detection (drives the brain-clear) and the canopy probe (drives the
-        // throttled reposition) so we can tell the two scenarios apart in logs.
-        if (Cobblebase.LOGGER.isDebugEnabled && now % 20L == 0L && (touchingLeaves || canopyAbove)) {
-            val bbStr = String.format(
-                "bb=[%.2f,%.2f,%.2f→%.2f,%.2f,%.2f]",
-                bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ
-            )
-            Cobblebase.LOGGER.debug(
-                "[escapeLeaves] $species @${pos.x},${pos.y},${pos.z} $bbStr " +
-                "touchingLeaves=$touchingLeaves canopyAbove=$canopyAbove " +
-                "inLeaves=$inLeaves onLeaves=$onLeaves " +
-                "block=${block.javaClass.simpleName} below=${blockBelow.javaClass.simpleName}"
-            )
-        }
 
         // Brain-clear ONLY when the hitbox is directly inside leaves. Without overlap
         // the mon has horizontal escape routes and we must not paralyze its brain.
@@ -312,14 +290,11 @@ object NavigationHelper {
                 }
             }
             if (groundY < pos.y) {
-                Cobblebase.LOGGER.info("[escapeLeaves] DROP $species from y=${pos.y} → y=$groundY (underCanopy=$underCanopy)")
                 pokemonEntity.refreshPositionAndAngles(
                     pokemonEntity.x, groundY.toDouble(), pokemonEntity.z,
                     pokemonEntity.yaw, pokemonEntity.pitch
                 )
                 pokemonEntity.navigation.stop()
-            } else {
-                Cobblebase.LOGGER.debug("[escapeLeaves] $species nearLeaves but no groundY found below y=${pos.y}")
             }
         }
     }

@@ -510,36 +510,49 @@ object CobblebaseFabric : ModInitializer {
 
     /**
      * Handles a log request from the client.
-     * Finds the nearest pasture block entity to the player and sends its logs.
+     *
+     * Resolves the player's open pasture by matching the packet's pastureId
+     * (== Cobblemon's pcId) against the tetherings of nearby pasture blocks.
+     * Earlier versions picked the geometrically nearest pasture, which sent
+     * the wrong pasture's logs whenever two pastures sat within the search
+     * radius — e.g. Pasture A's logs leaking into Pasture B's view (TobiNF12,
+     * 1.5.5-beta.1). The Pos-keyed log store was correct; only the lookup was wrong.
+     *
+     * Falls back to the nearest pasture for the edge case where every tethering
+     * has just been withdrawn (no pcId match, but historical logs still exist
+     * keyed by that BlockPos).
      */
     private fun handleLogRequest(player: net.minecraft.server.network.ServerPlayerEntity, packet: LogRequestC2SPacket) {
         val world = player.serverWorld
         val playerPos = player.blockPos
-
-        // Search nearby block entities for a PokemonPastureBlockEntity
-        var nearestPos: BlockPos? = null
-        var nearestDist = Double.MAX_VALUE
         val searchRadius = 16
 
-        for (x in -searchRadius..searchRadius) {
+        var matchedPos: BlockPos? = null
+        var nearestPos: BlockPos? = null
+        var nearestDist = Double.MAX_VALUE
+
+        outer@ for (x in -searchRadius..searchRadius) {
             for (y in -searchRadius..searchRadius) {
                 for (z in -searchRadius..searchRadius) {
                     val pos = playerPos.add(x, y, z)
                     val blockEntity = world.getBlockEntity(pos)
                     if (blockEntity is PokemonPastureBlockEntity) {
+                        if (blockEntity.tetheredPokemon.any { it.pcId == packet.pastureId }) {
+                            matchedPos = pos.toImmutable()
+                            break@outer
+                        }
                         val dist = pos.getSquaredDistance(playerPos)
                         if (dist < nearestDist) {
                             nearestDist = dist
-                            nearestPos = pos
+                            nearestPos = pos.toImmutable()
                         }
                     }
                 }
             }
         }
 
-        val pasturePos = nearestPos
+        val pasturePos = matchedPos ?: nearestPos
         if (pasturePos == null) {
-            // No pasture found, send empty logs
             ServerPlayNetworking.send(player, LogSyncS2CPacket(emptyList()))
             return
         }

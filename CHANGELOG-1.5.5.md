@@ -48,6 +48,16 @@ A new mixin (`PCGUIClickPriorityMixin`) intercepts mouse clicks on the Cobblemon
 
 ## Bug Fixes
 
+### Logs tab: two nearby pastures no longer share each other's entries
+
+**Reported by a user (Discord, 1.5.5-beta.1):** *"i have 2 different pasture blocks and appear the same logs in one i have ghimigouls and others and in the other i have combes"* — opening the Logs tab on either pasture showed the same entries (the Pharmacist drops from the Gimmighoul pasture, while the Combee Producer pasture's honeycomb logs were never visible). Workaround at the time was breaking and re-placing the pasture block.
+
+**Cause:** The server-side `LogRequest` handler ignored the `pastureId` UUID carried in the packet and instead picked the **geometrically nearest** `PokemonPastureBlockEntity` to the player within a 16-block radius. Logs are correctly keyed per pasture by `BlockPos` — but if two pastures sat inside that radius, the closer one always won, regardless of which GUI the player had actually opened. Same bug in both the Fabric and NeoForge handlers.
+
+**Fix:** The handler now matches by **pasture identity**: it scans nearby pasture block entities and picks the one whose `tetheredPokemon` contains a Tethering with `pcId == packet.pastureId`. The geometric-nearest path is retained as a fallback for the edge case where a player views logs of a fully-emptied pasture (no tetherings → no `pcId` match), so historical entries keyed by that `BlockPos` are still reachable.
+
+Side-effect: the "drops are missing" symptom users sometimes attributed to this report was largely the same bug viewed from the other side — Combee Producer drops were happening, just being shown under the wrong pasture's log feed.
+
 ### Furnace Fuel: Pokemon distribute across furnaces instead of all rushing the same one
 
 **Reported by a user:** *"Just curious if it's possible to somehow assign 'Furnace Fuel' pokemon to specific furnaces? Seems if I have more than one, they all rush to heat up the same furnace and then ignore all the others."*

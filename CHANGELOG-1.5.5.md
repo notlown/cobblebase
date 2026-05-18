@@ -68,6 +68,25 @@ Tether order is the order Cobblemon already exposes via `tetheredPokemon`, so "e
 
 ---
 
+### Sleeping Pokemon: hard position + brain lock (the "sleep moving" bug, hopefully for real this time)
+
+**Reported repeatedly since 1.3.x.** Two open Discord threads (`bug-reports / Pokemon Sleep Moving`, `Still getting sleeping cobblemons moving and working`). Five prior attempts to fix from inside the pasture tick all eventually failed — either they stopped movement but broke the sleep animation (`setAiDisabled(true)`, commit `caa48971`), or they kept animations but lost a race against Cobblemon's brain and the mon kept wandering (memory-clearing from the pasture-tick TAIL, commit `3ea1c0b6`; reverted in `3e3e82c1` and `9779f31f`).
+
+**Root cause:** every prior attempt enforced the sleep lock from the *pasture* block-entity tick. On any given server tick, Cobblemon's `PokemonEntity.tick` (where the brain ticks, where goal selectors populate `WALK_TARGET`/`PATH`, where path-following moves the entity) and the pasture tick both fire — and the entity tick happens first. Our pasture-tick reset arrived *after* the brain had already chosen a walk target, after the path was followed, after `move()` was applied. Velocity was zero by the time the player looked, but the position had already shifted, the navigation had already produced a path, and on the next tick everything repeated.
+
+**Fix:** new `PokemonEntitySleepLockMixin` injects at `@At("HEAD")` of `PokemonEntity.tick`, so it runs *before* the brain does anything on that server tick. For any Pokemon in the SLEEPING ambient state, on every tick:
+
+- `WALK_TARGET`, `LOOK_TARGET`, `PATH` memory modules are emptied — brain tasks like `WalkTowardTargetTask` find nothing to walk toward
+- `navigation.stop()` cancels any path still in flight
+- `setVelocity(0, y, 0)` zeros the horizontal velocity (Y is preserved so a mon that fell asleep mid-fall still settles via vanilla gravity)
+- X/Z position is pinned to an anchor recorded on the first sleep tick; drift > 1 block (knockback, water nudge, external teleport) snaps back. Y is never pinned.
+
+Animations are unaffected because the entity still ticks normally — only the brain's memory modules are empty. The sleep animation packet (`SkillEffects.sendAnimationPublic("sleep", "water_sleep", "battle_sleep")`) keeps firing every 5 seconds from `AmbientBehavior.tickSleeping`, same as before.
+
+Anchor map cleanup: a normal wake-up clears the entry on the next non-sleeping tick; the periodic 60s sweep in `BaseManager.tickPokemon` catches strays from despawn / chunk unload / world reload.
+
+The pasture-tick velocity reset stays in place as defense in depth, but the actual fix lives in the new mixin — that's the layer that runs early enough to matter.
+
 ### Logs tab: two nearby pastures no longer share each other's entries
 
 **Reported by a user (Discord, 1.5.5-beta.1):** *"i have 2 different pasture blocks and appear the same logs in one i have ghimigouls and others and in the other i have combes"* — opening the Logs tab on either pasture showed the same entries (the Pharmacist drops from the Gimmighoul pasture, while the Combee Producer pasture's honeycomb logs were never visible). Workaround at the time was breaking and re-placing the pasture block.

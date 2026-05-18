@@ -109,6 +109,9 @@ object BaseManager {
             // Drop the per-Pokemon safety-check throttle state for stale UUIDs too.
             val staleSafety = lastSafetyCheck.entries.filter { now - it.value > 1200L }.map { it.key }
             for (id in staleSafety) lastSafetyCheck.remove(id)
+            // Sleep-lock mixin holds an anchor Vec3d per sleeping Pokemon. Normal wake-up
+            // clears it; this sweep catches anchors orphaned by despawn / chunk unload.
+            notlown.cobblebase.mixin.PokemonEntitySleepLockMixin.`cobblebase$cleanupStale`()
         }
 
         // Brief stuck detection (8s no movement → clear nav) only for working mons

@@ -28,7 +28,24 @@ object GeneralSettings {
          * work targets and the pasture-owned area extends. Overrides the local cloth-config
          * `jobSearchRadius` value when running on a dedicated server. Bounded [5, 30].
          */
-        var pastureRange: Int = 10
+        var pastureRange: Int = 10,
+        /**
+         * Max number of Pokemon per pasture that may actively work simultaneously.
+         * "Working" means a Pokemon with a non-null job assignment; Relax mons (and
+         * pure passive-aura mons whose species grants a buff but has no assignment)
+         * never count toward the cap.
+         *
+         * Order is the pasture's own tethering order — the first N assigned Pokemon
+         * are active; the rest are queued and their executors are skipped. A queued
+         * Pokemon keeps its assignment so that raising the cap, or another worker
+         * leaving the pasture, resumes it immediately.
+         *
+         * 0 = unlimited (no enforcement, equivalent to the pasture's own max). This is
+         * the default so existing servers see no behavior change until an admin sets
+         * an explicit cap. Sane upper bound 64 — well above Cobblemon's stock 16-slot
+         * pasture but leaves room for modded larger pastures.
+         */
+        var maxWorkingPokemonPerPasture: Int = 0
     )
 
     private var settings = Settings()

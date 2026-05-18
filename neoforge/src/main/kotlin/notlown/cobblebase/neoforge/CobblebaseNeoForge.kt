@@ -376,7 +376,10 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.CODEC
         ) { packet, context ->
             context.enqueueWork {
-                notlown.cobblebase.core.GeneralSettingsCache.update(packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled)
+                notlown.cobblebase.core.GeneralSettingsCache.update(
+                    packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled,
+                    packet.pastureRange, packet.maxWorkingPokemonPerPasture
+                )
             }
         }
 
@@ -392,12 +395,14 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                     discordUrl = packet.discordUrl,
                     discordEnabled = packet.discordEnabled,
                     pokeWikiEnabled = packet.pokeWikiEnabled,
-                    pastureRange = packet.pastureRange.coerceIn(5, 30)
+                    pastureRange = packet.pastureRange.coerceIn(5, 30),
+                    maxWorkingPokemonPerPasture = packet.maxWorkingPokemonPerPasture.coerceIn(0, 64)
                 )
                 notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
                 notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
                 val syncPacket = notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
-                    newSettings.discordUrl, newSettings.discordEnabled, newSettings.pokeWikiEnabled, newSettings.pastureRange
+                    newSettings.discordUrl, newSettings.discordEnabled, newSettings.pokeWikiEnabled,
+                    newSettings.pastureRange, newSettings.maxWorkingPokemonPerPasture
                 )
                 for (p in player.server.playerManager.playerList) {
                     net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, syncPacket)
@@ -527,7 +532,10 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         val s = notlown.cobblebase.core.GeneralSettings.getSettings()
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
             player,
-            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(s.discordUrl, s.discordEnabled, s.pokeWikiEnabled, s.pastureRange)
+            notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
+                s.discordUrl, s.discordEnabled, s.pokeWikiEnabled,
+                s.pastureRange, s.maxWorkingPokemonPerPasture
+            )
         )
         // Sync all species skill overrides so the Pasture Skills tab sees
         // the admin-set skill set instead of the bundled default.

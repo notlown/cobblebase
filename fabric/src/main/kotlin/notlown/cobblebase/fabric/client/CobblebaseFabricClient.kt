@@ -109,7 +109,10 @@ object CobblebaseFabricClient : ClientModInitializer {
         // Register S2C general settings sync (Discord URL, enabled, etc.)
         ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket.ID) { packet, context ->
             context.client().execute {
-                notlown.cobblebase.core.GeneralSettingsCache.update(packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled, packet.pastureRange)
+                notlown.cobblebase.core.GeneralSettingsCache.update(
+                    packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled,
+                    packet.pastureRange, packet.maxWorkingPokemonPerPasture
+                )
             }
         }
 

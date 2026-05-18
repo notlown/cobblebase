@@ -48,6 +48,23 @@ A new mixin (`PCGUIClickPriorityMixin`) intercepts mouse clicks on the Cobblemon
 
 ## Bug Fixes
 
+### Server Settings: per-pasture working-pokemon cap
+
+A new admin-only knob in **Mod Menu → Admin → Server**: *"Max Working Pokemon per Pasture"*. The previous behavior — every tethered Pokemon with a job assignment ticks every server tick — is preserved as the default (value `0` shown as **Unlimited** in the GUI). Lowering it caps how many assigned mons per pasture actually run their executors at once.
+
+**Order:** the first N assigned mons in tethering order are the active workers. The remainder keep their job assignment but are flagged as **⏸ Queued** in the Pasture tab — their executors and passive buffs are skipped server-side until a slot frees up. Tethering order is what Cobblemon already exposes via the pasture's `tetheredPokemon` list, so "order = the order you tethered them in", and there's no extra UI to manage priority.
+
+**Graceful transitions:**
+- Lowering the cap (10 active → cap 8) immediately stops the bottom 2 from ticking — their assignment is **kept**, no withdraw, no Relax-reset. Raise the cap back and they resume next tick.
+- Withdrawing or unassigning an active worker promotes the next queued mon automatically (the rank shifts down on the next tick).
+- Aura-only mons (no job assignment, species grants a passive buff like Speed Boost) are **not counted** toward the cap and always tick their buff — they're bonuses, not workers, so a cap meant to throttle workers shouldn't kill them.
+
+**Bounds:** 0–64. The upper bound leaves room for modded larger-than-vanilla pastures; the stock Cobblemon pasture maxes at 16, so any cap ≥16 is functionally identical to "unlimited" on a vanilla setup.
+
+**Why:** server admins running large Cobbleverse / multi-player setups asked for a way to dial down per-pasture work output for both performance and game-balance reasons. The cap is per-pasture, not per-player or per-server, so a player with multiple pastures gets `cap × pastures` total workers as before — the knob is about how concentrated a single pasture can be.
+
+---
+
 ### Logs tab: two nearby pastures no longer share each other's entries
 
 **Reported by a user (Discord, 1.5.5-beta.1):** *"i have 2 different pasture blocks and appear the same logs in one i have ghimigouls and others and in the other i have combes"* — opening the Logs tab on either pasture showed the same entries (the Pharmacist drops from the Gimmighoul pasture, while the Combee Producer pasture's honeycomb logs were never visible). Workaround at the time was breaking and re-placing the pasture block.

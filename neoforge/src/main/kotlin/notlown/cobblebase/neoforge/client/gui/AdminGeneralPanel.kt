@@ -65,7 +65,12 @@ class AdminGeneralPanel(
     private fun saveSettings() {
         val url = discordUrlField?.text ?: return
         net.neoforged.neoforge.network.PacketDistributor.sendToServer(
-            GeneralSettingsUpdateC2SPacket(url, discordEnabled, notlown.cobblebase.core.GeneralSettingsCache.pokeWikiEnabled, notlown.cobblebase.core.GeneralSettingsCache.pastureRange)
+            GeneralSettingsUpdateC2SPacket(
+                url, discordEnabled,
+                notlown.cobblebase.core.GeneralSettingsCache.pokeWikiEnabled,
+                notlown.cobblebase.core.GeneralSettingsCache.pastureRange,
+                notlown.cobblebase.core.GeneralSettingsCache.maxWorkingPokemonPerPasture
+            )
         )
         dirty = false
     }

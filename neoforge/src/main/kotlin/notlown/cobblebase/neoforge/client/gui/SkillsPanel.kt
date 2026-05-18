@@ -171,6 +171,19 @@ class SkillsPanel(
         val contentBottom = panelY + panelH - 18
         context.enableScissor(panelX, contentY - 2, panelX + panelW, contentBottom)
 
+        // Working-cap queue: mons in tether order past the cap that have an assignment
+        // are flagged as "queued" \u2014 their executors are skipped server-side. Compute once
+        // per render so per-row checks are O(1).
+        val workingCap = notlown.cobblebase.core.GeneralSettingsCache.maxWorkingPokemonPerPasture
+        val queuedPokemon: Set<java.util.UUID> =
+            if (workingCap > 0) {
+                notlown.cobblebase.core.BaseManager.computeQueuedPokemon(
+                    pokemonList.map { it.pokemonId },
+                    notlown.cobblebase.core.AssignmentCache::getAssignment,
+                    workingCap
+                )
+            } else emptySet()
+
         // Row backgrounds + Pokemon names with sprite icons
         pokemonList.forEachIndexed { index, pokemonData ->
             val rowH = rowHeights[index]
@@ -196,10 +209,16 @@ class SkillsPanel(
             context.drawTextWithShadow(textRenderer, name, 0, 0, 0xFFFFFF)
             context.matrices.pop()
 
+            val isQueued = pokemonData.pokemonId in queuedPokemon
+            val levelText = if (isQueued) {
+                "\u00A77Lv.${pokemonData.level}  \u00A7e\u23F8 \u00A76Queued"
+            } else {
+                "\u00A77Lv.${pokemonData.level}"
+            }
             context.matrices.push()
             context.matrices.translate(nameX.toFloat(), (ry + 14).toFloat(), 0f)
             context.matrices.scale(nameScale, nameScale, 1f)
-            context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", 0, 0, 0xAAAAAA)
+            context.drawTextWithShadow(textRenderer, levelText, 0, 0, 0xAAAAAA)
             context.matrices.pop()
 
             // Aura icon between Pokemon and Skills (only if mon has buff)

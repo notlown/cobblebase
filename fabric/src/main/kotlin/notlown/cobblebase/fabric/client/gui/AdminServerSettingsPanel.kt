@@ -29,6 +29,13 @@ class AdminServerSettingsPanel(
     /** Min/max bounds per integer setting. */
     private val PASTURE_RANGE_MIN = 5
     private val PASTURE_RANGE_MAX = 30
+    /**
+     * Working-cap bounds. 0 = unlimited (use the pasture's own max — current behavior,
+     * preserved as default so existing servers don't change). 1..64 reduces the number
+     * of mons per pasture that can actively work simultaneously.
+     */
+    private val WORKING_CAP_MIN = 0
+    private val WORKING_CAP_MAX = 64
 
     fun init(addWidget: Function<ClickableWidget, ClickableWidget>) {
         // No widgets yet — toggles are custom-drawn for full layout control.
@@ -75,12 +82,31 @@ class AdminServerSettingsPanel(
             unit = "blocks"
         )
         rowY += ROW_H + ROW_GAP
+
+        // Working-cap stepper. 0 = unlimited (default), shown as "Unlimited" instead of "0".
+        // Lower values queue any assigned mons beyond the cap — they keep their job
+        // assignment but their executors are skipped until a slot opens up.
+        val workingCap = notlown.cobblebase.core.GeneralSettingsCache.maxWorkingPokemonPerPasture
+            .coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX)
+        renderStepperRow(
+            context, mouseX, mouseY,
+            id = "workingCap",
+            rowY = rowY,
+            title = "Max Working Pokemon per Pasture",
+            description = "How many tethered Pokemon can actively work at once. " +
+                "Extras keep their job but wait in queue until a slot opens.",
+            value = workingCap,
+            unit = if (workingCap == 0) "" else "mons",
+            valueLabelOverride = if (workingCap == 0) "Unlimited" else null
+        )
+        rowY += ROW_H + ROW_GAP
     }
 
     private fun renderStepperRow(
         context: DrawContext, mouseX: Int, mouseY: Int,
         id: String, rowY: Int,
-        title: String, description: String, value: Int, unit: String
+        title: String, description: String, value: Int, unit: String,
+        valueLabelOverride: String? = null
     ) {
         val rowLeft = x + PADDING
         val rowRight = x + w - PADDING
@@ -93,7 +119,8 @@ class AdminServerSettingsPanel(
         // Stepper area: [ − ] [value unit] [ + ]
         val stepW = 14
         val stepH = 14
-        val valueW = 56
+        // Override labels (e.g. "Unlimited") need wider value area to fit without truncation.
+        val valueW = if (valueLabelOverride != null) 72 else 56
         val plusX = rowRight - stepW - 6
         val valueX = plusX - valueW - 2
         val minusX = valueX - stepW - 2
@@ -103,12 +130,10 @@ class AdminServerSettingsPanel(
         val minusHov = mouseX in minusX..(minusX + stepW) && mouseY in stepY..(stepY + stepH)
         context.fill(minusX, stepY, minusX + stepW, stepY + stepH, if (minusHov) 0xFF3A3A5A.toInt() else 0xFF2A2A3F.toInt())
         drawScaled(context, "§f§l−", minusX + 5, stepY + 3, 0xFFFFFF, 0.85f)
-        stepperBoxes[id] = intArrayOf(minusX, stepY, stepW, stepH) to intArrayOf(plusX, stepY, stepW, stepH)
-        // (We overwrite below with the real pair — keep the placeholder until plus is rendered.)
 
         // Value box
         context.fill(valueX, stepY, valueX + valueW, stepY + stepH, 0xFF15151E.toInt())
-        val valueText = "§f$value §7$unit"
+        val valueText = valueLabelOverride?.let { "§e$it" } ?: "§f$value §7$unit"
         drawScaled(context, valueText, valueX + 6, stepY + 3, 0xFFFFFF, 0.85f)
 
         // Plus button
@@ -163,7 +188,8 @@ class AdminServerSettingsPanel(
                         val cache = notlown.cobblebase.core.GeneralSettingsCache
                         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
                             notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket(
-                                cache.discordUrl, cache.discordEnabled, !cache.pokeWikiEnabled, cache.pastureRange
+                                cache.discordUrl, cache.discordEnabled, !cache.pokeWikiEnabled,
+                                cache.pastureRange, cache.maxWorkingPokemonPerPasture
                             )
                         )
                     }
@@ -185,7 +211,21 @@ class AdminServerSettingsPanel(
                     if (newRange != currentRange) {
                         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
                             notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket(
-                                cache.discordUrl, cache.discordEnabled, cache.pokeWikiEnabled, newRange
+                                cache.discordUrl, cache.discordEnabled, cache.pokeWikiEnabled,
+                                newRange, cache.maxWorkingPokemonPerPasture
+                            )
+                        )
+                    }
+                }
+                "workingCap" -> {
+                    val current = cache.maxWorkingPokemonPerPasture.coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX)
+                    val delta = if (inPlus) 1 else -1
+                    val newCap = (current + delta).coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX)
+                    if (newCap != current) {
+                        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                            notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket(
+                                cache.discordUrl, cache.discordEnabled, cache.pokeWikiEnabled,
+                                cache.pastureRange, newCap
                             )
                         )
                     }

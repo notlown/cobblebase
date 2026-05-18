@@ -160,6 +160,17 @@ object BaseManager {
             return
         }
 
+        // Working-cap gate. If the admin has set maxWorkingPokemonPerPasture > 0 and this
+        // Pokemon is an assigned worker beyond the cap (counted in pasture tethering order
+        // among assigned mons only), skip its executor + passive-buff dispatch entirely.
+        //
+        // Aura-only mons (null assignment, species grants a passive buff) don't count
+        // toward the cap and always tick their buffs — they're bonuses, not workers, so
+        // a cap meant to throttle "workers" shouldn't kill them.
+        if (assignments[pokemonId] != null && isOverWorkingCap(world, pastureOrigin, pokemonId)) {
+            return
+        }
+
         val rawAssignment: String? = assignments[pokemonId]
 
         // Craftsman supplier mode: run dedicated supplier executor
@@ -245,6 +256,13 @@ object BaseManager {
         val speciesName = resolveSpeciesName(pokemon)
         val speciesData = SpeciesSkillRegistry.getSkills(speciesName) ?: return
 
+        // Same working-cap gate as tickPokemon: queued assigned mons should also be silent
+        // here so their auras don't sneak past the cap when their entity isn't loaded.
+        // Aura-only (null assignment) mons aren't counted toward the cap and pass through.
+        if (assignments[pokemon.uuid] != null && isOverWorkingCap(world, pastureOrigin, pokemon.uuid)) {
+            return
+        }
+
         val buffEntries = SpeciesSkillRegistry.getBuffSkills(speciesName) { isBuffSkill(it) }
         for (entry in buffEntries) {
             val skillDef = SkillRegistry.get(entry.skillId) ?: continue
@@ -326,6 +344,66 @@ object BaseManager {
      */
     fun getAllAssignments(): Map<UUID, String> {
         return assignments.filterValues { it != null }.mapValues { it.value!! }
+    }
+
+    /**
+     * Returns true if this assigned Pokemon is queued behind the working cap and should
+     * have its executor + buff dispatch skipped this tick.
+     *
+     * "Assigned" Pokemon are counted in pasture tethering order; the first
+     * `maxWorkingPokemonPerPasture` of them are the active workers. Aura-only mons
+     * (null assignment) are ignored by the count — they don't compete for worker slots
+     * and they don't push other Pokemon out of theirs.
+     *
+     * Cheap O(N) scan over `pasture.tetheredPokemon` (N ≤ pasture max, ~16 normally).
+     * Called per Pokemon per tick from `tickPokemon`. Returns false fast when the cap is
+     * 0 (unlimited) or when the pasture isn't over the cap yet.
+     */
+    private fun isOverWorkingCap(
+        world: World,
+        pastureOrigin: BlockPos,
+        pokemonId: UUID
+    ): Boolean {
+        val cap = GeneralSettings.getSettings().maxWorkingPokemonPerPasture
+        if (cap <= 0) return false
+
+        val pasture = world.getBlockEntity(pastureOrigin)
+                as? com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+            ?: return false
+
+        var workingRank = 0
+        for (tether in pasture.tetheredPokemon) {
+            val isAssigned = assignments[tether.pokemonId] != null
+            if (tether.pokemonId == pokemonId) {
+                return isAssigned && workingRank >= cap
+            }
+            if (isAssigned) workingRank++
+        }
+        return false
+    }
+
+    /**
+     * Client-facing variant of the cap check. Mirrors the server's gating logic so the
+     * Pasture-tab GUI can render a "queued" badge on mons that the server would skip.
+     *
+     * Takes the tether-ordered list of Pokemon UUIDs in the pasture (as the client sees
+     * it via OpenPasturePacket) plus the local assignment cache. Returns the set of
+     * Pokemon UUIDs that are over the cap.
+     */
+    fun computeQueuedPokemon(
+        tetheredOrder: List<UUID>,
+        assignmentLookup: (UUID) -> String?,
+        cap: Int
+    ): Set<UUID> {
+        if (cap <= 0) return emptySet()
+        val queued = mutableSetOf<UUID>()
+        var workingRank = 0
+        for (id in tetheredOrder) {
+            if (assignmentLookup(id) == null) continue
+            if (workingRank >= cap) queued.add(id)
+            workingRank++
+        }
+        return queued
     }
 
     fun getAvailableSkills(pokemonEntity: PokemonEntity): List<SkillEntry> {

@@ -72,7 +72,8 @@ class AdminGeneralPanel(
         ClientPlayNetworking.send(GeneralSettingsUpdateC2SPacket(
             url, discordEnabled,
             notlown.cobblebase.core.GeneralSettingsCache.pokeWikiEnabled,
-            notlown.cobblebase.core.GeneralSettingsCache.pastureRange
+            notlown.cobblebase.core.GeneralSettingsCache.pastureRange,
+            notlown.cobblebase.core.GeneralSettingsCache.maxWorkingPokemonPerPasture
         ))
         dirty = false
     }

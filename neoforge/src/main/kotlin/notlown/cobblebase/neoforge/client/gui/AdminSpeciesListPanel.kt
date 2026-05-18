@@ -18,7 +18,7 @@ class AdminSpeciesListPanel(
     private val textRenderer: TextRenderer,
     private val onSelect: (String) -> Unit
 ) {
-    private val ROW_HEIGHT = 18
+    private val ROW_HEIGHT = 14
     private val SEARCH_HEIGHT = 16
     private val PADDING = 4
 
@@ -181,13 +181,13 @@ class AdminSpeciesListPanel(
                 context.fill(x + 4, rowY + 6, x + 8, rowY + 10, OVERRIDE_INDICATOR)
             }
 
-            PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, species, x + 10, rowY + 3, delta)
+            PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, species, x + 10, rowY + 1, delta)
 
-            val nameX = x + 26
+            val nameX = x + 24
             val displayName = species.replaceFirstChar { it.uppercase() }
             val scale = 0.75f
             context.matrices.push()
-            context.matrices.translate(nameX.toFloat(), (rowY + 5).toFloat(), 0f)
+            context.matrices.translate(nameX.toFloat(), (rowY + 4).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)
             context.drawTextWithShadow(textRenderer, displayName, 0, 0, if (isSelected) 0xFFFFFF else 0xCCCCCC)
             context.matrices.pop()

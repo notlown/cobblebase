@@ -22,6 +22,20 @@ class CobblebaseScreen(
 
     enum class Tab { SKILLS, BUFFS, WORKSHOP, HATCHERY, LOGS, DISCOVERY }
 
+    /**
+     * Tabs that depend on a server-controllable job — when the admin disables the
+     * job in JobConfigOverrides, the corresponding tab disappears from the user
+     * GUI entirely (same vocabulary as the per-Pokemon skill chips already hide).
+     */
+    private fun visibleTabs(): List<Tab> = Tab.entries.filter { tab ->
+        when (tab) {
+            Tab.WORKSHOP -> notlown.cobblebase.core.JobConfigOverrides.isEnabled("cobblebase:craftsman")
+            Tab.HATCHERY -> notlown.cobblebase.core.JobConfigOverrides.isEnabled("cobblebase:egg_hatcher")
+            Tab.DISCOVERY -> notlown.cobblebase.core.JobConfigOverrides.isEnabled("cobblebase:scout")
+            else -> true
+        }
+    }
+
     private var activeTab = Tab.SKILLS
 
     // Panel layout
@@ -155,6 +169,10 @@ class CobblebaseScreen(
     }
 
     private fun initCurrentTab() {
+        // Fall back to SKILLS if the admin disabled the currently-active job tab.
+        val tabs = visibleTabs()
+        if (activeTab !in tabs) activeTab = tabs.firstOrNull() ?: Tab.SKILLS
+
         clearChildren()
         addBottomBarWidgets()  // persists across tab switches
         when (activeTab) {
@@ -206,7 +224,7 @@ class CobblebaseScreen(
     }
 
     private fun renderTabs(context: DrawContext, mouseX: Int, mouseY: Int) {
-        val tabs = Tab.entries
+        val tabs = visibleTabs()
         val tabCount = tabs.size
         // Reserve space on the right for the close button so tabs don't overlap it.
         val tabsAreaW = panelW - CLOSE_BTN_SIZE - CLOSE_BTN_INSET * 2
@@ -300,7 +318,7 @@ class CobblebaseScreen(
         }
 
         // Tab clicks (width matches the tab-area excluding the X button).
-        val tabs = Tab.entries
+        val tabs = visibleTabs()
         val tabCount = tabs.size
         val tabsAreaW = panelW - CLOSE_BTN_SIZE - CLOSE_BTN_INSET * 2
         val tabW = (tabsAreaW - TAB_GAP * (tabCount - 1)) / tabCount

@@ -31,6 +31,11 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     private var panelW = 0
     private var panelH = 0
 
+    private val CLOSE_BTN_SIZE = 14
+    private val CLOSE_BTN_INSET = 4
+    private var closeBtnX = 0
+    private var closeBtnY = 0
+
     private var activeTab = "species"
 
     private lateinit var speciesListPanel: AdminSpeciesListPanel
@@ -186,6 +191,23 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
         context.fill(panelX, panelY + 21, panelX + panelW, panelY + 22, PANEL_BORDER)
         context.drawTextWithShadow(textRenderer, "\u00A7f\u00A7lCobblebase Admin", panelX + 8, panelY + 7, 0xFFFFFF)
 
+        // Close button (X) top-right of the header. Same visual vocabulary as the
+        // user-facing CobblebaseScreen so both feel like one product.
+        closeBtnX = panelX + panelW - CLOSE_BTN_INSET - CLOSE_BTN_SIZE
+        closeBtnY = panelY + (22 - CLOSE_BTN_SIZE) / 2
+        val closeHovered = mouseX in closeBtnX..(closeBtnX + CLOSE_BTN_SIZE) &&
+            mouseY in closeBtnY..(closeBtnY + CLOSE_BTN_SIZE)
+        val closeBg = if (closeHovered) 0xFFB23A3A.toInt() else 0xFF44445A.toInt()
+        context.fill(closeBtnX, closeBtnY, closeBtnX + CLOSE_BTN_SIZE, closeBtnY + CLOSE_BTN_SIZE, closeBg)
+        val xLabel = "\u00A7f\u2715"
+        val xW = textRenderer.getWidth(xLabel)
+        context.drawTextWithShadow(
+            textRenderer, xLabel,
+            closeBtnX + (CLOSE_BTN_SIZE - xW) / 2,
+            closeBtnY + (CLOSE_BTN_SIZE - 8) / 2,
+            0xFFFFFF
+        )
+
         // Tab bar
         val tabBarY = getTabBarY()
         context.fill(panelX, tabBarY, panelX + panelW, tabBarY + TAB_HEIGHT, 0xCC1A1A30.toInt())
@@ -296,6 +318,13 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        // Close button (X) top-right.
+        if (mouseX >= closeBtnX && mouseX <= closeBtnX + CLOSE_BTN_SIZE &&
+            mouseY >= closeBtnY && mouseY <= closeBtnY + CLOSE_BTN_SIZE) {
+            close()
+            return true
+        }
+
         // Check tab clicks — General tab is hidden until a later release.
         // NOTE: global "Loot" tab is disabled. See renderTab block for the full reason. The
         // hit-box + state branch below are commented out so a click in the (now-empty) loot

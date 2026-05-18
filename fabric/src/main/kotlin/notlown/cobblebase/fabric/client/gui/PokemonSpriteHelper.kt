@@ -370,10 +370,36 @@ object PokemonSpriteHelper {
         y: Int,
         delta: Float = 0f
     ) {
+        // Use the actual 12-px small icon variant — the function name says "small",
+        // not "icon", and admin list rows need the compact sprite. (Previously
+        // routed to renderIcon which painted a 24-px sprite into a 14-px row slot,
+        // overflowing bottom-right.)
         val (baseName, aspects) = extractFormAspects(pokemonName)
         val speciesId = resolveSpeciesFromName(baseName)
         if (speciesId != null) {
-            renderIcon(context, textRenderer, speciesId, pokemonName, aspects, x, y, delta)
+            val state = getOrCreateState("${speciesId}_small_${aspects.joinToString(",")}", aspects)
+            try {
+                val size = 12
+                val matrixStack = context.matrices
+                matrixStack.push()
+                matrixStack.translate(
+                    (x + size / 2.0 - 0.5),
+                    (y.toDouble() + 1.0),
+                    0.0
+                )
+                matrixStack.scale(0.9F, 0.9F, 1F)
+                drawProfilePokemon(
+                    species = speciesId,
+                    matrixStack = matrixStack,
+                    rotation = Quaternionf().fromEulerXYZDegrees(Vector3f(13F, 35F, 0F)),
+                    state = state,
+                    partialTicks = delta,
+                    scale = 4.5F
+                )
+                matrixStack.pop()
+            } catch (_: Exception) {
+                renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
+            }
         } else {
             renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
         }
@@ -398,7 +424,30 @@ object PokemonSpriteHelper {
         val speciesId = resolveSpeciesFromName(baseName)
         val combined = formAspects + explicitAspects
         if (speciesId != null) {
-            renderIcon(context, textRenderer, speciesId, pokemonName, combined, x, y, delta)
+            // 12-px small variant — see the same-named overload above for rationale.
+            val state = getOrCreateState("${speciesId}_small_${combined.joinToString(",")}", combined)
+            try {
+                val size = 12
+                val matrixStack = context.matrices
+                matrixStack.push()
+                matrixStack.translate(
+                    (x + size / 2.0 - 0.5),
+                    (y.toDouble() + 1.0),
+                    0.0
+                )
+                matrixStack.scale(0.9F, 0.9F, 1F)
+                drawProfilePokemon(
+                    species = speciesId,
+                    matrixStack = matrixStack,
+                    rotation = Quaternionf().fromEulerXYZDegrees(Vector3f(13F, 35F, 0F)),
+                    state = state,
+                    partialTicks = delta,
+                    scale = 4.5F
+                )
+                matrixStack.pop()
+            } catch (_: Exception) {
+                renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
+            }
         } else {
             renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
         }

@@ -122,10 +122,11 @@ object PokemonSpriteHelper {
             val matrixStack = context.matrices
 
             matrixStack.push()
-            // drawProfilePokemon renders the Pokemon above the translate point
+            // Bottom-center anchor (was y+1, drew the sprite top-aligned and
+            // shifted bottom-right after the colored frame was removed).
             matrixStack.translate(
-                (x + ICON_SIZE / 2.0),
-                (y.toDouble() + 1.0),
+                (x + ICON_SIZE / 2.0 - 0.5),
+                (y.toDouble() + ICON_SIZE - 1.0),
                 0.0
             )
             matrixStack.scale(1.5F, 1.5F, 1F)
@@ -186,7 +187,11 @@ object PokemonSpriteHelper {
             val state = getOrCreateState(cacheKey, emptySet())
             val matrixStack = context.matrices
             matrixStack.push()
-            matrixStack.translate((x + size / 2.0), (y.toDouble() + 1.0), 0.0)
+            matrixStack.translate(
+                (x + size / 2.0 - 0.5),
+                (y.toDouble() + size - 1.0),
+                0.0
+            )
             matrixStack.scale(0.9F, 0.9F, 1F)
             drawProfilePokemon(
                 species = species,

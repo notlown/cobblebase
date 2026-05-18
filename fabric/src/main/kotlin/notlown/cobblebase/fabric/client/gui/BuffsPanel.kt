@@ -221,6 +221,30 @@ class BuffsPanel(
         return result
     }
 
+    /**
+     * Per-buff text color. Matches the *effect* the buff applies — Speed reads as the
+     * sky-blue Speed-effect tint, Strength as fire-red, Aura as gold, etc. Returns the
+     * neutral passive-green for unknown buff IDs so we never end up with invisible text.
+     */
+    private fun passiveBuffColor(skillId: String): Int {
+        val id = skillId.removePrefix("cobblebase:")
+        return when (id) {
+            "speed_boost" -> 0x66CCFF              // sky blue
+            "strength_boost" -> 0xFF6666           // fire red
+            "resistance_boost" -> 0xCCCCCC         // armor gray
+            "night_vision" -> 0x9966FF             // indigo
+            "water_breathing" -> 0x66E0FF          // water cyan
+            "jump_boost" -> 0x88FF88               // jump green
+            "haste_boost" -> 0xFFCC33              // haste yellow
+            "saturation_boost" -> 0xFFAA66         // saturation orange
+            "aura", "aura_boost" -> 0xFFD700       // luck gold
+            "lucky_charm" -> 0xFF99FF              // shiny pink
+            "growth", "growth_aura" -> 0xAAFF66    // crop green
+            "mentor" -> 0xCC88FF                   // XP purple
+            else -> 0x55FFAA                       // fallback: generic passive
+        }
+    }
+
     private fun generateDescription(skillName: String, executor: String, proficiency: Int, cooldownSeconds: Long, speciesName: String = ""): String {
         val prof = proficiency.coerceIn(1, 5)
         val effectiveCooldown = if (CobblebaseConfig.devMode) 5L
@@ -424,11 +448,13 @@ class BuffsPanel(
             }
 
             // Skill name (PASSIVE label removed \u2014 sub-tab already separates the two).
-            // Overshadowed passive rows: skill name uses a dim gray instead of the buff color.
+            // Each buff type carries its own hue matching the effect it applies \u2014 Speed
+            // is sky blue, Strength is fire-red, Aura is gold, etc. Single universal
+            // "passive green" was unreadable when 5 passive buffs lined up in a column.
             val skillTextX = colSkill + 11
             val skillNameColor = when {
                 isOvershadowed -> 0x666666
-                entry.isPassiveBuff -> 0x55FFAA
+                entry.isPassiveBuff -> passiveBuffColor(entry.skillId)
                 else -> cat
             }
             context.matrices.push()

@@ -33,8 +33,15 @@ class SkillsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    private val ROW_HEIGHT_SMALL = 24
-    private val ROW_HEIGHT_LARGE = 42
+    // Pasture redesign (2026-05-18):
+    //   * Single row height — no more variable 24/42 that broke vertical rhythm.
+    //   * Dynamic chip width per Pokemon — fits all skills into ONE row by
+    //     shrinking chips when needed, instead of wrapping into a second row.
+    //   * Active chip = hero (full color, white border, name + stars + icon).
+    //   * Available chips = demoted (name only, dim text, no stars, slim height).
+    //   * Bigger Pokemon name (full scale) so the SUBJECT of each row reads first.
+    private val ROW_HEIGHT_SMALL = 30
+    private val ROW_HEIGHT_LARGE = 30
     private val HEADER_HEIGHT = 14
     private val PANEL_PADDING = 8
     private val SUBTAB_H = 14
@@ -43,12 +50,16 @@ class SkillsPanel(
     private var activeSubTab = SubTab.ACTIVE_WORKERS
     private val subTabBoxes = mutableMapOf<SubTab, IntArray>()
     private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
-    private val NAME_WIDTH = 50 + ICON_OFFSET
+    private val NAME_WIDTH = 56 + ICON_OFFSET            // bumped from 50 → 56 (full-scale name fits)
     private val AURA_ICON_WIDTH = 15
-    private val AUTO_BTN_WIDTH = 36
-    private val BTN_WIDTH = 58
-    private val BTN_HEIGHT = 16
+    private val AUTO_BTN_WIDTH = 26                      // shrunk from 36 — Relax is just an Off toggle
+    private val BTN_WIDTH = 58                           // baseline chip width when Pokemon has ≤ btnsPerRow skills
+    private val BTN_HEIGHT = 18                          // hit area (active chip fills this; available chips render shorter inside it)
+    private val BTN_MIN_WIDTH = 38                       // dynamic shrink floor for Pokemon with many skills
     private val BTN_GAP = 2
+
+    /** Per-Pokemon chip width (varies when many skills must fit into one row). */
+    private val chipWidthByPokemon = mutableMapOf<UUID, Int>()
 
     private val ROW_EVEN = 0x44FFFFFF.toInt()
     private val ROW_ODD = 0x22FFFFFF.toInt()
@@ -83,6 +94,7 @@ class SkillsPanel(
         allButtons.clear()
         rowOffsets.clear()
         rowHeights.clear()
+        chipWidthByPokemon.clear()
         scrollX = 0
         scrollY = 0
         // contentY shifts down to leave room for the sub-tab strip at the top.
@@ -154,39 +166,42 @@ class SkillsPanel(
             // Auto button has its own column, skills start after it
             val autoX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
             val skillStartX = autoX + AUTO_BTN_WIDTH + BTN_GAP
-            val maxBtnX = panelX + panelW - PANEL_PADDING - BTN_WIDTH
-            val btnsPerRow = ((maxBtnX - skillStartX) / (BTN_WIDTH + BTN_GAP)) + 1
-            val needsTwoRows = skillCount > btnsPerRow
-            val rowH = if (needsTwoRows) ROW_HEIGHT_LARGE else ROW_HEIGHT_SMALL
+            val skillAreaW = panelX + panelW - PANEL_PADDING - skillStartX
+
+            // Dynamic chip width: divide available horizontal space evenly when the
+            // Pokemon has more skills than the baseline width allows. Clamped at
+            // BTN_MIN_WIDTH so labels like "Friend Recruiter" stay readable. With
+            // fewer skills we keep BTN_WIDTH so the row doesn't get sparse pills.
+            val chipW = if (skillCount <= 0) BTN_WIDTH else {
+                val perChipBudget = (skillAreaW - (skillCount - 1) * BTN_GAP) / skillCount
+                perChipBudget.coerceIn(BTN_MIN_WIDTH, BTN_WIDTH)
+            }
+            chipWidthByPokemon[pokemonId] = chipW
 
             rowOffsets.add(cumulativeY)
-            rowHeights.add(rowH)
+            rowHeights.add(ROW_HEIGHT_SMALL)  // single, predictable row height
 
             val rowY = contentY + cumulativeY
 
-            // Auto button in its own column
+            // Auto/Relax in its own column (small Off-toggle, not a "Skill")
             allButtons.add(SkillButtonData(pokemonId, null, "Relax", 0, "", autoX, rowY, currentAssignment == null))
 
-            // Skill buttons start after Auto column
+            // Skill buttons start after Auto column, all on a single row
             var btnX = skillStartX
-            var btnY = rowY
+            val btnY = rowY
 
             for (entry in availableSkills) {
                 val skillDef = SkillRegistry.get(entry.skillId) ?: continue
                 if (BaseManager.isBuffExecutor(skillDef.executor)) continue
                 if (!JobConfigOverrides.isEnabled(entry.skillId)) continue
-                if (btnX > maxBtnX) {
-                    btnX = skillStartX
-                    btnY = rowY + BTN_HEIGHT + BTN_GAP
-                }
                 allButtons.add(SkillButtonData(
                     pokemonId, entry.skillId, skillDef.name, entry.proficiency,
                     skillDef.category, btnX, btnY, currentAssignment == entry.skillId
                 ))
-                btnX += BTN_WIDTH + BTN_GAP
+                btnX += chipW + BTN_GAP
             }
 
-            cumulativeY += rowH
+            cumulativeY += ROW_HEIGHT_SMALL
         }
     }
 
@@ -984,14 +999,14 @@ class SkillsPanel(
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + rowH - 1, rowColor)
 
-            // Pokemon portrait icon — scaled 1.4× so a 16-px sprite renders at ~22 px
-            // (matches the Buffs-tab visual weight; PokemonSpriteHelper no longer paints
-            // a type-colored box around the icon so the larger sprite fills the freed
-            // horizontal space cleanly).
+            // Pokemon portrait — 1.5× scale so the sprite carries the same visual
+            // weight as the full-scale Pokemon name. The mon is the primary anchor
+            // of each row; the previous 0.75-scale name with 1.4× sprite made the
+            // skill chips dominate the row visually.
             val name = pokemonData.displayName.string
-            val spriteScale = 1.4f
+            val spriteScale = 1.5f
             context.matrices.push()
-            context.matrices.translate((panelX + PANEL_PADDING).toFloat(), (ry + 4).toFloat(), 0f)
+            context.matrices.translate((panelX + PANEL_PADDING).toFloat(), (ry + 3).toFloat(), 0f)
             context.matrices.scale(spriteScale, spriteScale, 1f)
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, pokemonData.species, name, pokemonData.aspects,
@@ -999,18 +1014,14 @@ class SkillsPanel(
             )
             context.matrices.pop()
 
-            // Pokemon name + level (shifted right for icon, scaled 0.75x)
-            val nameX = panelX + PANEL_PADDING + ICON_OFFSET
-            val nameScale = 0.75f
-            context.matrices.push()
-            context.matrices.translate(nameX.toFloat(), (ry + 4).toFloat(), 0f)
-            context.matrices.scale(nameScale, nameScale, 1f)
-            context.drawTextWithShadow(textRenderer, name, 0, 0, 0xFFFFFF)
-            context.matrices.pop()
+            // Pokemon name (full-scale 8-px font, readable) + Lv beneath it.
+            val nameX = panelX + PANEL_PADDING + ICON_OFFSET + 2
+            context.drawTextWithShadow(textRenderer, name, nameX, ry + 5, 0xFFFFFFFF.toInt())
 
+            val lvScale = 0.75f
             context.matrices.push()
-            context.matrices.translate(nameX.toFloat(), (ry + 14).toFloat(), 0f)
-            context.matrices.scale(nameScale, nameScale, 1f)
+            context.matrices.translate(nameX.toFloat(), (ry + 17).toFloat(), 0f)
+            context.matrices.scale(lvScale, lvScale, 1f)
             context.drawTextWithShadow(textRenderer, "\u00A77Lv.${pokemonData.level}", 0, 0, 0xAAAAAA)
             context.matrices.pop()
 
@@ -1026,9 +1037,9 @@ class SkillsPanel(
                 }
                 if (buffEmoji != null) {
                     val auraX = panelX + PANEL_PADDING + NAME_WIDTH
-                    val auraScale = 0.75f
+                    val auraScale = 0.85f
                     context.matrices.push()
-                    context.matrices.translate(auraX.toFloat(), (ry + 4).toFloat(), 0f)
+                    context.matrices.translate(auraX.toFloat(), (ry + 9).toFloat(), 0f)
                     context.matrices.scale(auraScale, auraScale, 1f)
                     context.drawTextWithShadow(textRenderer, buffEmoji, 0, 0, 0xFFFFFF)
                     context.matrices.pop()
@@ -1041,77 +1052,116 @@ class SkillsPanel(
             .filter { AssignmentCache.isCraftsmanSupplier(it.pokemonId) }
             .map { it.pokemonId }.toSet()
 
-        // Skill buttons — skip entirely for supplier Mons
+        // Skill chips — see PASTURE_REDESIGN_HOOK below.
         for (btn in allButtons) {
-            if (btn.pokemonId in supplierPokemonIds) continue // Don't render buttons for suppliers
+            if (btn.pokemonId in supplierPokemonIds) continue
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
             val isAutoBtn = btn.skillId == null
-            val bw = if (isAutoBtn) AUTO_BTN_WIDTH else BTN_WIDTH
+            val bw = if (isAutoBtn) AUTO_BTN_WIDTH else (chipWidthByPokemon[btn.pokemonId] ?: BTN_WIDTH)
 
             if (ry < contentY - ROW_HEIGHT_LARGE || ry > contentBottom) continue
             if (rx + bw < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
 
             val hovered = mouseX in rx..(rx + bw) && mouseY in ry..(ry + BTN_HEIGHT)
-
             val categoryColor = CobblebaseScreen.CATEGORY_COLORS[btn.category] ?: 0xFF666666.toInt()
-            val bg = when {
-                btn.selected -> categoryColor
-                hovered -> 0xFF4A4A6A.toInt()
-                else -> 0xFF2A2A3E.toInt()
-            }
-            context.fill(rx, ry + 2, rx + bw, ry + 2 + BTN_HEIGHT, bg)
-
-            val border = if (btn.selected) 0xFFFFFFFF.toInt() else 0xFF555577.toInt()
-            context.drawHorizontalLine(rx, rx + bw - 1, ry + 2, border)
-            context.drawHorizontalLine(rx, rx + bw - 1, ry + 1 + BTN_HEIGHT, border)
-            context.drawVerticalLine(rx, ry + 2, ry + 1 + BTN_HEIGHT, border)
-            context.drawVerticalLine(rx + bw - 1, ry + 2, ry + 1 + BTN_HEIGHT, border)
-
-            val textColor = if (btn.selected) 0xFFFFFF else 0xBBBBBB
-            val nameText = btn.displayName
-
-            // Scale text to 0.75x for better readability in small buttons
             val scale = 0.75f
-            val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
 
-            // Top row: full-width centered name (icon moved to the prof-stars row below
-            // so long names like "Friend Recruiter" don't overlap with the icon).
-            val textX = rx + (bw - nameWidth) / 2
-            val textY = ry + 4
-            context.matrices.push()
-            context.matrices.translate(textX.toFloat(), textY.toFloat(), 0f)
-            context.matrices.scale(scale, scale, 1f)
-            context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
-            context.matrices.pop()
+            // Vertical slots. ACTIVE chip fills the full 18-px hit area; AVAILABLE
+            // chips render 12-px tall inside it for a clear "demoted" look. Click
+            // detection stays on the full hit area either way.
+            val activeTop = ry + 5
+            val activeBot = activeTop + BTN_HEIGHT
+            val muteTop = ry + 8
+            val muteBot = muteTop + 12
 
-            if (btn.proficiency > 0) {
-                val stars = "\u2605".repeat(btn.proficiency) + "\u2606".repeat(5 - btn.proficiency)
-                val starColor = if (btn.proficiency >= 5) 0xFFD700
-                    else if (btn.proficiency >= 4) 0xFFA500
-                    else if (btn.proficiency >= 3) 0x88CC88
-                    else 0x888888
-                val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
-                // Stars stay fixed-centered in the full button width regardless of icon.
-                val starX = rx + (bw - starWidth) / 2
+            if (btn.selected && !isAutoBtn) {
+                // ACTIVE skill (hero): category-color BG, white border, name + stars + icon.
+                context.fill(rx, activeTop, rx + bw, activeBot, categoryColor)
+                val border = 0xFFFFFFFF.toInt()
+                context.drawHorizontalLine(rx, rx + bw - 1, activeTop, border)
+                context.drawHorizontalLine(rx, rx + bw - 1, activeBot - 1, border)
+                context.drawVerticalLine(rx, activeTop, activeBot - 1, border)
+                context.drawVerticalLine(rx + bw - 1, activeTop, activeBot - 1, border)
 
+                val nameText = btn.displayName
+                val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
                 context.matrices.push()
-                context.matrices.translate(starX.toFloat(), (ry + 12).toFloat(), 0f)
+                context.matrices.translate((rx + (bw - nameWidth) / 2).toFloat(), (activeTop + 2).toFloat(), 0f)
                 context.matrices.scale(scale, scale, 1f)
-                context.drawText(textRenderer, stars, 0, 0, starColor, false)
+                context.drawTextWithShadow(textRenderer, nameText, 0, 0, 0xFFFFFF)
                 context.matrices.pop()
 
-                // Small icon pinned to the bottom-left corner \u2014 doesn't influence star
-                // positioning. 0.4 scale \u2192 ~6px square; reads as a quiet visual identifier
-                // rather than a chunky badge.
-                if (!isAutoBtn && btn.skillId != null) {
-                    val iconStack = JobIcons.stackFor(btn.skillId)
+                if (btn.proficiency > 0) {
+                    val stars = "\u2605".repeat(btn.proficiency) + "\u2606".repeat(5 - btn.proficiency)
+                    val starColor = when {
+                        btn.proficiency >= 5 -> 0xFFD700
+                        btn.proficiency >= 4 -> 0xFFA500
+                        btn.proficiency >= 3 -> 0x88CC88
+                        else -> 0x888888
+                    }
+                    val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
                     context.matrices.push()
-                    context.matrices.translate((rx + 1).toFloat(), (ry + 11).toFloat(), 0f)
-                    context.matrices.scale(0.4f, 0.4f, 1f)
-                    context.drawItem(iconStack, 0, 0)
+                    context.matrices.translate((rx + (bw - starWidth) / 2).toFloat(), (activeTop + 10).toFloat(), 0f)
+                    context.matrices.scale(scale, scale, 1f)
+                    context.drawText(textRenderer, stars, 0, 0, starColor, false)
                     context.matrices.pop()
+
+                    // Tiny job-icon pinned bottom-left of the active pill.
+                    if (btn.skillId != null) {
+                        val iconStack = JobIcons.stackFor(btn.skillId)
+                        context.matrices.push()
+                        context.matrices.translate((rx + 1).toFloat(), (activeTop + 9).toFloat(), 0f)
+                        context.matrices.scale(0.45f, 0.45f, 1f)
+                        context.drawItem(iconStack, 0, 0)
+                        context.matrices.pop()
+                    }
                 }
+            } else if (isAutoBtn && btn.selected) {
+                // RELAX active: warm amber pill \u2014 distinct shape from job chips so
+                // "this mon is doing nothing" reads instantly, without being
+                // confused with any category color.
+                context.fill(rx, muteTop, rx + bw, muteBot, 0xFF5A4A2A.toInt())
+                val border = 0xFFAA8844.toInt()
+                context.drawHorizontalLine(rx, rx + bw - 1, muteTop, border)
+                context.drawHorizontalLine(rx, rx + bw - 1, muteBot - 1, border)
+                context.drawVerticalLine(rx, muteTop, muteBot - 1, border)
+                context.drawVerticalLine(rx + bw - 1, muteTop, muteBot - 1, border)
+
+                val labelText = "Relax"
+                val labelW = (textRenderer.getWidth(labelText) * scale).toInt()
+                context.matrices.push()
+                context.matrices.translate((rx + (bw - labelW) / 2).toFloat(), (muteTop + 3).toFloat(), 0f)
+                context.matrices.scale(scale, scale, 1f)
+                context.drawTextWithShadow(textRenderer, labelText, 0, 0, 0xFFCC88)
+                context.matrices.pop()
+            } else {
+                // AVAILABLE skill (or inactive Relax): muted pill, name only, thin
+                // category-color underline as a quiet category cue. NO stars \u2014 they
+                // only matter for the active skill; 5 stars \u00d7 6 chips per row is
+                // pure visual noise and was the dominant source of "wall of buttons"
+                // feeling on the old layout.
+                val bg = if (hovered) 0xFF3A3A4E.toInt() else 0xFF22222E.toInt()
+                context.fill(rx, muteTop, rx + bw, muteBot, bg)
+                val border = if (hovered) 0xFF7777AA.toInt() else 0xFF44445A.toInt()
+                context.drawHorizontalLine(rx, rx + bw - 1, muteTop, border)
+                context.drawHorizontalLine(rx, rx + bw - 1, muteBot - 1, border)
+                context.drawVerticalLine(rx, muteTop, muteBot - 1, border)
+                context.drawVerticalLine(rx + bw - 1, muteTop, muteBot - 1, border)
+
+                if (!isAutoBtn) {
+                    val stripe = (categoryColor and 0x00FFFFFF) or 0xCC000000.toInt()
+                    context.fill(rx + 1, muteBot - 2, rx + bw - 1, muteBot - 1, stripe)
+                }
+
+                val nameText = btn.displayName
+                val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
+                val textColor = if (hovered) 0xDDDDDD else 0x999999
+                context.matrices.push()
+                context.matrices.translate((rx + (bw - nameWidth) / 2).toFloat(), (muteTop + 3).toFloat(), 0f)
+                context.matrices.scale(scale, scale, 1f)
+                context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
+                context.matrices.pop()
             }
         }
 
@@ -1271,9 +1321,12 @@ class SkillsPanel(
 
             val rx = btn.baseX + scrollX
             val ry = btn.baseY + scrollY
-            val bw = if (btn.skillId == null) AUTO_BTN_WIDTH else BTN_WIDTH
+            val bw = if (btn.skillId == null) AUTO_BTN_WIDTH else (chipWidthByPokemon[btn.pokemonId] ?: BTN_WIDTH)
+            // Hit area matches the active-chip rectangle (the larger of the two
+            // visual variants), so clicking the chip works regardless of whether
+            // it's currently active or muted.
             if (mouseX >= rx && mouseX <= rx + bw &&
-                mouseY >= ry + 2 && mouseY <= ry + 2 + BTN_HEIGHT &&
+                mouseY >= ry + 5 && mouseY <= ry + 5 + BTN_HEIGHT &&
                 mouseY >= contentY && mouseY < contentBottom
             ) {
                 selectSkill(btn.pokemonId, btn.skillId)

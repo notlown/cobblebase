@@ -28,7 +28,7 @@ class LogsPanel(
     // Row height matches the 16-px Pokemon sprite — the previous 14-px row was 2 px
     // shorter than the sprite, so PokemonSpriteHelper.renderSmallIconByName (which is
     // actually a full 16-px icon despite the "small" name) overflowed the row bottom.
-    private val ROW_HEIGHT = 16
+    private val ROW_HEIGHT = UiTokens.ROW_STD       // 18 — matches Pasture + Buffs
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8

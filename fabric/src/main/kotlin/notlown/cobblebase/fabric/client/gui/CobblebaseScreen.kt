@@ -50,11 +50,11 @@ class CobblebaseScreen(
     private val TAB_GAP = 2
 
     /** Bottom strip reserved for the persistent Discord/Mute/Radius/Admin bar. */
-    private val BOTTOM_BAR_H = 20
+    private val BOTTOM_BAR_H = UiTokens.BOTTOM_BAR_H
 
     /** Close button (top-right X). 14×14 sits inside the panel header. */
-    private val CLOSE_BTN_SIZE = 14
-    private val CLOSE_BTN_INSET = 4
+    private val CLOSE_BTN_SIZE = UiTokens.BTN_ICON
+    private val CLOSE_BTN_INSET = UiTokens.CELL_PAD
     private var closeBtnX = 0
     private var closeBtnY = 0
 
@@ -109,20 +109,26 @@ class CobblebaseScreen(
         initCurrentTab()
     }
 
-    /** Bottom-bar buttons that persist across tab switches. Re-added each tab init. */
+    /**
+     * Bottom-bar buttons that persist across tab switches. Re-added each tab init.
+     * Sizes drawn from UiTokens so they match the rest of the GUI (Discord, Mute,
+     * Admin = same 14×12 icon-button pitch; Radius = wider chip with text).
+     */
     private fun addBottomBarWidgets() {
-        val barY = panelY + panelH - BOTTOM_BAR_H + 4
-        val barBtnH = 12
+        val barY = panelY + panelH - BOTTOM_BAR_H + UiTokens.BOTTOM_BAR_INSET
+        val barBtnH = UiTokens.BTN_H
+        val iconBtnW = UiTokens.BTN_ICON
+        val btnGap = UiTokens.BTN_GAP
 
         // Discord icon button — only if enabled via GeneralSettings.
         val discordEnabled = notlown.cobblebase.core.GeneralSettingsCache.discordEnabled
-        var nextX = panelX + 6
+        var nextX = panelX + UiTokens.CELL_PAD
         if (discordEnabled) {
             addDrawableChild(ButtonWidget.builder(Text.literal("§9⚉")) {
                 val url = notlown.cobblebase.core.GeneralSettingsCache.discordUrl
                 try { net.minecraft.util.Util.getOperatingSystem().open(java.net.URI(url)) } catch (_: Exception) {}
-            }.dimensions(nextX, barY, 14, barBtnH).build())
-            nextX += 16
+            }.dimensions(nextX, barY, iconBtnW, barBtnH).build())
+            nextX += iconBtnW + btnGap
         }
 
         // Mute toggle.
@@ -131,9 +137,9 @@ class CobblebaseScreen(
             config.cry.cryEnabled = !config.cry.cryEnabled
             me.shedaniel.autoconfig.AutoConfig.getConfigHolder(notlown.cobblebase.core.CobblebaseClothConfig::class.java).save()
             btn.message = Text.literal(getMuteIcon())
-        }.dimensions(nextX, barY, 14, barBtnH).build()
+        }.dimensions(nextX, barY, iconBtnW, barBtnH).build()
         addDrawableChild(muteBtn)
-        nextX += 16
+        nextX += iconBtnW + btnGap
 
         // Show Radius toggle (only if we have a pastureOrigin).
         if (pastureOrigin != null) {
@@ -142,16 +148,17 @@ class CobblebaseScreen(
             addDrawableChild(ButtonWidget.builder(Text.literal(radiusLabel)) {
                 notlown.cobblebase.fabric.client.render.RadiusRenderer.toggle(pastureOrigin, computeMaxRadius())
                 close()
-            }.dimensions(nextX, barY, 58, barBtnH).build())
+            }.dimensions(nextX, barY, 60, barBtnH).build())
         }
 
-        // Admin button (only if OP) — bottom-right.
+        // Admin button (only if OP) — bottom-right, aligned to the right edge.
         val client = net.minecraft.client.MinecraftClient.getInstance()
         if (client.player?.hasPermissionLevel(2) == true) {
+            val adminW = 40
             addDrawableChild(ButtonWidget.builder(Text.literal("§6Admin")) {
                 close()
                 notlown.cobblebase.fabric.client.CobblebaseFabricClient.requestAdminScreen()
-            }.dimensions(panelX + panelW - 44, barY, 38, barBtnH).build())
+            }.dimensions(panelX + panelW - adminW - UiTokens.CELL_PAD, barY, adminW, barBtnH).build())
         }
     }
 

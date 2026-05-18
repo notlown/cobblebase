@@ -31,8 +31,8 @@ class AdminScreen : Screen(Text.literal("Cobblebase Admin")) {
     private var panelW = 0
     private var panelH = 0
 
-    private val CLOSE_BTN_SIZE = 14
-    private val CLOSE_BTN_INSET = 4
+    private val CLOSE_BTN_SIZE = UiTokens.BTN_ICON
+    private val CLOSE_BTN_INSET = UiTokens.CELL_PAD
     private var closeBtnX = 0
     private var closeBtnY = 0
 

@@ -225,46 +225,70 @@ object NavigationHelper {
         val world = pokemonEntity.world
         val now = world.time
         val pokemonId = pokemonEntity.pokemon.uuid
+        val species = try { pokemonEntity.pokemon.species.name } catch (_: Exception) { "?" }
 
-        // Cheap detection (every tick). Scans the Pokemon's bounding box + one block above
-        // for any LeavesBlock — previous version only checked the floored blockPos and the
-        // single block below, which missed flying mons hovering in air pockets inside the
-        // canopy (Butterfree/Combee/Ninjask had a feet position in air with leaves on
-        // every side, and "in leaves" never fired). Up to ~8 block reads per Pokemon per
-        // tick for a typical 1×1×1 box; cheap enough to run unthrottled.
+        // Two distinct detections — distinguished so the every-tick brain-clear stays
+        // narrow (only fires when the mon's hitbox is actually overlapping leaves) and
+        // the throttled reposition stays inclusive (also catches mons trapped under a
+        // canopy with no overlap, e.g. flying mon hovering 1 block under the leaves
+        // with a fence below).
+        //
+        // EARLIER REGRESSION (commit 5e43e84c): I expanded the brain-clear trigger to
+        // "any leaves within 2 blocks above the bounding box". That broke the
+        // fence-below-canopy case — a Pokemon sitting on an oak fence with leaves 1
+        // above had its brain cleared every tick, so it couldn't fly sideways out
+        // from under the canopy either. User reported "es ging doch vorher" and this
+        // is exactly why.
         val pos = pokemonEntity.blockPos
         val bb = pokemonEntity.boundingBox
-        val nearLeaves = isInOrUnderLeaves(world, bb)
-        // Keep these two flags around — the expensive ground-scan below still uses them
-        // for the on-leaves / in-leaves vs under-canopy distinction.
+        val touchingLeaves = bbOverlapsLeaves(world, bb)
+        val canopyAbove = !touchingLeaves && hasLeavesAbove(world, pos, 3)
         val block = world.getBlockState(pos).block
         val blockBelow = world.getBlockState(pos.down()).block
         val inLeaves = block is net.minecraft.block.LeavesBlock
         val onLeaves = blockBelow is net.minecraft.block.LeavesBlock
 
-        if (nearLeaves) {
-            // Clear movement memories EVERY tick the mon is touching leaves. Flying mons
-            // re-issue a fly-up path the instant the brain ticks; this stops them from
-            // climbing back into the canopy between the throttled reposition sweeps.
+        // ── DEBUG ──
+        // Log once per second per Pokemon so we don't spam. Captures both the box
+        // overlap detection (drives the brain-clear) and the canopy probe (drives the
+        // throttled reposition) so we can tell the two scenarios apart in logs.
+        if (Cobblebase.LOGGER.isDebugEnabled && now % 20L == 0L && (touchingLeaves || canopyAbove)) {
+            val bbStr = String.format(
+                "bb=[%.2f,%.2f,%.2f→%.2f,%.2f,%.2f]",
+                bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ
+            )
+            Cobblebase.LOGGER.debug(
+                "[escapeLeaves] $species @${pos.x},${pos.y},${pos.z} $bbStr " +
+                "touchingLeaves=$touchingLeaves canopyAbove=$canopyAbove " +
+                "inLeaves=$inLeaves onLeaves=$onLeaves " +
+                "block=${block.javaClass.simpleName} below=${blockBelow.javaClass.simpleName}"
+            )
+        }
+
+        // Brain-clear ONLY when the hitbox is directly inside leaves. Without overlap
+        // the mon has horizontal escape routes and we must not paralyze its brain.
+        if (touchingLeaves) {
             try {
                 val brain = pokemonEntity.brain
                 brain.forget(net.minecraft.entity.ai.brain.MemoryModuleType.WALK_TARGET)
                 brain.forget(net.minecraft.entity.ai.brain.MemoryModuleType.PATH)
                 brain.forget(net.minecraft.entity.ai.brain.MemoryModuleType.LOOK_TARGET)
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Cobblebase.LOGGER.warn("[escapeLeaves] $species brain.forget threw: ${e.javaClass.simpleName}: ${e.message}")
+            }
             try { pokemonEntity.navigation.stop() } catch (_: Exception) {}
         }
 
-        // Expensive path (canopy probe + downward ground scan + reposition) stays
-        // throttled to once per second per Pokemon — block reads here can total up to
-        // ~23 per call, way too costly to run every tick across every pastured mon.
+        // Expensive path (downward ground scan + reposition) stays throttled to once
+        // per second per Pokemon — block reads here can total up to ~20 per call.
         val lastCheck = lastEscapeLeavesTick[pokemonId] ?: 0L
         if (now - lastCheck < ESCAPE_LEAVES_INTERVAL) return
         lastEscapeLeavesTick[pokemonId] = now
 
-        val underCanopy = nearLeaves && !inLeaves && !onLeaves
+        val needsReposition = touchingLeaves || canopyAbove
+        val underCanopy = canopyAbove && !touchingLeaves
 
-        if (nearLeaves) {
+        if (needsReposition) {
             // Find ground below (skip leaves and air only — fences are valid ground)
             var groundY = pos.y
             for (y in pos.y downTo pos.y - 20) {
@@ -276,13 +300,40 @@ object NavigationHelper {
                 }
             }
             if (groundY < pos.y) {
+                Cobblebase.LOGGER.info("[escapeLeaves] DROP $species from y=${pos.y} → y=$groundY (underCanopy=$underCanopy)")
                 pokemonEntity.refreshPositionAndAngles(
                     pokemonEntity.x, groundY.toDouble(), pokemonEntity.z,
                     pokemonEntity.yaw, pokemonEntity.pitch
                 )
                 pokemonEntity.navigation.stop()
+            } else {
+                Cobblebase.LOGGER.debug("[escapeLeaves] $species nearLeaves but no groundY found below y=${pos.y}")
             }
         }
+    }
+
+    /**
+     * Strict box-overlap check: does the Pokemon's bounding box intersect ANY block
+     * position that's a [net.minecraft.block.LeavesBlock]? No vertical expansion —
+     * a mon sitting under leaves with a 1-block air gap is NOT touching leaves.
+     */
+    private fun bbOverlapsLeaves(world: World, bb: net.minecraft.util.math.Box): Boolean {
+        val minX = Math.floor(bb.minX).toInt()
+        val minY = Math.floor(bb.minY).toInt()
+        val minZ = Math.floor(bb.minZ).toInt()
+        val maxX = Math.floor(bb.maxX).toInt()
+        val maxY = Math.floor(bb.maxY).toInt()
+        val maxZ = Math.floor(bb.maxZ).toInt()
+        val mp = BlockPos.Mutable()
+        for (x in minX..maxX) {
+            for (y in minY..maxY) {
+                for (z in minZ..maxZ) {
+                    mp.set(x, y, z)
+                    if (world.getBlockState(mp).block is net.minecraft.block.LeavesBlock) return true
+                }
+            }
+        }
+        return false
     }
 
     /**
@@ -298,33 +349,6 @@ object NavigationHelper {
         return false
     }
 
-    /**
-     * True if the Pokemon's bounding box overlaps any LeavesBlock, OR if there's a
-     * LeavesBlock within 2 blocks directly above the box. Used as the every-tick
-     * detection signal for [escapeLeaves]; the more expensive ground-scan + reposition
-     * still gates on this returning true before running.
-     *
-     * Reads roughly `(boxWidth + 1) × (boxHeight + 2) × (boxDepth + 1)` block states —
-     * for a typical 1×1×1 Pokemon that's 8 reads. Cheap enough for every server tick.
-     */
-    private fun isInOrUnderLeaves(world: World, bb: net.minecraft.util.math.Box): Boolean {
-        val minX = Math.floor(bb.minX).toInt()
-        val minY = Math.floor(bb.minY).toInt()
-        val minZ = Math.floor(bb.minZ).toInt()
-        val maxX = Math.floor(bb.maxX).toInt()
-        val maxY = Math.floor(bb.maxY).toInt() + 2  // include 2 blocks above the box
-        val maxZ = Math.floor(bb.maxZ).toInt()
-        val mp = BlockPos.Mutable()
-        for (x in minX..maxX) {
-            for (y in minY..maxY) {
-                for (z in minZ..maxZ) {
-                    mp.set(x, y, z)
-                    if (world.getBlockState(mp).block is net.minecraft.block.LeavesBlock) return true
-                }
-            }
-        }
-        return false
-    }
 
     /**
      * Checks if a Pokemon has been stuck (same position for 15+ seconds).

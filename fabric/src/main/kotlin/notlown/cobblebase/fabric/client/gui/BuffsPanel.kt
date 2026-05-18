@@ -381,6 +381,13 @@ class BuffsPanel(
             // Use the wider icon footprint for the text column offset.
             val scaledIconWidth = (PokemonSpriteHelper.ICON_SIZE * spriteScale).toInt()
             val nameOffset = scaledIconWidth + 4
+            // Overshadowed \u2192 cover the sprite with a semi-transparent dark overlay so
+            // the whole row reads as inactive in one glance (name + level + skill +
+            // stars + desc + sprite all dimmed together).
+            if (isOvershadowed) {
+                val scaledH = (PokemonSpriteHelper.ICON_SIZE * spriteScale).toInt()
+                context.fill(spriteX, spriteY, spriteX + scaledIconWidth, spriteY + scaledH, 0x88000000.toInt())
+            }
 
             // Pokemon name + level (shifted right past the bigger icon).
             val nameX = (colPokemon + 4 + nameOffset).toFloat()
@@ -400,11 +407,21 @@ class BuffsPanel(
 
             // Job icon left of the skill name (same vocabulary as Skills/Jobs tab).
             // Small scale 0.55 \u2248 9 px so it fits next to scaled text without crowding.
+            // When the row is overshadowed (passive buff with a stronger contributor),
+            // overlay a dark mask so the icon reads as inactive \u2014 same visual language
+            // as the gray name/stars/skill-name color below.
+            val jobIconX = colSkill
+            val jobIconY = ry + 3
             context.matrices.push()
-            context.matrices.translate(colSkill.toFloat(), (ry + 3).toFloat(), 0f)
+            context.matrices.translate(jobIconX.toFloat(), jobIconY.toFloat(), 0f)
             context.matrices.scale(0.55f, 0.55f, 1f)
             context.drawItem(JobIcons.stackFor(entry.skillId), 0, 0)
             context.matrices.pop()
+            if (isOvershadowed) {
+                // 9-px overlay (~ scaled icon size). 0x77 alpha kills the saturation
+                // without blacking out the icon entirely.
+                context.fill(jobIconX, jobIconY, jobIconX + 9, jobIconY + 9, 0x77000000.toInt())
+            }
 
             // Skill name (PASSIVE label removed \u2014 sub-tab already separates the two).
             // Overshadowed passive rows: skill name uses a dim gray instead of the buff color.
@@ -436,8 +453,14 @@ class BuffsPanel(
             context.drawText(textRenderer, stars, 0, 0, starColor, false)
             context.matrices.pop()
 
-            // Effect description (scaled 0.75x)
-            val descColor = if (entry.isPassiveBuff) 0x88DDAA else 0xCCCCCC
+            // Effect description (scaled 0.75x). Overshadowed → gray, same as the
+            // rest of the row, so the player can tell at a glance the description
+            // applies to a buff that doesn't actually fire.
+            val descColor = when {
+                isOvershadowed -> 0x666666
+                entry.isPassiveBuff -> 0x88DDAA
+                else -> 0xCCCCCC
+            }
             context.matrices.push()
             context.matrices.translate(colDesc.toFloat(), (ry + 9).toFloat(), 0f)
             context.matrices.scale(scale, scale, 1f)

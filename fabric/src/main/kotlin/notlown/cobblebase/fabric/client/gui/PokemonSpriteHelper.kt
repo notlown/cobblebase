@@ -112,19 +112,10 @@ object PokemonSpriteHelper {
         y: Int,
         delta: Float
     ) {
-        val color = getTypeColor(species)
-        val bgColor = darkenColor(color, 0.35f)
-
-        // Draw type-colored background behind the portrait
-        context.fill(x + 1, y, x + ICON_SIZE - 1, y + ICON_SIZE, bgColor)
-        context.fill(x, y + 1, x + 1, y + ICON_SIZE - 1, bgColor)
-        context.fill(x + ICON_SIZE - 1, y + 1, x + ICON_SIZE, y + ICON_SIZE - 1, bgColor)
-
-        // Colored border
-        context.fill(x + 1, y, x + ICON_SIZE - 1, y + 1, color)
-        context.fill(x + 1, y + ICON_SIZE - 1, x + ICON_SIZE - 1, y + ICON_SIZE, color)
-        context.fill(x, y + 1, x + 1, y + ICON_SIZE - 1, color)
-        context.fill(x + ICON_SIZE - 1, y + 1, x + ICON_SIZE, y + ICON_SIZE - 1, color)
+        // Type-colored background + border removed per user request — the colored
+        // squares around every Pokemon icon were noisy across Buffs / Pasture / My
+        // Pokemon / Logs and contributed nothing the type-emoji or skill-name color
+        // doesn't already convey. The 3D portrait now sits on a transparent backdrop.
 
         // Render the 3D Pokemon portrait on top
         try {
@@ -236,19 +227,7 @@ object PokemonSpriteHelper {
         delta: Float = 0f
     ) {
         val size = 12
-        val color = getTypeColor(species)
-        val bgColor = darkenColor(color, 0.35f)
-
-        // Background
-        context.fill(x + 1, y, x + size - 1, y + size, bgColor)
-        context.fill(x, y + 1, x + 1, y + size - 1, bgColor)
-        context.fill(x + size - 1, y + 1, x + size, y + size - 1, bgColor)
-
-        // Border
-        context.fill(x + 1, y, x + size - 1, y + 1, color)
-        context.fill(x + 1, y + size - 1, x + size - 1, y + size, color)
-        context.fill(x, y + 1, x + 1, y + size - 1, color)
-        context.fill(x + size - 1, y + 1, x + size, y + size - 1, color)
+        // Type-colored bg + border removed (see renderIcon above for rationale).
 
         // Render small 3D portrait
         try {

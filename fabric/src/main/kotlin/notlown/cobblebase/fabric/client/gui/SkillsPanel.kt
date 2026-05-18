@@ -984,12 +984,20 @@ class SkillsPanel(
             val rowColor = if (index % 2 == 0) ROW_EVEN else ROW_ODD
             context.fill(panelX + 1, ry, panelX + panelW - 1, ry + rowH - 1, rowColor)
 
-            // Pokemon portrait icon
+            // Pokemon portrait icon — scaled 1.4× so a 16-px sprite renders at ~22 px
+            // (matches the Buffs-tab visual weight; PokemonSpriteHelper no longer paints
+            // a type-colored box around the icon so the larger sprite fills the freed
+            // horizontal space cleanly).
             val name = pokemonData.displayName.string
+            val spriteScale = 1.4f
+            context.matrices.push()
+            context.matrices.translate((panelX + PANEL_PADDING).toFloat(), (ry + 4).toFloat(), 0f)
+            context.matrices.scale(spriteScale, spriteScale, 1f)
             PokemonSpriteHelper.renderIcon(
                 context, textRenderer, pokemonData.species, name, pokemonData.aspects,
-                panelX + PANEL_PADDING, ry + 4, delta
+                0, 0, delta
             )
+            context.matrices.pop()
 
             // Pokemon name + level (shifted right for icon, scaled 0.75x)
             val nameX = panelX + PANEL_PADDING + ICON_OFFSET

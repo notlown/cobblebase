@@ -25,11 +25,22 @@ import java.util.UUID
 object ProducerExecutor : SkillExecutor {
 
     private val lastProduceTime = mutableMapOf<UUID, Long>()
+    /**
+     * Per-Pokemon "last tick seen" timestamp, updated every executor tick (even when on
+     * cooldown). Used by [cleanupStale] to distinguish "Pokemon despawned / chunk
+     * unloaded" from "Pokemon is mid-cooldown, just hasn't produced in a while." Without
+     * this, cleanupStale wiped active cooldown timers every 60s and the Producer never
+     * actually fired its drop — the long-tail bug introduced in 1.5.5-beta.1.
+     */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastProduceTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
-        for (id in stale) lastProduceTime.remove(id)
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastScanTime.remove(id)
+            lastProduceTime.remove(id)
+        }
     }
 
     data class ProduceEntry(
@@ -365,6 +376,10 @@ object ProducerExecutor : SkillExecutor {
         val entry = ProducerOverrides.getOverride(speciesName) ?: produceMap[speciesName] ?: return
 
         val pokemonId = pokemonEntity.pokemon.uuid
+        // Heartbeat for the stale-state sweep — must be touched every tick the Pokemon
+        // is alive, NOT only when it produces. Otherwise cleanupStale wipes the active
+        // cooldown timer mid-flight.
+        lastScanTime[pokemonId] = now
         val baseCooldown = entry.cooldownSeconds ?: skill.cooldownSeconds
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(baseCooldown, skillEntry.proficiency, skill.id)
 

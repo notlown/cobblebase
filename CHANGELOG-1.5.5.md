@@ -68,6 +68,20 @@ Tether order is the order Cobblemon already exposes via `tetheredPokemon`, so "e
 
 ---
 
+### Loot jobs broken in beta.1: 60-second stale-state sweep wiped active cooldowns
+
+**Reported by Umutcan in testing:** *"3 Wooloos + 1 Gogoat on Producer in a pasture, no production for days per logs."* Investigation found the bug ran wider than Producer.
+
+**Root cause:** 1.5.5 added a `cleanupStale(now)` method to every executor as part of the perf hardening pass. The method drops per-Pokemon state for mons that have stopped ticking (despawn / chunk unload / withdraw). The bug: it identified "stopped ticking" by the **cooldown timer** (`lastProduceTime`, `lastFindTime`, `lastMineTime`, etc.) — but cooldown timers are only written when an action *succeeds*, not on every tick. With a 60-second stale TTL and a 300-second job cooldown (the default), the entry would always be > 60 s old, so the 60 s sweep wiped it. The next tick's `getOrPut { now }` re-initialized the cooldown to *now*, and the job never reached the end of its cooldown.
+
+**Net effect** in beta.1: **any job with a base cooldown above ~60 s simply didn't produce.** Producer, Mining, Fishing, Diving, the entire Finder family (12 subtypes), Recruiter, Scout, Supplier, Harvester, Irrigator, Generic-loot, Aura Boost, Growth Aura — all stuck.
+
+**Fix:** every affected executor now maintains a `lastScanTime` heartbeat that's written on **every** tick (not only on success). `cleanupStale` uses this heartbeat as the staleness signal; cooldown timers are only removed alongside the heartbeat when the heartbeat itself goes 60 s+ silent (= Pokemon genuinely not ticking). Cooldown timers in-flight are now safe.
+
+12 executors patched: `ProducerExecutor`, `MiningExecutor`, `FishingExecutor`, `RecruiterExecutor`, `ScoutExecutor`, `AuraBoostExecutor`, `GrowthAuraExecutor`, `GenericLootExecutor`, `SupplierExecutor`, `HarvesterExecutor`, `IrrigatorExecutor`, `FinderExecutor` (covers all 13 finder instances).
+
+`HealerExecutor`, `GuardExecutor`, `ExtinguisherExecutor`, `CauldronFillExecutor`, `FurnaceFuelExecutor`, `EggHatcherExecutor`, `BuilderExecutor` were already correct (separate scan-time / future-time semantics in their cleanups). `BuffExecutor`, `LuckyCharmExecutor` had short enough refresh intervals (≤ 1 s) that the bug never manifested.
+
 ### Sleeping Pokemon: hard position + brain lock (the "sleep moving" bug, hopefully for real this time)
 
 **Reported repeatedly since 1.3.x.** Two open Discord threads (`bug-reports / Pokemon Sleep Moving`, `Still getting sleeping cobblemons moving and working`). Five prior attempts to fix from inside the pasture tick all eventually failed — either they stopped movement but broke the sleep animation (`setAiDisabled(true)`, commit `caa48971`), or they kept animations but lost a race against Cobblemon's brain and the mon kept wandering (memory-clearing from the pasture-tick TAIL, commit `3ea1c0b6`; reverted in `3e3e82c1` and `9779f31f`).

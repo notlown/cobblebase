@@ -28,11 +28,17 @@ import java.util.UUID
 object SupplierExecutor {
 
     private val lastProduceTime = mutableMapOf<UUID, Long>()
+    /** Per-Pokemon heartbeat for [cleanupStale]; updated every tick so the cooldown
+     *  timer (lastProduceTime) isn't wiped while a Pokemon is on a long cooldown. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastProduceTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
-        for (id in stale) lastProduceTime.remove(id)
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastScanTime.remove(id)
+            lastProduceTime.remove(id)
+        }
         // Evict harvestable-position cache entries older than 60s — keeps memory bounded
         // and forces a fresh scan if a pasture has been idle for a while.
         harvestableCache.entries.removeAll { (_, entry) -> now - entry.tick > 1200L }
@@ -75,6 +81,7 @@ object SupplierExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
 
         if (now % 20L != 0L) return
 

@@ -38,11 +38,15 @@ object MiningExecutor : SkillExecutor {
     private val digTarget = mutableMapOf<UUID, BlockPos>()
     private val digStartTime = mutableMapOf<UUID, Long>()
     private val celebrationUntil = mutableMapOf<UUID, Long>() // short break after finding loot
+    /** Per-Pokemon heartbeat for [cleanupStale]. Updated every tick the executor runs,
+     *  so on-cooldown Pokemon don't have their cooldown timer wiped after 60s. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastMineTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
         for (id in stale) {
+            lastScanTime.remove(id)
             lastMineTime.remove(id)
             heldItems.remove(id)
             digTarget.remove(id)
@@ -65,6 +69,7 @@ object MiningExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
         val items = heldItems[pokemonId]
 
         // Phase 1: Drop held items on ground (Gatherer will sort into chests)

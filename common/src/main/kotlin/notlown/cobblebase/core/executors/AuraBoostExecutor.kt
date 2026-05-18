@@ -28,6 +28,10 @@ object AuraBoostExecutor : SkillExecutor {
 
     private val lastBuffTime = mutableMapOf<UUID, Long>()
     private val activeBuffPlayers = mutableMapOf<UUID, MutableSet<UUID>>()
+    /** Per-Pokemon heartbeat for [cleanupStale]. Updated every tick — Aura already
+     *  refreshes lastBuffTime every 1s, but only when there are players in range, so
+     *  a separate heartbeat keeps the entry alive even when nobody's nearby. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L  // 60s
 
     /**
@@ -35,8 +39,9 @@ object AuraBoostExecutor : SkillExecutor {
      * have stopped ticking (recalled, despawned, chunk unloaded).
      */
     fun cleanupStale(now: Long) {
-        val stale = lastBuffTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
         for (id in stale) {
+            lastScanTime.remove(id)
             lastBuffTime.remove(id)
             activeBuffPlayers.remove(id)
         }
@@ -54,6 +59,7 @@ object AuraBoostExecutor : SkillExecutor {
         if (!notlown.cobblebase.core.CobblebaseConfig.isBuffEnabled("aura")) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
         val prof = skillEntry.proficiency.coerceIn(1, 5)
 
         // Re-apply at most every 20 ticks (1s) — vanilla Luck duration is 15s+, so 1s refresh

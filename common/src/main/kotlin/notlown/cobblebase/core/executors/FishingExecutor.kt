@@ -33,11 +33,15 @@ object FishingExecutor : SkillExecutor {
     private val waterTarget = mutableMapOf<UUID, BlockPos>()
     private const val SUCCESS_PAUSE_TICKS = 40L
     private val waterModeApplied = mutableSetOf<UUID>()
+    /** Per-Pokemon heartbeat for [cleanupStale]. Updated every tick so on-cooldown
+     *  Pokemon don't have their cooldown timer wiped after 60s. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastGenerationTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
         for (id in stale) {
+            lastScanTime.remove(id)
             lastGenerationTime.remove(id)
             heldItems.remove(id)
             successTime.remove(id)
@@ -65,6 +69,7 @@ object FishingExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val items = heldItems[pokemonId]
 

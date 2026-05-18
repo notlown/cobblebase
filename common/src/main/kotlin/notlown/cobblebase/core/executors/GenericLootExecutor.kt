@@ -29,11 +29,15 @@ object GenericLootExecutor : SkillExecutor {
 
     private val lastLootTime = mutableMapOf<UUID, Long>()
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
+    /** Per-Pokemon heartbeat for [cleanupStale]; updated every tick so the cooldown
+     *  timer (lastLootTime) isn't wiped while a Pokemon is on a long cooldown. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastLootTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
         for (id in stale) {
+            lastScanTime.remove(id)
             lastLootTime.remove(id)
             heldItems.remove(id)
         }
@@ -49,6 +53,7 @@ object GenericLootExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
         val cooldownTicks = CobblebaseConfig.getEffectiveCooldownTicks(skill.cooldownSeconds, skillEntry.proficiency, skill.id)
         val items = heldItems[pokemonId]
 

@@ -42,11 +42,17 @@ import kotlin.math.sqrt
 object ScoutExecutor : SkillExecutor {
 
     private val lastScoutTime = mutableMapOf<UUID, Long>()
+    /** Per-Pokemon heartbeat for [cleanupStale]. Updated every tick so on-cooldown
+     *  Pokemon don't have their cooldown timer wiped after 60s. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastScoutTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
-        for (id in stale) lastScoutTime.remove(id)
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastScanTime.remove(id)
+            lastScoutTime.remove(id)
+        }
     }
 
     // Structure tag keys for locateStructure
@@ -100,6 +106,7 @@ object ScoutExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
 
         // Safety: keep Scout near the pasture — teleport back if too far.
         // Compare in squared-distance space to skip the sqrt on every tick.

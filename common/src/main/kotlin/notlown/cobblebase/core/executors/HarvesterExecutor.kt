@@ -48,6 +48,10 @@ object HarvesterExecutor : SkillExecutor {
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastSearchTime = mutableMapOf<UUID, Long>()
     private val lastHarvestTime = mutableMapOf<UUID, Long>() // per-pokemon cooldown between harvests
+    /** Per-Pokemon heartbeat for cleanup. Updated every tick (vs lastSearchTime which
+     *  only fires during the scan phase), so on-cooldown or mid-navigation Pokemon
+     *  don't have their cooldown timer wiped by the 60s sweep. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private val harvestedBlockCooldown = mutableMapOf<BlockPos, Long>() // per-block cooldown to prevent instant re-harvest
     /**
      * Tracks the world-time tick at which each block was first observed ripe by any
@@ -67,8 +71,9 @@ object HarvesterExecutor : SkillExecutor {
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastSearchTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
         for (id in stale) {
+            lastScanTime.remove(id)
             heldItems.remove(id)
             targetBlock.remove(id)
             targetSetTime.remove(id)
@@ -105,6 +110,7 @@ object HarvesterExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
         val speed = getSpeedForProficiency(skillEntry.proficiency)
         val items = heldItems[pokemonId]
 

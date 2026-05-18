@@ -35,11 +35,16 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
 
     private val lastFindTime = mutableMapOf<UUID, Long>()
     private val heldItems = mutableMapOf<UUID, List<ItemStack>>()
+    /** Per-Pokemon heartbeat for cleanup. Updated every tick so the cooldown timer
+     *  (lastFindTime) isn't wiped while a Finder is on a long cooldown. Without this,
+     *  the 60s sweep would erase mid-flight 5-minute cooldowns and prevent any drops. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
 
     /** Per-instance cleanup; iterated across all 13 instances via the companion. */
     fun cleanupStaleInstance(now: Long, ttl: Long) {
-        val stale = lastFindTime.entries.filter { now - it.value > ttl }.map { it.key }
+        val stale = lastScanTime.entries.filter { now - it.value > ttl }.map { it.key }
         for (id in stale) {
+            lastScanTime.remove(id)
             lastFindTime.remove(id)
             heldItems.remove(id)
         }
@@ -63,6 +68,7 @@ class FinderExecutor(private val finderType: String = "finder") : SkillExecutor 
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
 
         // Throttle: Finders have minute-long cooldowns, no need to check every tick
         if (now % 20L != 0L) return

@@ -23,11 +23,17 @@ import java.util.UUID
 object GrowthAuraExecutor : SkillExecutor {
 
     private val lastTickTime = mutableMapOf<UUID, Long>()
+    /** Per-Pokemon heartbeat for [cleanupStale]; updated every tick so the 30s pulse
+     *  interval can never be wiped mid-flight by the 60s cleanup sweep. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastTickTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
-        for (id in stale) lastTickTime.remove(id)
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        for (id in stale) {
+            lastScanTime.remove(id)
+            lastTickTime.remove(id)
+        }
     }
 
     // How often the aura pulses (in ticks). Every 30 seconds.
@@ -43,6 +49,7 @@ object GrowthAuraExecutor : SkillExecutor {
         if (world !is ServerWorld) return
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
         val prof = skillEntry.proficiency.coerceIn(1, 5)
 
         // Pulse interval check

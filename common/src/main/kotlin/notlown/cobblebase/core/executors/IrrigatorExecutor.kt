@@ -44,11 +44,15 @@ object IrrigatorExecutor : SkillExecutor {
     private val targetBlock = mutableMapOf<UUID, BlockPos>()
     private val targetSetTime = mutableMapOf<UUID, Long>()
     private val lastSearchTime = mutableMapOf<UUID, Long>()
+    /** Per-Pokemon heartbeat for cleanup. Updated every tick so mid-navigation
+     *  Pokemon don't have their target wiped by the 60s sweep. */
+    private val lastScanTime = mutableMapOf<UUID, Long>()
     private const val STALE_TTL_TICKS = 1200L
 
     fun cleanupStale(now: Long) {
-        val stale = lastSearchTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
+        val stale = lastScanTime.entries.filter { now - it.value > STALE_TTL_TICKS }.map { it.key }
         for (id in stale) {
+            lastScanTime.remove(id)
             targetBlock.remove(id)
             targetSetTime.remove(id)
             lastSearchTime.remove(id)
@@ -73,6 +77,7 @@ object IrrigatorExecutor : SkillExecutor {
 
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
+        lastScanTime[pokemonId] = now
         val speed = getSpeedForProficiency(skillEntry.proficiency)
         // Search from Pokemon position, not pasture origin
         val searchOrigin = pokemonEntity.blockPos

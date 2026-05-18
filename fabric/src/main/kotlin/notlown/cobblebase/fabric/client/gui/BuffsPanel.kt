@@ -285,6 +285,17 @@ class BuffsPanel(
             "extinguish" -> "Extinguishes fire near the base"
             "aura" -> "Luck for nearby players"
             "growth" -> "Accelerates crop growth nearby"
+            "egg_hatcher" -> {
+                // Speed multiplier is the prof-keyed tuning field; falls back to prof level
+                // (default linear scaling) when admins haven't customized it.
+                val tuningKey = "prof${prof}Speed"
+                val multiplier = try {
+                    SkillRegistry.getEffectiveTuning("cobblebase:egg_hatcher", tuningKey, prof.toDouble())
+                } catch (_: Throwable) { prof.toDouble() }
+                val label = if (multiplier % 1.0 == 0.0) multiplier.toInt().toString()
+                    else String.format("%.1f", multiplier)
+                "Incubating Cobbreeding eggs · ${label}× speed"
+            }
             else -> "Working"
         }
     }

@@ -141,13 +141,16 @@ class CobblebaseScreen(
         addDrawableChild(muteBtn)
         nextX += iconBtnW + btnGap
 
-        // Show Radius toggle (only if we have a pastureOrigin).
+        // Show Radius toggle (only if we have a pastureOrigin). Stay inside the
+        // GUI on click — close() removed so the user can flip ON/OFF without the
+        // PC GUI snapping shut every time.
         if (pastureOrigin != null) {
             val activeHere = notlown.cobblebase.fabric.client.render.RadiusRenderer.isActiveAt(pastureOrigin)
             val radiusLabel = if (activeHere) "§aRadius ON" else "§cRadius OFF"
             addDrawableChild(ButtonWidget.builder(Text.literal(radiusLabel)) {
                 notlown.cobblebase.fabric.client.render.RadiusRenderer.toggle(pastureOrigin, computeMaxRadius())
-                close()
+                // Re-init so the button's text + style refresh to the new state.
+                initCurrentTab()
             }.dimensions(nextX, barY, 60, barBtnH).build())
         }
 

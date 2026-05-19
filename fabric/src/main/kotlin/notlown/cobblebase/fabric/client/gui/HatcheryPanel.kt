@@ -232,9 +232,24 @@ class HatcheryPanel(
         context.matrices.pop()
 
         if (active.isEmpty()) {
-            // No giant decorative egg here — the section header already implies the theme,
-            // and the badge in the stats strip carries the dedicated icon.
-            val hint = "§8Assign the Egg Hatcher skill to a Pokemon and put eggs in the pasture or a nearby chest."
+            // Idle-hatcher list: Pokemon in this pasture that HAVE Egg Hatcher
+            // assigned but currently aren't incubating because there's no egg.
+            // We need to tell those mons apart from "no hatcher at all" — the
+            // assignment cache knows which mons are on Egg Hatcher.
+            val idleHatchers = pokemonList.filter {
+                notlown.cobblebase.core.AssignmentCache.getAssignment(it.pokemonId) == "cobblebase:egg_hatcher"
+            }
+
+            val hint = if (idleHatchers.isEmpty()) {
+                "§8Assign the Egg Hatcher skill to a Pokemon and put eggs in the pasture or a nearby chest."
+            } else {
+                val names = idleHatchers.joinToString(", ") { "§f${it.displayName.string}§7" }
+                if (idleHatchers.size == 1) {
+                    "§7$names §8is ready — drop an egg in the pasture or a nearby chest."
+                } else {
+                    "§7$names §8are ready — drop eggs in the pasture or a nearby chest."
+                }
+            }
             val hintW = textRenderer.getWidth(hint)
             context.drawTextWithShadow(textRenderer, hint,
                 panelX + panelW / 2 - hintW / 2, startY + 20, 0x888888)

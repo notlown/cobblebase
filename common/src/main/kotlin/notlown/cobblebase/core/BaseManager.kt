@@ -114,31 +114,15 @@ object BaseManager {
             notlown.cobblebase.core.SleepLockState.cleanupStale()
         }
 
-        // Resize the Pokemon's Cobblemon-managed tether roam box to match the
-        // admin's "Pasture Range" slider. Cobblemon defaults to ~16 blocks which
-        // would clamp every movement well inside our admin radius. Re-creating
-        // the Tethering object is cheap and only happens when the existing min/max
-        // don't already match (so steady state = no-op).
-        run {
-            val tethering = pokemonEntity.tethering ?: return@run
-            val pasturePos = tethering.pasturePos
-            val r = CobblebaseConfig.jobSearchRadius.coerceAtLeast(1)
-            val expectedMin = BlockPos(pasturePos.x - r, pasturePos.y - r, pasturePos.z - r)
-            val expectedMax = BlockPos(pasturePos.x + r, pasturePos.y + r, pasturePos.z + r)
-            if (tethering.minRoamPos != expectedMin || tethering.maxRoamPos != expectedMax) {
-                pokemonEntity.tethering = com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity.Tethering(
-                    minRoamPos = expectedMin,
-                    maxRoamPos = expectedMax,
-                    playerId = tethering.playerId,
-                    playerName = tethering.playerName,
-                    tetheringId = tethering.tetheringId,
-                    pokemonId = tethering.pokemonId,
-                    pcId = tethering.pcId,
-                    entityId = tethering.entityId,
-                    pasturePos = pasturePos
-                )
-            }
-        }
+        // [REVERTED] Tether-roam-box resize removed — Cobblemon's default 64-block
+        // tether is already larger than our admin range, so we were SHRINKING it
+        // when admin set 21. PokemonEntity.tick line 675 then untethered any mon
+        // currently outside the new (smaller) box, sending them back to the PC.
+        // Cause of the "mons disappear after a few minutes" report.
+        // Movement to the full admin radius now relies on:
+        //   - wanderNearOrigin(radius = jobSearchRadius) for idle mons (mixin)
+        //   - executor-driven navigation toward job targets within
+        //     skill.effectiveRadius (= admin range)
 
         // Brief stuck detection (8s no movement → clear nav) only for working mons
         val hasJob = assignments[pokemonId] != null
@@ -168,13 +152,8 @@ object BaseManager {
                 pastureOrigin.x + 0.5, pastureOrigin.y.toDouble(), pastureOrigin.z + 0.5
             )
             // Water-type Pokemon get double the safety radius (they swim farther).
-            // Floor at the admin pasture range + 4 buffer blocks so the legit work
-            // area is never inside the safety boundary (otherwise mons working at
-            // the edge of a 30-block pasture get teleported back constantly).
-            val baseSafety = CobblebaseConfig.safetyTeleportDistance.toDouble()
-            val adminFloor = CobblebaseConfig.jobSearchRadius + 4.0
-            val effectiveSafety = maxOf(baseSafety, adminFloor)
-            val maxDist = if (isWaterType) effectiveSafety * 2.0 else effectiveSafety
+            // Compare in squared-distance space to avoid the sqrt entirely.
+            val maxDist = if (isWaterType) CobblebaseConfig.safetyTeleportDistance * 2.0 else CobblebaseConfig.safetyTeleportDistance.toDouble()
             if (distSq > maxDist * maxDist) {
                 val (sx, sz) = getSpawnOffset(world)
                 pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y.toDouble(), pastureOrigin.z + sz)

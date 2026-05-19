@@ -454,10 +454,23 @@ object EggHatcherExecutor : SkillExecutor {
                 if (it.displayEntityId >= 0) it.displayEntityId else null
             }
             try {
+                // Reflection: read the displayed stack so we can match orphans by
+                // item type (catches eggs from versions before the customName
+                // marker was added — those have no name to filter on).
+                val getStackMethod = try {
+                    net.minecraft.entity.decoration.DisplayEntity.ItemDisplayEntity::class.java.declaredMethods
+                        .firstOrNull { it.parameterCount == 0 && it.returnType == ItemStack::class.java }
+                        ?.also { it.isAccessible = true }
+                } catch (_: Throwable) { null }
+
                 for (entity in world.iterateEntities()) {
                     if (entity !is net.minecraft.entity.decoration.DisplayEntity.ItemDisplayEntity) continue
-                    val name = entity.customName?.string ?: continue
-                    if (name != EGG_DISPLAY_MARKER) continue
+                    val nameMatches = entity.customName?.string == EGG_DISPLAY_MARKER
+                    val stackMatches = try {
+                        val stack = getStackMethod?.invoke(entity) as? ItemStack
+                        stack != null && isPokemonEgg(stack)
+                    } catch (_: Throwable) { false }
+                    if (!nameMatches && !stackMatches) continue
                     if (entity.id !in activeDisplayIds) {
                         try { entity.discard() } catch (_: Exception) {}
                     }

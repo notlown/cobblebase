@@ -497,8 +497,16 @@ class SkillsPanel(
                         context.fill(cbX, cbY, cbX + 1, cbY + 7, 0xFF777788.toInt())
                         context.fill(cbX + 6, cbY, cbX + 7, cbY + 7, 0xFF777788.toInt())
                         if (isSel) drawScaled(context, "§f✓", cbX + 1, cbY - 1, 0xFFFFFF, 0.7f)
+                        // Tiny job icon between checkbox and name — same vocabulary
+                        // as Pasture skill chips so users connect "this is the Mining job".
+                        val iconStack = JobIcons.stackFor(skill.id)
+                        context.matrices.push()
+                        context.matrices.translate((cbX + 10).toFloat(), (sy + 1).toFloat(), 0f)
+                        context.matrices.scale(0.55f, 0.55f, 1f)
+                        context.drawItem(iconStack, 0, 0)
+                        context.matrices.pop()
                         val n = countMonsForSkill(skill.id)
-                        drawScaled(context, "§f${skill.name} §8($n)", cbX + 11, sy + 2, if (isSel) 0xFFFFFF else 0xAAAAAA, 0.65f)
+                        drawScaled(context, "§f${skill.name} §8($n)", cbX + 21, sy + 2, if (isSel) 0xFFFFFF else 0xAAAAAA, 0.65f)
                     }
                     sidebarSkillHitBoxes[skill.id] = intArrayOf(sbX, sy, sbW, rowH)
                     sy += rowH

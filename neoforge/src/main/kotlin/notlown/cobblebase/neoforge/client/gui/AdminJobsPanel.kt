@@ -459,11 +459,18 @@ class AdminJobsPanel(
         // the subtitle ran into the name with no gap. Also bumped the visual gap from 8 → 12.
         val cat = CATEGORY_COLORS[job.category] ?: 0xFFAAAAAA.toInt()
         context.fill(rightX + PADDING, y + PADDING, rightX + PADDING + 3, y + PADDING + 11, cat)
+        // Job item icon next to the detail header — same vocabulary as the grid tile
+        // and Pasture skill chips.
+        context.matrices.push()
+        context.matrices.translate((rightX + PADDING + 8).toFloat(), (y + PADDING - 3).toFloat(), 0f)
+        context.matrices.scale(0.7f, 0.7f, 1f)
+        context.drawItem(jobIcon(job.skillId), 0, 0)
+        context.matrices.pop()
         val boldName = "§f§l${job.displayName}"
-        drawScaledText(context, boldName, rightX + PADDING + 8, y + PADDING + 1, 0xFFFFFF)
+        drawScaledText(context, boldName, rightX + PADDING + 22, y + PADDING + 1, 0xFFFFFF)
         val subtitle = "§7${job.category.replaceFirstChar { it.uppercase() }} job"
         val nameWidth = (textRenderer.getWidth(boldName) * SCALE).toInt()
-        val subX = rightX + PADDING + 8 + nameWidth + 12
+        val subX = rightX + PADDING + 22 + nameWidth + 12
         drawScaledText(context, subtitle, subX, y + PADDING + 1, 0xAAAAAA)
 
         // Sub-tab bar

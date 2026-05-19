@@ -66,9 +66,8 @@ class SkillsPanel(
     private val NAME_WIDTH = 56 + ICON_OFFSET            // bumped from 50 → 56 (full-scale name fits)
     private val AURA_ICON_WIDTH = 15
     private val AUTO_BTN_WIDTH = 26                      // Relax is just an Off toggle
-    private val BTN_WIDTH = 64                           // baseline chip width when Pokemon has ≤ btnsPerRow skills (+10% from 58)
+    private val BTN_WIDTH = 60                           // unified chip width across EVERY pokemon (was 64, -5% per user request)
     private val BTN_HEIGHT = 16                          // unified chip height — active and available are the SAME size now (height-difference broke the row silhouette)
-    private val BTN_MIN_WIDTH = 42                       // dynamic shrink floor for Pokemon with many skills (+10% from 38)
     private val BTN_GAP = 2
 
     /** Per-Pokemon chip width (varies when many skills must fit into one row). */
@@ -150,16 +149,11 @@ class SkillsPanel(
             // Auto button has its own column, skills start after it
             val autoX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH
             val skillStartX = autoX + AUTO_BTN_WIDTH + BTN_GAP
-            val skillAreaW = panelX + panelW - PANEL_PADDING - skillStartX
 
-            // Dynamic chip width: divide available horizontal space evenly when the
-            // Pokemon has more skills than the baseline width allows. Clamped at
-            // BTN_MIN_WIDTH so labels like "Friend Recruiter" stay readable. With
-            // fewer skills we keep BTN_WIDTH so the row doesn't get sparse pills.
-            val chipW = if (skillCount <= 0) BTN_WIDTH else {
-                val perChipBudget = (skillAreaW - (skillCount - 1) * BTN_GAP) / skillCount
-                perChipBudget.coerceIn(BTN_MIN_WIDTH, BTN_WIDTH)
-            }
+            // Every chip uses the same width — no dynamic shrink — so layouts read
+            // as uniform across all Pokemon. Pokemon with many skills can overflow
+            // the panel's right edge; the available row width caps how many fit.
+            val chipW = BTN_WIDTH
             chipWidthByPokemon[pokemonId] = chipW
 
             rowOffsets.add(cumulativeY)

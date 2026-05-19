@@ -50,6 +50,13 @@ class SkillsPanel(
     enum class SubTab { ACTIVE_WORKERS, MY_POKEMON, POKEWIKI }
     private var activeSubTab = SubTab.ACTIVE_WORKERS
     private val subTabBoxes = mutableMapOf<SubTab, IntArray>()
+
+    /**
+     * Auto-Assign button only applies to the Pasture sub-tab (it assigns the
+     * Pokemon currently TETHERED to this pasture). We toggle its `visible` flag
+     * when the sub-tab switches so it disappears on My Pokemon / WorkerWiki.
+     */
+    private var autoAssignButton: ButtonWidget? = null
     private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
     private val NAME_WIDTH = 56 + ICON_OFFSET            // bumped from 50 → 56 (full-scale name fits)
     private val AURA_ICON_WIDTH = 15
@@ -113,9 +120,12 @@ class SkillsPanel(
         val autoAssignY = panelY + SUBTAB_H + HEADER_HEIGHT + PANEL_PADDING - 14
         // Vanilla button text doesn't scale, so a long label scrolls (marquee) when
         // it overflows. Shorter label fits the 80-px button without scrolling.
-        addWidget.apply(ButtonWidget.builder(Text.literal("§6Auto-Assign")) {
+        val btn = ButtonWidget.builder(Text.literal("§6Auto-Assign")) {
             autoAssignAll()
-        }.dimensions(autoAssignX, autoAssignY, autoAssignW, autoAssignH).build())
+        }.dimensions(autoAssignX, autoAssignY, autoAssignW, autoAssignH).build()
+        btn.visible = (activeSubTab == SubTab.ACTIVE_WORKERS)
+        addWidget.apply(btn)
+        autoAssignButton = btn
 
         var cumulativeY = 0
 
@@ -1209,6 +1219,7 @@ class SkillsPanel(
             val (bx, by, bw, bh) = box
             if (mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh) {
                 activeSubTab = tab
+                autoAssignButton?.visible = (tab == SubTab.ACTIVE_WORKERS)
                 return true
             }
         }

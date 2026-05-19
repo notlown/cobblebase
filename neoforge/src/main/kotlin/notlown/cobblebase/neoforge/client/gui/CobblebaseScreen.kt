@@ -86,6 +86,9 @@ class CobblebaseScreen(
     private lateinit var workshopPanel: WorkshopPanel
     private lateinit var hatcheryPanel: HatcheryPanel
 
+    /** Base Settings overlay — non-null while the modal is open. */
+    private var baseSettingsModal: BaseSettingsModal? = null
+
     override fun init() {
         super.init()
 
@@ -156,13 +159,35 @@ class CobblebaseScreen(
 
         // Admin button (only if OP) — bottom-right, aligned to the right edge.
         val client = net.minecraft.client.MinecraftClient.getInstance()
+        var rightEdge = panelX + panelW - UiTokens.CELL_PAD
         if (client.player?.hasPermissionLevel(2) == true) {
             val adminW = 40
+            val adminX = rightEdge - adminW
             addDrawableChild(ButtonWidget.builder(Text.literal("§6Admin")) {
                 close()
                 notlown.cobblebase.neoforge.client.CobblebaseNeoForgeClient.requestAdminScreen()
-            }.dimensions(panelX + panelW - adminW - UiTokens.CELL_PAD, barY, adminW, barBtnH).build())
+            }.dimensions(adminX, barY, adminW, barBtnH).build())
+            rightEdge = adminX - btnGap
         }
+
+        // Base Settings button — bottom-right, available to every player (modal
+        // gates editing by ownership). Only renders if we know the pasture origin.
+        if (pastureOrigin != null) {
+            val bsW = 72
+            val bsX = rightEdge - bsW
+            addDrawableChild(ButtonWidget.builder(Text.literal("§bBase Settings")) {
+                openBaseSettings()
+            }.dimensions(bsX, barY, bsW, barBtnH).build())
+        }
+    }
+
+    private fun openBaseSettings() {
+        val pos = pastureOrigin ?: return
+        val world = net.minecraft.client.MinecraftClient.getInstance().world
+        val be = world?.getBlockEntity(pos)
+                as? com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+        val ownerId = be?.ownerId
+        baseSettingsModal = BaseSettingsModal(pos, ownerId, textRenderer)
     }
 
     private fun getMuteIcon(): String {
@@ -233,6 +258,9 @@ class CobblebaseScreen(
                 child.render(context, mouseX, mouseY, delta)
             }
         }
+
+        // Base Settings modal overlay — last so it sits above everything.
+        baseSettingsModal?.render(context, width, height, mouseX, mouseY)
     }
 
     private fun renderTabs(context: DrawContext, mouseX: Int, mouseY: Int) {
@@ -324,6 +352,11 @@ class CobblebaseScreen(
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        baseSettingsModal?.let { modal ->
+            val consumed = modal.mouseClicked(mouseX, mouseY, button)
+            if (!consumed) baseSettingsModal = null
+            return true
+        }
         // Close button (X) — top-right of the tab strip.
         if (mouseX >= closeBtnX && mouseX <= closeBtnX + CLOSE_BTN_SIZE &&
             mouseY >= closeBtnY && mouseY <= closeBtnY + CLOSE_BTN_SIZE) {
@@ -359,6 +392,7 @@ class CobblebaseScreen(
     }
 
     override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean {
+        baseSettingsModal?.let { if (it.mouseDragged(mouseX, mouseY, button)) return true }
         val handled = when (activeTab) {
             Tab.SKILLS -> skillsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
             Tab.BUFFS -> buffsPanel.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
@@ -372,6 +406,7 @@ class CobblebaseScreen(
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        baseSettingsModal?.let { if (it.mouseReleased(mouseX, mouseY, button)) return true }
         val handled = when (activeTab) {
             Tab.SKILLS -> skillsPanel.mouseReleased(mouseX, mouseY, button)
             Tab.BUFFS -> buffsPanel.mouseReleased(mouseX, mouseY, button)

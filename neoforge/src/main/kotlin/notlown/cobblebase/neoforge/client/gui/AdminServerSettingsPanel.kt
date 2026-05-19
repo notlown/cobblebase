@@ -81,22 +81,38 @@ class AdminServerSettingsPanel(
         )
         rowY += ROW_H + ROW_GAP
 
-        // Pasture range slider — now the global cap for every job's search radius
-        // (see SkillRegistry.getEffectiveRadius).
+        // Pasture range MAX — the cap each pasture owner can pick up to.
         val effectiveRange = notlown.cobblebase.core.GeneralSettingsCache.pastureRangeMax
             .let { if (it in PASTURE_RANGE_MIN..PASTURE_RANGE_MAX) it else PASTURE_RANGE_DEFAULT }
         renderStepperRow(
             context, mouseX, mouseY,
-            id = "pastureRange",
+            id = "pastureRangeMax",
             rowY = rowY,
-            title = "Pasture Range",
-            description = "Global cap on how far Pokemon scan for work — applies to every job. " +
-                "The Show-Radius wireframe in the Pokemon tab draws this value.",
+            title = "Pasture Range — Max",
+            description = "Upper cap on how far Pokemon scan for work. Each pasture owner " +
+                "may pick any value in [Min, Max] from their own Base Settings.",
             value = effectiveRange,
             unit = "blocks",
             rangeMin = PASTURE_RANGE_MIN,
             rangeMax = PASTURE_RANGE_MAX,
             defaultValue = PASTURE_RANGE_DEFAULT
+        )
+        rowY += ROW_H + 10 + ROW_GAP
+
+        // Pasture range MIN — the floor below which owners can't pick.
+        val rangeMinVal = notlown.cobblebase.core.GeneralSettingsCache.pastureRangeMin
+            .let { if (it in PASTURE_RANGE_MIN..PASTURE_RANGE_MAX) it else PASTURE_RANGE_MIN }
+        renderStepperRow(
+            context, mouseX, mouseY,
+            id = "pastureRangeMin",
+            rowY = rowY,
+            title = "Pasture Range — Min",
+            description = "Floor below which pasture owners can't shrink their range.",
+            value = rangeMinVal,
+            unit = "blocks",
+            rangeMin = PASTURE_RANGE_MIN,
+            rangeMax = PASTURE_RANGE_MAX,
+            defaultValue = PASTURE_RANGE_MIN
         )
         rowY += ROW_H + 10 + ROW_GAP
 
@@ -119,25 +135,38 @@ class AdminServerSettingsPanel(
         )
         rowY += ROW_H + 10 + ROW_GAP
 
-        // Below-pasture reach — how many blocks below the pasture Y any block-scanning
-        // job (Harvester, Gatherer, Irrigator, Supplier, ...) will look for work, and
-        // how far the Show-Radius wireframe extends downward. Small values keep mons
-        // out of caves under the base.
+        // Below-pasture reach MAX — owner-pickable upper bound.
         val belowReach = notlown.cobblebase.core.GeneralSettingsCache.belowPastureReachMax
             .let { if (it in BELOW_REACH_MIN..BELOW_REACH_MAX) it else BELOW_REACH_DEFAULT }
         renderStepperRow(
             context, mouseX, mouseY,
-            id = "belowReach",
+            id = "belowReachMax",
             rowY = rowY,
-            title = "Below-Pasture Reach",
-            description = "How far below the pasture every block-scanning job and the " +
-                "Show-Radius wireframe extend. Low = jobs stay near pasture-level, " +
-                "high = catches cliff/hillside work but risks cave-mining.",
+            title = "Below-Pasture Reach — Max",
+            description = "Upper cap on blocks below the pasture every block-scanning job scans " +
+                "and the Show-Radius wireframe extends downward.",
             value = belowReach,
             unit = "blocks",
             rangeMin = BELOW_REACH_MIN,
             rangeMax = BELOW_REACH_MAX,
             defaultValue = BELOW_REACH_DEFAULT
+        )
+        rowY += ROW_H + 10 + ROW_GAP
+
+        // Below-pasture reach MIN.
+        val belowMinVal = notlown.cobblebase.core.GeneralSettingsCache.belowPastureReachMin
+            .let { if (it in BELOW_REACH_MIN..BELOW_REACH_MAX) it else BELOW_REACH_MIN }
+        renderStepperRow(
+            context, mouseX, mouseY,
+            id = "belowReachMin",
+            rowY = rowY,
+            title = "Below-Pasture Reach — Min",
+            description = "Floor below which pasture owners can't reduce their downward reach.",
+            value = belowMinVal,
+            unit = "blocks",
+            rangeMin = BELOW_REACH_MIN,
+            rangeMax = BELOW_REACH_MAX,
+            defaultValue = BELOW_REACH_MIN
         )
         rowY += ROW_H + 10 + ROW_GAP
     }
@@ -293,9 +322,11 @@ class AdminServerSettingsPanel(
             val (bx, by, bw, bh) = box
             if (mouseX in bx.toDouble()..(bx + bw).toDouble() && mouseY in by.toDouble()..(by + bh).toDouble()) {
                 when (id) {
-                    "pastureRange" -> sendUpdate(pastureRangeMax = PASTURE_RANGE_DEFAULT)
+                    "pastureRangeMax" -> sendUpdate(pastureRangeMax = PASTURE_RANGE_DEFAULT)
+                    "pastureRangeMin" -> sendUpdate(pastureRangeMin = PASTURE_RANGE_MIN)
                     "workingCap" -> sendUpdate(workingCap = WORKING_CAP_DEFAULT)
-                    "belowReach" -> sendUpdate(belowReachMax = BELOW_REACH_DEFAULT)
+                    "belowReachMax" -> sendUpdate(belowReachMax = BELOW_REACH_DEFAULT)
+                    "belowReachMin" -> sendUpdate(belowReachMin = BELOW_REACH_MIN)
                 }
                 return true
             }
@@ -340,17 +371,25 @@ class AdminServerSettingsPanel(
     private fun setSliderFromMouse(id: String, mouseX: Double, trackX: Int, trackW: Int) {
         val frac = ((mouseX - trackX) / trackW.toDouble()).coerceIn(0.0, 1.0)
         when (id) {
-            "pastureRange" -> {
+            "pastureRangeMax" -> {
                 val newVal = (PASTURE_RANGE_MIN + frac * (PASTURE_RANGE_MAX - PASTURE_RANGE_MIN)).toInt()
                 sendUpdate(pastureRangeMax = newVal.coerceIn(PASTURE_RANGE_MIN, PASTURE_RANGE_MAX))
+            }
+            "pastureRangeMin" -> {
+                val newVal = (PASTURE_RANGE_MIN + frac * (PASTURE_RANGE_MAX - PASTURE_RANGE_MIN)).toInt()
+                sendUpdate(pastureRangeMin = newVal.coerceIn(PASTURE_RANGE_MIN, PASTURE_RANGE_MAX))
             }
             "workingCap" -> {
                 val newVal = (WORKING_CAP_MIN + frac * (WORKING_CAP_MAX - WORKING_CAP_MIN)).toInt()
                 sendUpdate(workingCap = newVal.coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX))
             }
-            "belowReach" -> {
+            "belowReachMax" -> {
                 val newVal = (BELOW_REACH_MIN + frac * (BELOW_REACH_MAX - BELOW_REACH_MIN)).toInt()
                 sendUpdate(belowReachMax = newVal.coerceIn(BELOW_REACH_MIN, BELOW_REACH_MAX))
+            }
+            "belowReachMin" -> {
+                val newVal = (BELOW_REACH_MIN + frac * (BELOW_REACH_MAX - BELOW_REACH_MIN)).toInt()
+                sendUpdate(belowReachMin = newVal.coerceIn(BELOW_REACH_MIN, BELOW_REACH_MAX))
             }
         }
     }
@@ -358,20 +397,30 @@ class AdminServerSettingsPanel(
     private fun applyDelta(id: String, delta: Int) {
         val cache = notlown.cobblebase.core.GeneralSettingsCache
         when (id) {
-            "pastureRange" -> {
+            "pastureRangeMax" -> {
                 val current = if (cache.pastureRangeMax in PASTURE_RANGE_MIN..PASTURE_RANGE_MAX) cache.pastureRangeMax else PASTURE_RANGE_DEFAULT
                 val newVal = (current + delta).coerceIn(PASTURE_RANGE_MIN, PASTURE_RANGE_MAX)
                 if (newVal != current) sendUpdate(pastureRangeMax = newVal)
+            }
+            "pastureRangeMin" -> {
+                val current = if (cache.pastureRangeMin in PASTURE_RANGE_MIN..PASTURE_RANGE_MAX) cache.pastureRangeMin else PASTURE_RANGE_MIN
+                val newVal = (current + delta).coerceIn(PASTURE_RANGE_MIN, PASTURE_RANGE_MAX)
+                if (newVal != current) sendUpdate(pastureRangeMin = newVal)
             }
             "workingCap" -> {
                 val current = cache.maxWorkingPokemonPerPasture.coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX)
                 val newVal = (current + delta).coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX)
                 if (newVal != current) sendUpdate(workingCap = newVal)
             }
-            "belowReach" -> {
+            "belowReachMax" -> {
                 val current = if (cache.belowPastureReachMax in BELOW_REACH_MIN..BELOW_REACH_MAX) cache.belowPastureReachMax else BELOW_REACH_DEFAULT
                 val newVal = (current + delta).coerceIn(BELOW_REACH_MIN, BELOW_REACH_MAX)
                 if (newVal != current) sendUpdate(belowReachMax = newVal)
+            }
+            "belowReachMin" -> {
+                val current = if (cache.belowPastureReachMin in BELOW_REACH_MIN..BELOW_REACH_MAX) cache.belowPastureReachMin else BELOW_REACH_MIN
+                val newVal = (current + delta).coerceIn(BELOW_REACH_MIN, BELOW_REACH_MAX)
+                if (newVal != current) sendUpdate(belowReachMin = newVal)
             }
         }
     }

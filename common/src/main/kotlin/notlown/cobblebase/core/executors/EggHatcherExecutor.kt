@@ -432,20 +432,37 @@ object EggHatcherExecutor : SkillExecutor {
      */
     fun cleanupStale(now: Long, world: net.minecraft.world.World? = null) {
         val stale = claims.entries.filter { (_, c) -> now - c.lastSeenTick > STALE_TTL_TICKS }
-        if (stale.isEmpty()) return
         if (world is ServerWorld) {
-            // Check every loaded world (the display can be in any dimension the player
-            // visited; we only have a reference to one of them here, but iterating the
-            // server's worlds catches the rest).
-            val worlds: Iterable<ServerWorld> = world.server?.worlds ?: listOf(world)
-            for ((_, c) in stale) {
-                if (c.displayEntityId < 0) continue
-                for (w in worlds) {
-                    val ent = w.getEntityById(c.displayEntityId) ?: continue
-                    try { ent.discard() } catch (_: Exception) {}
-                    break
+            // Stale-claim cleanup: discard the display for each timed-out claim.
+            if (stale.isNotEmpty()) {
+                val worlds: Iterable<ServerWorld> = world.server?.worlds ?: listOf(world)
+                for ((_, c) in stale) {
+                    if (c.displayEntityId < 0) continue
+                    for (w in worlds) {
+                        val ent = w.getEntityById(c.displayEntityId) ?: continue
+                        try { ent.discard() } catch (_: Exception) {}
+                        break
+                    }
                 }
             }
+
+            // Orphan-display sweep: iterate ItemDisplayEntities marked as ours and
+            // discard any whose entityId isn't referenced by an active claim. Catches
+            // floating eggs from crashed spawns / chunk-unload races / mid-session
+            // owner disconnects that survive between cleanup intervals.
+            val activeDisplayIds = claims.values.mapNotNullTo(mutableSetOf()) {
+                if (it.displayEntityId >= 0) it.displayEntityId else null
+            }
+            try {
+                for (entity in world.iterateEntities()) {
+                    if (entity !is net.minecraft.entity.decoration.DisplayEntity.ItemDisplayEntity) continue
+                    val name = entity.customName?.string ?: continue
+                    if (name != EGG_DISPLAY_MARKER) continue
+                    if (entity.id !in activeDisplayIds) {
+                        try { entity.discard() } catch (_: Exception) {}
+                    }
+                }
+            } catch (_: Exception) {}
         }
         claims.entries.removeAll { (_, c) -> now - c.lastSeenTick > STALE_TTL_TICKS }
     }

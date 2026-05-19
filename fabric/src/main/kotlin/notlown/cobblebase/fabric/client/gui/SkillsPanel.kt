@@ -157,14 +157,25 @@ class SkillsPanel(
             // the column reads as "off" without taking up text space.
             allButtons.add(SkillButtonData(pokemonId, null, "Zz", 0, "", autoX, rowY, currentAssignment == null))
 
-            // Skill buttons start after Auto column, all on a single row
+            // Skill buttons start after Auto column, all on a single row.
+            // Sort: proficiency DESC, then name ASC. Pre-sort gives every row the
+            // same order — previously the order was whatever the species_skills
+            // JSON happened to list, so Item Gatherer ended up at position 2 for
+            // one mon and position 5 for another.
+            val sortedSkills = availableSkills
+                .mapNotNull { entry ->
+                    val def = SkillRegistry.get(entry.skillId) ?: return@mapNotNull null
+                    if (BaseManager.isBuffExecutor(def.executor)) return@mapNotNull null
+                    if (!JobConfigOverrides.isEnabled(entry.skillId)) return@mapNotNull null
+                    Triple(entry, def, entry.proficiency)
+                }
+                .sortedWith(compareByDescending<Triple<notlown.cobblebase.core.SkillEntry, notlown.cobblebase.core.SkillDef, Int>> { it.third }
+                    .thenBy { it.second.name })
+
             var btnX = skillStartX
             val btnY = rowY
 
-            for (entry in availableSkills) {
-                val skillDef = SkillRegistry.get(entry.skillId) ?: continue
-                if (BaseManager.isBuffExecutor(skillDef.executor)) continue
-                if (!JobConfigOverrides.isEnabled(entry.skillId)) continue
+            for ((entry, skillDef, _) in sortedSkills) {
                 allButtons.add(SkillButtonData(
                     pokemonId, entry.skillId, skillDef.name, entry.proficiency,
                     skillDef.category, btnX, btnY, currentAssignment == entry.skillId
@@ -1101,11 +1112,10 @@ class SkillsPanel(
                 context.matrices.pop()
             }
 
-            // Name centers in the space RIGHT of the icon — Auto/Relax has no icon
-            // so it centers in the full chip width.
-            val textLeft = rx + if (!isAutoBtn) iconRenderW + 2 else 0
-            val textAreaW = bw - if (!isAutoBtn) iconRenderW + 2 else 0
-            val nameX = textLeft + (textAreaW - nameWidth) / 2
+            // Name centers in the FULL chip width — the icon sits BEHIND the text
+            // (drawn first) so text-on-icon overlap is intentional. Gives icons
+            // the "watermark behind label" feel instead of crowding the text.
+            val nameX = rx + (bw - nameWidth) / 2
 
             if (isJobActive) {
                 // Active: name top + stars bottom.
@@ -1124,9 +1134,11 @@ class SkillsPanel(
                         else -> 0x888888
                     }
                     val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
-                    val starX = textLeft + (textAreaW - starWidth) / 2
+                    val starX = rx + (bw - starWidth) / 2
+                    // Tighter to the name — was chipTop+9 (3-px gap). chipTop+8
+                    // packs them closer so the active chip reads as one block.
                     context.matrices.push()
-                    context.matrices.translate(starX.toFloat(), (chipTop + 9).toFloat(), 0f)
+                    context.matrices.translate(starX.toFloat(), (chipTop + 8).toFloat(), 0f)
                     context.matrices.scale(scale, scale, 1f)
                     context.drawText(textRenderer, stars, 0, 0, starColor, false)
                     context.matrices.pop()

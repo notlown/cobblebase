@@ -13,9 +13,11 @@ data class GeneralSettingsUpdateC2SPacket(
     val discordUrl: String,
     val discordEnabled: Boolean,
     val pokeWikiEnabled: Boolean,
-    val pastureRange: Int = 0,
+    val pastureRangeMax: Int = 0,
     val maxWorkingPokemonPerPasture: Int = 0,
-    val belowPastureReach: Int = 6
+    val belowPastureReachMax: Int = 6,
+    val pastureRangeMin: Int = 5,
+    val belowPastureReachMin: Int = 0
 ) : CustomPayload {
 
     companion object {
@@ -27,9 +29,11 @@ data class GeneralSettingsUpdateC2SPacket(
                     discordUrl = buf.readString(),
                     discordEnabled = buf.readBoolean(),
                     pokeWikiEnabled = buf.readBoolean(),
-                    pastureRange = buf.readVarInt(),
+                    pastureRangeMax = buf.readVarInt(),
                     maxWorkingPokemonPerPasture = buf.readVarInt(),
-                    belowPastureReach = buf.readVarInt()
+                    belowPastureReachMax = buf.readVarInt(),
+                    pastureRangeMin = buf.readVarInt(),
+                    belowPastureReachMin = buf.readVarInt()
                 )
             }
 
@@ -37,9 +41,11 @@ data class GeneralSettingsUpdateC2SPacket(
                 buf.writeString(packet.discordUrl)
                 buf.writeBoolean(packet.discordEnabled)
                 buf.writeBoolean(packet.pokeWikiEnabled)
-                buf.writeVarInt(packet.pastureRange)
+                buf.writeVarInt(packet.pastureRangeMax)
                 buf.writeVarInt(packet.maxWorkingPokemonPerPasture)
-                buf.writeVarInt(packet.belowPastureReach)
+                buf.writeVarInt(packet.belowPastureReachMax)
+                buf.writeVarInt(packet.pastureRangeMin)
+                buf.writeVarInt(packet.belowPastureReachMin)
             }
         }
     }

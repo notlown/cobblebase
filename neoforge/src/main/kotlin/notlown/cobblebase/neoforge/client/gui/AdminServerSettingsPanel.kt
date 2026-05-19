@@ -83,7 +83,7 @@ class AdminServerSettingsPanel(
 
         // Pasture range slider — now the global cap for every job's search radius
         // (see SkillRegistry.getEffectiveRadius).
-        val effectiveRange = notlown.cobblebase.core.GeneralSettingsCache.pastureRange
+        val effectiveRange = notlown.cobblebase.core.GeneralSettingsCache.pastureRangeMax
             .let { if (it in PASTURE_RANGE_MIN..PASTURE_RANGE_MAX) it else PASTURE_RANGE_DEFAULT }
         renderStepperRow(
             context, mouseX, mouseY,
@@ -123,7 +123,7 @@ class AdminServerSettingsPanel(
         // job (Harvester, Gatherer, Irrigator, Supplier, ...) will look for work, and
         // how far the Show-Radius wireframe extends downward. Small values keep mons
         // out of caves under the base.
-        val belowReach = notlown.cobblebase.core.GeneralSettingsCache.belowPastureReach
+        val belowReach = notlown.cobblebase.core.GeneralSettingsCache.belowPastureReachMax
             .let { if (it in BELOW_REACH_MIN..BELOW_REACH_MAX) it else BELOW_REACH_DEFAULT }
         renderStepperRow(
             context, mouseX, mouseY,
@@ -293,9 +293,9 @@ class AdminServerSettingsPanel(
             val (bx, by, bw, bh) = box
             if (mouseX in bx.toDouble()..(bx + bw).toDouble() && mouseY in by.toDouble()..(by + bh).toDouble()) {
                 when (id) {
-                    "pastureRange" -> sendUpdate(pastureRange = PASTURE_RANGE_DEFAULT)
+                    "pastureRange" -> sendUpdate(pastureRangeMax = PASTURE_RANGE_DEFAULT)
                     "workingCap" -> sendUpdate(workingCap = WORKING_CAP_DEFAULT)
-                    "belowReach" -> sendUpdate(belowReach = BELOW_REACH_DEFAULT)
+                    "belowReach" -> sendUpdate(belowReachMax = BELOW_REACH_DEFAULT)
                 }
                 return true
             }
@@ -342,7 +342,7 @@ class AdminServerSettingsPanel(
         when (id) {
             "pastureRange" -> {
                 val newVal = (PASTURE_RANGE_MIN + frac * (PASTURE_RANGE_MAX - PASTURE_RANGE_MIN)).toInt()
-                sendUpdate(pastureRange = newVal.coerceIn(PASTURE_RANGE_MIN, PASTURE_RANGE_MAX))
+                sendUpdate(pastureRangeMax = newVal.coerceIn(PASTURE_RANGE_MIN, PASTURE_RANGE_MAX))
             }
             "workingCap" -> {
                 val newVal = (WORKING_CAP_MIN + frac * (WORKING_CAP_MAX - WORKING_CAP_MIN)).toInt()
@@ -350,7 +350,7 @@ class AdminServerSettingsPanel(
             }
             "belowReach" -> {
                 val newVal = (BELOW_REACH_MIN + frac * (BELOW_REACH_MAX - BELOW_REACH_MIN)).toInt()
-                sendUpdate(belowReach = newVal.coerceIn(BELOW_REACH_MIN, BELOW_REACH_MAX))
+                sendUpdate(belowReachMax = newVal.coerceIn(BELOW_REACH_MIN, BELOW_REACH_MAX))
             }
         }
     }
@@ -359,9 +359,9 @@ class AdminServerSettingsPanel(
         val cache = notlown.cobblebase.core.GeneralSettingsCache
         when (id) {
             "pastureRange" -> {
-                val current = if (cache.pastureRange in PASTURE_RANGE_MIN..PASTURE_RANGE_MAX) cache.pastureRange else PASTURE_RANGE_DEFAULT
+                val current = if (cache.pastureRangeMax in PASTURE_RANGE_MIN..PASTURE_RANGE_MAX) cache.pastureRangeMax else PASTURE_RANGE_DEFAULT
                 val newVal = (current + delta).coerceIn(PASTURE_RANGE_MIN, PASTURE_RANGE_MAX)
-                if (newVal != current) sendUpdate(pastureRange = newVal)
+                if (newVal != current) sendUpdate(pastureRangeMax = newVal)
             }
             "workingCap" -> {
                 val current = cache.maxWorkingPokemonPerPasture.coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX)
@@ -369,9 +369,9 @@ class AdminServerSettingsPanel(
                 if (newVal != current) sendUpdate(workingCap = newVal)
             }
             "belowReach" -> {
-                val current = if (cache.belowPastureReach in BELOW_REACH_MIN..BELOW_REACH_MAX) cache.belowPastureReach else BELOW_REACH_DEFAULT
+                val current = if (cache.belowPastureReachMax in BELOW_REACH_MIN..BELOW_REACH_MAX) cache.belowPastureReachMax else BELOW_REACH_DEFAULT
                 val newVal = (current + delta).coerceIn(BELOW_REACH_MIN, BELOW_REACH_MAX)
-                if (newVal != current) sendUpdate(belowReach = newVal)
+                if (newVal != current) sendUpdate(belowReachMax = newVal)
             }
         }
     }
@@ -383,20 +383,26 @@ class AdminServerSettingsPanel(
      */
     private fun sendUpdate(
         pokeWiki: Boolean? = null,
-        pastureRange: Int? = null,
+        pastureRangeMax: Int? = null,
         workingCap: Int? = null,
-        belowReach: Int? = null,
+        belowReachMax: Int? = null,
+        pastureRangeMin: Int? = null,
+        belowReachMin: Int? = null,
     ) {
         val cache = notlown.cobblebase.core.GeneralSettingsCache
-        val currentBelowReach = if (cache.belowPastureReach in BELOW_REACH_MIN..BELOW_REACH_MAX) cache.belowPastureReach else BELOW_REACH_DEFAULT
+        val currentBelowMax = if (cache.belowPastureReachMax in BELOW_REACH_MIN..BELOW_REACH_MAX) cache.belowPastureReachMax else BELOW_REACH_DEFAULT
+        val currentRangeMin = if (cache.pastureRangeMin in PASTURE_RANGE_MIN..PASTURE_RANGE_MAX) cache.pastureRangeMin else PASTURE_RANGE_MIN
+        val currentBelowMin = if (cache.belowPastureReachMin in BELOW_REACH_MIN..BELOW_REACH_MAX) cache.belowPastureReachMin else BELOW_REACH_MIN
         net.neoforged.neoforge.network.PacketDistributor.sendToServer(
             notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket(
                 cache.discordUrl,
                 cache.discordEnabled,
                 pokeWiki ?: cache.pokeWikiEnabled,
-                pastureRange ?: cache.pastureRange,
+                pastureRangeMax ?: cache.pastureRangeMax,
                 workingCap ?: cache.maxWorkingPokemonPerPasture,
-                belowReach ?: currentBelowReach
+                belowReachMax ?: currentBelowMax,
+                pastureRangeMin ?: currentRangeMin,
+                belowReachMin ?: currentBelowMin
             )
         )
     }

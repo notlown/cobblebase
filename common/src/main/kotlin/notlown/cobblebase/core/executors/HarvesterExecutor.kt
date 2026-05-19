@@ -170,7 +170,8 @@ object HarvesterExecutor : SkillExecutor {
         // Use the server-wide pasture range (Admin → Server Settings) so the harvest scan
         // matches what the player set as the pasture's working radius. Falls through to the
         // skill's own JSON default when no server setting exists.
-        val pastureRadius = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius
+        // Per-pasture-aware lookup — owner-picked value within the admin [min, max] caps.
+        val pastureRadius = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius(origin)
         // Debug: prove the scan really uses the admin-set radius. Logs once per scan
         // cycle per Pokemon (SEARCH_INTERVAL_TICKS apart so it's not spammy).
         Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} scan @${origin.toShortString()} radius=$pastureRadius")
@@ -206,7 +207,7 @@ object HarvesterExecutor : SkillExecutor {
         // Admin-configurable downward scan buffer (Admin → Server Settings).
         // Small values prevent mons from trying to dig into caves under the base;
         // larger values let them reach cliff-edge and hillside harvestables.
-        val yDown = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.belowPastureReach)
+        val yDown = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.belowPastureReach(origin))
         for (x in -radius..radius) {
             // Y range: full `radius` upward (tall berry bushes, hanging apricorns)
             // but only DOWNWARD_SCAN_BUFFER downward — enough for cliff edges and
@@ -259,7 +260,7 @@ object HarvesterExecutor : SkillExecutor {
         // Admin-configurable downward scan buffer (Admin → Server Settings).
         // Small values prevent mons from trying to dig into caves under the base;
         // larger values let them reach cliff-edge and hillside harvestables.
-        val yDown = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.belowPastureReach)
+        val yDown = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.belowPastureReach(origin))
         for (x in -radius..radius) {
             for (y in -yDown..radius) {
                 for (z in -radius..radius) {

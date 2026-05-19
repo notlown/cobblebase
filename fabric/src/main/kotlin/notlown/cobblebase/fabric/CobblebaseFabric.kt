@@ -250,22 +250,70 @@ object CobblebaseFabric : ModInitializer {
             context.server().execute {
                 val player = context.player()
                 if (!player.hasPermissionLevel(2)) return@execute
+                val rangeMin = packet.pastureRangeMin.coerceIn(5, 30)
+                val rangeMax = packet.pastureRangeMax.coerceAtLeast(rangeMin).coerceAtMost(30)
+                val belowMin = packet.belowPastureReachMin.coerceIn(0, 30)
+                val belowMax = packet.belowPastureReachMax.coerceAtLeast(belowMin).coerceAtMost(30)
                 val newSettings = notlown.cobblebase.core.GeneralSettings.Settings(
                     discordUrl = packet.discordUrl,
                     discordEnabled = packet.discordEnabled,
                     pokeWikiEnabled = packet.pokeWikiEnabled,
-                    pastureRange = packet.pastureRange.coerceIn(5, 30),
+                    pastureRangeMax = rangeMax,
                     maxWorkingPokemonPerPasture = packet.maxWorkingPokemonPerPasture.coerceIn(0, 64),
-                    belowPastureReach = packet.belowPastureReach.coerceIn(0, 30)
+                    belowPastureReachMax = belowMax,
+                    pastureRangeMin = rangeMin,
+                    belowPastureReachMin = belowMin
                 )
                 notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
                 notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
+                // Re-clamp every per-pasture override to the (possibly narrower) new caps.
+                notlown.cobblebase.core.PastureSettings.clampToAdminCaps(rangeMin, rangeMax, belowMin, belowMax)
+                notlown.cobblebase.core.PastureSettings.save(player.serverWorld)
                 for (p in player.server.playerManager.playerList) {
                     ServerPlayNetworking.send(p, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                         newSettings.discordUrl, newSettings.discordEnabled, newSettings.pokeWikiEnabled,
-                        newSettings.pastureRange, newSettings.maxWorkingPokemonPerPasture,
-                        newSettings.belowPastureReach
+                        newSettings.pastureRangeMax, newSettings.maxWorkingPokemonPerPasture,
+                        newSettings.belowPastureReachMax,
+                        newSettings.pastureRangeMin, newSettings.belowPastureReachMin
                     ))
+                    // Re-sync the per-pasture overrides too (in case any were clamped).
+                    val snap = notlown.cobblebase.core.PastureSettings.snapshot()
+                        .mapValues { (_, e) -> intArrayOf(e.range ?: -1, e.belowReach ?: -1, e.access.ordinal) }
+                    ServerPlayNetworking.send(p, notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket(snap))
+                }
+            }
+        }
+
+        // Per-pasture override packets (range/below-reach/access).
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket.CODEC
+        )
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.PastureSettingsUpdateC2SPacket.ID,
+            notlown.cobblebase.core.net.PastureSettingsUpdateC2SPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.PastureSettingsUpdateC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                val player = context.player()
+                // Ownership gate — only the pasture's Cobblemon owner or an OP can edit.
+                if (!notlown.cobblebase.core.BaseManager.canEditPasture(player, packet.pasturePos)) return@execute
+                // Clamp to current admin caps.
+                val rangeMin = notlown.cobblebase.core.CobblebaseConfig.pastureRangeMin
+                val rangeMax = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius
+                val belowMin = notlown.cobblebase.core.CobblebaseConfig.belowPastureReachMin
+                val belowMax = notlown.cobblebase.core.CobblebaseConfig.belowPastureReachMax
+                val rangeOverride = if (packet.range < 0) null else packet.range.coerceIn(rangeMin, rangeMax)
+                val belowOverride = if (packet.belowReach < 0) null else packet.belowReach.coerceIn(belowMin, belowMax)
+                val access = notlown.cobblebase.core.PastureSettings.AccessMode.values()
+                    .getOrElse(packet.access) { notlown.cobblebase.core.PastureSettings.AccessMode.OWNER_ONLY }
+                notlown.cobblebase.core.PastureSettings.set(packet.pasturePos, rangeOverride, belowOverride, access)
+                notlown.cobblebase.core.PastureSettings.save(player.serverWorld)
+                // Broadcast new snapshot so everyone sees the right wireframe / UI state.
+                val snap = notlown.cobblebase.core.PastureSettings.snapshot()
+                    .mapValues { (_, e) -> intArrayOf(e.range ?: -1, e.belowReach ?: -1, e.access.ordinal) }
+                for (p in player.server.playerManager.playerList) {
+                    ServerPlayNetworking.send(p, notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket(snap))
                 }
             }
         }
@@ -508,8 +556,13 @@ object CobblebaseFabric : ModInitializer {
             val s = notlown.cobblebase.core.GeneralSettings.getSettings()
             ServerPlayNetworking.send(handler.player, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                 s.discordUrl, s.discordEnabled, s.pokeWikiEnabled,
-                s.pastureRange, s.maxWorkingPokemonPerPasture, s.belowPastureReach
+                s.pastureRangeMax, s.maxWorkingPokemonPerPasture, s.belowPastureReachMax,
+                s.pastureRangeMin, s.belowPastureReachMin
             ))
+            // Per-pasture overrides snapshot.
+            val pSnap = notlown.cobblebase.core.PastureSettings.snapshot()
+                .mapValues { (_, e) -> intArrayOf(e.range ?: -1, e.belowReach ?: -1, e.access.ordinal) }
+            ServerPlayNetworking.send(handler.player, notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket(pSnap))
             // Sync all species skill overrides so the client's Pasture Skills
             // tab sees the admin-set skill set instead of the bundled default.
             val overrideSync = notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket(
@@ -543,6 +596,7 @@ object CobblebaseFabric : ModInitializer {
             notlown.cobblebase.core.ProducerOverrides.load(world)
             notlown.cobblebase.core.WorkshopManager.load(world)
             notlown.cobblebase.core.GeneralSettings.load(world)
+            notlown.cobblebase.core.PastureSettings.load(world)
             notlown.cobblebase.core.LootOverrides.load(world)
             notlown.cobblebase.core.RecipeOverrides.load(world)
             // Sweep orphan egg ItemDisplays — survived across restarts, no in-memory

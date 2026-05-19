@@ -24,11 +24,16 @@ object GeneralSettings {
          */
         var pokeWikiEnabled: Boolean = true,
         /**
-         * Server-wide pasture range — the radius (in blocks) within which Pokemon scan for
-         * work targets and the pasture-owned area extends. Overrides the local cloth-config
-         * `jobSearchRadius` value when running on a dedicated server. Bounded [5, 30].
+         * Admin **maximum** pasture range. Each pasture owner may pick any value in
+         * [pastureRangeMin, pastureRangeMax] via the Base Settings modal; unset
+         * pastures default to the max. Bounded [5, 30].
+         *
+         * Renamed from `pastureRange` for clarity once per-pasture overrides
+         * landed — the single global value is now the *cap*, not the value.
          */
-        var pastureRange: Int = 10,
+        var pastureRangeMax: Int = 10,
+        /** Admin **minimum** pasture range — owners can't pick below this. Bounded [5, 30]. */
+        var pastureRangeMin: Int = 5,
         /**
          * Max number of Pokemon per pasture that may actively work simultaneously.
          * "Working" means a Pokemon with a non-null job assignment; Relax mons (and
@@ -47,16 +52,13 @@ object GeneralSettings {
          */
         var maxWorkingPokemonPerPasture: Int = 0,
         /**
-         * How far BELOW the pasture Y the Harvester scans for ripe crops and the
-         * Show-Radius wireframe extends downward. Smaller = safer (mons won't try
-         * to dig into caves under the base); larger = catches harvestables on
-         * cliffs and stair gardens that grow below pasture level.
-         *
-         * Bounded [0, 30]. 0 = pasture-level-and-above only (original behavior).
-         * 6 (default) covers typical surface variation — stairs, small cliffs,
-         * hillside trees — without reaching cave systems.
+         * Admin **maximum** below-pasture reach — pasture owners may pick any
+         * value in [belowPastureReachMin, belowPastureReachMax]; unset pastures
+         * default to the max. Bounded [0, 30].
          */
-        var belowPastureReach: Int = 6
+        var belowPastureReachMax: Int = 6,
+        /** Admin **minimum** below-pasture reach. Bounded [0, 30]. */
+        var belowPastureReachMin: Int = 0
     )
 
     private var settings = Settings()

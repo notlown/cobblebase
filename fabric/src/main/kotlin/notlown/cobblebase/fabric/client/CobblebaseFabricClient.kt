@@ -111,9 +111,16 @@ object CobblebaseFabricClient : ClientModInitializer {
             context.client().execute {
                 notlown.cobblebase.core.GeneralSettingsCache.update(
                     packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled,
-                    packet.pastureRange, packet.maxWorkingPokemonPerPasture,
-                    packet.belowPastureReach
+                    packet.pastureRangeMax, packet.maxWorkingPokemonPerPasture,
+                    packet.belowPastureReachMax,
+                    packet.pastureRangeMin, packet.belowPastureReachMin
                 )
+            }
+        }
+        // Per-pasture override sync — full replace.
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.core.PastureSettingsCache.replaceAll(packet.entries)
             }
         }
 

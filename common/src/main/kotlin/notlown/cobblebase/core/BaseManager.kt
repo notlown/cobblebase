@@ -324,6 +324,23 @@ object BaseManager {
 
     fun getAssignment(pokemonId: UUID): String? = assignments[pokemonId]
 
+    /**
+     * Returns true if [player] is permitted to write changes to the pasture at
+     * [pasturePos]. Either:
+     *   - the player is the pasture's recorded owner (Cobblemon's ownerId)
+     *   - OR the player has OP permission (level 2)
+     * Used by every C2S packet that mutates per-pasture state.
+     */
+    fun canEditPasture(
+        player: net.minecraft.server.network.ServerPlayerEntity,
+        pasturePos: BlockPos
+    ): Boolean {
+        if (player.hasPermissionLevel(2)) return true
+        val pasture = player.serverWorld.getBlockEntity(pasturePos)
+                as? com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity ?: return false
+        return pasture.ownerId == player.uuid
+    }
+
     /** Check if a Pokemon is assigned as a Craftsman supplier. */
     /**
      * Returns true if any Pokemon tethered to [pastureOrigin] has the Craftsman skill assigned.

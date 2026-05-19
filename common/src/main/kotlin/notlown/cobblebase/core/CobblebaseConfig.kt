@@ -14,29 +14,83 @@ object CobblebaseConfig {
     val devMode = false // Dev mode removed from settings
     /**
      * Job search radius. Source resolution:
-     *   1. Server-side `GeneralSettings.pastureRange` (admin-configured, persisted per-world).
+     *   1. Server-side `GeneralSettings.pastureRangeMax` (admin-configured, persisted per-world).
      *      Wins on dedicated servers + integrated server with admin-set value.
-     *   2. Client-side `GeneralSettingsCache.pastureRange` synced from the server.
+     *   2. Client-side `GeneralSettingsCache.pastureRangeMax` synced from the server.
      *      Wins on multiplayer clients.
      *   3. Local cloth-config `holder.general.jobSearchRadius` as the final fallback.
      */
+    /**
+     * Admin **maximum** pasture range. Per-pasture overrides may pick a lower
+     * value via the Base Settings modal; use [jobSearchRadius] with a pasture
+     * origin to get the effective per-pasture value.
+     */
     val jobSearchRadius: Int get() {
-        val server = try { GeneralSettings.getSettings().pastureRange } catch (_: Throwable) { 0 }
+        val server = try { GeneralSettings.getSettings().pastureRangeMax } catch (_: Throwable) { 0 }
         if (server in 5..30) return server
-        val cache = GeneralSettingsCache.pastureRange
+        val cache = GeneralSettingsCache.pastureRangeMax
         if (cache in 5..30) return cache
         return holder.general.jobSearchRadius
     }
+
+    /** Admin minimum pasture range (= the floor below which owners can't pick). */
+    val pastureRangeMin: Int get() {
+        val server = try { GeneralSettings.getSettings().pastureRangeMin } catch (_: Throwable) { 0 }
+        if (server in 5..30) return server
+        val cache = GeneralSettingsCache.pastureRangeMin
+        if (cache in 5..30) return cache
+        return 5
+    }
+
     /**
-     * How far below the pasture Y the Harvester scans / the wireframe extends
-     * downward. Resolved server → client-cache → default 6. Bounded [0, 30].
+     * Pasture-aware pasture range: per-pasture override clamped to the admin
+     * [min, max] cap when one exists, otherwise the admin max. Block-scanning
+     * executors and RadiusRenderer pass the pasture origin so each pasture uses
+     * its owner-picked value.
      */
-    val belowPastureReach: Int get() {
-        val server = try { GeneralSettings.getSettings().belowPastureReach } catch (_: Throwable) { -1 }
+    fun jobSearchRadius(pasturePos: net.minecraft.util.math.BlockPos?): Int {
+        val maxV = jobSearchRadius
+        if (pasturePos == null) return maxV
+        val minV = pastureRangeMin
+        val override = try {
+            PastureSettings.get(pasturePos)?.range
+        } catch (_: Throwable) { null } ?: PastureSettingsCache.getRange(pasturePos)
+        return override?.coerceIn(minV, maxV) ?: maxV
+    }
+
+    /**
+     * Admin **maximum** below-pasture reach. Resolved server → client-cache →
+     * default 6. Bounded [0, 30].
+     */
+    val belowPastureReachMax: Int get() {
+        val server = try { GeneralSettings.getSettings().belowPastureReachMax } catch (_: Throwable) { -1 }
         if (server in 0..30) return server
-        val cache = GeneralSettingsCache.belowPastureReach
+        val cache = GeneralSettingsCache.belowPastureReachMax
         if (cache in 0..30) return cache
         return 6
+    }
+
+    /** Admin minimum below-pasture reach. */
+    val belowPastureReachMin: Int get() {
+        val server = try { GeneralSettings.getSettings().belowPastureReachMin } catch (_: Throwable) { -1 }
+        if (server in 0..30) return server
+        val cache = GeneralSettingsCache.belowPastureReachMin
+        if (cache in 0..30) return cache
+        return 0
+    }
+
+    /**
+     * Pasture-aware below-reach: per-pasture override clamped to [min, max],
+     * or the admin max if no override is set.
+     */
+    fun belowPastureReach(pasturePos: net.minecraft.util.math.BlockPos?): Int {
+        val maxV = belowPastureReachMax
+        if (pasturePos == null) return maxV
+        val minV = belowPastureReachMin
+        val override = try {
+            PastureSettings.get(pasturePos)?.belowReach
+        } catch (_: Throwable) { null } ?: PastureSettingsCache.getBelowReach(pasturePos)
+        return override?.coerceIn(minV, maxV) ?: maxV
     }
     val enableSafetyTeleport get() = holder.general.enableSafetyTeleport
     val safetyTeleportDistance get() = holder.general.safetyTeleportDistance

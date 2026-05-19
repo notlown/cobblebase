@@ -452,8 +452,9 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             context.enqueueWork {
                 notlown.cobblebase.core.GeneralSettingsCache.update(
                     packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled,
-                    packet.pastureRange, packet.maxWorkingPokemonPerPasture,
-                    packet.belowPastureReach
+                    packet.pastureRangeMax, packet.maxWorkingPokemonPerPasture,
+                    packet.belowPastureReachMax,
+                    packet.pastureRangeMin, packet.belowPastureReachMin
                 )
             }
         }
@@ -466,26 +467,79 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             context.enqueueWork {
                 val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
                 if (!player.hasPermissionLevel(2)) return@enqueueWork
+                // Clamp min ≤ max so admins can't paint themselves into a corner.
+                val rangeMin = packet.pastureRangeMin.coerceIn(5, 30)
+                val rangeMax = packet.pastureRangeMax.coerceAtLeast(rangeMin).coerceAtMost(30)
+                val belowMin = packet.belowPastureReachMin.coerceIn(0, 30)
+                val belowMax = packet.belowPastureReachMax.coerceAtLeast(belowMin).coerceAtMost(30)
                 val newSettings = notlown.cobblebase.core.GeneralSettings.Settings(
                     discordUrl = packet.discordUrl,
                     discordEnabled = packet.discordEnabled,
                     pokeWikiEnabled = packet.pokeWikiEnabled,
-                    pastureRange = packet.pastureRange.coerceIn(5, 30),
+                    pastureRangeMax = rangeMax,
                     maxWorkingPokemonPerPasture = packet.maxWorkingPokemonPerPasture.coerceIn(0, 64),
-                    belowPastureReach = packet.belowPastureReach.coerceIn(0, 30)
+                    belowPastureReachMax = belowMax,
+                    pastureRangeMin = rangeMin,
+                    belowPastureReachMin = belowMin
                 )
                 notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
                 notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
+                // Re-clamp every per-pasture override to the (possibly narrower) new caps.
+                notlown.cobblebase.core.PastureSettings.clampToAdminCaps(rangeMin, rangeMax, belowMin, belowMax)
+                notlown.cobblebase.core.PastureSettings.save(player.serverWorld)
                 val syncPacket = notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                     newSettings.discordUrl, newSettings.discordEnabled, newSettings.pokeWikiEnabled,
-                    newSettings.pastureRange, newSettings.maxWorkingPokemonPerPasture,
-                    newSettings.belowPastureReach
+                    newSettings.pastureRangeMax, newSettings.maxWorkingPokemonPerPasture,
+                    newSettings.belowPastureReachMax,
+                    newSettings.pastureRangeMin, newSettings.belowPastureReachMin
                 )
                 for (p in player.server.playerManager.playerList) {
                     net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, syncPacket)
+                    val pSnap = notlown.cobblebase.core.PastureSettings.snapshot()
+                        .mapValues { (_, e) -> intArrayOf(e.range ?: -1, e.belowReach ?: -1, e.access.ordinal) }
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+                        p, notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket(pSnap)
+                    )
                 }
             }
         }
+
+        // Per-pasture override packets (range/below-reach/access).
+        registrar.playToClient(
+            notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.core.PastureSettingsCache.replaceAll(packet.entries)
+            }
+        }
+        registrar.playToServer(
+            notlown.cobblebase.core.net.PastureSettingsUpdateC2SPacket.ID,
+            notlown.cobblebase.core.net.PastureSettingsUpdateC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!notlown.cobblebase.core.BaseManager.canEditPasture(player, packet.pasturePos)) return@enqueueWork
+                val rangeMin = notlown.cobblebase.core.CobblebaseConfig.pastureRangeMin
+                val rangeMax = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius
+                val belowMin = notlown.cobblebase.core.CobblebaseConfig.belowPastureReachMin
+                val belowMax = notlown.cobblebase.core.CobblebaseConfig.belowPastureReachMax
+                val rangeOverride = if (packet.range < 0) null else packet.range.coerceIn(rangeMin, rangeMax)
+                val belowOverride = if (packet.belowReach < 0) null else packet.belowReach.coerceIn(belowMin, belowMax)
+                val access = notlown.cobblebase.core.PastureSettings.AccessMode.values()
+                    .getOrElse(packet.access) { notlown.cobblebase.core.PastureSettings.AccessMode.OWNER_ONLY }
+                notlown.cobblebase.core.PastureSettings.set(packet.pasturePos, rangeOverride, belowOverride, access)
+                notlown.cobblebase.core.PastureSettings.save(player.serverWorld)
+                val snap = notlown.cobblebase.core.PastureSettings.snapshot()
+                    .mapValues { (_, e) -> intArrayOf(e.range ?: -1, e.belowReach ?: -1, e.access.ordinal) }
+                for (p in player.server.playerManager.playerList) {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+                        p, notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket(snap)
+                    )
+                }
+            }
+        }
+
         // --- Workshop packets ---
 
         // C2S: Request recipe list + workshop state
@@ -655,8 +709,16 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             player,
             notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                 s.discordUrl, s.discordEnabled, s.pokeWikiEnabled,
-                s.pastureRange, s.maxWorkingPokemonPerPasture, s.belowPastureReach
+                s.pastureRangeMax, s.maxWorkingPokemonPerPasture, s.belowPastureReachMax,
+                s.pastureRangeMin, s.belowPastureReachMin
             )
+        )
+        // Sync per-pasture overrides so the client renders the right wireframe + UI.
+        val pastureSnap = notlown.cobblebase.core.PastureSettings.snapshot()
+            .mapValues { (_, e) -> intArrayOf(e.range ?: -1, e.belowReach ?: -1, e.access.ordinal) }
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+            player,
+            notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket(pastureSnap)
         )
         // Sync all species skill overrides so the Pasture Skills tab sees
         // the admin-set skill set instead of the bundled default.
@@ -695,6 +757,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         notlown.cobblebase.core.ProducerOverrides.load(world)
         notlown.cobblebase.core.WorkshopManager.load(world)
         notlown.cobblebase.core.GeneralSettings.load(world)
+        notlown.cobblebase.core.PastureSettings.load(world)
         notlown.cobblebase.core.LootOverrides.load(world)
         notlown.cobblebase.core.RecipeOverrides.load(world)
         // Sweep orphan egg ItemDisplays — survived across restarts, no in-memory claim

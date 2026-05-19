@@ -111,7 +111,9 @@ class SkillsPanel(
         val autoAssignH = 12
         val autoAssignX = panelX + panelW - PANEL_PADDING - autoAssignW
         val autoAssignY = panelY + SUBTAB_H + HEADER_HEIGHT + PANEL_PADDING - 14
-        addWidget.apply(ButtonWidget.builder(Text.literal("§6Auto-Assign Best")) {
+        // Vanilla button text doesn't scale, so a long label scrolls (marquee) when
+        // it overflows. Shorter label fits the 80-px button without scrolling.
+        addWidget.apply(ButtonWidget.builder(Text.literal("§6Auto-Assign")) {
             autoAssignAll()
         }.dimensions(autoAssignX, autoAssignY, autoAssignW, autoAssignH).build())
 
@@ -151,7 +153,9 @@ class SkillsPanel(
             val rowY = contentY + cumulativeY
 
             // Auto/Relax in its own column (small Off-toggle, not a "Skill")
-            allButtons.add(SkillButtonData(pokemonId, null, "Relax", 0, "", autoX, rowY, currentAssignment == null))
+            // Relax chip renders as a "Zz" sleep icon instead of the word "Relax" so
+            // the column reads as "off" without taking up text space.
+            allButtons.add(SkillButtonData(pokemonId, null, "Zz", 0, "", autoX, rowY, currentAssignment == null))
 
             // Skill buttons start after Auto column, all on a single row
             var btnX = skillStartX

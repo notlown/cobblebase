@@ -42,22 +42,24 @@ object SkillRegistry {
     }
 
     /**
-     * Returns the effective search radius for a skill — capped at the admin-set
-     * pasture range. Lookup order:
-     *   1. Per-job admin override (if set on this specific skill)
-     *   2. Skill JSON `searchRadius`
-     *   3. Hard-capped by [CobblebaseConfig.jobSearchRadius] so the admin's
-     *      "Pasture Range" stepper acts as a global cap for every executor.
+     * The effective search radius for a job.
      *
-     * Every executor should call this (or [SkillDef.effectiveRadius]) instead of
-     * reading `skill.searchRadius` directly — that's the only way the global cap
-     * actually applies.
+     * - **Active jobs** (Mining, Fishing, Egg Hatcher, Craftsman, Healer, …) →
+     *   ALWAYS the admin's "Pasture Range" stepper. Per-skill JSON values are
+     *   ignored; admins control the one number and every executor obeys it.
+     * - **Auras / passive buffs** (Speed Boost, Strength Boost, Growth Aura,
+     *   Aura Boost, …) → use the per-skill JSON radius (or admin per-skill
+     *   override) so balance-tuned aura reach isn't broken by the global cap.
+     *
+     * Unknown skill ids fall through to the admin radius.
      */
     fun getEffectiveRadius(skillId: String): Int {
-        val skill = skills[skillId] ?: return 10
-        val perSkill = JobConfigOverrides.getEffectiveRadius(skill)
-        val cap = CobblebaseConfig.jobSearchRadius
-        return minOf(perSkill, cap)
+        val skill = skills[skillId] ?: return CobblebaseConfig.jobSearchRadius
+        return if (BaseManager.isBuffExecutor(skill.executor)) {
+            JobConfigOverrides.getEffectiveRadius(skill)
+        } else {
+            CobblebaseConfig.jobSearchRadius
+        }
     }
 
     /**

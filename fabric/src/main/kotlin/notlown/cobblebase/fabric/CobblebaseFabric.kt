@@ -255,14 +255,16 @@ object CobblebaseFabric : ModInitializer {
                     discordEnabled = packet.discordEnabled,
                     pokeWikiEnabled = packet.pokeWikiEnabled,
                     pastureRange = packet.pastureRange.coerceIn(5, 30),
-                    maxWorkingPokemonPerPasture = packet.maxWorkingPokemonPerPasture.coerceIn(0, 64)
+                    maxWorkingPokemonPerPasture = packet.maxWorkingPokemonPerPasture.coerceIn(0, 64),
+                    harvesterDownwardLimit = packet.harvesterDownwardLimit.coerceIn(0, 30)
                 )
                 notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
                 notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
                 for (p in player.server.playerManager.playerList) {
                     ServerPlayNetworking.send(p, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                         newSettings.discordUrl, newSettings.discordEnabled, newSettings.pokeWikiEnabled,
-                        newSettings.pastureRange, newSettings.maxWorkingPokemonPerPasture
+                        newSettings.pastureRange, newSettings.maxWorkingPokemonPerPasture,
+                        newSettings.harvesterDownwardLimit
                     ))
                 }
             }
@@ -506,7 +508,7 @@ object CobblebaseFabric : ModInitializer {
             val s = notlown.cobblebase.core.GeneralSettings.getSettings()
             ServerPlayNetworking.send(handler.player, notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                 s.discordUrl, s.discordEnabled, s.pokeWikiEnabled,
-                s.pastureRange, s.maxWorkingPokemonPerPasture
+                s.pastureRange, s.maxWorkingPokemonPerPasture, s.harvesterDownwardLimit
             ))
             // Sync all species skill overrides so the client's Pasture Skills
             // tab sees the admin-set skill set instead of the bundled default.

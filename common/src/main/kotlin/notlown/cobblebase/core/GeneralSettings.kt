@@ -45,7 +45,18 @@ object GeneralSettings {
          * an explicit cap. Sane upper bound 64 — well above Cobblemon's stock 16-slot
          * pasture but leaves room for modded larger pastures.
          */
-        var maxWorkingPokemonPerPasture: Int = 0
+        var maxWorkingPokemonPerPasture: Int = 0,
+        /**
+         * How far BELOW the pasture Y the Harvester scans for ripe crops and the
+         * Show-Radius wireframe extends downward. Smaller = safer (mons won't try
+         * to dig into caves under the base); larger = catches harvestables on
+         * cliffs and stair gardens that grow below pasture level.
+         *
+         * Bounded [0, 30]. 0 = pasture-level-and-above only (original behavior).
+         * 6 (default) covers typical surface variation — stairs, small cliffs,
+         * hillside trees — without reaching cave systems.
+         */
+        var harvesterDownwardLimit: Int = 6
     )
 
     private var settings = Settings()

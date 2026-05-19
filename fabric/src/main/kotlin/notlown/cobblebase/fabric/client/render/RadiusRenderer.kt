@@ -77,10 +77,14 @@ object RadiusRenderer {
         val a = 0.9f
 
         // Re-read every frame so admin slider changes update all boxes instantly.
+        // X/Z use the full pasture range, Y is asymmetric: full range upward,
+        // but only `harvesterDownwardLimit` downward — matches the Harvester's
+        // actual scan and signals to the player "mons won't dig under the base."
         val radius = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius.coerceAtLeast(1)
+        val downReach = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.harvesterDownwardLimit)
         for (pos in active) {
             val minX = (pos.x - radius).toDouble()
-            val minY = (pos.y - radius).toDouble()
+            val minY = (pos.y - downReach).toDouble()
             val minZ = (pos.z - radius).toDouble()
             val maxX = (pos.x + radius + 1).toDouble()
             val maxY = (pos.y + radius + 1).toDouble()

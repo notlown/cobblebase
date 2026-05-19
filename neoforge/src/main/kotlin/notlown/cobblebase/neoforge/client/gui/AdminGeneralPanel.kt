@@ -69,11 +69,13 @@ class AdminGeneralPanel(
     private fun saveSettings() {
         val url = discordUrlField?.text ?: return
         // PokeWiki toggle is edited in AdminWikiPanel; keep its current value when saving here.
+        val cachedDownLimit = notlown.cobblebase.core.GeneralSettingsCache.harvesterDownwardLimit
         PacketDistributor.sendToServer(GeneralSettingsUpdateC2SPacket(
             url, discordEnabled,
             notlown.cobblebase.core.GeneralSettingsCache.pokeWikiEnabled,
             notlown.cobblebase.core.GeneralSettingsCache.pastureRange,
-            notlown.cobblebase.core.GeneralSettingsCache.maxWorkingPokemonPerPasture
+            notlown.cobblebase.core.GeneralSettingsCache.maxWorkingPokemonPerPasture,
+            if (cachedDownLimit in 0..30) cachedDownLimit else 6
         ))
         dirty = false
     }

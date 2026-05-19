@@ -27,6 +27,17 @@ object CobblebaseConfig {
         if (cache in 5..30) return cache
         return holder.general.jobSearchRadius
     }
+    /**
+     * How far below the pasture Y the Harvester scans / the wireframe extends
+     * downward. Resolved server → client-cache → default 6. Bounded [0, 30].
+     */
+    val harvesterDownwardLimit: Int get() {
+        val server = try { GeneralSettings.getSettings().harvesterDownwardLimit } catch (_: Throwable) { -1 }
+        if (server in 0..30) return server
+        val cache = GeneralSettingsCache.harvesterDownwardLimit
+        if (cache in 0..30) return cache
+        return 6
+    }
     val enableSafetyTeleport get() = holder.general.enableSafetyTeleport
     val safetyTeleportDistance get() = holder.general.safetyTeleportDistance
     val enableUnstickTeleport get() = holder.general.enableUnstickTeleport

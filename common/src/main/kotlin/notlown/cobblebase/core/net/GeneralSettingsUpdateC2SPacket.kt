@@ -14,7 +14,8 @@ data class GeneralSettingsUpdateC2SPacket(
     val discordEnabled: Boolean,
     val pokeWikiEnabled: Boolean,
     val pastureRange: Int = 0,
-    val maxWorkingPokemonPerPasture: Int = 0
+    val maxWorkingPokemonPerPasture: Int = 0,
+    val harvesterDownwardLimit: Int = 6
 ) : CustomPayload {
 
     companion object {
@@ -27,7 +28,8 @@ data class GeneralSettingsUpdateC2SPacket(
                     discordEnabled = buf.readBoolean(),
                     pokeWikiEnabled = buf.readBoolean(),
                     pastureRange = buf.readVarInt(),
-                    maxWorkingPokemonPerPasture = buf.readVarInt()
+                    maxWorkingPokemonPerPasture = buf.readVarInt(),
+                    harvesterDownwardLimit = buf.readVarInt()
                 )
             }
 
@@ -37,6 +39,7 @@ data class GeneralSettingsUpdateC2SPacket(
                 buf.writeBoolean(packet.pokeWikiEnabled)
                 buf.writeVarInt(packet.pastureRange)
                 buf.writeVarInt(packet.maxWorkingPokemonPerPasture)
+                buf.writeVarInt(packet.harvesterDownwardLimit)
             }
         }
     }

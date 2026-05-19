@@ -44,6 +44,11 @@ class AdminServerSettingsPanel(
      */
     private val WORKING_CAP_MIN = 0
     private val WORKING_CAP_MAX = 64
+    /** Harvester downward-scan bounds. 0 = pasture-level-and-above only.
+     *  6 (default) covers cliff/stair scenarios without reaching cave systems. */
+    private val DOWN_LIMIT_MIN = 0
+    private val DOWN_LIMIT_MAX = 30
+    private val DOWN_LIMIT_DEFAULT = 6
 
     fun init(addWidget: Function<ClickableWidget, ClickableWidget>) {
         // No widgets yet — toggles are custom-drawn for full layout control.
@@ -111,6 +116,26 @@ class AdminServerSettingsPanel(
             rangeMin = WORKING_CAP_MIN,
             rangeMax = WORKING_CAP_MAX,
             defaultValue = WORKING_CAP_DEFAULT
+        )
+        rowY += ROW_H + 10 + ROW_GAP
+
+        // Harvester downward-scan limit — how far below the pasture Y the Harvester
+        // and the wireframe reach. Small values keep mons out of caves under the base.
+        val downLimit = notlown.cobblebase.core.GeneralSettingsCache.harvesterDownwardLimit
+            .let { if (it in DOWN_LIMIT_MIN..DOWN_LIMIT_MAX) it else DOWN_LIMIT_DEFAULT }
+        renderStepperRow(
+            context, mouseX, mouseY,
+            id = "downLimit",
+            rowY = rowY,
+            title = "Harvester Downward Reach",
+            description = "How many blocks below the pasture the Harvester and the " +
+                "Show-Radius wireframe extend. Low = mons stay near pasture-level, " +
+                "high = catches cliff/hillside crops but risks cave-mining.",
+            value = downLimit,
+            unit = "blocks",
+            rangeMin = DOWN_LIMIT_MIN,
+            rangeMax = DOWN_LIMIT_MAX,
+            defaultValue = DOWN_LIMIT_DEFAULT
         )
         rowY += ROW_H + 10 + ROW_GAP
     }
@@ -268,6 +293,7 @@ class AdminServerSettingsPanel(
                 when (id) {
                     "pastureRange" -> sendUpdate(pastureRange = PASTURE_RANGE_DEFAULT)
                     "workingCap" -> sendUpdate(workingCap = WORKING_CAP_DEFAULT)
+                    "downLimit" -> sendUpdate(downLimit = DOWN_LIMIT_DEFAULT)
                 }
                 return true
             }
@@ -320,6 +346,10 @@ class AdminServerSettingsPanel(
                 val newVal = (WORKING_CAP_MIN + frac * (WORKING_CAP_MAX - WORKING_CAP_MIN)).toInt()
                 sendUpdate(workingCap = newVal.coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX))
             }
+            "downLimit" -> {
+                val newVal = (DOWN_LIMIT_MIN + frac * (DOWN_LIMIT_MAX - DOWN_LIMIT_MIN)).toInt()
+                sendUpdate(downLimit = newVal.coerceIn(DOWN_LIMIT_MIN, DOWN_LIMIT_MAX))
+            }
         }
     }
 
@@ -336,6 +366,11 @@ class AdminServerSettingsPanel(
                 val newVal = (current + delta).coerceIn(WORKING_CAP_MIN, WORKING_CAP_MAX)
                 if (newVal != current) sendUpdate(workingCap = newVal)
             }
+            "downLimit" -> {
+                val current = if (cache.harvesterDownwardLimit in DOWN_LIMIT_MIN..DOWN_LIMIT_MAX) cache.harvesterDownwardLimit else DOWN_LIMIT_DEFAULT
+                val newVal = (current + delta).coerceIn(DOWN_LIMIT_MIN, DOWN_LIMIT_MAX)
+                if (newVal != current) sendUpdate(downLimit = newVal)
+            }
         }
     }
 
@@ -348,15 +383,18 @@ class AdminServerSettingsPanel(
         pokeWiki: Boolean? = null,
         pastureRange: Int? = null,
         workingCap: Int? = null,
+        downLimit: Int? = null,
     ) {
         val cache = notlown.cobblebase.core.GeneralSettingsCache
+        val currentDownLimit = if (cache.harvesterDownwardLimit in DOWN_LIMIT_MIN..DOWN_LIMIT_MAX) cache.harvesterDownwardLimit else DOWN_LIMIT_DEFAULT
         net.neoforged.neoforge.network.PacketDistributor.sendToServer(
             notlown.cobblebase.core.net.GeneralSettingsUpdateC2SPacket(
                 cache.discordUrl,
                 cache.discordEnabled,
                 pokeWiki ?: cache.pokeWikiEnabled,
                 pastureRange ?: cache.pastureRange,
-                workingCap ?: cache.maxWorkingPokemonPerPasture
+                workingCap ?: cache.maxWorkingPokemonPerPasture,
+                downLimit ?: currentDownLimit
             )
         )
     }

@@ -1,6 +1,8 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
@@ -104,7 +106,7 @@ object HealerExecutor : SkillExecutor {
         lastScanTime[pokemonId] = now
 
         // Find player that needs healing
-        val radius = skill.effectiveRadius.toDouble()
+        val radius = skill.effectiveRadiusFor(origin).toDouble()
         val searchBox = Box.of(origin.toCenterPos(), radius * 2, radius * 2, radius * 2)
 
         val allPlayers = world.getEntitiesByClass(ServerPlayerEntity::class.java, searchBox) { true }

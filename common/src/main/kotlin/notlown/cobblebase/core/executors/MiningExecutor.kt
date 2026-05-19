@@ -1,6 +1,8 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.item.ItemStack
@@ -124,7 +126,7 @@ object MiningExecutor : SkillExecutor {
         }
 
         // Phase 4: Pick a random nearby position to "mine" at
-        val radius = skill.effectiveRadius.coerceAtLeast(5)
+        val radius = skill.effectiveRadiusFor(origin).coerceAtLeast(5)
         val offsetX = world.random.nextInt(radius * 2 + 1) - radius
         val offsetZ = world.random.nextInt(radius * 2 + 1) - radius
         val minePos = origin.add(offsetX, 0, offsetZ)

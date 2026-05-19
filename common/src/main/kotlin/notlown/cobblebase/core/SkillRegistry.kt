@@ -53,12 +53,20 @@ object SkillRegistry {
      *
      * Unknown skill ids fall through to the admin radius.
      */
-    fun getEffectiveRadius(skillId: String): Int {
-        val skill = skills[skillId] ?: return CobblebaseConfig.jobSearchRadius
+    fun getEffectiveRadius(skillId: String): Int = getEffectiveRadius(skillId, null)
+
+    /**
+     * Pasture-aware variant. When [pasturePos] is given, active jobs read the
+     * owner-picked per-pasture override (falling back to the admin max if no
+     * override is set). Auras / passives still use the per-skill JSON value —
+     * they're balance-tuned to a specific reach and shouldn't follow the cap.
+     */
+    fun getEffectiveRadius(skillId: String, pasturePos: net.minecraft.util.math.BlockPos?): Int {
+        val skill = skills[skillId] ?: return CobblebaseConfig.jobSearchRadius(pasturePos)
         return if (BaseManager.isBuffExecutor(skill.executor)) {
             JobConfigOverrides.getEffectiveRadius(skill)
         } else {
-            CobblebaseConfig.jobSearchRadius
+            CobblebaseConfig.jobSearchRadius(pasturePos)
         }
     }
 
@@ -114,8 +122,17 @@ object SkillRegistry {
 
 /**
  * Convenience accessor — every executor should use this in place of
- * `skill.searchRadius`. Routes through [SkillRegistry.getEffectiveRadius] so the
- * admin's "Pasture Range" cap applies uniformly.
+ * `skill.searchRadius`. Returns the admin max (= the cap). Use
+ * [effectiveRadiusFor] when you have a pasture origin and want the
+ * owner-picked per-pasture value.
  */
 val SkillDef.effectiveRadius: Int
     get() = SkillRegistry.getEffectiveRadius(this.id)
+
+/**
+ * Pasture-aware variant — pass the pasture origin so active jobs read the
+ * owner-picked per-pasture override (clamped to admin min/max). Falls back
+ * to the admin max when no override is set, identical to [effectiveRadius].
+ */
+fun SkillDef.effectiveRadiusFor(pasturePos: net.minecraft.util.math.BlockPos?): Int =
+    SkillRegistry.getEffectiveRadius(this.id, pasturePos)

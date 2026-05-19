@@ -103,9 +103,8 @@ object IrrigatorExecutor : SkillExecutor {
         if (now - lastSearch < SEARCH_INTERVAL_TICKS) return
         lastSearchTime[pokemonId] = now
 
-        // Scan radius follows the server-wide pasture range so admin Settings → Pasture Range
-        // governs every working executor uniformly.
-        val pastureRadius = CobblebaseConfig.jobSearchRadius
+        // Per-pasture-aware lookup — owner-picked range, falls back to admin max.
+        val pastureRadius = CobblebaseConfig.jobSearchRadius(searchOrigin)
         val found = findGrowingBlock(world, searchOrigin, pastureRadius)
         if (found != null) {
             targetBlock[pokemonId] = found
@@ -123,8 +122,9 @@ object IrrigatorExecutor : SkillExecutor {
     private fun findGrowingBlock(world: World, origin: BlockPos, radius: Int): BlockPos? {
         var closest: BlockPos? = null
         var closestDistSq = Long.MAX_VALUE
+        val yDown = minOf(radius, CobblebaseConfig.belowPastureReach(origin))
         for (x in -radius..radius) {
-            for (y in -radius..radius) {
+            for (y in -yDown..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     val state = world.getBlockState(pos)

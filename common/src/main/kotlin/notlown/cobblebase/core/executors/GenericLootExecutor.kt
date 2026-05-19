@@ -1,6 +1,8 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.item.ItemStack
@@ -107,7 +109,7 @@ object GenericLootExecutor : SkillExecutor {
         val items = heldItems[pokemonId] ?: return
 
         // Instant deposit into nearest matching chest (no walking needed)
-        val containerPos = InventoryHelper.findBestContainer(world, origin, skill.effectiveRadius, items)
+        val containerPos = InventoryHelper.findBestContainer(world, origin, skill.effectiveRadiusFor(origin), items)
         if (containerPos != null) {
             InventoryHelper.insertItems(world, containerPos, items)
         } else {

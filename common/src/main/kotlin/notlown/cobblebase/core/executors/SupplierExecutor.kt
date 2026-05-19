@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.block.ApricornBlock
 import com.cobblemon.mod.common.block.BerryBlock
@@ -118,7 +119,7 @@ object SupplierExecutor {
         world: ServerWorld, origin: BlockPos, pokemonEntity: PokemonEntity,
         pokemonId: UUID, neededItem: String, skillDef: SkillDef, now: Long
     ) {
-        val radius = skillDef.effectiveRadius
+        val radius = skillDef.effectiveRadiusFor(origin)
 
         // Search for a harvestable block that drops the needed item
         val harvestPos = findHarvestableFor(world, origin, radius, neededItem)
@@ -179,7 +180,7 @@ object SupplierExecutor {
         val stack = ItemStack(item, 1)
         lastProduceTime[pokemonId] = now
 
-        val containerPos = InventoryHelper.findBestContainer(world, origin, skillDef.effectiveRadius, listOf(stack))
+        val containerPos = InventoryHelper.findBestContainer(world, origin, skillDef.effectiveRadiusFor(origin), listOf(stack))
         if (containerPos != null) {
             InventoryHelper.insertItems(world, containerPos, listOf(stack))
         } else {
@@ -221,10 +222,12 @@ object SupplierExecutor {
             harvestableCache.remove(key)
         }
 
-        // Fresh cube scan.
+        // Fresh cube scan. Per-pasture-aware downward buffer (was: pasture-level-and-above only,
+        // which mirrored the old HarvesterExecutor pre-fix and hid cliff/stair-edge crops).
         val candidates = mutableListOf<BlockPos>()
+        val yDown = minOf(radius, CobblebaseConfig.belowPastureReach(origin))
         for (x in -radius..radius) {
-            for (y in 0..radius) {
+            for (y in -yDown..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     val state = world.getBlockState(pos)

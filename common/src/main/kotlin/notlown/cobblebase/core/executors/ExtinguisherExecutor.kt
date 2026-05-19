@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.Blocks
@@ -54,11 +55,14 @@ object ExtinguisherExecutor : SkillExecutor {
         }
 
         // Range scales with proficiency
-        val radius = getRadius(prof, skill.effectiveRadius)
+        val radius = getRadius(prof, skill.effectiveRadiusFor(origin))
+        // Per-pasture-aware downward scan — keeps mons from wandering into caves
+        // below the base in search of a fire to put out.
+        val yDown = minOf(radius, CobblebaseConfig.belowPastureReach(origin))
         var extinguishedCount = 0
 
         for (x in -radius..radius) {
-            for (y in -radius..radius) {
+            for (y in -yDown..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     val state = world.getBlockState(pos)

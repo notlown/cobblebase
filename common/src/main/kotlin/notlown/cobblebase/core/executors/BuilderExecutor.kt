@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.BlockState
@@ -110,7 +111,7 @@ object BuilderExecutor : SkillExecutor {
 
         // Look for an item in the player's nearby chests.
         val chestPos = InventoryHelper.findContainerWithItem(
-            world, origin, skill.effectiveRadius, itemId.toString()
+            world, origin, skill.effectiveRadiusFor(origin), itemId.toString()
         ) ?: return  // Chest doesn't have material — wait, retry next tick (tolerant).
 
         val taken = InventoryHelper.extractItem(world, chestPos, itemId.toString(), 1)

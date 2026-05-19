@@ -1,6 +1,8 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.item.ItemStack
@@ -82,7 +84,7 @@ object GuardExecutor : SkillExecutor {
         lastScanTime[pokemonId] = now
 
         // Find nearest wild Pokemon within search radius
-        val guardRadius = skill.effectiveRadius.toDouble()
+        val guardRadius = skill.effectiveRadiusFor(origin).toDouble()
         val searchBox = Box.of(origin.toCenterPos(), guardRadius * 2, guardRadius * 2, guardRadius * 2)
         val wildMons = world.getEntitiesByClass(PokemonEntity::class.java, searchBox) { entity ->
             entity != pokemonEntity && entity.pokemon.isWild() && entity.isAlive

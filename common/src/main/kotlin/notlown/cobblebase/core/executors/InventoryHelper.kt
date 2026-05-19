@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import com.cobblemon.mod.common.block.entity.PokemonPastureBlockEntity
+import notlown.cobblebase.core.CobblebaseConfig
 import notlown.cobblebase.core.ContainerHelperRegistry
 import notlown.cobblebase.core.ItemOriginHelper
 
@@ -360,8 +361,9 @@ object InventoryHelper {
     private fun scanAllContainersFallback(world: World, origin: BlockPos, radius: Int): List<BlockPos> {
         val helper = ContainerHelperRegistry.instance
         val result = mutableListOf<BlockPos>()
+        val yDown = minOf(radius, CobblebaseConfig.belowPastureReach(origin))
         for (x in -radius..radius) {
-            for (y in -radius..radius) {
+            for (y in -yDown..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     if (helper != null) {

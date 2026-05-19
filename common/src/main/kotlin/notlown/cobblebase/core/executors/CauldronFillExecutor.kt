@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.Blocks
@@ -61,7 +62,7 @@ object CauldronFillExecutor : SkillExecutor {
         }
 
         // Find or navigate to cauldron
-        val target = cauldronTarget[pokemonId] ?: findEmptyCauldron(world, origin, skill.effectiveRadius)
+        val target = cauldronTarget[pokemonId] ?: findEmptyCauldron(world, origin, skill.effectiveRadiusFor(origin))
         if (target == null) return
 
         cauldronTarget[pokemonId] = target
@@ -85,8 +86,9 @@ object CauldronFillExecutor : SkillExecutor {
         var best: BlockPos? = null
         var bestDist = Double.MAX_VALUE
 
+        val yDown = minOf(radius, CobblebaseConfig.belowPastureReach(origin))
         for (x in -radius..radius) {
-            for (y in -radius..radius) {
+            for (y in -yDown..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     if (isCauldronEmpty(world, pos)) {

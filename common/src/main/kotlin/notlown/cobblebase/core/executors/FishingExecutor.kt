@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.Blocks
@@ -130,7 +131,7 @@ object FishingExecutor : SkillExecutor {
             }
         } else {
             // Navigate to water using cached water blocks
-            val target = waterTarget[pokemonId] ?: findWaterCached(world, origin, skill.effectiveRadius, now)
+            val target = waterTarget[pokemonId] ?: findWaterCached(world, origin, skill.effectiveRadiusFor(origin), now)
             if (target != null) {
                 waterTarget[pokemonId] = target
                 NavigationHelper.navigateTo(pokemonEntity, target.up())
@@ -155,8 +156,9 @@ object FishingExecutor : SkillExecutor {
         if (now - lastScan > CACHE_TTL_TICKS || waterCache[origin] == null) {
             // Rebuild cache
             val blocks = mutableSetOf<BlockPos>()
+            val yDown = minOf(radius, CobblebaseConfig.belowPastureReach(origin))
             for (x in -radius..radius) {
-                for (y in -radius..radius) {
+                for (y in -yDown..radius) {
                     for (z in -radius..radius) {
                         val pos = origin.add(x, y, z)
                         if (world.getBlockState(pos).block == Blocks.WATER) {

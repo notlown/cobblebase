@@ -1,6 +1,7 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.AbstractFurnaceBlock
@@ -108,7 +109,7 @@ object FurnaceFuelExecutor : SkillExecutor {
         val target = if (existing != null && furnaceNeedsFuel(world, existing)) {
             existing
         } else {
-            findFurnaceNeedingFuel(world, origin, skill.effectiveRadius, otherClaims)
+            findFurnaceNeedingFuel(world, origin, skill.effectiveRadiusFor(origin), otherClaims)
         }
         if (target == null) {
             // No work available — release any stale claim
@@ -146,8 +147,9 @@ object FurnaceFuelExecutor : SkillExecutor {
         var best: BlockPos? = null
         var bestDist = Double.MAX_VALUE
 
+        val yDown = minOf(radius, CobblebaseConfig.belowPastureReach(origin))
         for (x in -radius..radius) {
-            for (y in -radius..radius) {
+            for (y in -yDown..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     if (pos.toImmutable() in exclude) continue

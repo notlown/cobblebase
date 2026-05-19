@@ -1,6 +1,8 @@
 package notlown.cobblebase.core.executors
 
 import notlown.cobblebase.core.effectiveRadius
+import notlown.cobblebase.core.effectiveRadiusFor
+import notlown.cobblebase.core.effectiveRadiusFor
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.item.ItemStack
@@ -135,7 +137,7 @@ object CraftsmanExecutor : SkillExecutor {
             searchIds.addAll(CraftsmanSupplyFilter.getRelatedItems(itemId))
 
             for (searchId in searchIds) {
-                val chestPos = InventoryHelper.findContainerWithItem(world, origin, skill.effectiveRadius, searchId)
+                val chestPos = InventoryHelper.findContainerWithItem(world, origin, skill.effectiveRadiusFor(origin), searchId)
                 if (chestPos != null) {
                     NavigationHelper.navigateTo(pokemonEntity, chestPos, getSpeedForProficiency(skillEntry.proficiency))
                     val extracted = InventoryHelper.extractItem(world, chestPos, searchId, 1)
@@ -232,7 +234,7 @@ object CraftsmanExecutor : SkillExecutor {
             return
         }
 
-        val containerPos = InventoryHelper.findBestContainer(world, origin, skill.effectiveRadius, listOf(output))
+        val containerPos = InventoryHelper.findBestContainer(world, origin, skill.effectiveRadiusFor(origin), listOf(output))
         if (containerPos != null) {
             InventoryHelper.insertItems(world, containerPos, listOf(output))
         } else {

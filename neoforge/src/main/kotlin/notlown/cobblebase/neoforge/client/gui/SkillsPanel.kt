@@ -1150,11 +1150,14 @@ class SkillsPanel(
                     }
                     val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
                     val starX = textLeftBound + (textAreaW - starWidth) / 2
-                    // Stars also need to render above the icon → +200 Z.
+                    // Stars also need to render above the icon → +200 Z. drop-shadow
+                    // (shadow=true) gives every star a 1-px dark outline so the
+                    // sand/blue/green stars stay readable on any chip BG color —
+                    // previously yellow stars vanished on Botanist's green BG.
                     context.matrices.push()
                     context.matrices.translate(starX.toFloat(), (chipTop + 8).toFloat(), 200f)
                     context.matrices.scale(scale, scale, 1f)
-                    context.drawText(textRenderer, stars, 0, 0, starColor, false)
+                    context.drawText(textRenderer, stars, 0, 0, starColor, true)
                     context.matrices.pop()
 
                     // Job icon moved out of the active block — drawn for every

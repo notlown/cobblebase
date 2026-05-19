@@ -36,7 +36,10 @@ class HatcheryPanel(
     private val textRenderer: TextRenderer
 ) {
     private val PADDING = UiTokens.PANEL_PAD  // 8 — matches Skills / Buffs / Logs / Discovery
-    private val ROW_H = UiTokens.ROW_TIGHT    // 14 — same as Admin Species DB
+    // 16 px = full-size 16-px Pokemon sprite + 0 padding (matches LogsPanel — hatch
+    // log entries have the same density requirements). The previous 14 left the
+    // sprite undersized and the row too cramped.
+    private val ROW_H = 16
     private val STATS_H = 38
     private val CARD_H = 46
     // Matches Pokemon-tab + Buffs-tab sub-tab strip so all sub-tab rows feel the same.
@@ -347,7 +350,7 @@ class HatcheryPanel(
         val textScale = UiTokens.TEXT_SM
 
         // Hatched sprite (16x16 — overflows row slightly, same as LogsPanel).
-        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, e.hatchedSpecies, cardLeft + 4, rowY - 1, 0f)
+        PokemonSpriteHelper.renderIconByName(context, textRenderer, e.hatchedSpecies, cardLeft + 4, rowY, 0f)
         // Hatched name
         val hatchedName = e.hatchedSpecies.replaceFirstChar { c -> c.uppercase() }
         context.matrices.push()
@@ -365,7 +368,7 @@ class HatcheryPanel(
         context.matrices.pop()
 
         val hatcherX = midX + 8
-        PokemonSpriteHelper.renderSmallIconByName(context, textRenderer, e.hatcherSpecies, hatcherX, rowY - 1, 0f)
+        PokemonSpriteHelper.renderIconByName(context, textRenderer, e.hatcherSpecies, hatcherX, rowY, 0f)
         context.matrices.push()
         context.matrices.translate((hatcherX + 18).toFloat(), (rowY + 3).toFloat(), 0f)
         context.matrices.scale(textScale, textScale, 1f)

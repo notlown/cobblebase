@@ -70,16 +70,19 @@ object JobIcons {
             "cobblebase:friend_recruiter" to Items.ECHO_SHARD,
             "cobblebase:recruiter" to Items.NETHER_STAR,
             "cobblebase:lucky_charm" to Items.GOLD_NUGGET,
-            "cobblebase:growth_aura" to Items.BONE_MEAL,
-            "cobblebase:aura_boost" to Items.GLOWSTONE_DUST,
-            "cobblebase:speed_boost" to Items.SUGAR,
-            "cobblebase:strength_boost" to Items.IRON_INGOT,
-            "cobblebase:resistance_boost" to Items.NETHERITE_INGOT,
-            "cobblebase:night_vision" to Items.GOLDEN_CARROT,
-            "cobblebase:water_breathing" to Items.PUFFERFISH,
-            "cobblebase:jump_boost" to Items.RABBIT_FOOT,
-            "cobblebase:haste_boost" to Items.AMETHYST_SHARD,
-            "cobblebase:saturation_boost" to Items.COOKED_BEEF,
+            // Passive buff icons — semantic match for what the buff DOES, not the
+            // arcane vanilla brewing ingredient. Haste = mining speed → golden
+            // pickaxe; Jump = bouncing → slime block; Aura = effect beam → beacon.
+            "cobblebase:growth_aura" to Items.BONE_MEAL,                // bone meal = grow plants ✓
+            "cobblebase:aura_boost" to Items.BEACON,                    // beacon emits an aura beam
+            "cobblebase:speed_boost" to Items.FEATHER,                  // feather = light + swift
+            "cobblebase:strength_boost" to Items.IRON_SWORD,            // sword = raw damage
+            "cobblebase:resistance_boost" to Items.NETHERITE_INGOT,     // tough armor ingot
+            "cobblebase:night_vision" to Items.GLOW_INK_SAC,            // glow = see in dark
+            "cobblebase:water_breathing" to Items.TURTLE_HELMET,        // vanilla water-breathing item
+            "cobblebase:jump_boost" to Items.SLIME_BLOCK,               // slime = bounce/jump
+            "cobblebase:haste_boost" to Items.GOLDEN_PICKAXE,           // haste = mining speed
+            "cobblebase:saturation_boost" to Items.BREAD,               // bread = staple food / saturation
             "cobblebase:egg_hatcher" to POKEMON_EGG,
             "cobblebase:finder_bal" to POKE_BALL,
             "cobblebase:finder_evo" to Items.AMETHYST_CLUSTER,

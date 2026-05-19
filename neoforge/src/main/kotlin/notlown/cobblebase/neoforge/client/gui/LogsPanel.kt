@@ -25,11 +25,11 @@ class LogsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    // Logs have unlimited rows, density matters more than rhythm with other tabs.
-    // 16 px = full-size 16-px Pokemon sprite + 0 padding so a 16-px row stays
-    // dense (more rows on screen than Pasture/Buffs at 18) without shrinking
-    // the sprite to a tiny 12-px badge.
-    private val ROW_HEIGHT = 16
+    // Logs have unlimited rows — density wins. 11 px row = 8 px text height +
+    // ~1.5 px breathing room top/bottom. Sprite renders via renderSmallIconByName
+    // (12-px small variant) which overflows by 1 px but reads fine and lets way
+    // more rows fit on screen than the 16-px row used by Pasture/Buffs.
+    private val ROW_HEIGHT = 11
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8
@@ -157,11 +157,11 @@ class LogsPanel(
             context.drawTextWithShadow(textRenderer, timeStr, 0, 0, 0x999999)
             context.matrices.pop()
 
-            // Pokemon icon — full 16-px renderIcon variant so the sprite fills the
-            // 16-px row instead of the 12-px small badge admin lists use.
-            PokemonSpriteHelper.renderIconByName(
+            // Pokemon icon — 12-px small variant fits the 11-px row with minimal
+            // overflow. Full 16-px renderIcon would dominate a compact log feed.
+            PokemonSpriteHelper.renderSmallIconByName(
                 context, textRenderer, entry.pokemonName,
-                colPokemon, ry, delta
+                colPokemon, ry - 1, delta
             )
 
             // Action (scaled 0.75x)

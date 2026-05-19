@@ -1086,10 +1086,31 @@ class SkillsPanel(
             val nameText = btn.displayName
             val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
 
-            if (isJobActive) {
-                // Active: name top + stars bottom + job-icon corner.
+            // Big job-icon on the LEFT of every skill chip, vertically centered.
+            // drawItem renders a native 16-px sprite; iconScale 0.8 → ~13 px visible,
+            // leaving ~1.5 px breathing room above + below in a 16-px chip.
+            val iconScale = 0.8f
+            val iconRenderW = (16 * iconScale).toInt()  // ~13 px
+            if (!isAutoBtn && btn.skillId != null) {
+                val iconStack = JobIcons.stackFor(btn.skillId)
+                val iconY = chipTop + (BTN_HEIGHT - iconRenderW) / 2
                 context.matrices.push()
-                context.matrices.translate((rx + (bw - nameWidth) / 2).toFloat(), (chipTop + 2).toFloat(), 0f)
+                context.matrices.translate((rx + 1).toFloat(), iconY.toFloat(), 0f)
+                context.matrices.scale(iconScale, iconScale, 1f)
+                context.drawItem(iconStack, 0, 0)
+                context.matrices.pop()
+            }
+
+            // Name centers in the space RIGHT of the icon — Auto/Relax has no icon
+            // so it centers in the full chip width.
+            val textLeft = rx + if (!isAutoBtn) iconRenderW + 2 else 0
+            val textAreaW = bw - if (!isAutoBtn) iconRenderW + 2 else 0
+            val nameX = textLeft + (textAreaW - nameWidth) / 2
+
+            if (isJobActive) {
+                // Active: name top + stars bottom.
+                context.matrices.push()
+                context.matrices.translate(nameX.toFloat(), (chipTop + 2).toFloat(), 0f)
                 context.matrices.scale(scale, scale, 1f)
                 context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
                 context.matrices.pop()
@@ -1103,26 +1124,21 @@ class SkillsPanel(
                         else -> 0x888888
                     }
                     val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
+                    val starX = textLeft + (textAreaW - starWidth) / 2
                     context.matrices.push()
-                    context.matrices.translate((rx + (bw - starWidth) / 2).toFloat(), (chipTop + 9).toFloat(), 0f)
+                    context.matrices.translate(starX.toFloat(), (chipTop + 9).toFloat(), 0f)
                     context.matrices.scale(scale, scale, 1f)
                     context.drawText(textRenderer, stars, 0, 0, starColor, false)
                     context.matrices.pop()
 
-                    if (btn.skillId != null) {
-                        val iconStack = JobIcons.stackFor(btn.skillId)
-                        context.matrices.push()
-                        context.matrices.translate((rx + 1).toFloat(), (chipTop + 8).toFloat(), 0f)
-                        context.matrices.scale(0.4f, 0.4f, 1f)
-                        context.drawItem(iconStack, 0, 0)
-                        context.matrices.pop()
-                    }
+                    // Job icon moved out of the active block — drawn for every
+                    // skill chip below, big and left-aligned.
                 }
             } else {
                 // Available / inactive Relax: name centered vertically (single line,
                 // no stars). 5 stars \u00d7 6 chips per row was pure visual noise.
                 context.matrices.push()
-                context.matrices.translate((rx + (bw - nameWidth) / 2).toFloat(), (chipTop + 5).toFloat(), 0f)
+                context.matrices.translate(nameX.toFloat(), (chipTop + 5).toFloat(), 0f)
                 context.matrices.scale(scale, scale, 1f)
                 context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
                 context.matrices.pop()

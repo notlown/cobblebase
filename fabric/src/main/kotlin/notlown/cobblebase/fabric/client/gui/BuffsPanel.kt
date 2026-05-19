@@ -331,6 +331,16 @@ class BuffsPanel(
                     else String.format("%.1f", multiplier)
                 "Incubating Cobbreeding eggs · ${label}× speed"
             }
+            // Loot-table based jobs all share the generic_loot executor; differentiate
+            // them by skill name so each gets a meaningful description.
+            "generic_loot", "pickup", "archeology", "diving" -> when (skillName) {
+                "Diving" -> "Diving for underwater treasure$cooldownLabel"
+                "Archeology" -> "Excavating archeological loot$cooldownLabel"
+                "Pickup" -> "Picking up wild items$cooldownLabel"
+                else -> "Looking for $skillName loot$cooldownLabel"
+            }
+            "builder" -> "Building structures from chest materials$cooldownLabel"
+            "craftsman" -> "Crafting items from chest materials$cooldownLabel"
             else -> "Working"
         }
     }

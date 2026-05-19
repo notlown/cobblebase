@@ -342,7 +342,7 @@ class BuffsPanel(
         // Sub-tab bar at top \u2192 shifts content header below it.
         val tabsBottom = renderSubTabs(context, mouseX, mouseY)
         val contentTop = tabsBottom
-        val contentBottom = panelY + panelH - 18
+        val contentBottom = panelY + panelH - 2
 
         val visible = visibleEntries()
         if (visible.isEmpty()) {
@@ -525,10 +525,10 @@ class BuffsPanel(
         }
 
         // Footer line
-        context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
+        context.fill(panelX, panelY + panelH - 2, panelX + panelW, panelY + panelH - 1, CobblebaseScreen.PANEL_BORDER)
 
         // Entry count
-        context.drawTextWithShadow(textRenderer, "\u00A78${visible.size} shown", panelX + PADDING, panelY + panelH - 14, 0x666666)
+        context.drawTextWithShadow(textRenderer, "\u00A78${visible.size} shown", panelX + PADDING, panelY + panelH - 8, 0x666666)
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {

@@ -100,7 +100,7 @@ class LogsPanel(
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val contentTop = panelY + HEADER_HEIGHT + FILTER_HEIGHT + 6
-        val contentBottom = panelY + panelH - 18
+        val contentBottom = panelY + panelH - 2
 
 
 
@@ -111,7 +111,7 @@ class LogsPanel(
                 else "\u00A77No activity logged yet"
             context.drawCenteredTextWithShadow(textRenderer, msg, panelX + panelW / 2, panelY + panelH / 2 - 4, 0x888888)
             // Still render footer
-            context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
+            context.fill(panelX, panelY + panelH - 2, panelX + panelW, panelY + panelH - 1, CobblebaseScreen.PANEL_BORDER)
             return
         }
 
@@ -210,11 +210,11 @@ class LogsPanel(
         }
 
         // Footer line
-        context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
+        context.fill(panelX, panelY + panelH - 2, panelX + panelW, panelY + panelH - 1, CobblebaseScreen.PANEL_BORDER)
 
         // Entry count
         val filterLabel = if (filterRarity != null) " (${filterRarity!!.displayName}+)" else ""
-        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} events$filterLabel", panelX + PADDING, panelY + panelH - 14, 0x666666)
+        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} events$filterLabel", panelX + PADDING, panelY + panelH - 8, 0x666666)
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {

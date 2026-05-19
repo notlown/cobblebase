@@ -100,7 +100,7 @@ class DiscoveryPanel(
 
     fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val contentTop = panelY + HEADER_HEIGHT + FILTER_HEIGHT + 6
-        val contentBottom = panelY + panelH - 18
+        val contentBottom = panelY + panelH - 2
 
 
 
@@ -110,7 +110,7 @@ class DiscoveryPanel(
             val msg = "\u00A77No discoveries yet \u2014 assign a Scout to explore!"
             context.drawCenteredTextWithShadow(textRenderer, msg, panelX + panelW / 2, panelY + panelH / 2 - 4, 0x888888)
             // Still render footer
-            context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
+            context.fill(panelX, panelY + panelH - 2, panelX + panelW, panelY + panelH - 1, CobblebaseScreen.PANEL_BORDER)
             return
         }
 
@@ -208,11 +208,11 @@ class DiscoveryPanel(
         }
 
         // Footer line
-        context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
+        context.fill(panelX, panelY + panelH - 2, panelX + panelW, panelY + panelH - 1, CobblebaseScreen.PANEL_BORDER)
 
         // Discovery count
         val filterLabel = if (filterType != null) " (${filterType!!.displayName}s)" else ""
-        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} discoveries$filterLabel", panelX + PADDING, panelY + panelH - 14, 0x666666)
+        context.drawTextWithShadow(textRenderer, "\u00A78${entries.size} discoveries$filterLabel", panelX + PADDING, panelY + panelH - 8, 0x666666)
     }
 
     fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, verticalAmount: Double): Boolean {

@@ -289,7 +289,7 @@ class SkillsPanel(
         sidebarTitle: String
     ) {
         val listTop = panelY + SUBTAB_H + HEADER_HEIGHT
-        val listBottom = panelY + panelH - 20
+        val listBottom = panelY + panelH - 4
 
         // ---- Sidebar (expandable categories + per-skill checkboxes) ----
         val mainX = renderSkillSidebar(
@@ -826,7 +826,7 @@ class SkillsPanel(
      */
     private fun renderPokeWikiGrid(context: DrawContext, mouseX: Int, mouseY: Int) {
         val listTop = panelY + SUBTAB_H + HEADER_HEIGHT
-        val listBottom = panelY + panelH - 20
+        val listBottom = panelY + panelH - 4
         currentHighlightSkills = pokeWikiSelectedSkills
 
         // Build species pool & represent each as a packet Entry so the sidebar's counter logic works.
@@ -987,7 +987,7 @@ class SkillsPanel(
         context.drawTextWithShadow(textRenderer, "\u00A7eSkills", skillsHeaderX, headerY, 0xFFFF55)
 
         // Content area with scissor
-        val contentBottom = panelY + panelH - 18
+        val contentBottom = panelY + panelH - 2
         context.enableScissor(panelX, contentY - 2, panelX + panelW, contentBottom)
 
         // Row backgrounds + Pokemon names with sprite icons
@@ -1240,7 +1240,7 @@ class SkillsPanel(
         }
 
         // Footer line
-        context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
+        context.fill(panelX, panelY + panelH - 2, panelX + panelW, panelY + panelH - 1, CobblebaseScreen.PANEL_BORDER)
 
         // Hover tooltip — pops up once a skill chip has been hovered continuously
         // for HOVER_TOOLTIP_DELAY_MS. Render last so it sits above every chip + the
@@ -1431,7 +1431,7 @@ class SkillsPanel(
             return true
         }
 
-        val contentBottom = panelY + panelH - 18
+        val contentBottom = panelY + panelH - 2
         for (btn in allButtons) {
             // Skip clicks on supplier Mons — they're locked to Craftsman
             if (AssignmentCache.isCraftsmanSupplier(btn.pokemonId)) continue

@@ -58,7 +58,7 @@ object JobIcons {
             "cobblebase:irrigator" to Items.WATER_BUCKET,
             "cobblebase:extinguisher" to Items.WET_SPONGE,
             "cobblebase:guard" to Items.IRON_SWORD,
-            "cobblebase:healer" to Items.GOLDEN_APPLE,
+            "cobblebase:healer" to Items.TOTEM_OF_UNDYING,  // iconic "save you from death" item — strongest healing association in vanilla
             "cobblebase:mentor" to Items.ENCHANTED_BOOK,
             "cobblebase:builder" to Items.BRICKS,
             "cobblebase:craftsman" to Items.CRAFTING_TABLE,
@@ -67,7 +67,7 @@ object JobIcons {
             "cobblebase:water_fill" to Items.WATER_BUCKET,
             "cobblebase:lava_fill" to Items.LAVA_BUCKET,
             "cobblebase:snow_fill" to Items.POWDER_SNOW_BUCKET,
-            "cobblebase:friend_recruiter" to Items.ECHO_SHARD,
+            "cobblebase:friend_recruiter" to Items.NAME_TAG,  // names = befriends (recruiter brings wild mons in by name)
             "cobblebase:recruiter" to Items.NETHER_STAR,
             "cobblebase:lucky_charm" to Items.GOLD_NUGGET,
             // Passive buff icons — semantic match for what the buff DOES, not the
@@ -86,7 +86,7 @@ object JobIcons {
             "cobblebase:egg_hatcher" to POKEMON_EGG,
             "cobblebase:finder_bal" to POKE_BALL,
             "cobblebase:finder_evo" to Items.AMETHYST_CLUSTER,
-            "cobblebase:finder_hea" to Items.GLISTERING_MELON_SLICE,
+            "cobblebase:finder_hea" to Items.POTION,            // Pharmacist: generic potion bottle = medicine
             "cobblebase:finder_food" to Items.BREAD,
             "cobblebase:finder_bui" to Items.STONE_BRICKS,
             "cobblebase:finder_ore" to Items.RAW_IRON,

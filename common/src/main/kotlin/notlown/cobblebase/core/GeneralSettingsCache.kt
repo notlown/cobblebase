@@ -22,7 +22,7 @@ object GeneralSettingsCache {
      * How many blocks BELOW the pasture Y the Harvester scans / the wireframe reaches.
      * -1 = not synced (use default 6). Otherwise in [0, 30].
      */
-    var harvesterDownwardLimit: Int = -1
+    var belowPastureReach: Int = -1
         private set
 
     fun update(
@@ -38,6 +38,6 @@ object GeneralSettingsCache {
         pokeWikiEnabled = pokeWiki
         pastureRange = range
         maxWorkingPokemonPerPasture = maxWorking
-        harvesterDownwardLimit = downwardLimit
+        belowPastureReach = downwardLimit
     }
 }

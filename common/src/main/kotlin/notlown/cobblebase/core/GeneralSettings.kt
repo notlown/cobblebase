@@ -56,7 +56,7 @@ object GeneralSettings {
          * 6 (default) covers typical surface variation — stairs, small cliffs,
          * hillside trees — without reaching cave systems.
          */
-        var harvesterDownwardLimit: Int = 6
+        var belowPastureReach: Int = 6
     )
 
     private var settings = Settings()

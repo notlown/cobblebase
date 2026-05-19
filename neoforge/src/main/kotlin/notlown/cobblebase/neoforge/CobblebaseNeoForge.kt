@@ -453,7 +453,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                 notlown.cobblebase.core.GeneralSettingsCache.update(
                     packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled,
                     packet.pastureRange, packet.maxWorkingPokemonPerPasture,
-                    packet.harvesterDownwardLimit
+                    packet.belowPastureReach
                 )
             }
         }
@@ -472,14 +472,14 @@ class CobblebaseNeoForge(modBus: IEventBus) {
                     pokeWikiEnabled = packet.pokeWikiEnabled,
                     pastureRange = packet.pastureRange.coerceIn(5, 30),
                     maxWorkingPokemonPerPasture = packet.maxWorkingPokemonPerPasture.coerceIn(0, 64),
-                    harvesterDownwardLimit = packet.harvesterDownwardLimit.coerceIn(0, 30)
+                    belowPastureReach = packet.belowPastureReach.coerceIn(0, 30)
                 )
                 notlown.cobblebase.core.GeneralSettings.setSettings(newSettings)
                 notlown.cobblebase.core.GeneralSettings.save(player.serverWorld)
                 val syncPacket = notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                     newSettings.discordUrl, newSettings.discordEnabled, newSettings.pokeWikiEnabled,
                     newSettings.pastureRange, newSettings.maxWorkingPokemonPerPasture,
-                    newSettings.harvesterDownwardLimit
+                    newSettings.belowPastureReach
                 )
                 for (p in player.server.playerManager.playerList) {
                     net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, syncPacket)
@@ -655,7 +655,7 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             player,
             notlown.cobblebase.core.net.GeneralSettingsSyncS2CPacket(
                 s.discordUrl, s.discordEnabled, s.pokeWikiEnabled,
-                s.pastureRange, s.maxWorkingPokemonPerPasture, s.harvesterDownwardLimit
+                s.pastureRange, s.maxWorkingPokemonPerPasture, s.belowPastureReach
             )
         )
         // Sync all species skill overrides so the Pasture Skills tab sees

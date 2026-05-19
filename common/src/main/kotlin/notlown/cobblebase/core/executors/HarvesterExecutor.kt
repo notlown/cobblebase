@@ -206,7 +206,7 @@ object HarvesterExecutor : SkillExecutor {
         // Admin-configurable downward scan buffer (Admin → Server Settings).
         // Small values prevent mons from trying to dig into caves under the base;
         // larger values let them reach cliff-edge and hillside harvestables.
-        val yDown = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.harvesterDownwardLimit)
+        val yDown = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.belowPastureReach)
         for (x in -radius..radius) {
             // Y range: full `radius` upward (tall berry bushes, hanging apricorns)
             // but only DOWNWARD_SCAN_BUFFER downward — enough for cliff edges and
@@ -259,7 +259,7 @@ object HarvesterExecutor : SkillExecutor {
         // Admin-configurable downward scan buffer (Admin → Server Settings).
         // Small values prevent mons from trying to dig into caves under the base;
         // larger values let them reach cliff-edge and hillside harvestables.
-        val yDown = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.harvesterDownwardLimit)
+        val yDown = minOf(radius, notlown.cobblebase.core.CobblebaseConfig.belowPastureReach)
         for (x in -radius..radius) {
             for (y in -yDown..radius) {
                 for (z in -radius..radius) {

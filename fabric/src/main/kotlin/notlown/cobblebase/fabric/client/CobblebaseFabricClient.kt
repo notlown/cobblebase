@@ -112,7 +112,7 @@ object CobblebaseFabricClient : ClientModInitializer {
                 notlown.cobblebase.core.GeneralSettingsCache.update(
                     packet.discordUrl, packet.discordEnabled, packet.pokeWikiEnabled,
                     packet.pastureRange, packet.maxWorkingPokemonPerPasture,
-                    packet.harvesterDownwardLimit
+                    packet.belowPastureReach
                 )
             }
         }

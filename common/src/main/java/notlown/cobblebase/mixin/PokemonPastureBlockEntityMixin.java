@@ -260,11 +260,10 @@ public class PokemonPastureBlockEntityMixin {
                     try {
                         boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                         if (!handled) {
-                            // Idle wander stays at 15 blocks (was briefly tied to the admin
-                            // Pasture Range but that pushed mons into water/cliffs faster
-                            // than the safety-teleport tick could rescue them, causing
-                            // despawn-into-PC reports).
-                            NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
+                            // Idle wander radius tracks the admin Pasture Range slider so
+                            // Relax mons roam the full base extent, not a hardcoded bubble.
+                            int wanderR = Math.max(5, notlown.cobblebase.core.CobblebaseConfig.INSTANCE.getJobSearchRadius());
+                            NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, wanderR);
                         }
                     } catch (Exception ignored) { }
                 }

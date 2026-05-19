@@ -152,8 +152,13 @@ object BaseManager {
                 pastureOrigin.x + 0.5, pastureOrigin.y.toDouble(), pastureOrigin.z + 0.5
             )
             // Water-type Pokemon get double the safety radius (they swim farther).
-            // Compare in squared-distance space to avoid the sqrt entirely.
-            val maxDist = if (isWaterType) CobblebaseConfig.safetyTeleportDistance * 2.0 else CobblebaseConfig.safetyTeleportDistance.toDouble()
+            // Floor at the admin pasture range + 4 buffer blocks so the legit work
+            // area is never inside the safety boundary (otherwise mons working at
+            // the edge of a 30-block pasture get teleported back constantly).
+            val baseSafety = CobblebaseConfig.safetyTeleportDistance.toDouble()
+            val adminFloor = CobblebaseConfig.jobSearchRadius + 4.0
+            val effectiveSafety = maxOf(baseSafety, adminFloor)
+            val maxDist = if (isWaterType) effectiveSafety * 2.0 else effectiveSafety
             if (distSq > maxDist * maxDist) {
                 val (sx, sz) = getSpawnOffset(world)
                 pokemonEntity.setPosition(pastureOrigin.x + sx, pastureOrigin.y.toDouble(), pastureOrigin.z + sz)

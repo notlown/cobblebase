@@ -61,9 +61,9 @@ class SkillsPanel(
     private val NAME_WIDTH = 56 + ICON_OFFSET            // bumped from 50 → 56 (full-scale name fits)
     private val AURA_ICON_WIDTH = 15
     private val AUTO_BTN_WIDTH = 26                      // Relax is just an Off toggle
-    private val BTN_WIDTH = 58                           // baseline chip width when Pokemon has ≤ btnsPerRow skills
+    private val BTN_WIDTH = 64                           // baseline chip width when Pokemon has ≤ btnsPerRow skills (+10% from 58)
     private val BTN_HEIGHT = 16                          // unified chip height — active and available are the SAME size now (height-difference broke the row silhouette)
-    private val BTN_MIN_WIDTH = 38                       // dynamic shrink floor for Pokemon with many skills
+    private val BTN_MIN_WIDTH = 42                       // dynamic shrink floor for Pokemon with many skills (+10% from 38)
     private val BTN_GAP = 2
 
     /** Per-Pokemon chip width (varies when many skills must fit into one row). */

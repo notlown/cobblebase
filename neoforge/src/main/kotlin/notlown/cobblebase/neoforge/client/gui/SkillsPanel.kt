@@ -167,11 +167,9 @@ class SkillsPanel(
             // the column reads as "off" without taking up text space.
             allButtons.add(SkillButtonData(pokemonId, null, "Zz", 0, "", autoX, rowY, currentAssignment == null))
 
-            // Skill buttons start after Auto column, all on a single row.
-            // Sort: proficiency DESC, then name ASC. Pre-sort gives every row the
-            // same order — previously the order was whatever the species_skills
-            // JSON happened to list, so Item Gatherer ended up at position 2 for
-            // one mon and position 5 for another.
+            // Skill chips sorted alphabetically per row — gives every Pokemon the
+            // same stable order (Item Gatherer is always in the same spot relative
+            // to other names), without the prof-DESC noise of previous attempt.
             val sortedSkills = availableSkills
                 .mapNotNull { entry ->
                     val def = SkillRegistry.get(entry.skillId) ?: return@mapNotNull null
@@ -179,8 +177,7 @@ class SkillsPanel(
                     if (!JobConfigOverrides.isEnabled(entry.skillId)) return@mapNotNull null
                     Triple(entry, def, entry.proficiency)
                 }
-                .sortedWith(compareByDescending<Triple<notlown.cobblebase.core.SkillEntry, notlown.cobblebase.core.SkillDef, Int>> { it.third }
-                    .thenBy { it.second.name })
+                .sortedBy { it.second.name.lowercase() }
 
             var btnX = skillStartX
             val btnY = rowY
@@ -1105,13 +1102,16 @@ class SkillsPanel(
             }
 
             val nameText = btn.displayName
-            val nameWidth = (textRenderer.getWidth(nameText) * scale).toInt()
+            // Shrink the font when the label runs longer than the chip can hold at
+            // the default scale. 11+ char skill names (Friend Recruiter, Cauldron
+            // Fill, Furnace Fuel, …) overflow otherwise.
+            val nameScale = if (nameText.length > 11) scale * 0.8f else scale
+            val nameWidth = (textRenderer.getWidth(nameText) * nameScale).toInt()
 
             // Big job-icon on the LEFT of every skill chip, vertically centered.
-            // drawItem renders a native 16-px sprite; iconScale 0.8 → ~13 px visible,
-            // leaving ~1.5 px breathing room above + below in a 16-px chip.
+            // drawItem renders a native 16-px sprite; iconScale 0.8 → ~13 px visible.
             val iconScale = 0.8f
-            val iconRenderW = (16 * iconScale).toInt()  // ~13 px
+            val iconRenderW = (16 * iconScale).toInt()
             if (!isAutoBtn && btn.skillId != null) {
                 val iconStack = JobIcons.stackFor(btn.skillId)
                 val iconY = chipTop + (BTN_HEIGHT - iconRenderW) / 2
@@ -1122,16 +1122,21 @@ class SkillsPanel(
                 context.matrices.pop()
             }
 
-            // Name centers in the FULL chip width — the icon sits BEHIND the text
-            // (drawn first) so text-on-icon overlap is intentional. Gives icons
-            // the "watermark behind label" feel instead of crowding the text.
-            val nameX = rx + (bw - nameWidth) / 2
+            // Name sits in the space to the RIGHT of the icon with a small gap
+            // (2 px) — icons are big watermarks but the label shouldn't touch them.
+            // drawItem renders at GUI z≈150 so plain text would sit BEHIND the
+            // item sprite; we push +200 on Z before drawing text so it lands above.
+            val iconGap = 2
+            val textLeftBound = rx + if (!isAutoBtn) iconRenderW + iconGap else 0
+            val textAreaW = bw - if (!isAutoBtn) iconRenderW + iconGap else 0
+            val nameX = textLeftBound + (textAreaW - nameWidth) / 2
 
             if (isJobActive) {
-                // Active: name top + stars bottom.
+                // Active: name top + stars bottom. +200 Z so the text sits above
+                // the drawItem-rendered icon (items in GUI draw at z≈150).
                 context.matrices.push()
-                context.matrices.translate(nameX.toFloat(), (chipTop + 2).toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
+                context.matrices.translate(nameX.toFloat(), (chipTop + 2).toFloat(), 200f)
+                context.matrices.scale(nameScale, nameScale, 1f)
                 context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
                 context.matrices.pop()
 
@@ -1144,11 +1149,10 @@ class SkillsPanel(
                         else -> 0x888888
                     }
                     val starWidth = (textRenderer.getWidth(stars) * scale).toInt()
-                    val starX = rx + (bw - starWidth) / 2
-                    // Tighter to the name — was chipTop+9 (3-px gap). chipTop+8
-                    // packs them closer so the active chip reads as one block.
+                    val starX = textLeftBound + (textAreaW - starWidth) / 2
+                    // Stars also need to render above the icon → +200 Z.
                     context.matrices.push()
-                    context.matrices.translate(starX.toFloat(), (chipTop + 8).toFloat(), 0f)
+                    context.matrices.translate(starX.toFloat(), (chipTop + 8).toFloat(), 200f)
                     context.matrices.scale(scale, scale, 1f)
                     context.drawText(textRenderer, stars, 0, 0, starColor, false)
                     context.matrices.pop()
@@ -1159,9 +1163,11 @@ class SkillsPanel(
             } else {
                 // Available / inactive Relax: name centered vertically (single line,
                 // no stars). 5 stars \u00d7 6 chips per row was pure visual noise.
+                // Available chip name also needs the +200 Z push so it renders
+                // above the icon, plus the same long-name shrink.
                 context.matrices.push()
-                context.matrices.translate(nameX.toFloat(), (chipTop + 5).toFloat(), 0f)
-                context.matrices.scale(scale, scale, 1f)
+                context.matrices.translate(nameX.toFloat(), (chipTop + 5).toFloat(), 200f)
+                context.matrices.scale(nameScale, nameScale, 1f)
                 context.drawTextWithShadow(textRenderer, nameText, 0, 0, textColor)
                 context.matrices.pop()
             }

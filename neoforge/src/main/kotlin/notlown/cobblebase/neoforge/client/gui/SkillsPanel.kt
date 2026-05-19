@@ -1024,7 +1024,13 @@ class SkillsPanel(
             if (rx + bw < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
 
             val hovered = mouseX in rx..(rx + bw) && mouseY in ry..(ry + BTN_HEIGHT)
-            val categoryColor = CobblebaseScreen.CATEGORY_COLORS[btn.category] ?: 0xFF666666.toInt()
+            // Per-job accent from JobColors (Mining = stone gray, Fishing = ocean
+            // blue, etc.) — falls back to category color for jobs not yet in the
+            // palette. Variable name kept as "categoryColor" so the downstream
+            // render code stays identical.
+            val skillKey = btn.skillId
+            val categoryColor = if (skillKey != null) JobColors.colorFor(skillKey)
+                else CobblebaseScreen.CATEGORY_COLORS[btn.category] ?: 0xFF666666.toInt()
             val scale = 0.75f
 
             // Unified vertical slot \u2014 ALL chips render at the same size and Y

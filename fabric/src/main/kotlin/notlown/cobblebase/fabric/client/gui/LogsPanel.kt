@@ -25,10 +25,11 @@ class LogsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    // Row height matches the 16-px Pokemon sprite — the previous 14-px row was 2 px
-    // shorter than the sprite, so PokemonSpriteHelper.renderSmallIconByName (which is
-    // actually a full 16-px icon despite the "small" name) overflowed the row bottom.
-    private val ROW_HEIGHT = UiTokens.ROW_STD       // 18 — matches Pasture + Buffs
+    // Logs have unlimited rows, density matters more than rhythm with other tabs.
+    // 16 px = full-size 16-px Pokemon sprite + 0 padding so a 16-px row stays
+    // dense (more rows on screen than Pasture/Buffs at 18) without shrinking
+    // the sprite to a tiny 12-px badge.
+    private val ROW_HEIGHT = 16
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8
@@ -39,29 +40,11 @@ class LogsPanel(
     private val ROW_BG = 0x18FFFFFF.toInt()
 
     /**
-     * Subtle per-action background tint applied over the zebra pattern, so a glance at
-     * the Logs tab tells you which type of event each row is. Alpha 0x22 = ~13%, low
-     * enough that rarity color bar + text stay readable but high enough to be useful.
-     * Match falls back to no tint for unknown actions.
+     * Subtle per-action row tint — pulled from the central JobColors palette so the
+     * Logs tab matches the SkillsPanel chip colors + BuffsPanel passive colors.
+     * Unknown actions fall back to no tint.
      */
-    private fun actionTintColor(action: String): Int {
-        return when (action.lowercase()) {
-            "found" -> 0x22FFD700.toInt()        // Finder family — gold
-            "mined" -> 0x22A0A0A0.toInt()        // Mining — stone gray
-            "fished" -> 0x223399FF.toInt()       // Fishing — water blue
-            "harvested" -> 0x2255CC55.toInt()    // Harvester / Supplier-harvest — leaf green
-            "supplied" -> 0x2244BB99.toInt()     // Supplier-generate — teal
-            "producer", "produced" -> 0x22F0E6C8.toInt()  // Producer — wool cream
-            "craftsman", "crafted" -> 0x22B07050.toInt()  // Craftsman — workbench brown
-            "healed" -> 0x22FF6666.toInt()       // Healer — soft red
-            "recruited" -> 0x22CC66FF.toInt()    // Recruiter — purple
-            "sorted" -> 0x22FFA040.toInt()       // Gatherer — orange
-            "hatched" -> 0x22FF99CC.toInt()      // Egg Hatcher — baby pink
-            "spotted", "discovered" -> 0x22DDDD66.toInt() // Scout — light yellow
-            "repelled", "extinguisher" -> 0x22FF7733.toInt()  // Guard / Extinguish — flame
-            else -> 0
-        }
-    }
+    private fun actionTintColor(action: String): Int = JobColors.tint(action)
 
     private var scrollY = 0
     private var filterRarity: Rarity? = null // null = show all
@@ -174,10 +157,9 @@ class LogsPanel(
             context.drawTextWithShadow(textRenderer, timeStr, 0, 0, 0x999999)
             context.matrices.pop()
 
-            // Pokemon icon only (no name text — saves space). Sprite is 16 px, row is
-            // 16 px → draw at ry + 0 to center perfectly. Previous +2 offset overflowed
-            // the row bottom by 2 px and left an even gap at the top.
-            PokemonSpriteHelper.renderSmallIconByName(
+            // Pokemon icon — full 16-px renderIcon variant so the sprite fills the
+            // 16-px row instead of the 12-px small badge admin lists use.
+            PokemonSpriteHelper.renderIconByName(
                 context, textRenderer, entry.pokemonName,
                 colPokemon, ry, delta
             )

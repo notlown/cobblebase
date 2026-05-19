@@ -362,6 +362,29 @@ object PokemonSpriteHelper {
         }
     }
 
+    /**
+     * Resolve a Pokemon name to a species id and render the full 16-px icon (same
+     * as [renderIcon]). Use this when the caller has only the display name (e.g.
+     * Log entries, hatch records) AND wants the bigger sprite size — admin lists
+     * keep using [renderSmallIconByName] for the 12-px variant.
+     */
+    fun renderIconByName(
+        context: DrawContext,
+        textRenderer: TextRenderer,
+        pokemonName: String,
+        x: Int,
+        y: Int,
+        delta: Float = 0f
+    ) {
+        val (baseName, aspects) = extractFormAspects(pokemonName)
+        val speciesId = resolveSpeciesFromName(baseName)
+        if (speciesId != null) {
+            renderIcon(context, textRenderer, speciesId, pokemonName, aspects, x, y, delta)
+        } else {
+            renderSmallIconWithColor(context, textRenderer, pokemonName, nameToColor(pokemonName), x, y)
+        }
+    }
+
     fun renderSmallIconByName(
         context: DrawContext,
         textRenderer: TextRenderer,

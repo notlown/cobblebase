@@ -263,12 +263,14 @@ class CobblebaseScreen(
                 context.fill(tx, ty + TAB_HEIGHT - 2, tx + tabW, ty + TAB_HEIGHT, accentColor)
             }
 
-            // Tab icon (vanilla item, same vocabulary as the Admin job grid) + label.
+            // Tab icon — themed for the tab's content. Pokemon → pokeball, Buffs →
+            // beacon (aura/effects radiating outward, not a single Potion), Workshop
+            // → crafting table, Hatchery → egg, Logs → paper, Discovery → spyglass.
             val iconItem = when (tab) {
-                Tab.SKILLS -> net.minecraft.item.Items.ENCHANTED_BOOK
-                Tab.BUFFS -> net.minecraft.item.Items.POTION
+                Tab.SKILLS -> JobIcons.POKE_BALL
+                Tab.BUFFS -> net.minecraft.item.Items.BEACON
                 Tab.WORKSHOP -> net.minecraft.item.Items.CRAFTING_TABLE
-                Tab.HATCHERY -> JobIcons.POKEMON_EGG  // Cobbreeding's pokemon_egg, falls back to vanilla
+                Tab.HATCHERY -> JobIcons.POKEMON_EGG
                 Tab.LOGS -> net.minecraft.item.Items.PAPER
                 Tab.DISCOVERY -> net.minecraft.item.Items.SPYGLASS
             }

@@ -69,7 +69,9 @@ class BuffsPanel(
 
     private enum class SubTab { ACTIVE, PASSIVE }
     private var activeSubTab = SubTab.ACTIVE
-    private val SUBTAB_H = 16
+    // Matches the Pokemon tab's sub-tab dimensions so all sub-tab strips
+    // (Skills/Buffs/Hatchery) read as the same component.
+    private val SUBTAB_H = 14
     private var activeTabBox = intArrayOf(0, 0, 0, 0)
     private var passiveTabBox = intArrayOf(0, 0, 0, 0)
 
@@ -87,15 +89,15 @@ class BuffsPanel(
     }
 
     private fun renderSubTabs(context: DrawContext, mouseX: Int, mouseY: Int): Int {
+        // Uniform dimensions with Skills + Hatchery sub-tabs.
         val tabsY = panelY + 2
         val tabH = SUBTAB_H
-        val gap = 4
-        val activeW = 60
-        val passiveW = 64
+        val gap = 3
+        val tabW = 80
         val activeX = panelX + PADDING
-        val passiveX = activeX + activeW + gap
-        activeTabBox = intArrayOf(activeX, tabsY, activeW, tabH)
-        passiveTabBox = intArrayOf(passiveX, tabsY, passiveW, tabH)
+        val passiveX = activeX + tabW + gap
+        activeTabBox = intArrayOf(activeX, tabsY, tabW, tabH)
+        passiveTabBox = intArrayOf(passiveX, tabsY, tabW, tabH)
 
         renderSubTabButton(context, "Active", activeTabBox, activeSubTab == SubTab.ACTIVE, mouseX, mouseY, 0xFFFF9800.toInt())
         renderSubTabButton(context, "Passive", passiveTabBox, activeSubTab == SubTab.PASSIVE, mouseX, mouseY, 0xFF55FFAA.toInt())
@@ -125,10 +127,16 @@ class BuffsPanel(
             else -> 0xFF1A1A2A.toInt()
         }
         context.fill(x, y, x + w, y + h, bg)
-        if (active) context.fill(x, y + h - 2, x + w, y + h, accent)
-        val labelW = textRenderer.getWidth(label)
+        // 1-px bottom accent line — matches Pokemon tab's sub-tabs.
+        if (active) context.fill(x, y + h - 1, x + w, y + h, accent)
+        val labelScale = UiTokens.TEXT_SM
+        val labelW = (textRenderer.getWidth(label) * labelScale).toInt()
         val color = if (active) 0xFFFFFF else 0x999999
-        context.drawTextWithShadow(textRenderer, label, x + (w - labelW) / 2, y + 4, color)
+        context.matrices.push()
+        context.matrices.translate((x + (w - labelW) / 2).toFloat(), (y + 4).toFloat(), 0f)
+        context.matrices.scale(labelScale, labelScale, 1f)
+        context.drawTextWithShadow(textRenderer, label, 0, 0, color)
+        context.matrices.pop()
     }
 
     private fun inBox(mx: Double, my: Double, box: IntArray): Boolean {

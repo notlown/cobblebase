@@ -39,7 +39,8 @@ class HatcheryPanel(
     private val ROW_H = UiTokens.ROW_TIGHT    // 14 — same as Admin Species DB
     private val STATS_H = 38
     private val CARD_H = 46
-    private val SUBTAB_H = 16
+    // Matches Pokemon-tab + Buffs-tab sub-tab strip so all sub-tab rows feel the same.
+    private val SUBTAB_H = 14
     private val TIME_FORMAT = SimpleDateFormat("MMM dd HH:mm")
 
     private enum class SubTab { HOME, LOGS }
@@ -111,16 +112,16 @@ class HatcheryPanel(
     }
 
     private fun renderSubTabs(context: DrawContext, mouseX: Int, mouseY: Int): Int {
-        val tabsY = panelY + PADDING
+        // Uniform with Skills + Buffs sub-tabs.
+        val tabsY = panelY + 2
         val tabH = SUBTAB_H
-        val gap = 4
-        val homeW = 60
-        val logsW = 60
+        val gap = 3
+        val tabW = 80
         val homeX = panelX + PADDING
-        val logsX = homeX + homeW + gap
+        val logsX = homeX + tabW + gap
 
-        homeTabBox = intArrayOf(homeX, tabsY, homeW, tabH)
-        logsTabBox = intArrayOf(logsX, tabsY, logsW, tabH)
+        homeTabBox = intArrayOf(homeX, tabsY, tabW, tabH)
+        logsTabBox = intArrayOf(logsX, tabsY, tabW, tabH)
 
         renderSubTabButton(context, "Home", homeTabBox, activeSubTab == SubTab.HOME, mouseX, mouseY, 0xFFFFB300.toInt())
         renderSubTabButton(context, "Logs", logsTabBox, activeSubTab == SubTab.LOGS, mouseX, mouseY, 0xFF2196F3.toInt())
@@ -144,12 +145,15 @@ class HatcheryPanel(
             else -> 0xFF1A1A2A.toInt()
         }
         context.fill(x, y, x + w, y + h, bg)
-        if (active) {
-            context.fill(x, y + h - 2, x + w, y + h, accent)
-        }
-        val labelW = textRenderer.getWidth(label)
+        if (active) context.fill(x, y + h - 1, x + w, y + h, accent)
+        val labelScale = UiTokens.TEXT_SM
+        val labelW = (textRenderer.getWidth(label) * labelScale).toInt()
         val color = if (active) 0xFFFFFF else 0x999999
-        context.drawTextWithShadow(textRenderer, label, x + (w - labelW) / 2, y + 4, color)
+        context.matrices.push()
+        context.matrices.translate((x + (w - labelW) / 2).toFloat(), (y + 4).toFloat(), 0f)
+        context.matrices.scale(labelScale, labelScale, 1f)
+        context.drawTextWithShadow(textRenderer, label, 0, 0, color)
+        context.matrices.pop()
     }
 
     private fun renderHomeTab(

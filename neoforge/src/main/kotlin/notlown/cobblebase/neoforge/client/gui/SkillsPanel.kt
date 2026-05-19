@@ -104,6 +104,17 @@ class SkillsPanel(
         // Bottom bar (Discord / Mute / Radius / Admin) + Close button now live in the
         // parent CobblebaseScreen so they're consistent across every tab.
 
+        // Auto-Assign button: for every Pokemon in the pasture, pick the skill with
+        // the highest proficiency (excluding passive buffs) and assign it. Lives on
+        // the header row, right side, next to the "Skills" column header.
+        val autoAssignW = 80
+        val autoAssignH = 12
+        val autoAssignX = panelX + panelW - PANEL_PADDING - autoAssignW
+        val autoAssignY = panelY + SUBTAB_H + HEADER_HEIGHT + PANEL_PADDING - 14
+        addWidget.apply(ButtonWidget.builder(Text.literal("§6Auto-Assign Best")) {
+            autoAssignAll()
+        }.dimensions(autoAssignX, autoAssignY, autoAssignW, autoAssignH).build())
+
         var cumulativeY = 0
 
         pokemonList.forEachIndexed { index, pokemonData ->
@@ -940,7 +951,11 @@ class SkillsPanel(
         // Column headers
         val headerY = contentY - 12
         context.drawTextWithShadow(textRenderer, "\u00A7ePokemon", panelX + PANEL_PADDING, headerY, 0xFFFF55)
-        context.drawTextWithShadow(textRenderer, "\u00A7eSkills", panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH, headerY, 0xFFFF55)
+        // "Skills" header sits over the actual skill chips, NOT over the Relax/Auto
+        // toggle column to its left. Previously the header started right after the
+        // Pokemon column, which made it look like "Relax" was the first skill.
+        val skillsHeaderX = panelX + PANEL_PADDING + NAME_WIDTH + AURA_ICON_WIDTH + AUTO_BTN_WIDTH + BTN_GAP
+        context.drawTextWithShadow(textRenderer, "\u00A7eSkills", skillsHeaderX, headerY, 0xFFFF55)
 
         // Content area with scissor
         val contentBottom = panelY + panelH - 18
@@ -1354,6 +1369,33 @@ class SkillsPanel(
         // Update local client-side cache so GUI shows correct state on re-init
         AssignmentCache.setAssignment(pokemonId, skillId)
         PacketDistributor.sendToServer(SkillAssignmentC2SPacket(pokemonId, skillId ?: ""))
+    }
+
+    /**
+     * For every Pokemon in this pasture, pick the highest-proficiency non-passive
+     * job and assign it. Ties are broken by the first occurrence in the species'
+     * skill list. Pokemon already at their best-prof skill stay unchanged.
+     */
+    private fun autoAssignAll() {
+        for (pokemonData in pokemonList) {
+            // Supplier-locked Pokemon are exempt — they're tethered to a Craftsman.
+            if (AssignmentCache.isCraftsmanSupplier(pokemonData.pokemonId)) continue
+
+            val speciesName = SpeciesSkillRegistry.resolveFormName(pokemonData.species.path, pokemonData.aspects)
+            val speciesSkills = SpeciesSkillRegistry.getSkills(speciesName) ?: continue
+
+            val best = speciesSkills.skills
+                .filter { entry ->
+                    val skillDef = SkillRegistry.get(entry.skillId) ?: return@filter false
+                    !BaseManager.isBuffExecutor(skillDef.executor) && JobConfigOverrides.isEnabled(entry.skillId)
+                }
+                .maxByOrNull { it.proficiency }
+                ?: continue
+
+            if (AssignmentCache.getAssignment(pokemonData.pokemonId) != best.skillId) {
+                selectSkill(pokemonData.pokemonId, best.skillId)
+            }
+        }
     }
 
     private fun getBuffEmoji(executor: String): String? {

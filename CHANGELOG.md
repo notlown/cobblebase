@@ -4,6 +4,35 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [2.0.0] - 2026-05-19
+
+A full UI overhaul, the long-awaited per-pasture settings, and an end-to-end
+NeoForge port. Everything since 1.5 has been consolidated into one release.
+
+Highlights:
+- **Per-pasture overrides** — every pasture owner picks their own Pasture
+  Range + Below-Pasture Reach inside admin caps. New 🔒 Private / 👁 View-Only
+  / 🔓 Public access mode gates the pasture UI per-pasture.
+- **Base Settings modal** — slider-driven popup launched from the new
+  bottom-right footer button.
+- **Show-Radius wireframe is now server-broadcast** — when a pasture owner
+  enables their radius box, every player sees it.
+- **Harvester downward Y fix** — apricorns on cliff-edge / stair-garden trees
+  no longer hide from the scan.
+- **Pasture-Tab redesign** — hero active chips, uniform chip height, 10+
+  rows visible without scrolling, watermark-large job icons, 2-second
+  hover tooltips, alphabetical sort.
+- **Full NeoForge parity** — every Fabric panel, packet, mixin, and renderer
+  has a NeoForge counterpart.
+- **Admin GUI sliders** with default ticks + ↻ reset; min/max splits for
+  every numeric setting that pasture owners can override.
+- **Quieter logs** — no more per-scan Harvester radius readouts in the
+  server console.
+
+See [CHANGELOG-2.0.md](./CHANGELOG-2.0.md) for the full breakdown.
+
+---
+
 ## [1.5.1] - 2026-04-08
 
 Fast-follow patch for four critical 1.5.0 bugs.

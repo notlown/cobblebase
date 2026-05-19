@@ -421,7 +421,7 @@ object EggHatcherExecutor : SkillExecutor {
             Cobblebase.LOGGER.warn("[EggHatcher] purgeOrphanDisplays failed: ${e.javaClass.simpleName}: ${e.message}")
         }
         if (removed > 0) {
-            Cobblebase.LOGGER.info("[EggHatcher] Purged $removed orphan egg display(s) on world ${world.registryKey.value}")
+            Cobblebase.LOGGER.debug("[EggHatcher] Purged $removed orphan egg display(s) on world ${world.registryKey.value}")
         }
     }
 

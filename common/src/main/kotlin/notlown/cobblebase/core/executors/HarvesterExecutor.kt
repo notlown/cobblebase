@@ -167,18 +167,10 @@ object HarvesterExecutor : SkillExecutor {
         if (now - lastSearch < SEARCH_INTERVAL_TICKS) return
         lastSearchTime[pokemonId] = now
 
-        // Use the server-wide pasture range (Admin → Server Settings) so the harvest scan
-        // matches what the player set as the pasture's working radius. Falls through to the
-        // skill's own JSON default when no server setting exists.
         // Per-pasture-aware lookup — owner-picked value within the admin [min, max] caps.
         val pastureRadius = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius(origin)
-        // Debug: prove the scan really uses the admin-set radius. Logs once per scan
-        // cycle per Pokemon (SEARCH_INTERVAL_TICKS apart so it's not spammy).
-        Cobblebase.LOGGER.info("[Harvester] ${pokemonEntity.pokemon.species.name} scan @${origin.toShortString()} radius=$pastureRadius")
         val found = findHarvestable(world, origin, pastureRadius, pokemonId, now)
         if (found != null) {
-            val d = kotlin.math.sqrt(((found.x - origin.x).toDouble().let { it*it } + (found.y - origin.y).toDouble().let { it*it } + (found.z - origin.z).toDouble().let { it*it }))
-            Cobblebase.LOGGER.info("[Harvester]   -> found ripe @${found.toShortString()} dist=$d")
             targetBlock[pokemonId] = found
             targetSetTime[pokemonId] = now
             reservedBlocks[found] = pokemonId

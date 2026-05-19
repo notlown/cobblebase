@@ -1285,9 +1285,10 @@ class SkillsPanel(
     }
 
     /**
-     * Chip labels for long skill names. Short forms keep the chip readable at
-     * 60-px width without aggressive font-shrinking. Full name stays available
-     * in the hover tooltip via SkillDef.name.
+     * Chip labels for long ACTIVE-skill names. Passive buffs (Speed/Haste/Aura/…)
+     * keep their full names everywhere — they live in the Buffs tab where space
+     * isn't a constraint, and the full label is what tells you what the buff does.
+     * Full active-skill name stays available in the 2-second hover tooltip.
      */
     private val SHORT_CHIP_LABELS = mapOf(
         "Friend Recruiter" to "Recruiter",
@@ -1295,17 +1296,6 @@ class SkillsPanel(
         "Egg Hatcher" to "Hatcher",
         "Furnace Fuel" to "Furnace",
         "Cauldron Fill" to "Cauldron",
-        "Aura Boost" to "Aura",
-        "Growth Aura" to "Growth",
-        "Speed Boost" to "Speed",
-        "Strength Boost" to "Strength",
-        "Resistance Boost" to "Resist",
-        "Jump Boost" to "Jump",
-        "Haste Boost" to "Haste",
-        "Saturation Boost" to "Saturation",
-        "Night Vision" to "Night Vis",
-        "Water Breathing" to "Water Br",
-        "Lucky Charm" to "Lucky",
     )
 
     private fun shortChipLabel(fullName: String): String {

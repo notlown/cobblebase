@@ -57,6 +57,11 @@ class SkillsPanel(
      * when the sub-tab switches so it disappears on My Pokemon / WorkerWiki.
      */
     private var autoAssignButton: ButtonWidget? = null
+
+    /** Hover-tooltip state for skill chips. */
+    private var hoveredSkillId: String? = null
+    private var hoverStartedAtMs: Long = 0L
+    private val HOVER_TOOLTIP_DELAY_MS = 2000L
     private val ICON_OFFSET = PokemonSpriteHelper.ICON_SIZE + 4 // 16px icon + 4px gap
     private val NAME_WIDTH = 56 + ICON_OFFSET            // bumped from 50 → 56 (full-scale name fits)
     private val AURA_ICON_WIDTH = 15
@@ -1049,6 +1054,9 @@ class SkillsPanel(
             .filter { AssignmentCache.isCraftsmanSupplier(it.pokemonId) }
             .map { it.pokemonId }.toSet()
 
+        // Reset the hover tracker — set again below if mouse is actually over a chip.
+        var hoveredThisFrame: String? = null
+
         // Skill chips — see PASTURE_REDESIGN_HOOK below.
         for (btn in allButtons) {
             if (btn.pokemonId in supplierPokemonIds) continue
@@ -1061,6 +1069,9 @@ class SkillsPanel(
             if (rx + bw < panelX + PANEL_PADDING + NAME_WIDTH || rx > panelX + panelW) continue
 
             val hovered = mouseX in rx..(rx + bw) && mouseY in ry..(ry + BTN_HEIGHT)
+            if (hovered && !isAutoBtn && btn.skillId != null) {
+                hoveredThisFrame = btn.skillId
+            }
             // Per-job accent from JobColors (Mining = stone gray, Fishing = ocean
             // blue, etc.) — falls back to category color for jobs not yet in the
             // palette. Variable name kept as "categoryColor" so the downstream
@@ -1176,6 +1187,14 @@ class SkillsPanel(
             }
         }
 
+        // Update hover-tracker state. Reset the timer when the hovered chip changes
+        // (or when the mouse leaves all chips) so the 2-second countdown restarts.
+        val now = System.currentTimeMillis()
+        if (hoveredThisFrame != hoveredSkillId) {
+            hoveredSkillId = hoveredThisFrame
+            hoverStartedAtMs = now
+        }
+
         // "Helps your Craftsman" label for supplier Mons (rendered where buttons would be)
         pokemonList.forEachIndexed { index, pokemonData ->
             if (pokemonData.pokemonId in supplierPokemonIds) {
@@ -1220,6 +1239,72 @@ class SkillsPanel(
 
         // Footer line
         context.fill(panelX, panelY + panelH - 18, panelX + panelW, panelY + panelH - 17, CobblebaseScreen.PANEL_BORDER)
+
+        // Hover tooltip — pops up once a skill chip has been hovered continuously
+        // for HOVER_TOOLTIP_DELAY_MS. Render last so it sits above every chip + the
+        // scrollbar. Skipped on non-Pasture sub-tabs.
+        if (activeSubTab == SubTab.ACTIVE_WORKERS) {
+            val skillId = hoveredSkillId
+            if (skillId != null && now - hoverStartedAtMs >= HOVER_TOOLTIP_DELAY_MS) {
+                renderSkillTooltip(context, mouseX, mouseY, skillId)
+            }
+        }
+    }
+
+    /**
+     * Floating tooltip with the skill's display name + description, anchored to
+     * the mouse cursor. Keeps the tooltip inside the panel bounds when the mouse
+     * is near the right/bottom edge so it doesn't render off-screen.
+     */
+    private fun renderSkillTooltip(context: DrawContext, mouseX: Int, mouseY: Int, skillId: String) {
+        val skill = SkillRegistry.get(skillId) ?: return
+        val title = "§f§l${skill.name}"
+        val descLines = wrapText(skill.description, 36)
+
+        val padding = 4
+        val titleW = textRenderer.getWidth(title)
+        val descMaxW = descLines.maxOf { textRenderer.getWidth(it) }
+        val tooltipW = maxOf(titleW, descMaxW) + padding * 2
+        val tooltipH = 10 + descLines.size * 9 + padding * 2
+
+        // Position: just below+right of cursor, clamped to panel bounds.
+        var tx = mouseX + 8
+        var ty = mouseY + 8
+        if (tx + tooltipW > panelX + panelW) tx = panelX + panelW - tooltipW - 2
+        if (ty + tooltipH > panelY + panelH) ty = mouseY - tooltipH - 4
+
+        // Background + border (drawn at +400 Z so it lands above all chip content).
+        context.matrices.push()
+        context.matrices.translate(0f, 0f, 400f)
+        context.fill(tx, ty, tx + tooltipW, ty + tooltipH, 0xEE10101A.toInt())
+        context.fill(tx, ty, tx + tooltipW, ty + 1, 0xFFFFFFFF.toInt())
+        context.fill(tx, ty + tooltipH - 1, tx + tooltipW, ty + tooltipH, 0xFFFFFFFF.toInt())
+        context.fill(tx, ty, tx + 1, ty + tooltipH, 0xFFFFFFFF.toInt())
+        context.fill(tx + tooltipW - 1, ty, tx + tooltipW, ty + tooltipH, 0xFFFFFFFF.toInt())
+
+        // Title + description text.
+        context.drawTextWithShadow(textRenderer, title, tx + padding, ty + padding, 0xFFFFFF)
+        for ((i, line) in descLines.withIndex()) {
+            context.drawTextWithShadow(textRenderer, "§7$line", tx + padding, ty + padding + 12 + i * 9, 0xBBBBBB)
+        }
+        context.matrices.pop()
+    }
+
+    /** Naive text wrap by character count — sufficient for short skill descriptions. */
+    private fun wrapText(text: String, maxChars: Int): List<String> {
+        if (text.isBlank()) return listOf("(no description)")
+        val out = mutableListOf<String>()
+        var line = StringBuilder()
+        for (word in text.split(' ')) {
+            if (line.isNotEmpty() && line.length + 1 + word.length > maxChars) {
+                out.add(line.toString())
+                line = StringBuilder()
+            }
+            if (line.isNotEmpty()) line.append(' ')
+            line.append(word)
+        }
+        if (line.isNotEmpty()) out.add(line.toString())
+        return out
     }
 
     fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {

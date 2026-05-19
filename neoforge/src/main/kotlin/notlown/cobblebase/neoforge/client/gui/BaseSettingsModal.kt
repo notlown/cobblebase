@@ -59,10 +59,24 @@ class BaseSettingsModal(
 
     private var dragging: String? = null
 
+    /** Set by the × button; the parent screen polls this and nulls the modal. */
+    var wantsClose: Boolean = false
+        private set
+
     init {
+        // Cobblemon's PokemonPastureBlockEntity stores ownerId server-side only
+        // (the NBT-write includes it but there's no toUpdatePacket override, so
+        // the client never receives it). Treat null as "owner unknown" rather
+        // than "no owner" — Cobblemon already gates GUI access to the owner, so
+        // if we got here the player almost certainly owns it. Server validates
+        // the C2S packet via BaseManager.canEditPasture regardless.
         val player = MinecraftClient.getInstance().player
-        canEdit = player != null &&
-                (player.hasPermissionLevel(2) || (ownerUuid != null && ownerUuid == player.uuid))
+        canEdit = player != null && when {
+            player.hasPermissionLevel(2) -> true            // OP — always editable
+            ownerUuid == null -> true                       // unknown — optimistic
+            ownerUuid == player.uuid -> true                // confirmed owner
+            else -> false                                   // confirmed someone else's
+        }
     }
 
     /**
@@ -107,19 +121,30 @@ class BaseSettingsModal(
 
         // Title bar.
         drawScaled(context, "§f§lBase Settings", panelX + PADDING, panelY + PADDING, 0xFFFFFF, 0.95f)
-        val ownerNote = if (ownerUuid == null) "§7unowned pasture"
-            else if (canEdit) "§ayou own this pasture"
-            else "§cread-only — not your pasture"
+        val player = MinecraftClient.getInstance().player
+        val ownerNote = when {
+            ownerUuid != null && ownerUuid == player?.uuid -> "§ayou own this pasture"
+            ownerUuid != null -> "§cread-only — not your pasture"
+            canEdit -> "§ayour pasture"                     // optimistic (ownerId not synced)
+            else -> "§7sign-in required"                    // shouldn't happen client-side
+        }
         drawScaled(context, ownerNote, panelX + PADDING, panelY + PADDING + 9, 0xCCCCCC, 0.6f)
 
-        // Close button (×) top-right.
+        // Close button (✕) top-right — same colors + glyph as the main Cobblebase
+        // screen's close button (CLOSE_BTN_SIZE=14), just one px smaller so it
+        // doesn't dominate the modal header.
         val closeSize = 12
         closeBtn = intArrayOf(panelX + PANEL_W - closeSize - 4, panelY + 4, closeSize, closeSize)
         val closeHov = mouseX in closeBtn[0]..(closeBtn[0] + closeBtn[2]) &&
                        mouseY in closeBtn[1]..(closeBtn[1] + closeBtn[3])
-        context.fill(closeBtn[0], closeBtn[1], closeBtn[0] + closeBtn[2], closeBtn[1] + closeBtn[3],
-            if (closeHov) 0xFF5A2A2A.toInt() else 0xFF2A2A3F.toInt())
-        drawScaled(context, "§f×", closeBtn[0] + 4, closeBtn[1] + 2, 0xFFFFFF, 0.85f)
+        val closeBg = if (closeHov) 0xFFB23A3A.toInt() else 0xFF44445A.toInt()
+        context.fill(closeBtn[0], closeBtn[1], closeBtn[0] + closeBtn[2], closeBtn[1] + closeBtn[3], closeBg)
+        val xLabel = "§f✕"
+        val xW = textRenderer.getWidth(xLabel)
+        context.drawTextWithShadow(textRenderer, xLabel,
+            closeBtn[0] + (closeSize - xW) / 2,
+            closeBtn[1] + (closeSize - 8) / 2,
+            0xFFFFFF)
 
         // Divider under title.
         context.fill(panelX + PADDING, panelY + PADDING + 18,
@@ -251,8 +276,11 @@ class BaseSettingsModal(
             mouseY < panelY || mouseY > panelY + PANEL_H) {
             return false // signal "I didn't consume" — caller closes us
         }
-        // × button.
-        if (hit(mouseX, mouseY, closeBtn)) return true.also { dragging = "close" }
+        // × button — actually request close.
+        if (hit(mouseX, mouseY, closeBtn)) {
+            wantsClose = true
+            return true
+        }
         if (!canEdit) return true // consume click silently
         // Reset buttons.
         if (hit(mouseX, mouseY, rangeResetBtn)) {

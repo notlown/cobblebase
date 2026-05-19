@@ -318,6 +318,30 @@ object CobblebaseFabric : ModInitializer {
             }
         }
 
+        // Show-Radius visibility — owner-toggled set broadcast to all clients so
+        // visiting players see the wireframe too.
+        PayloadTypeRegistry.playS2C().register(
+            notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket.CODEC
+        )
+        PayloadTypeRegistry.playC2S().register(
+            notlown.cobblebase.core.net.RadiusToggleC2SPacket.ID,
+            notlown.cobblebase.core.net.RadiusToggleC2SPacket.CODEC
+        )
+        ServerPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.RadiusToggleC2SPacket.ID) { packet, context ->
+            context.server().execute {
+                val player = context.player()
+                if (!notlown.cobblebase.core.BaseManager.canEditPasture(player, packet.pasturePos)) return@execute
+                notlown.cobblebase.core.RadiusVisible.toggle(packet.pasturePos)
+                val sync = notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket(
+                    notlown.cobblebase.core.RadiusVisible.snapshot().toList()
+                )
+                for (p in player.server.playerManager.playerList) {
+                    ServerPlayNetworking.send(p, sync)
+                }
+            }
+        }
+
         // Recipe overrides — admin enable/disable per-recipe for Craftsman.
         PayloadTypeRegistry.playS2C().register(
             notlown.cobblebase.core.net.RecipeOverridesSyncS2CPacket.ID,
@@ -563,6 +587,10 @@ object CobblebaseFabric : ModInitializer {
             val pSnap = notlown.cobblebase.core.PastureSettings.snapshot()
                 .mapValues { (_, e) -> intArrayOf(e.range ?: -1, e.belowReach ?: -1, e.access.ordinal) }
             ServerPlayNetworking.send(handler.player, notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket(pSnap))
+            // Show-Radius wireframe visibility set.
+            ServerPlayNetworking.send(handler.player, notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket(
+                notlown.cobblebase.core.RadiusVisible.snapshot().toList()
+            ))
             // Sync all species skill overrides so the client's Pasture Skills
             // tab sees the admin-set skill set instead of the bundled default.
             val overrideSync = notlown.cobblebase.core.net.SpeciesOverrideSyncS2CPacket(

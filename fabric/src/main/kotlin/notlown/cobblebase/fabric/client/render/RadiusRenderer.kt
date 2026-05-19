@@ -27,37 +27,15 @@ object RadiusRenderer {
     /** True only if the given [pos] specifically has its radius shown. */
     fun isActiveAt(pos: BlockPos): Boolean = active.contains(pos)
 
-    /** Turn the box on for [pos]. The `radius` parameter is ignored (read from
-     * GeneralSettings at render time) but kept for callsite compatibility. */
-    @Suppress("UNUSED_PARAMETER")
-    fun enable(pos: BlockPos, radius: Int) {
-        active.add(pos.toImmutable())
-    }
-
-    /** Turn the box off for [pos]. No-op if it was off. */
-    fun disable(pos: BlockPos) {
-        active.remove(pos)
-    }
-
-    /** Clear every active radius. */
-    fun disableAll() {
-        active.clear()
-    }
-
     /**
-     * Toggle the box for [pos]. Returns the new active state for this pasture.
-     * Other pastures' radii are never touched.
+     * Replace the active set wholesale. Called by the RadiusVisibleSyncS2CPacket
+     * receiver — the visible set is server-authoritative now so every player
+     * sees the same wireframes (a pasture owner toggling Show Radius lights it
+     * up for everyone in render distance).
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun toggle(pos: BlockPos, radius: Int): Boolean {
-        val key = pos.toImmutable()
-        return if (active.contains(key)) {
-            active.remove(key)
-            false
-        } else {
-            active.add(key)
-            true
-        }
+    fun setActive(positions: Collection<BlockPos>) {
+        active.clear()
+        for (p in positions) active.add(p.toImmutable())
     }
 
     fun render(context: WorldRenderContext) {

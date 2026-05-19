@@ -123,6 +123,12 @@ object CobblebaseFabricClient : ClientModInitializer {
                 notlown.cobblebase.core.PastureSettingsCache.replaceAll(packet.entries)
             }
         }
+        // Show-Radius wireframe sync — full replace; renderer reads this set every frame.
+        ClientPlayNetworking.registerGlobalReceiver(notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket.ID) { packet, context ->
+            context.client().execute {
+                notlown.cobblebase.fabric.client.render.RadiusRenderer.setActive(packet.positions)
+            }
+        }
 
         // Cry playback — server-side `world.playSound(null, ...)` ignored per-player config,
         // so cryEnabled/cryVolume are checked HERE on the receiving client before playing.

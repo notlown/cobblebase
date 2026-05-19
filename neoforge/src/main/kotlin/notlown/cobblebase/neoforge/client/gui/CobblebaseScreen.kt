@@ -144,15 +144,16 @@ class CobblebaseScreen(
         addDrawableChild(muteBtn)
         nextX += iconBtnW + btnGap
 
-        // Show Radius toggle (only if we have a pastureOrigin). Stay inside the
-        // GUI on click — close() removed so the user can flip ON/OFF without the
-        // PC GUI snapping shut every time.
+        // Show Radius toggle — server-broadcast now, so every player sees the
+        // same wireframes. Only the pasture owner (or an OP) can flip the
+        // server-side set; the C2S handler validates and re-broadcasts.
         if (pastureOrigin != null) {
             val activeHere = notlown.cobblebase.neoforge.client.render.RadiusRenderer.isActiveAt(pastureOrigin)
             val radiusLabel = if (activeHere) "§aRadius ON" else "§cRadius OFF"
             addDrawableChild(ButtonWidget.builder(Text.literal(radiusLabel)) {
-                notlown.cobblebase.neoforge.client.render.RadiusRenderer.toggle(pastureOrigin, computeMaxRadius())
-                // Re-init so the button's text + style refresh to the new state.
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(
+                    notlown.cobblebase.core.net.RadiusToggleC2SPacket(pastureOrigin)
+                )
                 initCurrentTab()
             }.dimensions(nextX, barY, 60, barBtnH).build())
         }
@@ -354,7 +355,7 @@ class CobblebaseScreen(
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         baseSettingsModal?.let { modal ->
             val consumed = modal.mouseClicked(mouseX, mouseY, button)
-            if (!consumed) baseSettingsModal = null
+            if (!consumed || modal.wantsClose) baseSettingsModal = null
             return true
         }
         // Close button (X) — top-right of the tab strip.

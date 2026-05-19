@@ -144,15 +144,18 @@ class CobblebaseScreen(
         addDrawableChild(muteBtn)
         nextX += iconBtnW + btnGap
 
-        // Show Radius toggle (only if we have a pastureOrigin). Stay inside the
-        // GUI on click — close() removed so the user can flip ON/OFF without the
-        // PC GUI snapping shut every time.
+        // Show Radius toggle — server-broadcast now, so every player sees the
+        // same wireframes. Only the pasture owner (or an OP) can flip the
+        // server-side set; the C2S handler validates and re-broadcasts.
         if (pastureOrigin != null) {
             val activeHere = notlown.cobblebase.fabric.client.render.RadiusRenderer.isActiveAt(pastureOrigin)
             val radiusLabel = if (activeHere) "§aRadius ON" else "§cRadius OFF"
             addDrawableChild(ButtonWidget.builder(Text.literal(radiusLabel)) {
-                notlown.cobblebase.fabric.client.render.RadiusRenderer.toggle(pastureOrigin, computeMaxRadius())
-                // Re-init so the button's text + style refresh to the new state.
+                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                    notlown.cobblebase.core.net.RadiusToggleC2SPacket(pastureOrigin)
+                )
+                // Re-init so the button's text refreshes once the sync packet arrives.
+                // (Optimistic UI: the actual flip applies on receipt, ~1 tick latency.)
                 initCurrentTab()
             }.dimensions(nextX, barY, 60, barBtnH).build())
         }
@@ -357,8 +360,8 @@ class CobblebaseScreen(
         baseSettingsModal?.let { modal ->
             val consumed = modal.mouseClicked(mouseX, mouseY, button)
             // mouseClicked returns false ONLY when the click was outside the panel —
-            // treat that as "close the modal."
-            if (!consumed) baseSettingsModal = null
+            // treat that as "close the modal." The × button sets wantsClose.
+            if (!consumed || modal.wantsClose) baseSettingsModal = null
             return true
         }
         // Close button (X) — top-right of the tab strip.

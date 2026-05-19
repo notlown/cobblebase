@@ -540,6 +540,32 @@ class CobblebaseNeoForge(modBus: IEventBus) {
             }
         }
 
+        // Show-Radius wireframe visibility — owner toggles → server broadcasts to all.
+        registrar.playToClient(
+            notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket.ID,
+            notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                notlown.cobblebase.neoforge.client.render.RadiusRenderer.setActive(packet.positions)
+            }
+        }
+        registrar.playToServer(
+            notlown.cobblebase.core.net.RadiusToggleC2SPacket.ID,
+            notlown.cobblebase.core.net.RadiusToggleC2SPacket.CODEC
+        ) { packet, context ->
+            context.enqueueWork {
+                val player = context.player() as net.minecraft.server.network.ServerPlayerEntity
+                if (!notlown.cobblebase.core.BaseManager.canEditPasture(player, packet.pasturePos)) return@enqueueWork
+                notlown.cobblebase.core.RadiusVisible.toggle(packet.pasturePos)
+                val sync = notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket(
+                    notlown.cobblebase.core.RadiusVisible.snapshot().toList()
+                )
+                for (p in player.server.playerManager.playerList) {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(p, sync)
+                }
+            }
+        }
+
         // --- Workshop packets ---
 
         // C2S: Request recipe list + workshop state
@@ -719,6 +745,13 @@ class CobblebaseNeoForge(modBus: IEventBus) {
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
             player,
             notlown.cobblebase.core.net.PastureSettingsSyncS2CPacket(pastureSnap)
+        )
+        // Show-Radius wireframe visibility set.
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
+            player,
+            notlown.cobblebase.core.net.RadiusVisibleSyncS2CPacket(
+                notlown.cobblebase.core.RadiusVisible.snapshot().toList()
+            )
         )
         // Sync all species skill overrides so the Pasture Skills tab sees
         // the admin-set skill set instead of the bundled default.

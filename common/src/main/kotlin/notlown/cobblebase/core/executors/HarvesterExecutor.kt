@@ -92,6 +92,13 @@ object HarvesterExecutor : SkillExecutor {
     private val NAV_TIMEOUT_TICKS = 100L // 5 seconds - auto-harvest if can't reach
     private val SEARCH_INTERVAL_TICKS = 40L // 2 seconds between scans when nothing is ripe
 
+    // How far BELOW the pasture Y we still look for harvestables. Cliff edges,
+    // stair gardens, and hillside trees grow a few blocks lower than the pasture
+    // block itself, so we need *some* downward reach — but going further would
+    // pull mons into cave systems beneath the base, which we deliberately avoid.
+    // 6 blocks covers typical surface variation without dipping into "underground".
+    private const val DOWNWARD_SCAN_BUFFER = 6
+
     /**
      * Returns movement speed based on proficiency (1-5).
      * Prof 1 = 0.4 (slow), Prof 5 = 1.2 (fast)
@@ -203,8 +210,12 @@ object HarvesterExecutor : SkillExecutor {
         val candidates = mutableListOf<BlockPos>()
         val seenThisScan = HashSet<BlockPos>()
 
+        val yDown = minOf(radius, DOWNWARD_SCAN_BUFFER)
         for (x in -radius..radius) {
-            for (y in 0..radius) { // Only search at pasture level and ABOVE, never below
+            // Y range: full `radius` upward (tall berry bushes, hanging apricorns)
+            // but only DOWNWARD_SCAN_BUFFER downward — enough for cliff edges and
+            // stair gardens, not enough to crawl into caves under the base.
+            for (y in -yDown..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     // Skip blocks still on cooldown (prevents instant re-harvest with Irrigator)
@@ -249,8 +260,9 @@ object HarvesterExecutor : SkillExecutor {
      */
     private fun findGrowing(world: World, origin: BlockPos, radius: Int): BlockPos? {
         val candidates = mutableListOf<BlockPos>()
+        val yDown = minOf(radius, DOWNWARD_SCAN_BUFFER)
         for (x in -radius..radius) {
-            for (y in -radius..radius) {
+            for (y in -yDown..radius) {
                 for (z in -radius..radius) {
                     val pos = origin.add(x, y, z)
                     if (isHarvestableBlock(world, pos) && !isReadyToHarvest(world, pos)) {

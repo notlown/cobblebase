@@ -15,18 +15,23 @@ import net.minecraft.util.math.BlockPos
  */
 object RadiusRenderer {
 
-    // pasture position -> radius in blocks
-    private val active = mutableMapOf<BlockPos, Int>()
+    // Set of pasture positions that currently show their wireframe. The radius
+    // itself is read fresh from CobblebaseConfig.jobSearchRadius at render time,
+    // so when the admin changes "Pasture Range" in Server Settings, every active
+    // wireframe in every pasture re-snaps to the new value on the next frame.
+    private val active = mutableSetOf<BlockPos>()
 
     /** True if any pasture currently has its radius shown. */
     fun isActive(): Boolean = active.isNotEmpty()
 
     /** True only if the given [pos] specifically has its radius shown. */
-    fun isActiveAt(pos: BlockPos): Boolean = active.containsKey(pos)
+    fun isActiveAt(pos: BlockPos): Boolean = active.contains(pos)
 
-    /** Turn the box on for [pos] (replaces the radius if already on). */
+    /** Turn the box on for [pos]. The `radius` parameter is ignored (read from
+     * GeneralSettings at render time) but kept for callsite compatibility. */
+    @Suppress("UNUSED_PARAMETER")
     fun enable(pos: BlockPos, radius: Int) {
-        active[pos.toImmutable()] = radius.coerceAtLeast(1)
+        active.add(pos.toImmutable())
     }
 
     /** Turn the box off for [pos]. No-op if it was off. */
@@ -43,13 +48,14 @@ object RadiusRenderer {
      * Toggle the box for [pos]. Returns the new active state for this pasture.
      * Other pastures' radii are never touched.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun toggle(pos: BlockPos, radius: Int): Boolean {
         val key = pos.toImmutable()
-        return if (active.containsKey(key)) {
+        return if (active.contains(key)) {
             active.remove(key)
             false
         } else {
-            active[key] = radius.coerceAtLeast(1)
+            active.add(key)
             true
         }
     }
@@ -65,13 +71,14 @@ object RadiusRenderer {
         matrices.translate(-cam.x, -cam.y, -cam.z)
 
         val buffer = consumers.getBuffer(RenderLayer.getLines())
-        // Solid red, slightly transparent so the box blends naturally with the world.
         val r = 1.0f
         val g = 0.15f
         val b = 0.15f
         val a = 0.9f
 
-        for ((pos, radius) in active) {
+        // Re-read every frame so admin slider changes update all boxes instantly.
+        val radius = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius.coerceAtLeast(1)
+        for (pos in active) {
             val minX = (pos.x - radius).toDouble()
             val minY = (pos.y - radius).toDouble()
             val minZ = (pos.z - radius).toDouble()

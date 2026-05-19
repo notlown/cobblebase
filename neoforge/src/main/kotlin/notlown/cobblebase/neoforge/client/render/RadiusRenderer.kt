@@ -13,6 +13,8 @@ object RadiusRenderer {
 
     fun isActiveAt(pos: BlockPos): Boolean = active.contains(pos)
 
+    /** Radius value is ignored — the actual wireframe (when implemented) will
+     * read from CobblebaseConfig.jobSearchRadius at render time, same as Fabric. */
     fun toggle(pos: BlockPos, @Suppress("UNUSED_PARAMETER") radius: Int) {
         if (!active.remove(pos)) active.add(pos)
     }

@@ -183,7 +183,7 @@ class SkillsPanel(
 
             for ((entry, skillDef, _) in sortedSkills) {
                 allButtons.add(SkillButtonData(
-                    pokemonId, entry.skillId, skillDef.name, entry.proficiency,
+                    pokemonId, entry.skillId, shortChipLabel(skillDef.name), entry.proficiency,
                     skillDef.category, btnX, btnY, currentAssignment == entry.skillId
                 ))
                 btnX += chipW + BTN_GAP
@@ -1282,6 +1282,34 @@ class SkillsPanel(
             context.drawTextWithShadow(textRenderer, "§7$line", tx + padding, ty + padding + 12 + i * 9, 0xBBBBBB)
         }
         context.matrices.pop()
+    }
+
+    /**
+     * Chip labels for long skill names. Short forms keep the chip readable at
+     * 60-px width without aggressive font-shrinking. Full name stays available
+     * in the hover tooltip via SkillDef.name.
+     */
+    private val SHORT_CHIP_LABELS = mapOf(
+        "Friend Recruiter" to "Recruiter",
+        "Item Gatherer" to "Gatherer",
+        "Egg Hatcher" to "Hatcher",
+        "Furnace Fuel" to "Furnace",
+        "Cauldron Fill" to "Cauldron",
+        "Aura Boost" to "Aura",
+        "Growth Aura" to "Growth",
+        "Speed Boost" to "Speed",
+        "Strength Boost" to "Strength",
+        "Resistance Boost" to "Resist",
+        "Jump Boost" to "Jump",
+        "Haste Boost" to "Haste",
+        "Saturation Boost" to "Saturation",
+        "Night Vision" to "Night Vis",
+        "Water Breathing" to "Water Br",
+        "Lucky Charm" to "Lucky",
+    )
+
+    private fun shortChipLabel(fullName: String): String {
+        return SHORT_CHIP_LABELS[fullName] ?: fullName
     }
 
     /** Naive text wrap by character count — sufficient for short skill descriptions. */

@@ -25,11 +25,11 @@ class LogsPanel(
     private val textRenderer: TextRenderer
 ) {
 
-    // Logs have unlimited rows — density wins. 11 px row = 8 px text height +
-    // ~1.5 px breathing room top/bottom. Sprite renders via renderSmallIconByName
-    // (12-px small variant) which overflows by 1 px but reads fine and lets way
-    // more rows fit on screen than the 16-px row used by Pasture/Buffs.
-    private val ROW_HEIGHT = 11
+    // Logs have unlimited rows but the sprite needs to be recognizable. 14 px row
+    // fits the full-size 16-px renderIconByName sprite (slight 2-px overflow that
+    // disappears into the row below's tint) so Pokemon are identifiable at a
+    // glance without dropping back to the cramped 11-px row.
+    private val ROW_HEIGHT = 14
     private val HEADER_HEIGHT = 18
     private val FILTER_HEIGHT = 18
     private val PADDING = 8
@@ -157,9 +157,10 @@ class LogsPanel(
             context.drawTextWithShadow(textRenderer, timeStr, 0, 0, 0x999999)
             context.matrices.pop()
 
-            // Pokemon icon — 12-px small variant fits the 11-px row with minimal
-            // overflow. Full 16-px renderIcon would dominate a compact log feed.
-            PokemonSpriteHelper.renderSmallIconByName(
+            // Pokemon icon — full 16-px renderIconByName so the sprite is
+            // recognizable, not a tiny 12-px badge. Slight overflow into the
+            // next row's tint band is intentional.
+            PokemonSpriteHelper.renderIconByName(
                 context, textRenderer, entry.pokemonName,
                 colPokemon, ry - 1, delta
             )

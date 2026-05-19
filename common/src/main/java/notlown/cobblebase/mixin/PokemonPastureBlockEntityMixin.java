@@ -260,7 +260,10 @@ public class PokemonPastureBlockEntityMixin {
                     try {
                         boolean handled = AmbientBehavior.INSTANCE.tickIdle(world, pokemonEntity, blockPos);
                         if (!handled) {
-                            NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, 15);
+                            // Wander radius = admin's Pasture Range so Relax mons roam to
+                            // the full base extent, not just a hardcoded 15-block bubble.
+                            int wanderR = Math.max(5, notlown.cobblebase.core.CobblebaseConfig.INSTANCE.getJobSearchRadius());
+                            NavigationHelper.INSTANCE.wanderNearOrigin(pokemonEntity, blockPos, wanderR);
                         }
                     } catch (Exception ignored) { }
                 }

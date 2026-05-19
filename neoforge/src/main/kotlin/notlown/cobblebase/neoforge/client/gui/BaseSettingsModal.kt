@@ -87,6 +87,14 @@ class BaseSettingsModal(
     }
 
     fun render(context: DrawContext, screenW: Int, screenH: Int, mouseX: Int, mouseY: Int) {
+        // Push the whole modal far enough forward in Z that DrawContext.drawItem
+        // (which renders at z≈150 during ItemRenderer's translucent pass) ends
+        // up BEHIND the modal instead of poking through the panel background.
+        // 400 sits above items (150) but below vanilla tooltips (also ~400),
+        // which is fine since the modal owns input while open anyway.
+        context.matrices.push()
+        context.matrices.translate(0f, 0f, 400f)
+
         // Backdrop dims the underlying GUI.
         context.fill(0, 0, screenW, screenH, 0xB0000000.toInt())
 
@@ -139,6 +147,8 @@ class BaseSettingsModal(
 
         // Access mode pill row.
         accessBtn = drawAccessRow(context, rowY, mouseX, mouseY)
+
+        context.matrices.pop()
     }
 
     /**

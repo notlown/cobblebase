@@ -45,8 +45,10 @@ object UiTokens {
     const val ROW_GAP = 2
 
     // ── Bottom bar ─────────────────────────────────────────────────────────
-    /** Reserved vertical strip for the persistent bottom bar. */
-    const val BOTTOM_BAR_H = 20
+    /** Reserved vertical strip for the persistent bottom bar. Matches button
+     * height + 1 px above + 1 px below so the strip looks like a button row,
+     * not a wasted-space frame. */
+    const val BOTTOM_BAR_H = 14
     /** Padding below the bottom bar (panel edge to button top). */
-    const val BOTTOM_BAR_INSET = 4
+    const val BOTTOM_BAR_INSET = 1
 }

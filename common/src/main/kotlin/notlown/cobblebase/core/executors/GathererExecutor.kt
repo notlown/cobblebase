@@ -1,5 +1,7 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.effectiveRadius
+
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.ItemEntity
@@ -118,7 +120,7 @@ object GathererExecutor : SkillExecutor {
 
         // Phase 1: deposit items if holding any
         if (!items.isNullOrEmpty()) {
-            depositItems(world, origin, pokemonEntity, pokemonId, speed, skill.searchRadius)
+            depositItems(world, origin, pokemonEntity, pokemonId, speed, skill.effectiveRadius)
             return
         }
 
@@ -165,7 +167,7 @@ object GathererExecutor : SkillExecutor {
         if (now - lastSearch < SEARCH_INTERVAL_TICKS) return
         lastSearchTime[pokemonId] = now
 
-        val radius = getRadiusForProficiency(skillEntry.proficiency, skill.searchRadius)
+        val radius = getRadiusForProficiency(skillEntry.proficiency, skill.effectiveRadius)
         val found = findNearestDroppedItem(world, pokemonEntity, radius, origin)
         if (found != null) {
             // Claim the item immediately — prevent player pickup to avoid dupe glitch

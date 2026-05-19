@@ -1,5 +1,7 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.effectiveRadius
+
 import net.minecraft.entity.ItemEntity
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
@@ -269,7 +271,7 @@ object InventoryHelper {
     // misses (was 600-1400ms per tick at radius 24) makes a longer TTL essential.
 
     /**
-     * Maximum radius we'll EVER scan for containers, regardless of what `skill.searchRadius`
+     * Maximum radius we'll EVER scan for containers, regardless of what `skill.effectiveRadius`
      * declares. The skill's search radius is for OTHER purposes (e.g. Gatherer item-pickup
      * range = 24 blocks), but for deposit-chest detection a 12-block cap covers any sensible
      * base layout while keeping per-scan cost bounded (25³ = 15625 positions).

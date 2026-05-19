@@ -1,5 +1,7 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.effectiveRadius
+
 import com.cobblemon.mod.common.block.ApricornBlock
 import com.cobblemon.mod.common.block.BerryBlock
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
@@ -116,7 +118,7 @@ object SupplierExecutor {
         world: ServerWorld, origin: BlockPos, pokemonEntity: PokemonEntity,
         pokemonId: UUID, neededItem: String, skillDef: SkillDef, now: Long
     ) {
-        val radius = skillDef.searchRadius
+        val radius = skillDef.effectiveRadius
 
         // Search for a harvestable block that drops the needed item
         val harvestPos = findHarvestableFor(world, origin, radius, neededItem)
@@ -177,7 +179,7 @@ object SupplierExecutor {
         val stack = ItemStack(item, 1)
         lastProduceTime[pokemonId] = now
 
-        val containerPos = InventoryHelper.findBestContainer(world, origin, skillDef.searchRadius, listOf(stack))
+        val containerPos = InventoryHelper.findBestContainer(world, origin, skillDef.effectiveRadius, listOf(stack))
         if (containerPos != null) {
             InventoryHelper.insertItems(world, containerPos, listOf(stack))
         } else {

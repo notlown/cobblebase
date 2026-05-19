@@ -1,5 +1,7 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.effectiveRadius
+
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.Blocks
 import net.minecraft.block.CampfireBlock
@@ -52,7 +54,7 @@ object ExtinguisherExecutor : SkillExecutor {
         }
 
         // Range scales with proficiency
-        val radius = getRadius(prof, skill.searchRadius)
+        val radius = getRadius(prof, skill.effectiveRadius)
         var extinguishedCount = 0
 
         for (x in -radius..radius) {

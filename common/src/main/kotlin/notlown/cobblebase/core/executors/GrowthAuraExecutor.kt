@@ -1,5 +1,7 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.effectiveRadius
+
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.CropBlock
 import net.minecraft.particle.ParticleTypes
@@ -56,7 +58,7 @@ object GrowthAuraExecutor : SkillExecutor {
         val lastTime = lastTickTime[pokemonId] ?: 0L
         if (now - lastTime < PULSE_INTERVAL) return
 
-        val radius = getRadius(prof, skill.searchRadius)
+        val radius = getRadius(prof, skill.effectiveRadius)
         // Per-job tuning: admin can scale the number of crops ticked per pulse.
         val growthMult = notlown.cobblebase.core.SkillRegistry
             .getEffectiveTuning(skill.id, "growthMultiplier", 1.0)

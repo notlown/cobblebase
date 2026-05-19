@@ -170,10 +170,12 @@ class CobblebaseScreen(
      * Maximum pasture work radius across all jobs — used by the Radius wireframe.
      * Mirrors the per-job effective radius calculation from SkillRegistry.
      */
-    private fun computeMaxRadius(): Int {
-        return notlown.cobblebase.core.SkillRegistry.getAll().keys
-            .maxOfOrNull { notlown.cobblebase.core.SkillRegistry.getEffectiveRadius(it) } ?: 16
-    }
+    /**
+     * The radius shown by the Show-Radius wireframe = the admin's "Pasture Range"
+     * cap (CobblebaseConfig.jobSearchRadius). Every executor is now capped at this
+     * value, so the box shows the *real* outer reach of every job in this pasture.
+     */
+    private fun computeMaxRadius(): Int = notlown.cobblebase.core.CobblebaseConfig.jobSearchRadius
 
     private fun initCurrentTab() {
         // Fall back to SKILLS if the admin disabled the currently-active job tab.

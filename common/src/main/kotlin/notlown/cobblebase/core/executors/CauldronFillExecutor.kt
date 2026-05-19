@@ -1,5 +1,7 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.effectiveRadius
+
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.Blocks
 import net.minecraft.block.LeveledCauldronBlock
@@ -59,7 +61,7 @@ object CauldronFillExecutor : SkillExecutor {
         }
 
         // Find or navigate to cauldron
-        val target = cauldronTarget[pokemonId] ?: findEmptyCauldron(world, origin, skill.searchRadius)
+        val target = cauldronTarget[pokemonId] ?: findEmptyCauldron(world, origin, skill.effectiveRadius)
         if (target == null) return
 
         cauldronTarget[pokemonId] = target

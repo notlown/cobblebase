@@ -393,8 +393,10 @@ class BuffsPanel(
 
             val scale = 0.75f
             val nameScale = 0.9f
-            val cat = if (entry.isPassiveBuff) 0xFF55FFAA.toInt()
-                else CobblebaseScreen.CATEGORY_COLORS[entry.category] ?: 0xFF666666.toInt()
+            // Unified palette: pull the skill-specific color from JobColors so
+            // active jobs + passive buffs share the same vocabulary that the
+            // SkillsPanel chip BGs and LogsPanel row tints use.
+            val cat = JobColors.colorFor(entry.skillId)
 
             // Pokemon portrait \u2014 1.15\u00D7 scale (~18 px), matches Pasture tab.
             val spriteScale = 1.15f
@@ -458,11 +460,10 @@ class BuffsPanel(
             // is sky blue, Strength is fire-red, Aura is gold, etc. Single universal
             // "passive green" was unreadable when 5 passive buffs lined up in a column.
             val skillTextX = colSkill + 11
-            val skillNameColor = when {
-                isOvershadowed -> 0x666666
-                entry.isPassiveBuff -> passiveBuffColor(entry.skillId)
-                else -> cat
-            }
+            // Both active jobs and passive buffs draw from JobColors now (variable
+            // `cat` already resolved to the per-skill color above). Overshadowed
+            // passive rows stay gray to read as "doesn't count toward the buff".
+            val skillNameColor = if (isOvershadowed) 0x666666 else cat
             context.matrices.push()
             context.matrices.translate(skillTextX.toFloat(), (ry + 2).toFloat(), 0f)
             context.matrices.scale(nameScale, nameScale, 1f)

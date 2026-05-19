@@ -1,5 +1,7 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.effectiveRadius
+
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.block.AbstractFurnaceBlock
 import net.minecraft.block.entity.AbstractFurnaceBlockEntity
@@ -106,7 +108,7 @@ object FurnaceFuelExecutor : SkillExecutor {
         val target = if (existing != null && furnaceNeedsFuel(world, existing)) {
             existing
         } else {
-            findFurnaceNeedingFuel(world, origin, skill.searchRadius, otherClaims)
+            findFurnaceNeedingFuel(world, origin, skill.effectiveRadius, otherClaims)
         }
         if (target == null) {
             // No work available — release any stale claim

@@ -1,5 +1,7 @@
 package notlown.cobblebase.core.executors
 
+import notlown.cobblebase.core.effectiveRadius
+
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.decoration.DisplayEntity
@@ -177,7 +179,7 @@ object EggHatcherExecutor : SkillExecutor {
 
         // No active claim → look for a new egg.
         val otherClaims = claims.filterKeys { it != pokemonId }.values.map { it.location }.toSet()
-        val newLocation = findEgg(world, origin, skill.searchRadius, otherClaims)
+        val newLocation = findEgg(world, origin, skill.effectiveRadius, otherClaims)
         if (newLocation == null) {
             claims.remove(pokemonId)
             return

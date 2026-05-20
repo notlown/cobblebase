@@ -22,8 +22,8 @@
       "proficiency": 3
     },
     {
-      "proficiency": 3,
-      "skillId": "cobblebase:egg_hatcher"
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 3
     }
   ]
 }

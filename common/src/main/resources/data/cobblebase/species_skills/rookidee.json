@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:night_vision",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 1
     }
   ]
 }

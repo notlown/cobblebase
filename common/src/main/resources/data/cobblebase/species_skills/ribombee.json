@@ -24,6 +24,10 @@
     {
       "skillId": "cobblebase:lucky_charm",
       "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 3
     }
   ]
 }

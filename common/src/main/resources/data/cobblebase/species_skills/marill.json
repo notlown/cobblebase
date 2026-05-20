@@ -22,12 +22,8 @@
       "proficiency": 3
     },
     {
-      "skillId": "cobblebase:irrigator",
+      "skillId": "cobblebase:egg_hatcher",
       "proficiency": 2
-    },
-    {
-      "proficiency": 2,
-      "skillId": "cobblebase:egg_hatcher"
     }
   ]
 }

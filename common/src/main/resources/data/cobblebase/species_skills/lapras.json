@@ -32,6 +32,10 @@
     {
       "skillId": "cobblebase:diving",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:extinguisher",
+      "proficiency": 4
     }
   ]
 }

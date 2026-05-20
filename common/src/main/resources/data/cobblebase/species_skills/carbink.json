@@ -20,10 +20,6 @@
     {
       "skillId": "cobblebase:finder_treasure",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:craftsman",
-      "proficiency": 3
     }
   ]
 }

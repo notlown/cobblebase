@@ -3,7 +3,7 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_food",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:healer",
@@ -22,7 +22,7 @@
       "proficiency": 2
     },
     {
-      "skillId": "cobblebase:craftsman",
+      "skillId": "cobblebase:aura_boost",
       "proficiency": 3
     }
   ]

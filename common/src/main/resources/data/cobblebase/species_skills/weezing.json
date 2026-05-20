@@ -3,7 +3,7 @@
   "skills": [
     {
       "skillId": "cobblebase:brew_fuel",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:finder_hea",
@@ -11,10 +11,6 @@
     },
     {
       "skillId": "cobblebase:producer",
-      "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:craftsman",
       "proficiency": 3
     }
   ]

@@ -11,15 +11,15 @@
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:scout",
-      "proficiency": 5
+      "proficiency": 4
     }
   ]
 }

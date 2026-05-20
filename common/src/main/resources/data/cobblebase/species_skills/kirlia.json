@@ -24,6 +24,10 @@
     {
       "skillId": "cobblebase:brew_fuel",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 2
     }
   ]
 }

@@ -3,7 +3,7 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_held",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:finder_smith",
@@ -28,10 +28,6 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 2
-    },
-    {
-      "skillId": "cobblebase:craftsman",
-      "proficiency": 3
     }
   ]
 }

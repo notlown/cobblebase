@@ -15,7 +15,7 @@
     },
     {
       "skillId": "cobblebase:guard",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:harvester",
@@ -23,7 +23,7 @@
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:irrigator",
@@ -35,7 +35,7 @@
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:friend_recruiter",

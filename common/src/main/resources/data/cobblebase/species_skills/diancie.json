@@ -7,7 +7,7 @@
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:mining",
@@ -30,8 +30,8 @@
       "proficiency": 5
     },
     {
-      "skillId": "cobblebase:craftsman",
-      "proficiency": 3
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 4
     }
   ]
 }

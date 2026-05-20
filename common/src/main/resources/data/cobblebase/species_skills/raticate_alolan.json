@@ -3,6 +3,18 @@
   "skills": [
     {
       "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
       "proficiency": 2
     }
   ]

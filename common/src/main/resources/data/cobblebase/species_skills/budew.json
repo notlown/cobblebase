@@ -22,8 +22,8 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:craftsman",
-      "proficiency": 3
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 1
     }
   ]
 }

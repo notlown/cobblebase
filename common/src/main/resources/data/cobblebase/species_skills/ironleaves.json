@@ -12,10 +12,6 @@
     {
       "skillId": "cobblebase:guard",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:growth",
-      "proficiency": 3
     }
   ]
 }

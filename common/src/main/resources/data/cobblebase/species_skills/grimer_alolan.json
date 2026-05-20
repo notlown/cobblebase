@@ -2,8 +2,20 @@
   "species": "grimer_alolan",
   "skills": [
     {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:producer",
-      "proficiency": 1
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_treasure",
+      "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:harvester",
+      "proficiency": 2
     }
   ]
 }

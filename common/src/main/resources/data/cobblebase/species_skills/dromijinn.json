@@ -15,7 +15,7 @@
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:irrigator",
@@ -23,7 +23,7 @@
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:water_fill",

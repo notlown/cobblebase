@@ -3,7 +3,7 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_exp",
-      "proficiency": 3
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:finder_hea",
@@ -22,8 +22,8 @@
       "proficiency": 4
     },
     {
-      "proficiency": 4,
-      "skillId": "cobblebase:egg_hatcher"
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 4
     }
   ]
 }

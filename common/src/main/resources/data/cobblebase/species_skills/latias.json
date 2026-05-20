@@ -11,15 +11,15 @@
     },
     {
       "skillId": "cobblebase:mentor",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 4
     },
     {
-      "proficiency": 5,
-      "skillId": "cobblebase:egg_hatcher"
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 5
     }
   ]
 }

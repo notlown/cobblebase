@@ -26,8 +26,16 @@
       "proficiency": 2
     },
     {
-      "proficiency": 3,
-      "skillId": "cobblebase:egg_hatcher"
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_food",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 4
     }
   ]
 }

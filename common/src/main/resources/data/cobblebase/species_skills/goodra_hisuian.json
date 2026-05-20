@@ -2,7 +2,23 @@
   "species": "goodra_hisuian",
   "skills": [
     {
+      "skillId": "cobblebase:guard",
+      "proficiency": 5
+    },
+    {
       "skillId": "cobblebase:producer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
       "proficiency": 3
     }
   ]

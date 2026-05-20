@@ -22,8 +22,12 @@
       "proficiency": 2
     },
     {
-      "proficiency": 4,
-      "skillId": "cobblebase:egg_hatcher"
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 3
     }
   ]
 }

@@ -19,15 +19,15 @@
     },
     {
       "skillId": "cobblebase:guard",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:scout",
-      "proficiency": 5
+      "proficiency": 4
     }
   ]
 }

@@ -2,8 +2,20 @@
   "species": "sliggoo_hisuian",
   "skills": [
     {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
       "skillId": "cobblebase:producer",
-      "proficiency": 2
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:resistance_boost",
+      "proficiency": 3
     }
   ]
 }

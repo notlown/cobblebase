@@ -7,7 +7,7 @@
     },
     {
       "skillId": "cobblebase:furnace_fuel",
-      "proficiency": 2
+      "proficiency": 1
     },
     {
       "skillId": "cobblebase:gatherer",
@@ -18,8 +18,8 @@
       "proficiency": 2
     },
     {
-      "proficiency": 2,
-      "skillId": "cobblebase:egg_hatcher"
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 2
     }
   ]
 }

@@ -23,7 +23,11 @@
     },
     {
       "skillId": "cobblebase:brew_fuel",
-      "proficiency": 4
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_evo",
+      "proficiency": 5
     }
   ]
 }

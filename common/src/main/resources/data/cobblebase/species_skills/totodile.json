@@ -14,12 +14,8 @@
       "proficiency": 1
     },
     {
-      "skillId": "cobblebase:irrigator",
-      "proficiency": 1
-    },
-    {
       "skillId": "cobblebase:diving",
-      "proficiency": 3
+      "proficiency": 1
     }
   ]
 }

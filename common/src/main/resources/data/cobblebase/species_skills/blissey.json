@@ -15,7 +15,7 @@
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:mentor",
@@ -34,8 +34,8 @@
       "proficiency": 4
     },
     {
-      "proficiency": 5,
-      "skillId": "cobblebase:egg_hatcher"
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 5
     }
   ]
 }

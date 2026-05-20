@@ -3,7 +3,7 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_food",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:finder_hea",
@@ -28,10 +28,6 @@
     {
       "skillId": "cobblebase:lucky_charm",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:craftsman",
-      "proficiency": 3
     }
   ]
 }

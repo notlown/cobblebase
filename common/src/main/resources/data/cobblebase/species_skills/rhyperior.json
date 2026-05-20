@@ -12,10 +12,6 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:craftsman",
-      "proficiency": 3
     }
   ]
 }

@@ -3,11 +3,35 @@
   "skills": [
     {
       "skillId": "cobblebase:harvester",
-      "proficiency": 2
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:producer",
-      "proficiency": 2
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:irrigator",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:mentor",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
     }
   ]
 }

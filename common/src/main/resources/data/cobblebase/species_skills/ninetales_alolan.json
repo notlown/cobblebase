@@ -3,6 +3,22 @@
   "skills": [
     {
       "skillId": "cobblebase:snow_fill",
+      "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:finder_hea",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:healer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:aura_boost",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_fill",
       "proficiency": 3
     }
   ]

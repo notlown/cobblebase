@@ -28,6 +28,10 @@
     {
       "skillId": "cobblebase:producer",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 3
     }
   ]
 }

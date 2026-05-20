@@ -24,6 +24,10 @@
     {
       "skillId": "cobblebase:scout",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 1
     }
   ]
 }

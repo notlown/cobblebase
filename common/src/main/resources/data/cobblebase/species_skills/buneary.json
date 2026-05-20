@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:lucky_charm",
       "proficiency": 2
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 1
     }
   ]
 }

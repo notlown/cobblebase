@@ -11,11 +11,11 @@
     },
     {
       "skillId": "cobblebase:guard",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:healer",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:mentor",
@@ -23,7 +23,7 @@
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:scout",

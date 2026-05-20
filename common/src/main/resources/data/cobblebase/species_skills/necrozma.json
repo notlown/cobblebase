@@ -3,7 +3,7 @@
   "skills": [
     {
       "skillId": "cobblebase:finder_exp",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:haste_boost",

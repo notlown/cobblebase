@@ -28,10 +28,6 @@
     {
       "skillId": "cobblebase:diving",
       "proficiency": 3
-    },
-    {
-      "skillId": "cobblebase:craftsman",
-      "proficiency": 3
     }
   ]
 }

@@ -3,6 +3,26 @@
   "skills": [
     {
       "skillId": "cobblebase:producer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:water_fill",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:furnace_fuel",
       "proficiency": 2
     }
   ]

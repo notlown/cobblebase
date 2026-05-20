@@ -23,15 +23,11 @@
     },
     {
       "skillId": "cobblebase:mining",
-      "proficiency": 5
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:strength_boost",
       "proficiency": 4
-    },
-    {
-      "skillId": "cobblebase:craftsman",
-      "proficiency": 3
     }
   ]
 }

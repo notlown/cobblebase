@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:irrigator",
       "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 4
     }
   ]
 }

@@ -7,7 +7,7 @@
     },
     {
       "skillId": "cobblebase:jump_boost",
-      "proficiency": 4
+      "proficiency": 5
     },
     {
       "skillId": "cobblebase:producer",
@@ -18,8 +18,16 @@
       "proficiency": 4
     },
     {
-      "proficiency": 3,
-      "skillId": "cobblebase:egg_hatcher"
+      "skillId": "cobblebase:egg_hatcher",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:gatherer",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:speed_boost",
+      "proficiency": 4
     }
   ]
 }

@@ -3,11 +3,31 @@
   "skills": [
     {
       "skillId": "cobblebase:guard",
-      "proficiency": 3
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:scout",
+      "proficiency": 4
     },
     {
       "skillId": "cobblebase:harvester",
-      "proficiency": 2
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_see",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:friend_recruiter",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:strength_boost",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:night_vision",
+      "proficiency": 4
     }
   ]
 }

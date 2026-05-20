@@ -28,6 +28,10 @@
     {
       "skillId": "cobblebase:friend_recruiter",
       "proficiency": 1
+    },
+    {
+      "skillId": "cobblebase:growth_aura",
+      "proficiency": 2
     }
   ]
 }

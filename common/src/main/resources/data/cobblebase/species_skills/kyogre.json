@@ -20,6 +20,10 @@
     {
       "skillId": "cobblebase:diving",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:extinguisher",
+      "proficiency": 5
     }
   ]
 }

@@ -2,8 +2,24 @@
   "species": "dugtrio_alolan",
   "skills": [
     {
+      "skillId": "cobblebase:finder_ore",
+      "proficiency": 4
+    },
+    {
       "skillId": "cobblebase:mining",
-      "proficiency": 2
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:finder_smith",
+      "proficiency": 4
+    },
+    {
+      "skillId": "cobblebase:guard",
+      "proficiency": 3
+    },
+    {
+      "skillId": "cobblebase:producer",
+      "proficiency": 3
     }
   ]
 }

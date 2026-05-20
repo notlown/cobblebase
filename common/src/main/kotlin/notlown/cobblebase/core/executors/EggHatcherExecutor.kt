@@ -14,6 +14,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import notlown.cobblebase.core.Cobblebase
 import notlown.cobblebase.core.CobblebaseConfig
+import notlown.cobblebase.core.CobbreedingBridge
 import notlown.cobblebase.core.HatchLogManager
 import notlown.cobblebase.core.SkillDef
 import notlown.cobblebase.core.SkillEntry
@@ -38,86 +39,11 @@ import java.util.UUID
  * Sequential-only: another hatcher in the same pasture will pick a *different* egg via the
  * shared claim ledger. No two hatchers tick the same stack.
  *
- * Soft-dep: Cobbreeding is optional. If the `ludichat.cobbreeding.PokemonEgg` class isn't on
- * the classpath the executor short-circuits — `egg_hatcher` is selectable in the GUI but
- * does nothing without Cobbreeding installed.
+ * Soft-dep: Cobbreeding is optional. All reflection lives in [CobbreedingBridge]; if the mod
+ * isn't loaded the executor short-circuits — `egg_hatcher` is selectable in the GUI but does
+ * nothing without Cobbreeding installed.
  */
 object EggHatcherExecutor : SkillExecutor {
-
-    // ---- Cobbreeding reflection layer ----
-
-    private val cobbreedingLoaded: Boolean by lazy {
-        try {
-            Class.forName("ludichat.cobbreeding.PokemonEgg")
-            true
-        } catch (_: ClassNotFoundException) {
-            false
-        }
-    }
-
-    private val pokemonEggClass: Class<*>? by lazy {
-        runCatching { Class.forName("ludichat.cobbreeding.PokemonEgg") }.getOrNull()
-    }
-
-    private val eggUtilitiesClass: Class<*>? by lazy {
-        runCatching { Class.forName("ludichat.cobbreeding.EggUtilities") }.getOrNull()
-    }
-
-    private val extractPropertiesMethod by lazy {
-        eggUtilitiesClass?.declaredMethods
-            ?.firstOrNull { it.name == "extractProperties" && it.parameterCount == 1 }
-    }
-
-    /**
-     * Cobbreeding stores the remaining hatch ticks in a `class_9331<Integer>` data component
-     * on each egg ItemStack. We pull the ComponentType via reflection (PokemonEgg.Companion.getTIMER)
-     * and then call `stack.get(componentType)` to read the live value.
-     */
-    private val timerComponentType: Any? by lazy {
-        try {
-            val cls = pokemonEggClass ?: return@lazy null
-            val companionField = cls.getField("Companion")
-            val companion = companionField.get(null)
-            val getTimerMethod = companion.javaClass.getMethod("getTIMER")
-            getTimerMethod.invoke(companion)
-        } catch (_: Exception) { null }
-    }
-
-    /** DEFAULT_TIMER public static int field from PokemonEgg — fallback when no per-egg initial seen. */
-    private val defaultTimer: Int by lazy {
-        try {
-            pokemonEggClass?.getField("DEFAULT_TIMER")?.getInt(null) ?: 12000
-        } catch (_: Exception) { 12000 }
-    }
-
-    /** Returns true iff the ItemStack's item is a Cobbreeding egg. */
-    private fun isPokemonEgg(stack: ItemStack): Boolean {
-        if (stack.isEmpty) return false
-        val cls = pokemonEggClass ?: return false
-        return cls.isInstance(stack.item)
-    }
-
-    /** Reads the egg's current TIMER component, or [defaultTimer] if the component is absent. */
-    private fun readEggTimer(stack: ItemStack): Int {
-        val componentType = timerComponentType ?: return defaultTimer
-        return try {
-            val getMethod = stack.javaClass.methods.firstOrNull {
-                it.name == "method_57824" || it.name == "get"
-            } ?: return defaultTimer
-            (getMethod.invoke(stack, componentType) as? Int) ?: defaultTimer
-        } catch (_: Exception) { defaultTimer }
-    }
-
-    /** Tries to read the human-readable species name from an egg stack. Returns "Unknown egg" on failure. */
-    private fun describeEgg(stack: ItemStack): String {
-        val method = extractPropertiesMethod ?: return "Unknown egg"
-        return try {
-            val props = method.invoke(null, stack) ?: return "Unknown egg"
-            val speciesField = props.javaClass.methods.firstOrNull { it.name == "getSpecies" && it.parameterCount == 0 }
-            val species = speciesField?.invoke(props)?.toString()
-            species ?: "Unknown egg"
-        } catch (_: Exception) { "Unknown egg" }
-    }
 
     // ---- Claim ledger ----
 
@@ -163,7 +89,7 @@ object EggHatcherExecutor : SkillExecutor {
         skillEntry: SkillEntry
     ) {
         if (world !is ServerWorld) return
-        if (!cobbreedingLoaded) return  // Cobbreeding not present → no-op
+        if (!CobbreedingBridge.isLoaded) return  // Cobbreeding not present → no-op
         val pokemonId = pokemonEntity.pokemon.uuid
         val now = world.time
 
@@ -187,7 +113,7 @@ object EggHatcherExecutor : SkillExecutor {
             return
         }
         val stack = stackAt(world, newLocation) ?: return
-        val initial = readEggTimer(stack)
+        val initial = CobbreedingBridge.readEggTimer(stack)
         val species = pokemonEntity.pokemon.species.name
         val display = try { pokemonEntity.pokemon.getDisplayName().string.ifBlank { species.replaceFirstChar { c -> c.uppercase() } } }
             catch (_: Exception) { species.replaceFirstChar { c -> c.uppercase() } }
@@ -196,7 +122,7 @@ object EggHatcherExecutor : SkillExecutor {
             location = newLocation,
             pasturePos = origin,
             lastSeenTick = now,
-            initialDescription = describeEgg(stack),
+            initialDescription = CobbreedingBridge.describeEgg(stack),
             initialTimer = initial,
             currentTimer = initial,
             hatcherSpecies = species,
@@ -204,7 +130,7 @@ object EggHatcherExecutor : SkillExecutor {
             proficiency = skillEntry.proficiency,
             displayEntityId = eggDisplay?.id ?: -1
         )
-        Cobblebase.LOGGER.debug("[EggHatcher] Claim created: $species (prof ${skillEntry.proficiency}) → ${describeEgg(stack)} (timer=$initial) at $newLocation, pasture=$origin")
+        Cobblebase.LOGGER.debug("[EggHatcher] Claim created: $species (prof ${skillEntry.proficiency}) → ${CobbreedingBridge.describeEgg(stack)} (timer=$initial) at $newLocation, pasture=$origin")
         if (now % 40L == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
     }
 
@@ -290,7 +216,7 @@ object EggHatcherExecutor : SkillExecutor {
         if (pastureEntity is Inventory) {
             for (slot in 0 until pastureEntity.size()) {
                 val stack = pastureEntity.getStack(slot)
-                if (isPokemonEgg(stack)) {
+                if (CobbreedingBridge.isPokemonEgg(stack)) {
                     val loc = EggLocation(origin, slot)
                     if (loc !in exclude) return loc
                 }
@@ -305,7 +231,7 @@ object EggHatcherExecutor : SkillExecutor {
             val be = world.getBlockEntity(pos) as? Inventory ?: continue
             for (slot in 0 until be.size()) {
                 val stack = be.getStack(slot)
-                if (isPokemonEgg(stack)) {
+                if (CobbreedingBridge.isPokemonEgg(stack)) {
                     val loc = EggLocation(pos, slot)
                     if (loc !in exclude) return loc
                 }
@@ -318,7 +244,7 @@ object EggHatcherExecutor : SkillExecutor {
         val be = world.getBlockEntity(loc.containerPos) as? Inventory ?: return null
         if (loc.slot >= be.size()) return null
         val s = be.getStack(loc.slot)
-        return if (isPokemonEgg(s)) s else null
+        return if (CobbreedingBridge.isPokemonEgg(s)) s else null
     }
 
     /** Advance the timer on the claimed egg. If it hatches (stack becomes empty), release claim and log. */
@@ -390,7 +316,7 @@ object EggHatcherExecutor : SkillExecutor {
         }
 
         // Refresh claim timestamp + current timer so the GUI sees fresh progress.
-        val freshTimer = readEggTimer(stack)
+        val freshTimer = CobbreedingBridge.readEggTimer(stack)
         claims[pokemonId] = claim.copy(lastSeenTick = now, currentTimer = freshTimer)
         if (now % 40L == 0L) SkillEffects.playWorking(world, pokemonEntity, skill.effectType)
     }
@@ -470,7 +396,7 @@ object EggHatcherExecutor : SkillExecutor {
                     val nameMatches = entity.customName?.string == EGG_DISPLAY_MARKER
                     val stackMatches = try {
                         val stack = getStackMethod?.invoke(entity) as? ItemStack
-                        stack != null && isPokemonEgg(stack)
+                        stack != null && CobbreedingBridge.isPokemonEgg(stack)
                     } catch (_: Throwable) { false }
                     if (!nameMatches && !stackMatches) continue
                     if (entity.id !in activeDisplayIds) {
@@ -511,7 +437,7 @@ object EggHatcherExecutor : SkillExecutor {
      * "X eggs available" so users know whether adding another hatcher would have work to do.
      */
     fun countAvailableEggs(world: ServerWorld, pasturePos: BlockPos, radius: Int): Int {
-        if (!cobbreedingLoaded) return 0
+        if (!CobbreedingBridge.isLoaded) return 0
         val claimedLocations = claims.values.map { it.location }.toSet()
         var count = 0
 
@@ -519,7 +445,7 @@ object EggHatcherExecutor : SkillExecutor {
         if (pastureEntity is Inventory) {
             for (slot in 0 until pastureEntity.size()) {
                 val stack = pastureEntity.getStack(slot)
-                if (isPokemonEgg(stack) && EggLocation(pasturePos, slot) !in claimedLocations) {
+                if (CobbreedingBridge.isPokemonEgg(stack) && EggLocation(pasturePos, slot) !in claimedLocations) {
                     count += stack.count
                 }
             }
@@ -531,7 +457,7 @@ object EggHatcherExecutor : SkillExecutor {
             val be = world.getBlockEntity(pos) as? Inventory ?: continue
             for (slot in 0 until be.size()) {
                 val stack = be.getStack(slot)
-                if (isPokemonEgg(stack) && EggLocation(pos, slot) !in claimedLocations) {
+                if (CobbreedingBridge.isPokemonEgg(stack) && EggLocation(pos, slot) !in claimedLocations) {
                     count += stack.count
                 }
             }

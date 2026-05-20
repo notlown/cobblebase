@@ -1,5 +1,6 @@
 archeologist.json
 aura_boost.json
+breeder.json
 brew_fuel.json
 craftsman.json
 diving.json

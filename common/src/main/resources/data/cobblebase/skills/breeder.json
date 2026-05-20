@@ -1,0 +1,66 @@
+{
+  "id": "cobblebase:breeder",
+  "name": "Breeder",
+  "description": "Ditto pairs with female Pokemon in the pasture to produce eggs (Cobbreeding format). Shiny Ditto doubles the offspring's shiny chance.",
+  "category": "support",
+  "cooldownSeconds": 1,
+  "searchRadius": 0,
+  "executor": "breeder",
+  "effectType": "heal",
+  "tuning": {
+    "prof1Multiplier": {
+      "label": "Prof 1 ★☆☆☆☆ Cooldown",
+      "defaultValue": 1.0,
+      "min": 0.1,
+      "max": 4.0,
+      "step": 0.05,
+      "unit": "x",
+      "tooltip": "Multiplier on Cobbreeding's [min, max] breeding-ticks range at Proficiency 1. 1.0x = same speed as vanilla Cobbreeding native pasture breeding."
+    },
+    "prof2Multiplier": {
+      "label": "Prof 2 ★★☆☆☆ Cooldown",
+      "defaultValue": 0.875,
+      "min": 0.1,
+      "max": 4.0,
+      "step": 0.05,
+      "unit": "x",
+      "tooltip": "Cooldown multiplier at Proficiency 2."
+    },
+    "prof3Multiplier": {
+      "label": "Prof 3 ★★★☆☆ Cooldown",
+      "defaultValue": 0.75,
+      "min": 0.1,
+      "max": 4.0,
+      "step": 0.05,
+      "unit": "x",
+      "tooltip": "Cooldown multiplier at Proficiency 3."
+    },
+    "prof4Multiplier": {
+      "label": "Prof 4 ★★★★☆ Cooldown",
+      "defaultValue": 0.625,
+      "min": 0.1,
+      "max": 4.0,
+      "step": 0.05,
+      "unit": "x",
+      "tooltip": "Cooldown multiplier at Proficiency 4."
+    },
+    "prof5Multiplier": {
+      "label": "Prof 5 ★★★★★ Cooldown",
+      "defaultValue": 0.5,
+      "min": 0.1,
+      "max": 4.0,
+      "step": 0.05,
+      "unit": "x",
+      "tooltip": "Cooldown multiplier at Proficiency 5. Default 0.5x = twice as fast as vanilla Cobbreeding."
+    },
+    "shinyDittoBonus": {
+      "label": "Shiny Ditto Shiny Bonus",
+      "defaultValue": 2.0,
+      "min": 1.0,
+      "max": 10.0,
+      "step": 0.5,
+      "unit": "x",
+      "tooltip": "Shiny chance multiplier applied when the breeding Ditto is shiny. 2.0x = doubled shiny odds (1/4096 instead of 1/8192)."
+    }
+  }
+}

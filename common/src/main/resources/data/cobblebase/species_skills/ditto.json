@@ -16,6 +16,10 @@
     {
       "skillId": "cobblebase:egg_hatcher",
       "proficiency": 5
+    },
+    {
+      "skillId": "cobblebase:breeder",
+      "proficiency": 5
     }
   ]
 }

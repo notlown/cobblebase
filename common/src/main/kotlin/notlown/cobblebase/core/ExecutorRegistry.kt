@@ -22,6 +22,7 @@ import notlown.cobblebase.core.executors.AuraBoostExecutor
 import notlown.cobblebase.core.executors.GrowthAuraExecutor
 import notlown.cobblebase.core.executors.ProducerExecutor
 import notlown.cobblebase.core.executors.CraftsmanExecutor
+import notlown.cobblebase.core.executors.BreederExecutor
 
 /**
  * Maps executor names (from Skill JSON) to executor implementations.
@@ -45,6 +46,7 @@ object ExecutorRegistry {
         register("producer", ProducerExecutor)   // Species-specific passive item production
         register("craftsman", CraftsmanExecutor) // Crafts items from nearby chest materials
         register("egg_hatcher", notlown.cobblebase.core.executors.EggHatcherExecutor) // Cobbreeding eggs (soft-dep)
+        register("breeder", BreederExecutor)     // Ditto-only passive egg producer (Cobbreeding soft-dep)
 
         // -- Generation --
         register("cauldron_fill", CauldronFillExecutor)

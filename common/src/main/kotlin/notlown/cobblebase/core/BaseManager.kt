@@ -93,6 +93,7 @@ object BaseManager {
             notlown.cobblebase.core.executors.LuckyCharmExecutor.cleanupStale(now)
             notlown.cobblebase.core.executors.MiningExecutor.cleanupStale(now)
             notlown.cobblebase.core.executors.ProducerExecutor.cleanupStale(now)
+            notlown.cobblebase.core.executors.BreederExecutor.cleanupStale(now)
             notlown.cobblebase.core.executors.RecruiterExecutor.cleanupStale(now)
             notlown.cobblebase.core.executors.ScoutExecutor.cleanupStale(now)
             notlown.cobblebase.core.executors.SupplierExecutor.cleanupStale(now)

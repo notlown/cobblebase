@@ -34,7 +34,7 @@ object SpawnData {
                 val species = try {
                     detail.pokemon.species?.lowercase() ?: continue
                 } catch (_: Exception) { continue }
-                val bucketName = detail.bucket?.name?.lowercase() ?: continue
+                val bucketName = detail.bucket.lowercase()
                 val bucket = parseBucket(bucketName)
                 register(species.substringAfterLast(":"), bucket)
                 entries++

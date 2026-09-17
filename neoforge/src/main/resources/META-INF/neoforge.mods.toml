@@ -27,7 +27,7 @@ side = "BOTH"
 [[dependencies.cobblebase]]
 modId = "cobblemon"
 type = "required"
-versionRange = "[1.7.0,)"
+versionRange = "[1.8.0,)"
 ordering = "AFTER"
 side = "BOTH"
 

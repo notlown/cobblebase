@@ -9,7 +9,7 @@
 <p align="center">
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=minecraft)](https://minecraft.net)
-[![Cobblemon](https://img.shields.io/badge/Cobblemon-1.7.0+-E8532E?style=flat-square)](https://cobblemon.com)
+[![Cobblemon](https://img.shields.io/badge/Cobblemon-1.8.0+-E8532E?style=flat-square)](https://cobblemon.com)
 [![Fabric](https://img.shields.io/badge/Fabric-0.16.14+-DBD0B4?style=flat-square)](https://fabricmc.net)
 [![NeoForge](https://img.shields.io/badge/NeoForge-21.1+-F16436?style=flat-square)](https://neoforged.net)
 [![License: MPL-2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg?style=flat-square)](https://opensource.org/licenses/MPL-2.0)
@@ -268,7 +268,7 @@ Everything is also JSON-configurable and customizable via **[datapacks](https://
 
 ### Requirements
 - Minecraft **1.21.1**
-- Cobblemon **1.7.0+**
+- Cobblemon **1.8.0+**
 - **Cloth Config** (required — mod crashes without it)
 - **Fabric**: Fabric Loader 0.16.14+ and Fabric Language Kotlin
 - **NeoForge**: NeoForge 21.1+ and Kotlin for Forge 5.x

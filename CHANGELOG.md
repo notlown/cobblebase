@@ -4,6 +4,17 @@ All notable changes to Cobblebase are documented here.
 
 ---
 
+## [2.0.1] - 2026-10-03
+
+Compatibility hotfix for Cobblemon 1.8.
+
+- **Fixed** server crash on startup with Cobblemon 1.8.0
+  (`NoSuchMethodError: SpawnDetail.getBucket()`), caused by the spawn bucket
+  API change in Cobblemon 1.8. Thanks to @Yuri-Almir-Pinto for the fix (#8).
+- **Changed** minimum required Cobblemon version is now 1.8.0.
+
+---
+
 ## [2.0.0] - 2026-05-19
 
 A full UI overhaul, the long-awaited per-pasture settings, and an end-to-end
